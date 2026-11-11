@@ -2,10 +2,9 @@
 
 ## 1. Overview
 
-Everything a command writes lands in the agent's context, so only the command decides what reaches stdout and
-stderr. A service, repository or use case that prints puts text where the agent expects a result line or one JSON
-object, and its output cannot be suppressed, tested as data or reused by another transport (an MCP tool, a test).
-This rule reports terminal writes outside CLI modules and every `print`.
+Only the command decides what reaches stdout and stderr. A service, repository or use case that prints puts text
+where the agent expects a result line or one JSON object, and that output cannot be suppressed, tested as data or
+reused by another transport. This rule reports terminal writes outside CLI modules and every `print`.
 
 - **Phase and severity**: `linter`, `error`; it runs in `devkit rules check` and the commit gate. Shipped by the
   `cli-tool` bundle (`devkit add cli-tool`).

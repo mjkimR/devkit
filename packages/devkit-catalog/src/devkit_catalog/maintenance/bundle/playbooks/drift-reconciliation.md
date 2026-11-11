@@ -6,8 +6,9 @@ description: Manually review a bounded Living Spec, code and guidance scope for 
 # Drift reconciliation
 
 Run only when the user invoked or confirmed this playbook (`devkit-playbook`, its exact ID or a confirmed intake
-offer). Review one bounded batch. The user, not code or documentation, decides each mismatch. Changed paths, age, entrypoints and passing checks locate evidence but prove
-neither drift nor consistency; a failing check proves only its own condition.
+offer). Review one bounded batch. The user, not code or documentation, decides each mismatch. Changed paths, age,
+entrypoints and passing checks locate evidence but prove neither drift nor consistency; a failing check proves only
+its own condition.
 
 ## 1. Bound the review
 
@@ -47,8 +48,8 @@ its reason and provenance:
 
 ## 4. Apply decided corrections
 
-1. If HEAD or relevant dirty paths changed since intake, revalidate the evidence and get a new decision when the
-   correction changes.
+1. If HEAD or relevant dirty paths changed since intake, revalidate the evidence; if the correction changes, get a
+   new decision.
 2. Apply each decided correction through the repository's development workflow; track out-of-scope corrections and
    structural cleanup as separate work.
 3. Verify code fixes with regression evidence and documentation fixes by rechecking the disputed claims and

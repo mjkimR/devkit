@@ -1,42 +1,35 @@
 # Applying agreed changes
 
-Read once the decision round approved changes. The application procedure is `review-refactor`'s, resolved as the
-playbook's entry file describes; this file names the sections that apply, overrides three points and adds the
-performance evidence.
+The application procedure is the resolved `review-refactor` text; this file names the sections that apply,
+overrides three points and adds the performance evidence.
 
 ## 1. Sections that apply
 
-Follow these sections of the resolved `review-refactor` text, in order:
+Follow these sections in order:
 
-1. `review-refactor references/applying.md "Branch and edit tasks"`: the work item's own branch, dirty paths that do
-   not belong to the run, edit tasks with write scopes; the branch follows the third override.
-2. `review-refactor references/applying.md "Subagent edits"`: isolated checkouts, disjoint write scopes, results
-   moved onto the branch one at a time.
-3. `review-refactor references/applying.md "Commits and verification"`: verification before and after each change,
-   one commit per change, full verification at the final head.
-4. `review-refactor references/criteria.md "Preservation evidence"`, including its differential comparison of old
-   and new code on the same inputs.
-5. `review-refactor references/applying.md "Review"`: a fresh reviewer before integration.
-6. `review-refactor references/applying.md "Report"`: the work item's report in the final response and the commit
-   body.
-7. `review-refactor references/applying.md "Integration"`: the repository's integration path and its own approval;
-   the path follows the third override.
-8. `review-refactor references/applying.md "Contract removals"`: for an approved removal, its own work item. Its
-   compatibility-policy exception does not apply here: a removed option is a contract change.
+1. `review-refactor references/applying.md "Branch and edit tasks"`; the branch follows override 3.
+2. `review-refactor references/applying.md "Subagent edits"`.
+3. `review-refactor references/applying.md "Commits and verification"`.
+4. `review-refactor references/criteria.md "Preservation evidence"`, including its differential comparison.
+5. `review-refactor references/applying.md "Review"`.
+6. `review-refactor references/applying.md "Report"`.
+7. `review-refactor references/applying.md "Integration"`; the path follows override 3.
+8. `review-refactor references/applying.md "Contract removals"`, without its compatibility-policy exception: a
+   removed option is a contract change.
 
-The route of the work item is this playbook's decision round route;
-`review-refactor references/applying.md "Work items and route"` is not followed.
+The work item's route is the entry file's decision round route, not
+`review-refactor references/applying.md "Work items and route"`.
 
 ## 2. Overrides
 
-1. Every difference found by the differential comparison or the review is a contract change. Fix it so old and new
-   agree, or return the change to the decision round as its own contract-change work item.
-   `review-refactor`'s approved behavior change inside the behavior-preserving work item does not apply to this run.
+1. Every difference found by the differential comparison or the review is a contract change: fix it so old and new
+   agree, or return the change to the decision round as its own contract-change work item. `review-refactor`'s
+   approved behavior change inside the behavior-preserving work item does not apply.
 2. Edit tasks may run in parallel in isolated checkouts, but every timing run waits until no edit task or
-   verification runs. Schedule the measurements between edit tasks, never beside them.
+   verification runs; schedule measurements between edit tasks.
 3. The work item's branch and integration path are those of the feature workflow the decision round routed it to,
-   whatever the number of modules it edits. Where the cited sections name the overall-refactor workflow's branch
-   policy or its integration path (with the `spec` bundle, task kind `overall-refactor`), that text does not apply.
+   whatever the number of modules it edits. Text of the cited sections naming the overall-refactor workflow's branch
+   policy or integration path (with the `spec` bundle, task kind `overall-refactor`) does not apply.
 
 ## 3. Per-change measurement
 
@@ -44,15 +37,14 @@ The route of the work item is this playbook's decision round route;
    this change applied, same input, same session, interleaved.
 2. Record in the commit body, beside the preservation evidence: target, state, run count, median, minimum and range
    for old and new, the noise floor and the load before and after.
-3. If the median difference is below the noise floor, record "no measurable change". Return the change to the
-   decision round unless the user approved it for another reason (fewer subprocesses, lower peak memory) that the
-   measurement shows.
+3. If the median difference is below the noise floor, record "no measurable change" and return the change to the
+   decision round, unless the user approved it for another reason the measurement shows (fewer subprocesses, lower
+   peak memory).
 
 ## 4. Differential inputs
 
-Run old and new on the repository's own corpus plus the input domain's edge and error cases. A faster API often
-differs from the one it replaces on error paths and unusual states, not on the corpus. Include at least those that
-apply to the changed code:
+Run old and new on the repository's own corpus plus the input domain's edge and error cases, since a faster API
+often differs on error paths and unusual states. Include at least those that apply to the changed code:
 
 - empty, malformed or unclosed input;
 - unreadable entries (a file or directory without read permission);
@@ -73,8 +65,7 @@ Add to the brief of the cited "Review" section:
 - cache invalidation (version, fingerprint, what makes an entry stale) and memo keys (every input that changes the
   answer, and whether a failure is memoized).
 
-Ask for the inputs or states under which behavior differs, each with a reproduction. Confirm each reported difference
-against the code, then handle it by the first override.
+Handle each confirmed difference by override 1.
 
 ## 6. Final measurement
 

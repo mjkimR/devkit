@@ -1,14 +1,14 @@
 # Delegation: local roles and Impeccable
 
-Read before delegating to a local role or to Impeccable. The local-role sections apply on both tracks; the
-Impeccable sections apply only after the user selects Impeccable for this request.
+Local-role sections apply on both tracks; Impeccable sections apply only after the user selects Impeccable for
+this request.
 
 ## Local roles
 
-Resolve paths from the directory containing the invoked `SKILL.md`, not the working
-directory or this reference. If its location is unavailable, locate and verify the invoked skill first.
-Verify the selected role file exists and pass its resolved absolute path to the subagent type below, with the
-directive to read that file before acting. Do not load every role into the coordinator.
+Resolve paths from the directory containing the invoked `SKILL.md`, not the working directory or this reference;
+if its location is unavailable, locate and verify the invoked skill first. Verify the selected role file exists and
+pass its absolute path to the subagent type below with the directive to read it before acting. Do not load every
+role into the coordinator.
 
 - If the assignment interacts with a running UI (operating it, inspecting it in a browser or capturing it), spawn the
   host's general subagent (`general-purpose` on Claude Code), because those tools are outside `role-worker`'s list.
@@ -25,30 +25,30 @@ directive to read that file before acting. Do not load every role into the coord
 | `roles/reference-researcher.md` | Find a precedent or evidence that changes a design choice. |
 | `roles/critic.md` | Find consequential breakdowns or unnecessary burdens in supplied artifacts or a proposed direction. |
 
-Prefer the smallest useful assignment. Research and criticism can be skipped; a critic can return zero findings.
-Use separate instances only when their questions or design premises differ. Do not require a role count or debate.
+Prefer the smallest useful assignment; research and criticism are optional, and a critic can return zero findings.
+Use separate instances only for differing questions or design premises; require no role count or debate.
 
 ### Dispatch and receive
 
 1. Give the child the user goal, relevant artifacts, hard constraints, open preferences, one concrete assignment,
-   allowed reads/actions, an observable stop condition and its expected return. Include the absolute local role path.
-   Pass task-relevant facts instead of the coordinator's full conversation.
+   allowed reads/actions, an observable stop condition, its expected return and the absolute local role path; pass
+   task-relevant facts, not the coordinator's full conversation.
 2. Where supported, use a fresh context without parent conversation inheritance. If fresh children are unavailable,
    perform useful passes inline and disclose that they were not independent contexts. Preserve host restrictions;
    a role prompt supplies no enforcement guarantee or access permission.
-3. Keep peer conclusions out of independent first-pass payloads. After returns arrive, provide only the material
-   a selected refinement or critic needs. Do not wait for consensus before making an in-scope design choice.
-4. Let roles return suggestions, sketches or evidence; keep product source edits with the coordinator through
-   the existing workflow. Roles leave the index and HEAD unchanged and do not write retained artifacts.
-5. Validate that a return identifies its inspected artifacts, actual work, assumptions, limitations and any failed
-   or unavailable action. A failed or missing role contributes no findings; continue inline when useful and report
+3. Keep peer conclusions out of independent first-pass payloads; after returns arrive, give a selected refinement or
+   critic only the material it needs. Make in-scope design choices without waiting for consensus.
+4. Roles return suggestions, sketches or evidence, leave the index and HEAD unchanged and write no retained
+   artifacts; product source edits stay with the coordinator through the existing workflow.
+5. Validate that a return names its inspected artifacts, actual work, assumptions, limitations and any failed or
+   unavailable action. A failed or missing role contributes no findings; continue inline when useful and report
    missing coverage. Reinvoke only after the input or cause changes.
-6. Check consequential claims or conflicts selectively. Do not repeat a well-supported investigation in full.
-   Distinguish inspected evidence from analogy, taste and assumptions before synthesis.
+6. Check consequential claims or conflicts selectively, without repeating a well-supported investigation in full;
+   distinguish inspected evidence from analogy, taste and assumptions before synthesis.
 7. Keep one useful critique/refinement pass as the default. Stop when the requested outcome and applicable checks
-   are satisfied; do not iterate to prove benefit, fill an issue quota or reach agreement.
+   are satisfied; never iterate to prove benefit, fill an issue quota or reach agreement.
 
-Example assignment:
+Example assignment (illustrative; assign a different mechanism only when it serves the actual user task):
 
 ```text
 Read <absolute-skill-directory>/roles/unconventional-designer.md first.
@@ -59,13 +59,11 @@ Actions: read the supplied artifacts; return suggestions only, no source or reta
 Stop: return one concrete task sequence, affected states, expected benefit, tradeoff and weakest assumption.
 ```
 
-The example is illustrative. Assign a different mechanism only when it can serve the actual user task.
-
 ## Impeccable session
 
-Impeccable is a separately installed design skill with its own commands, detector and project files. This bundle
-ships none of it. A delegated Impeccable session is not a local role: it may edit the product files its brief lists,
-and you accept its changes before they continue through the consumer workflow.
+Impeccable is a separately installed design skill with its own commands, detector and project files; this bundle
+ships none of it. A delegated session is not a local role: it may edit the product files its brief lists, and you
+accept its changes before they continue through the consumer workflow.
 
 ### Select and set up
 
@@ -107,8 +105,7 @@ Write a self-contained brief with these fields:
   the question; move the command to a session the user operates.
 - User-operated session: new work, `init`, `shape` and `critique` ask the user questions (`critique` also needs two
   isolated sub-agents), so hand the user the brief to run in their own Impeccable session and wait for their report.
-  The user may run `shape` with the brief as its starting context; for a fresh child, your framing covers its
-  structural role.
+  The user may start `shape` from the brief; for a fresh child, your framing covers its structural role.
 - Exclude `live` and any other route that turns off the host's sandbox or approvals.
 - Make no product edits until the session returns.
 

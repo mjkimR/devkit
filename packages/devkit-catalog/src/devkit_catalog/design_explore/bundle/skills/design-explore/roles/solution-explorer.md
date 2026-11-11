@@ -18,7 +18,7 @@ Return the premise, mechanism, illustrative example, benefit, tradeoff, evidence
 ## Response assignment
 
 1. Read the actual candidate, selected objections, evidence, failure conditions, affected choice and preserved
-   constraints supplied after the independent first pass. Inspect only assigned sources within the read boundary.
+   constraints supplied after the independent first pass; inspect only assigned sources within the read boundary.
 2. For each selected objection, accept and revise the mechanism, rebut with inspected evidence or explicitly labeled
    inference, or identify a bounded unknown. Preserve the goal and hard constraints in any revision.
 3. Return the actual response or revision per objection with support and remaining uncertainty. Keep inaccessible

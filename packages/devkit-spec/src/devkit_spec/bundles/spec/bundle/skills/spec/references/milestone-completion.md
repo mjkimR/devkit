@@ -1,6 +1,6 @@
 # Milestone completion review
 
-Read for a requested Backlog close review, or to propose one after the milestone's known work finishes.
+Read for a requested Backlog close review, or to propose one after the milestone's known work finishes. File placement follows [Backlog](backlog.md) Milestones.
 
 ## Prepare one candidate
 
@@ -24,26 +24,17 @@ Direct proposal work: pending
 
 1. Present both assertions with the candidate. Missing or previously confirmed assertions authorize nothing.
 2. Immediately before writing, re-read scope and membership and recheck the evidence. If either changed, or the approved candidate cannot be re-established after a pause, present the candidate again; an interruption alone does not invalidate the user's confirmation.
-3. On the user's confirmation of both, write `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done` in one Backlog commit, from `planned` or `active`; move the file into the `_archive/` of the milestone's roadmap root in that same commit (`docs/roadmap/` to `docs/roadmap/_archive/`, or `docs/packages/<name>/roadmap/` to its `_archive/`).
+3. On the user's confirmation of both, write `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done` in one Backlog commit, from `planned` or `active`, and move the file into the `_archive/` of the milestone's roadmap root (`docs/roadmap/` to `docs/roadmap/_archive/`, or `docs/packages/<name>/roadmap/` to its `_archive/`) in that same commit.
 
 ## Later changes
 
-- Semantic scope changes reset both completion assertions to pending; normal handoff does not.
-- Wording or format corrections that keep the meaning do not reset the assertions.
-- To extend a `done` milestone, on the user's decision reopen it to `active` and reset both assertions to pending, moving it from `_archive/` to the roadmap root in the same commit, or put the new scope in another milestone. Merging into a broader theme milestone ([Backlog](backlog.md)) is not such an extension: the theme's own assertions decide its close.
-- Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate, and existing `done` records stay as they are unless merged or an exact content-preserving relocation batch is approved.
+- Semantic scope changes reset both completion assertions to pending; normal handoff does not, nor does a wording or format correction that keeps the meaning.
+- To extend a `done` milestone, on the user's decision reopen it to `active` (Backlog Milestones, Reopen) or put the new scope in another milestone. Merging into a broader theme milestone is not such an extension: the theme's own assertions decide its close.
+- Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate. Existing `done` records stay as they are unless merged or an exact content-preserving relocation batch is approved.
 
 ## Placement, drop and retained history
 
-File placement follows [Backlog](backlog.md) Milestones.
-
-- Drop: present unsettled members and dependent milestones with the concrete reassignment, clearing or rejection. On
-  the user's decision, record that disposition, set dropped and move into `_archive/` in one Backlog commit. Drop does
-  not create or confirm either completion assertion. An unchanged archived drop writes nothing.
-- The close/drop/reopen candidate includes its file movement; reuse approval for those exact effects, with no extra
-  archive-only gate. Recheck source and destination immediately before applying; a destination collision stops the
-  operation without overwriting. A changed candidate needs a fresh decision.
-- For a reviewed existing-history relocation batch, present the exact source/destination files and their current
-  contents. After reader verification, reuse the user's authority for that exact unchanged batch and move only those
-  files, comparing bytes before/after. Keep absent historical assertions absent; invent no status or evidence.
-- A merge ([Backlog](backlog.md)) works from either supported location; merged IDs stay as theme aliases.
+- Drop: present unsettled members and dependent milestones with the concrete reassignment, clearing or rejection. On the user's decision, record that disposition, set dropped and move into `_archive/` in one Backlog commit. Drop does not create or confirm either completion assertion. An unchanged archived drop writes nothing.
+- The close/drop/reopen candidate includes its file movement; reuse approval for those exact effects, with no extra archive-only gate. Recheck source and destination immediately before applying; a destination collision stops the operation without overwriting. A changed candidate needs a fresh decision.
+- For a reviewed existing-history relocation batch, present the exact source/destination files and their current contents. After reader verification, reuse the user's authority for that exact unchanged batch and move only those files, comparing bytes before/after. Keep absent historical assertions absent; invent no status or evidence.
+- A merge (Backlog Milestones) works from either supported location; merged IDs stay as theme aliases.

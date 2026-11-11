@@ -2,18 +2,17 @@
 
 ## 1. Overview
 
-An agent reads a command's stdout as its result, its stderr as advisories and its exit code as the outcome. A click
-command without a `devkit_cli.Boundary` decorator lets an exception escape as a Python traceback, prints errors as
-free text, ignores `--format json` on failure and has no `-q`, `-v` or `--strict`. This rule reports such commands.
+A click command without a `devkit_cli.Boundary` decorator lets an exception escape as a Python traceback, prints
+errors as free text, ignores `--format json` on failure and has no `-q`, `-v` or `--strict`. This rule reports such
+commands.
 
 - **Phase and severity**: `linter`, `error`; it runs in `devkit rules check` and the commit gate. Shipped by the
   `cli-tool` bundle (`devkit add cli-tool`).
 - **What is checked**: in every Python file matching `include` and `cli_modules` and not `exclude`, each function
   with a decorator named `command` (`@cli.command()`, `@click.command`, `@command()`), read statically: a decorator
   named in `boundary_names` must sit below it.
-- **Not checked**: group callbacks (`@click.group`, `@cli.group()`): a group only dispatches to its commands. Commands
-  outside CLI modules are not looked for: that a command lives in a CLI module is the structure the
-  `cli-tool-structure` instruction asks for.
+- **Not checked**: group callbacks (`@click.group`, `@cli.group()`), which only dispatch; commands outside CLI
+  modules (the `cli-tool-structure` instruction places commands in CLI modules).
 
 ## 2. Cause of Violation
 

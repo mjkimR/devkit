@@ -979,7 +979,8 @@
       "id": "adr-consolidation",
       "kind": "playbook",
       "paths": [
-        ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md"
+        ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md",
+        ".devkit/managed/spec/playbooks/adr-consolidation/references/kept-adrs.md"
       ]
     },
     {
@@ -1014,7 +1015,7 @@
     },
     ".agents/agents/decomposer.md": {
       "mode": 420,
-      "sha256": "005e39943708933d40e921ff7283204f6765bbdc282a243e325809467d566288"
+      "sha256": "637c706956852b436262974d2dd504353049099c9d6f6cf8d60596fe318c46e6"
     },
     ".agents/agents/development-worker.md": {
       "mode": 420,
@@ -1042,15 +1043,15 @@
     },
     ".agents/agents/triage.md": {
       "mode": 420,
-      "sha256": "1a27e3305549b8e41a77330e589fdc4a3319316dbaea02e436bc951b25329afa"
+      "sha256": "11e6f59291902569c32570883725497c2b12f0aad88335f28839d5ac093422e4"
     },
     ".agents/agents/ux-reviewer.md": {
       "mode": 420,
-      "sha256": "ad79599ccb54fb443711321c952cea33300393f8eeb927980018f2991e5a3f5c"
+      "sha256": "eb94d70258a42bc788bb2d81732a64e6aa43c31c32f8359983fd923e8ee25c26"
     },
     ".agents/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "ef8dcf7614aeb2856ae7d6109485095d83a2aa83720765bc290b06425ff3bc97"
+      "sha256": "dc7f1252666781f7ca55bd01b5f2a8fb5b015a16fc16743ad59d78ed687cae22"
     },
     ".agents/skills/deep-research/agents/openai.yaml": {
       "mode": 420,
@@ -1058,35 +1059,35 @@
     },
     ".agents/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
-      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
+      "sha256": "94e1a236743863b8fc25a29a2b4e52d3b3d2c4bac06543b9a53d8e0cc59fbb6e"
     },
     ".agents/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
+      "sha256": "b3f14690eea19e22ebf9be0ce5c8241d810dc3588c0ad771cca3dda199533e31"
     },
     ".agents/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
+      "sha256": "fe1c5dbdb41c734b860cbea4b4916e525ff9980c12c51bf7bf690bcb0cd4a43d"
     },
     ".agents/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
+      "sha256": "7f648799751bbc4f2962bc134b3b2426731af38ae25aa9e839d90817ff40b3f7"
     },
     ".agents/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
+      "sha256": "ce29074b9b18fa99e3774e8713a081b62b0a096eea4857b108ef44a07ffd2881"
     },
     ".agents/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
+      "sha256": "01a8762bdce1df0d3bbc71bc7ba868adddb69b9e4c41fd893e1c2f20f7caa2aa"
     },
     ".agents/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
+      "sha256": "d711b5ab9a18c1452fdcd0f857c238aef54e8ee3ba1234e690b5dd0a4075ddaa"
     },
     ".agents/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
+      "sha256": "ec19c7e8643074cd8c5670d4878ce054f92b52519c044566808955c21df6acdc"
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1126,11 +1127,11 @@
     },
     ".agents/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "878d7821f793e44587062a55768c9aa3aa5127c55c23b305a98deddd7d055e07"
+      "sha256": "5108fec9fe20faa78e7564104df341e64503060ecb096af33e0e8c6f6b11e11e"
     },
     ".agents/skills/spec-entrypoints/references/backfill.md": {
       "mode": 420,
-      "sha256": "940605329d6626a100e8d374543b7faeae60e1807590a6c0b6c35f2e7b87971a"
+      "sha256": "2a09ddb0725c6c3a2a9711a831d13a34c404578cab51cc8d176f006e7ed22443"
     },
     ".agents/skills/spec-feedback/SKILL.md": {
       "mode": 420,
@@ -1198,15 +1199,15 @@
     },
     ".agents/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "5063a46c15de20f04a88f008eb0962bd4e8938259143004aac786dd335446964"
+      "sha256": "447ac176d7224eb61b5e7a9aba1e00cbb1c1e2a7ad500e3f9f37049afe0ad5a2"
     },
     ".agents/skills/spec-rule/references/config.md": {
       "mode": 420,
-      "sha256": "e3ce4815e49951dd876b275521e5a4b02e0fa4f7b2d726eb2fd8b90b4a0fd127"
+      "sha256": "d27bee74530d8ce456914321abf3e9b886765248ebbc10022d4d2200bfcf20d7"
     },
     ".agents/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "882367bc29e5b7148adbbdc3992d5c8064f3b86be3ec0356df011796d99cd0ae"
+      "sha256": "722782363b3063d0ac5e7a123ea9bd4e547a348131735f12c9c4e67fb7e96b09"
     },
     ".agents/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -1230,7 +1231,7 @@
     },
     ".agents/skills/spec-ux-review/SKILL.md": {
       "mode": 420,
-      "sha256": "7bc422f4c1c0f99a86d4d33ef9c1f12ccc58265404717c6b455a944ceba9efdf"
+      "sha256": "20e806b57b59122d348da4d8ce278e5cd26ddedc02ab35dfba7e457222520aef"
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
@@ -1238,7 +1239,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "1cbbac5ef4610575fe25ef2da17a81b746befc0a6f98c0140ffb056c71c5ad05"
+      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1266,7 +1267,7 @@
     },
     ".agents/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
-      "sha256": "18816297ca62f261434db893bb879820004c315992f1dc26e37ffc7aab84210f"
+      "sha256": "b42850a9cbb889a8f7509c59cfcad5477b18b41d088a0394a4cecf295454f4be"
     },
     ".agents/skills/spec/references/git-policy.md": {
       "mode": 420,
@@ -1274,7 +1275,7 @@
     },
     ".agents/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "6b01cc3a60f487e745da06f5cba8b26578c45a85fc366c197f01ded3c06110d8"
+      "sha256": "1d4d47c78884597dd2f250d5b7368cb41e3f9f2b0744ad22881248337f2daa23"
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1286,7 +1287,7 @@
     },
     ".agents/skills/spec/references/proposals-catalog.md": {
       "mode": 420,
-      "sha256": "668fd32f8a879b161115ea25188f1c733c9b05f0174fc547f1b92b6950812da4"
+      "sha256": "b17755e5d8f1d5c7118efdcd1d497a6f010f16d424b4228ac9ef16df9eebd905"
     },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1294,11 +1295,11 @@
     },
     ".agents/skills/spec/references/roadmap-catalog.md": {
       "mode": 420,
-      "sha256": "a5c511640172519f4d3b5ae9495b57ed963ebf0a322e0a2c4b40fd1ecb458206"
+      "sha256": "46e0657714b58c4e5957de46386a30ac28cbd61826086b47e6b1fed46d0be7dd"
     },
     ".agents/skills/spec/references/source-feedback.md": {
       "mode": 420,
-      "sha256": "1a6cc7319fee38ddaaef22a126c80c9c39094a82f988579dd85a6a1bccc8994c"
+      "sha256": "f4e3cf45973a6b44c76671cf4d196345fdd0b2d15ac4fa44820e3f6b9a12717d"
     },
     ".agents/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -1318,7 +1319,7 @@
     },
     ".claude/agents/decomposer.md": {
       "mode": 420,
-      "sha256": "cb7d728602023a3e75fae5f931e01f2ab9dfe124025f0f26719986d771c16fd3"
+      "sha256": "8a668fb67e8263abe47ec7e53bf4a30f7b97dea55b4f2512176ca8b6d46946f9"
     },
     ".claude/agents/development-worker.md": {
       "mode": 420,
@@ -1346,47 +1347,47 @@
     },
     ".claude/agents/triage.md": {
       "mode": 420,
-      "sha256": "47c0a9ca2279033c7cb3953e34e9f51e6ec7c1bfb2389fcbd84ea6cc19929551"
+      "sha256": "5b0a134b287635be9b42e809d1916e77431b64c54970f3202ab375f60b45dd16"
     },
     ".claude/agents/ux-reviewer.md": {
       "mode": 420,
-      "sha256": "c4a0e149b55246900468aef81587421fb535f225b336898aa92d9e0873d13149"
+      "sha256": "599c18b246e9e4625398cd9d99e92208f819ff6508622e027d5077e3ae2edc52"
     },
     ".claude/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "d126229921410fb7ec6ec127d3930b66df0781d9ee8b5f411051812640cda7fa"
+      "sha256": "ad40371adcf4949996679e5ed9643bdcffc50d564a2ff8df85765e8dc65fd81b"
     },
     ".claude/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
-      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
+      "sha256": "94e1a236743863b8fc25a29a2b4e52d3b3d2c4bac06543b9a53d8e0cc59fbb6e"
     },
     ".claude/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
+      "sha256": "b3f14690eea19e22ebf9be0ce5c8241d810dc3588c0ad771cca3dda199533e31"
     },
     ".claude/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
+      "sha256": "fe1c5dbdb41c734b860cbea4b4916e525ff9980c12c51bf7bf690bcb0cd4a43d"
     },
     ".claude/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
+      "sha256": "7f648799751bbc4f2962bc134b3b2426731af38ae25aa9e839d90817ff40b3f7"
     },
     ".claude/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
+      "sha256": "ce29074b9b18fa99e3774e8713a081b62b0a096eea4857b108ef44a07ffd2881"
     },
     ".claude/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
+      "sha256": "01a8762bdce1df0d3bbc71bc7ba868adddb69b9e4c41fd893e1c2f20f7caa2aa"
     },
     ".claude/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
+      "sha256": "d711b5ab9a18c1452fdcd0f857c238aef54e8ee3ba1234e690b5dd0a4075ddaa"
     },
     ".claude/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
+      "sha256": "ec19c7e8643074cd8c5670d4878ce054f92b52519c044566808955c21df6acdc"
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1418,11 +1419,11 @@
     },
     ".claude/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "878d7821f793e44587062a55768c9aa3aa5127c55c23b305a98deddd7d055e07"
+      "sha256": "5108fec9fe20faa78e7564104df341e64503060ecb096af33e0e8c6f6b11e11e"
     },
     ".claude/skills/spec-entrypoints/references/backfill.md": {
       "mode": 420,
-      "sha256": "940605329d6626a100e8d374543b7faeae60e1807590a6c0b6c35f2e7b87971a"
+      "sha256": "2a09ddb0725c6c3a2a9711a831d13a34c404578cab51cc8d176f006e7ed22443"
     },
     ".claude/skills/spec-feedback/SKILL.md": {
       "mode": 420,
@@ -1486,15 +1487,15 @@
     },
     ".claude/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "5063a46c15de20f04a88f008eb0962bd4e8938259143004aac786dd335446964"
+      "sha256": "447ac176d7224eb61b5e7a9aba1e00cbb1c1e2a7ad500e3f9f37049afe0ad5a2"
     },
     ".claude/skills/spec-rule/references/config.md": {
       "mode": 420,
-      "sha256": "e3ce4815e49951dd876b275521e5a4b02e0fa4f7b2d726eb2fd8b90b4a0fd127"
+      "sha256": "d27bee74530d8ce456914321abf3e9b886765248ebbc10022d4d2200bfcf20d7"
     },
     ".claude/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "882367bc29e5b7148adbbdc3992d5c8064f3b86be3ec0356df011796d99cd0ae"
+      "sha256": "722782363b3063d0ac5e7a123ea9bd4e547a348131735f12c9c4e67fb7e96b09"
     },
     ".claude/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -1518,7 +1519,7 @@
     },
     ".claude/skills/spec-ux-review/SKILL.md": {
       "mode": 420,
-      "sha256": "7bc422f4c1c0f99a86d4d33ef9c1f12ccc58265404717c6b455a944ceba9efdf"
+      "sha256": "20e806b57b59122d348da4d8ce278e5cd26ddedc02ab35dfba7e457222520aef"
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
@@ -1526,7 +1527,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "1cbbac5ef4610575fe25ef2da17a81b746befc0a6f98c0140ffb056c71c5ad05"
+      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1554,7 +1555,7 @@
     },
     ".claude/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
-      "sha256": "18816297ca62f261434db893bb879820004c315992f1dc26e37ffc7aab84210f"
+      "sha256": "b42850a9cbb889a8f7509c59cfcad5477b18b41d088a0394a4cecf295454f4be"
     },
     ".claude/skills/spec/references/git-policy.md": {
       "mode": 420,
@@ -1562,7 +1563,7 @@
     },
     ".claude/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "6b01cc3a60f487e745da06f5cba8b26578c45a85fc366c197f01ded3c06110d8"
+      "sha256": "1d4d47c78884597dd2f250d5b7368cb41e3f9f2b0744ad22881248337f2daa23"
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1574,7 +1575,7 @@
     },
     ".claude/skills/spec/references/proposals-catalog.md": {
       "mode": 420,
-      "sha256": "668fd32f8a879b161115ea25188f1c733c9b05f0174fc547f1b92b6950812da4"
+      "sha256": "b17755e5d8f1d5c7118efdcd1d497a6f010f16d424b4228ac9ef16df9eebd905"
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1582,11 +1583,11 @@
     },
     ".claude/skills/spec/references/roadmap-catalog.md": {
       "mode": 420,
-      "sha256": "a5c511640172519f4d3b5ae9495b57ed963ebf0a322e0a2c4b40fd1ecb458206"
+      "sha256": "46e0657714b58c4e5957de46386a30ac28cbd61826086b47e6b1fed46d0be7dd"
     },
     ".claude/skills/spec/references/source-feedback.md": {
       "mode": 420,
-      "sha256": "1a6cc7319fee38ddaaef22a126c80c9c39094a82f988579dd85a6a1bccc8994c"
+      "sha256": "f4e3cf45973a6b44c76671cf4d196345fdd0b2d15ac4fa44820e3f6b9a12717d"
     },
     ".claude/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -1606,7 +1607,7 @@
     },
     ".codex/agents/decomposer.toml": {
       "mode": 420,
-      "sha256": "6d1e998a6a26109d59d38900d2f8d4efe315dd6af9942b99690a5bd2238b0042"
+      "sha256": "37672a9c090b72b6f599537c89f64dd0f727aa4bf1fc34c0ffc244e2e5d6a640"
     },
     ".codex/agents/development-worker.toml": {
       "mode": 420,
@@ -1634,11 +1635,11 @@
     },
     ".codex/agents/triage.toml": {
       "mode": 420,
-      "sha256": "ba61813feef5844c6b2c62d7445dd7c23961946243d3a075cf3c917ea7fe4056"
+      "sha256": "885334885c6eadd07bb8507a502be4bb52b7244e3a81ad4e3f3f255e805bbbcb"
     },
     ".codex/agents/ux-reviewer.toml": {
       "mode": 420,
-      "sha256": "6fbff63367bfdc4ed97df3390e3b194cfedf57e87003faa102150fc65e3830e2"
+      "sha256": "7f8b05c31391f54e671a96dd949c8a2d1bcd4006623d26c478ce627f0be9cb43"
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1738,39 +1739,39 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "ef8dcf7614aeb2856ae7d6109485095d83a2aa83720765bc290b06425ff3bc97"
+      "sha256": "dc7f1252666781f7ca55bd01b5f2a8fb5b015a16fc16743ad59d78ed687cae22"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
-      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
+      "sha256": "94e1a236743863b8fc25a29a2b4e52d3b3d2c4bac06543b9a53d8e0cc59fbb6e"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
+      "sha256": "b3f14690eea19e22ebf9be0ce5c8241d810dc3588c0ad771cca3dda199533e31"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
+      "sha256": "fe1c5dbdb41c734b860cbea4b4916e525ff9980c12c51bf7bf690bcb0cd4a43d"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
+      "sha256": "7f648799751bbc4f2962bc134b3b2426731af38ae25aa9e839d90817ff40b3f7"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
+      "sha256": "ce29074b9b18fa99e3774e8713a081b62b0a096eea4857b108ef44a07ffd2881"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
+      "sha256": "01a8762bdce1df0d3bbc71bc7ba868adddb69b9e4c41fd893e1c2f20f7caa2aa"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
+      "sha256": "d711b5ab9a18c1452fdcd0f857c238aef54e8ee3ba1234e690b5dd0a4075ddaa"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
+      "sha256": "ec19c7e8643074cd8c5670d4878ce054f92b52519c044566808955c21df6acdc"
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
@@ -2078,31 +2079,35 @@
     },
     ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md": {
       "mode": 420,
-      "sha256": "538a3673adbe8c91498d906dc049a2013c87ff322cd24b3b87a0f2616066c2bc"
+      "sha256": "b704196be97db5291c73523861cf32b0d39805b993eb0b50a9849de744955fff"
+    },
+    ".devkit/managed/spec/playbooks/adr-consolidation/references/kept-adrs.md": {
+      "mode": 420,
+      "sha256": "835d6fa40626d17ebbc4f64bbeca821e734b176563dec2c23f2cc6f60fb1b607"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
-      "sha256": "3817955889b73e52c0217911bae481f26c7d925658b27ab487decf9bccc3b59a"
+      "sha256": "451ba4e5e19c193352a78b91be270f19a101dbaeba68d59ecf5690e286924b55"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/references/migration.md": {
       "mode": 420,
-      "sha256": "ad7cd36a5febcf6aff94e2eee5922e407f8086af17b683b071bb0b42a131767a"
+      "sha256": "78923c37d6b3156c01c3af2f91c1af0222f0efd80d332297585c8470d741e44e"
     },
     ".devkit/managed/spec/playbooks/feedback-consolidation/SKILL.md": {
       "mode": 420,
-      "sha256": "ae7489d74712e88b2834d58b4278ac0bada040c6337da702d512a5805d52b585"
+      "sha256": "2bb3711df567d91635d6774e7a5e9e6de40e6a0e1b592a04e8112f1e96e5fcc4"
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
-      "sha256": "129032ff29ff3d578c88475f938f508f7ca72286b9ed07f11d15ba4c435ea18f"
+      "sha256": "add0a8be15eac4d46fb5fe5fd26bf5779a88bffda2c7182359a76a62176e4d7b"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md": {
       "mode": 420,
-      "sha256": "8b09481b191382bdc458a4ae36f8524a83fa7085bb5ecfdaf16f3ab850f40623"
+      "sha256": "73880a2dbbe67f8290ca1fde28b24afc36f2ce407eb25518e53687b4976c61e6"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md": {
       "mode": 420,
-      "sha256": "922646122de500e11fffd86fae4a2b143d6e4a7886172af78b1463ea265638fa"
+      "sha256": "7c2a376682d4f072929a585cada97354096deffd2699be3d921efaf503ae19e4"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,
@@ -2182,11 +2187,11 @@
     },
     ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "878d7821f793e44587062a55768c9aa3aa5127c55c23b305a98deddd7d055e07"
+      "sha256": "5108fec9fe20faa78e7564104df341e64503060ecb096af33e0e8c6f6b11e11e"
     },
     ".devkit/managed/spec/skills/spec-entrypoints/references/backfill.md": {
       "mode": 420,
-      "sha256": "940605329d6626a100e8d374543b7faeae60e1807590a6c0b6c35f2e7b87971a"
+      "sha256": "2a09ddb0725c6c3a2a9711a831d13a34c404578cab51cc8d176f006e7ed22443"
     },
     ".devkit/managed/spec/skills/spec-feedback/SKILL.md": {
       "mode": 420,
@@ -2250,15 +2255,15 @@
     },
     ".devkit/managed/spec/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "5063a46c15de20f04a88f008eb0962bd4e8938259143004aac786dd335446964"
+      "sha256": "447ac176d7224eb61b5e7a9aba1e00cbb1c1e2a7ad500e3f9f37049afe0ad5a2"
     },
     ".devkit/managed/spec/skills/spec-rule/references/config.md": {
       "mode": 420,
-      "sha256": "e3ce4815e49951dd876b275521e5a4b02e0fa4f7b2d726eb2fd8b90b4a0fd127"
+      "sha256": "d27bee74530d8ce456914321abf3e9b886765248ebbc10022d4d2200bfcf20d7"
     },
     ".devkit/managed/spec/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "882367bc29e5b7148adbbdc3992d5c8064f3b86be3ec0356df011796d99cd0ae"
+      "sha256": "722782363b3063d0ac5e7a123ea9bd4e547a348131735f12c9c4e67fb7e96b09"
     },
     ".devkit/managed/spec/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -2282,7 +2287,7 @@
     },
     ".devkit/managed/spec/skills/spec-ux-review/SKILL.md": {
       "mode": 420,
-      "sha256": "7bc422f4c1c0f99a86d4d33ef9c1f12ccc58265404717c6b455a944ceba9efdf"
+      "sha256": "20e806b57b59122d348da4d8ce278e5cd26ddedc02ab35dfba7e457222520aef"
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
@@ -2290,7 +2295,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "1cbbac5ef4610575fe25ef2da17a81b746befc0a6f98c0140ffb056c71c5ad05"
+      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
@@ -2318,7 +2323,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/feedback-retirement.md": {
       "mode": 420,
-      "sha256": "18816297ca62f261434db893bb879820004c315992f1dc26e37ffc7aab84210f"
+      "sha256": "b42850a9cbb889a8f7509c59cfcad5477b18b41d088a0394a4cecf295454f4be"
     },
     ".devkit/managed/spec/skills/spec/references/git-policy.md": {
       "mode": 420,
@@ -2326,7 +2331,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "6b01cc3a60f487e745da06f5cba8b26578c45a85fc366c197f01ded3c06110d8"
+      "sha256": "1d4d47c78884597dd2f250d5b7368cb41e3f9f2b0744ad22881248337f2daa23"
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
@@ -2338,7 +2343,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/proposals-catalog.md": {
       "mode": 420,
-      "sha256": "668fd32f8a879b161115ea25188f1c733c9b05f0174fc547f1b92b6950812da4"
+      "sha256": "b17755e5d8f1d5c7118efdcd1d497a6f010f16d424b4228ac9ef16df9eebd905"
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -2346,11 +2351,11 @@
     },
     ".devkit/managed/spec/skills/spec/references/roadmap-catalog.md": {
       "mode": 420,
-      "sha256": "a5c511640172519f4d3b5ae9495b57ed963ebf0a322e0a2c4b40fd1ecb458206"
+      "sha256": "46e0657714b58c4e5957de46386a30ac28cbd61826086b47e6b1fed46d0be7dd"
     },
     ".devkit/managed/spec/skills/spec/references/source-feedback.md": {
       "mode": 420,
-      "sha256": "1a6cc7319fee38ddaaef22a126c80c9c39094a82f988579dd85a6a1bccc8994c"
+      "sha256": "f4e3cf45973a6b44c76671cf4d196345fdd0b2d15ac4fa44820e3f6b9a12717d"
     },
     ".devkit/managed/spec/skills/spec/references/worker-records.md": {
       "mode": 420,
@@ -2370,7 +2375,7 @@
     },
     ".devkit/managed/spec/subagents/decomposer.md": {
       "mode": 420,
-      "sha256": "b3d762eb6e7512a5f356d7225495c0c0ab44c803c386276c3ada9b84c2334a74"
+      "sha256": "ebe58ba642242da5a855db7082ac3f3520e0047edd33335ed262dca824d4549a"
     },
     ".devkit/managed/spec/subagents/development-worker.md": {
       "mode": 420,
@@ -2394,11 +2399,11 @@
     },
     ".devkit/managed/spec/subagents/triage.md": {
       "mode": 420,
-      "sha256": "aab6e45ada6056fb2bc3b06f2a28972afb540f486582cc7015e01c880a88c5ae"
+      "sha256": "63cd92b303aaaf7e4e594857b0ea81c6b1a5788e27b99add9c6a844b1871b48a"
     },
     ".devkit/managed/spec/subagents/ux-reviewer.md": {
       "mode": 420,
-      "sha256": "ead20c4ffd79c302c7fe1386c41a60c619abe0dce0f86dba39fddc89b1843097"
+      "sha256": "a8c903c7894cfce987f880500b7f48609fb3753b2c58fa6aabb3a9fa82a5ba13"
     },
     ".devkit/managed/spec/templates/proposal.md": {
       "mode": 420,

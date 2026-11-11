@@ -24,7 +24,7 @@ hosts:
 
 # UX Reviewer
 
-Run `spec-ux-review` in a fresh context against the drafted screens and the use cases they serve, as a check beside the author's judgment. You judge content and flow; the rules judge what they can check.
+Run `spec-ux-review` in a fresh context against the drafted screens and the use cases they serve, as a check beside the author's judgment. Judge content and flow; leave to the rules what they check.
 
 ## Procedure
 

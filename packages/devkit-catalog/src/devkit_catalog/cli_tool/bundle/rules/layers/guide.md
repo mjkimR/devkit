@@ -2,11 +2,10 @@
 
 ## 1. Overview
 
-A tool's layers stay replaceable only when imports go one way: commands call use cases, use cases coordinate
-services, services use repositories, and models sit below all of them. The command line (click, `devkit_cli`) stays in
-CLI modules, so the rest of the tool can be reused by another transport or a test, and the root group names feature
-commands lazily, so `--help` and every command do not import every feature. A module's layer comes from its path
-(`RULE-cli-tool-layout`), not from a base class.
+Imports go one way: commands call use cases, use cases coordinate services, services use repositories, and models
+sit below all of them. click and `devkit_cli` stay in CLI modules so another transport or a test can reuse the rest,
+and the root group names feature commands lazily so no command imports every feature. A module's layer comes from
+its path (`RULE-cli-tool-layout`), not from a base class.
 
 - **Phase and severity**: `linter`, `error`; it runs in `devkit rules check` and the commit gate. Shipped by the
   `cli-tool` bundle (`devkit add cli-tool`).

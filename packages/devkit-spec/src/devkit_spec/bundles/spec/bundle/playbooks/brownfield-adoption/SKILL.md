@@ -5,12 +5,11 @@ description: Adopt spec-driven development in an existing repository that alread
 
 # Brownfield adoption
 
-The spec rules check the Markdown already under `docs/` and `specs/` (paths, frontmatter, number-based IDs such as
-`ADR-0001`). This playbook contains that debt so `devkit rules check` passes; legacy content then moves into the
-Living Spec as work touches it ([migration](references/migration.md)).
-
-Contain debt without editing a rule: move legacy files to `docs/materials/`, which the spec rules leave free-form,
-and record any other deferral as a `.devkit/config.toml` entry the user decided.
+The spec rules check existing Markdown under `docs/` and `specs/` (paths, frontmatter, number-based IDs such as
+`ADR-0001`). Contain that debt so `devkit rules check` passes, then migrate legacy content into the Living Spec as
+work touches it ([migration](references/migration.md)). Contain without editing a rule: move legacy files to
+`docs/materials/`, which the spec rules leave free-form, and record any other deferral as a `.devkit/config.toml`
+entry the user decided.
 
 ## Prerequisites
 
@@ -26,8 +25,8 @@ uv run devkit rules check
 git ls-files -- 'docs/*.md' 'specs/*.md' > /tmp/legacy.txt
 ```
 
-- Remove from the set the paths `docs:docs-skeleton` seeded, if it was added, and files already shaped like the
-  Living Spec; those stay in place and are fixed as ordinary work.
+- Remove from the set the paths `docs:docs-skeleton` seeded, if added, and files already shaped like the Living
+  Spec; fix those in place as ordinary work.
 - Review a long or mixed set with the user.
 
 ## Step 2: Contain
@@ -60,14 +59,12 @@ done < /tmp/legacy.txt
   exclude = ["docs/decisions/0*.md"]
   ```
 
-Propose the containment as one commit before any migration, so moves and content edits are reviewed apart.
-
 ## Step 3: Docs skeleton, policy and commit gate
 
-- **Docs skeleton** (optional): `uv run devkit add docs:docs-skeleton`. Point a link to a legacy index such as
-  `docs/README.md` at its `_legacy/` copy when the reader needs the old content.
-- **Policy**: show `uv run devkit spec policy` and record the user's decisions in `.devkit/config.toml`.
-- **Commit gate**: the `rules-check` gate refuses a commit touching a file with an error finding. The user chooses to
+- Docs skeleton (optional): `uv run devkit add docs:docs-skeleton`. If the reader needs the old content, point a
+  link to a legacy index such as `docs/README.md` at its `_legacy/` copy.
+- Policy: show `uv run devkit spec policy` and record the user's decisions in `.devkit/config.toml`.
+- Commit gate: the `rules-check` gate refuses a commit touching a file with an error finding. The user chooses to
   fix, park or lower the rule, or set `enabled = false` in `[gates.settings.rules-check]`.
 
 ## Completion conditions
@@ -75,4 +72,4 @@ Propose the containment as one commit before any migration, so moves and content
 - `uv run devkit rules check` and `uv run devkit gate status` exit `0`, and every `.devkit/config.toml` entry added
   carries its reason.
 - One small real change has gone through the `spec` skill; an empty `_legacy/` is not required.
-- The commits are proposed: containment, then any migration.
+- The containment is proposed as one commit, before any migration commit.

@@ -1,11 +1,9 @@
 # Skill
 
-Choose a skill when the source is a procedure the Host itself runs. A source skill that holds domain checks for delegated work and no Host procedure becomes a role overlay.
-
 ## Write the directory
 
 1. Create `skills/<prefix>-<name>/SKILL.md` in the project bundle; the directory name is the asset ID.
-2. Keep two frontmatter keys, `name` and `description`. Drop host-specific keys such as `allowed-tools`, `model` and `license`; the source license stays in the conversion report.
+2. Keep only the `name` and `description` frontmatter keys; drop host-specific keys such as `allowed-tools`, `model` and `license` (the source license stays in the conversion report).
 3. Rewrite `description` for triggering in this project: what the skill does and the situation that calls for it, in the words this project's users type. Remove auto-invocation wording.
 4. Rewrite the body with the rewrite rules, as numbered steps that end with completion criteria the agent can check.
 5. Keep in `SKILL.md` what every run needs; move what some runs need to `references/<situation>.md`, each linked from `SKILL.md` with its read condition.
@@ -50,7 +48,7 @@ invocation = "user"
 
 ## Import a script
 
-1. Import a script when the user selected that script by path, and only after reading it whole.
+1. Import a script only when the user selected it by path, and only after reading it whole.
 2. Report what it reads, what it writes, each network address it contacts and each program it starts.
 3. Never run it during conversion; its first run belongs to a task the user starts.
 4. A copied script is verbatim text: keep the source's license notice beside it in the skill directory.
@@ -60,7 +58,7 @@ invocation = "user"
 
 - `uv run devkit sync` deploys the whole directory, executable bits included, to `.claude/skills/<id>/` and `.agents/skills/<id>/`, and writes each host's explicit-invocation setting when `invocation = "user"`.
 - One skill ID has one owning bundle; a second bundle shipping the same ID stops the sync with `BUNDLE_CONFLICT`.
-- When the project bundle has a constitution, each deployed copy gains a line telling the agent to read `uv run devkit get-context <bundle>` first.
+- When the project bundle has a constitution, each deployed copy gains a line to read `uv run devkit get-context <bundle>` first.
 
 ## Trial
 

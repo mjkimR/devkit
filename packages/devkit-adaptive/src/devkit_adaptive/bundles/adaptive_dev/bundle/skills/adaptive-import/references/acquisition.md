@@ -11,7 +11,7 @@ git -C "$work/source" rev-parse HEAD
 
 ## A commit SHA
 
-`--branch` rejects a commit SHA, so fetch the commit into an empty repository:
+`--branch` rejects a commit SHA; fetch the commit into an empty repository:
 
 ```bash
 git init -q "$work/source"
@@ -25,7 +25,7 @@ If the server refuses to serve that commit, report the refusal and ask for a bra
 
 ## A subdirectory
 
-1. Clone the repository as above; record the repository's commit and the subdirectory as the source path prefix.
+1. Clone the repository as above; record its commit and the subdirectory as the source path prefix.
 2. Limit the inventory to `"$work/source/<subdirectory>"`.
 3. Take the license file from the repository root unless the subdirectory carries its own.
 
@@ -40,7 +40,7 @@ If the server refuses to serve that commit, report the refusal and ask for a bra
 
 1. Report the Git error text and the URL; retry once only when the error names a transient network failure.
 2. If the repository needs credentials, ask the user for a local path to their own checkout instead of handling a credential.
-3. Leave no partial directory: delete `$work` before ending the run.
+3. Delete `$work` before ending the run; leave no partial directory.
 
 ## Identity to record
 

@@ -2,9 +2,9 @@
 
 ## 1. Overview
 
-A tool that starts flat (`cli.py` next to `usecases.py` and `services.py`) has to be restructured when its second
-feature arrives. Every tool therefore starts with the feature layout, and this rule keeps every module of the package
-in it. A module's place is also its layer, which `RULE-cli-tool-layers` checks imports against.
+Every tool starts with the feature layout, since a flat one (`cli.py` next to `usecases.py` and `services.py`) must be
+restructured when its second feature arrives; this rule keeps every module of the package in it. A module's place is
+also its layer, which `RULE-cli-tool-layers` checks imports against.
 
 - **Phase and severity**: `linter`, `error`; it runs in `devkit rules check` and the commit gate. Shipped by the
   `cli-tool` bundle (`devkit add cli-tool`).

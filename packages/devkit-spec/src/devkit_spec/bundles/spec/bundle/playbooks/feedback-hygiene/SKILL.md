@@ -5,12 +5,13 @@ description: Triage open feedback files under specs/ in one hygiene session; gro
 
 # Feedback hygiene
 
-Run this playbook only in a hygiene session the user invoked or confirmed, from a clean working tree or a task worktree. You
-propose and draft; destinations beyond existing authorization are the user's decisions. A direct fix resolves its
-feedback through the `spec` skill's
-[source feedback resolution](../../skills/spec/references/source-feedback.md) instead.
-Terminal feedback is out of scope here: the separate `feedback-consolidation` playbook consolidates it when the user
-invokes or confirms that playbook.
+Run this playbook only in a hygiene session the user invoked or confirmed, from a clean working tree or a task
+worktree. Propose and draft; the user decides destinations beyond existing authorization.
+
+- Resolve a direct fix's feedback through the `spec` skill's
+  [source feedback resolution](../../skills/spec/references/source-feedback.md) instead.
+- Leave terminal feedback to the `feedback-consolidation` playbook, which runs only when the user invokes or
+  confirms it.
 
 ## Step 1: Collect and group
 
@@ -24,29 +25,31 @@ uv run devkit docs list feedback --status open --all-namespaces -n 0
   and the Step 2 recommendation to it through `spec-delegate`, from a clean checkout (`git status --porcelain`
   empty); verify and present its return as the `spec` skill's `references/backlog.md` (Backlog roles) says.
   Otherwise run this step inline; on a dirty checkout, delegate from a clean task worktree or run it inline.
-- Confirm each item's ownership (`repo`, `upstream`, `unknown`) from its target and evidence; do not ask the user.
+- Determine each item's ownership (`repo`, `upstream`, `unknown`) from its target and evidence instead of asking the
+  user.
 - Separate the observed symptom, its proposed cause and its suggested remedy. Check the relevant current code or
-  contract; use a narrow reproduction only when needed. Mark unverified causes explicitly and treat the suggested
-  remedy as a candidate. Repeated requests alone do not establish repeated remote effects.
-- Classify the observation against the current contract: defect, normal behavior, improvement or already addressed.
-  Evidence of an event alone does not establish a defect. Normal, obsolete or already addressed items are dismissal
-  candidates; when evidence is insufficient to recommend a destination, keep the item open and name the missing fact.
+  contract, with a narrow reproduction only when needed. Mark unverified causes and treat the suggested remedy as a
+  candidate. Repeated requests alone do not establish repeated remote effects.
+- Classify the observation against the current contract: defect, normal behavior, improvement or already addressed;
+  evidence of an event alone does not establish a defect.
+- Treat normal, obsolete or already addressed items and items without observed Evidence as dismissal candidates. If
+  evidence is insufficient to recommend a destination, keep the item open and name the missing fact.
 - Group items by `target`; a group shares one decision.
 - Order by `critical`, then `recurring: true`, then `blocked`, `workaround`, `noise`.
-- An item without observed Evidence is a dismissal candidate.
 
 ## Step 2: Decide the destination with the user
 
-Recommend the smallest sufficient response: wording correction, removing unhelpful advice or using an existing
-procedure can be enough. Before recommending a mechanism such as a cache, persistent state or a new extension point,
-state the known frequency and exposure (ordinary use or an exceptional case), demonstrated impact and one smaller alternative;
-mark unknown frequency or impact as unknown.
-
-Separate size and effort from Planning depth. For work starting now, use the `spec` classification: a settled fix
-with no contract impact can be a session; a settled contract change uses spec depth; an unresolved material choice
-about guarantees, policy or operation needs a proposal. Implementation details alone do not make the direction
-unsettled. Queue deferred work by the existing Backlog procedure, and state the material decision still needed or
-that the direction is settled. `promoted` records an actual handoff to follow-up work, not its size or effort.
+- Recommend the smallest sufficient response, such as a wording correction, removing unhelpful advice or an
+  existing procedure.
+- Before recommending a mechanism such as a cache, persistent state or a new extension point, state its known
+  frequency and exposure (ordinary use or an exceptional case), demonstrated impact and one smaller alternative;
+  mark unknown frequency or impact as unknown.
+- Choose Planning depth apart from size and effort. For work starting now, use the `spec` classification: a settled
+  fix with no contract impact can be a session; a settled contract change uses spec depth; an unresolved material
+  choice about guarantees, policy or operation needs a proposal. Implementation details alone do not make the
+  direction unsettled.
+- Queue deferred work by the existing Backlog procedure, stating the material decision still needed or that the
+  direction is settled.
 
 | Scope | Destination | Action |
 | :--- | :--- | :--- |
@@ -62,7 +65,8 @@ Record the source FB IDs in the destination's `Source feedback` or the session's
 
 ## Step 3: Update status
 
-- `promoted`: follow-up work received the item. It stays `promoted` when that work finishes.
+- `promoted`: follow-up work actually received the item, whatever its size or effort; it stays `promoted` when
+  that work finishes.
 - `dismissed`: a reasoned decline.
 - `forwarded`: only after the authorized submission. A draft or an unresolved ownership stays `open`.
 

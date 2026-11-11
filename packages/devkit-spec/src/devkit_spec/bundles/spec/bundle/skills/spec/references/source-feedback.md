@@ -2,7 +2,9 @@
 
 Read when the agreed work addresses named feedback (FB IDs), at entry and again before reporting completion.
 
-Only `open` feedback is actionable. `promoted`, `resolved`, `dismissed` and `forwarded` are terminal: their references stay for traceability, with no disposition, re-verification or edit. A promoted, dismissed or forwarded terminal source may resolve to a consolidated record (`FB-consolidated-...`) through its alias after a `feedback-consolidation` run; the reference stays as written and the record's entry for that ID keeps its outcome. Eligible resolved feedback may be deleted after active references no longer need it.
+- Only `open` feedback is actionable. `promoted`, `resolved`, `dismissed` and `forwarded` are terminal: their references stay for traceability, with no disposition, re-verification or edit.
+- A promoted, dismissed or forwarded terminal source may resolve through its alias to a consolidated record (`FB-consolidated-...`) after a `feedback-consolidation` run; the reference stays as written and the record's entry for that ID keeps its outcome.
+- Eligible resolved feedback may be deleted once active references no longer need it.
 
 ## At entry
 
@@ -14,9 +16,8 @@ Only `open` feedback is actionable. `promoted`, `resolved`, `dismissed` and `for
 
 Review only the explicitly linked open sources the task addresses directly, against the final diff and verification. Record outcomes in `reconcile.md` at `living-spec-draft` for a spec, or at `report-session` before the commit for a session (no new artifact), even with requested-only capture or `collect-feedback` off.
 
-- Set `resolved` only when the authorized implementation fully addresses the source and tests or review verify it; append a Disposition naming the SPEC ID (or changed session paths), the outcome and the verification evidence.
+- Set `resolved` only when the authorized implementation fully addresses the source and tests or review verify it; handoff, planning, document checks or integration alone verify nothing. Append a Disposition naming the SPEC ID (or changed session paths), the outcome and the verification evidence.
 - Keep partial, deferred or unverified fixes open and report the remaining scope and destination; required work in the agreed scope cannot be deferred to claim completion.
 - Never convert `promoted` to `resolved`, and never resolve unrelated feedback a sweep found.
-- Handoff, planning, document checks or integration alone do not verify a fix.
 - If later changes invalidate the evidence of a resolution this task made, set the source back to `open` and explain the remaining work.
 - The Host handles a disposition outside a delegated write boundary.

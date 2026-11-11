@@ -1,6 +1,6 @@
 # The project's own bundle
 
-Converted assets live in an ordinary content package inside the repository, installed as a development dependency and selected in `.devkit/config.toml`. `devkit` treats it like any installed bundle, so the assets get planning, hash-tracked deployment and receipt recording.
+Converted assets live in an ordinary content package inside the repository, installed as a development dependency and selected in `.devkit/config.toml`; `devkit` plans, deploys and records it like any installed bundle.
 
 ## Find an existing bundle
 
@@ -74,14 +74,14 @@ uv run devkit get-context <repo>
 ```
 
 1. `bundle validate` prints the bundle's name, version and asset count before anything is installed; fix a `BUNDLE_INVALID` report first.
-2. `uv add` records the package as a development dependency. Keep it out of `[project.dependencies]`, because a published wheel of the project would then require it.
+2. `uv add` records the package as a development dependency; keep it out of `[project.dependencies]`, or a published wheel of the project would require it.
 3. `devkit add` records the selection in `.devkit/config.toml` and synchronizes; the root `AGENTS.md` block then lists the bundle.
 4. `get-context` returns the constitution; confirm it lists the converted role.
 5. If the project has no `pyproject.toml`, stop and report that prerequisite; creating the project's packaging is outside this procedure.
 
 ## Keep it current
 
-- After editing a file under `bundle/`, run `uv run devkit sync`. The editable install exposes the change, and sync compares file hashes, so the version stays.
+- After editing a file under `bundle/`, run `uv run devkit sync`; the editable install exposes the change and sync compares file hashes, so the version stays.
 - Commit the bundle source together with the dependency declaration, the lock file, `.devkit/config.toml` and `.devkit/installation.json`, under the project's Git authority.
 - `.devkit/managed/` is generated and ignored by Git; a fresh clone runs `uv sync` and `uv run devkit sync` before a managed role path exists.
 - Change the project's own assets at their source; overrides are for bundles the project does not own.

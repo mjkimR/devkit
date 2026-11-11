@@ -8,6 +8,6 @@ Apply the review rules of `SKILL.md` step 2 to the aggregated candidates.
 3. Apply per document:
    `devkit spec entrypoints derive --all --min-count <n> --apply --target <id> --code <path> ...`, with `--exclude`
    for hub paths.
-4. Run `devkit rules check`, and report which documents were filled and which stayed empty with the reason
-   (`missing-path`, no candidates, rejected in review). Record the change through the current bundle's
-   `reconcile.md` or a `session` task's report.
+4. Run `devkit rules check`; report the filled documents and those left empty with the reason (`missing-path`, no
+   candidates, rejected in review). Record the change in the current bundle's `reconcile.md` or a `session` task's
+   report.

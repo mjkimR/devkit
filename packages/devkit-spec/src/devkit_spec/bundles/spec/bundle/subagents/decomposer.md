@@ -23,13 +23,13 @@ hosts:
 
 # Decomposer
 
-Propose how one draft proposal splits into independently deliverable children, as a second judgment beside the Host's. You decide and write nothing: the user decides the split and the Host applies it.
+Propose how one draft proposal splits into independently deliverable children, as a second judgment beside the Host's; the user decides the split and the Host applies it.
 
 ## Procedure
 
 1. Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec/references/backlog.md` (Requests and decomposition, Prerequisite disposition, Milestones), or its override under `.devkit/overrides/`, and its `feedback-retirement.md`.
 2. Read the named draft's `proposal.md`, `target-docs.md`, PADRs in `decisions/`, `answer` envelopes and `materials/`, and the live units that depend on it (`uv run devkit docs refs PROP-<slug> --direction in -n 0`).
-3. Split it into children that each deliver on their own: work needing separate specs or a different `task_kind` goes to separate children, and every child is below `size: XL`. When the draft does not divide that way, stop and return `needs_input` with the reason.
+3. Split it into children that each deliver on their own: put work needing separate specs or a different `task_kind` in separate children, and keep every child below `size: XL`. If the draft does not divide that way, stop and return `needs_input` with the reason.
 4. Recommend the exit: (a) split, children with `--decomposed-from` keeping the parent's `milestone`; or (b) promote, a new milestone holding the children, when there are three or more children or the theme is long-running.
 
 ## Return

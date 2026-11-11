@@ -23,9 +23,9 @@ Start from `.devkit/managed/docs/templates/<kind>.md`.
 ## Procedure
 
 1. Migrate inside ordinary work, typically in the `spec-sync` skill.
-2. Write the current state, citing IDs, without legacy change logs; fill a starter chapter instead of keeping a second
+2. Write the current state, citing IDs, without legacy change logs; fill a starter chapter instead of a second
    architecture description.
 3. Delete the legacy copy once superseded; keep it when it holds history the Living Spec does not carry.
-4. Report a legacy instruction that conflicts with the spec constitution to the user; do not pick precedence yourself.
+4. Report a legacy instruction that conflicts with the spec constitution to the user instead of choosing precedence.
 5. Delete a `.devkit/config.toml` deferral when `uv run devkit rules check --phase hygiene` reports
    `RULES_PROMOTION_READY` for it.

@@ -1,7 +1,6 @@
 # Candidates and the decision round
 
-Read before the decision round. A candidate is a proposed change with a measured cost behind it; the decision round
-decides every candidate of the run together.
+A candidate is a proposed change with a measured cost behind it.
 
 ## 1. Candidate record
 
@@ -13,12 +12,11 @@ Record per candidate:
 - Measured share: the share of the target metric the location owns, measured unprofiled, with its state (`warm`,
   `cold`).
 - Proposed change: what replaces what.
-- Expected saving: an estimate derived from the share (the share the change removes), labelled as an estimate until
-  the change is measured.
+- Expected saving: derived from the share the change removes, labelled as an estimate until the change is measured.
 - Risk: the inputs or states under which the new code could behave differently from the old.
 - Classification: behavior-preserving or contract change (section 3).
 - Planned differential inputs: the corpus and the edge and error cases the comparison will run.
-- Route, edited paths and write scope (section 5).
+- Route, edited paths and write scope, by the entry file's decision round.
 
 ## 2. Selection
 
@@ -43,7 +41,7 @@ order of observable side effects.
 - A memo within one run qualifies when its key covers every input that changes the answer and it never memoizes a
   failure.
 
-Contract change, each its own work item:
+Contract change, each its own work item through the repository's normal development workflow:
 
 - changed output: content, order or format;
 - new state kept between runs where none existed (a cache file, a daemon);
@@ -56,20 +54,6 @@ the differential comparison shows otherwise.
 
 ## 4. Presentation
 
-Present all candidates of the run in one round, ranked by expected saving. Give each its key, location, mechanism,
-measured share, proposed change, expected saving, risk, classification, planned differential inputs and proposed
-disposition. Present dropped candidates as a count and kept costs with their reasons.
-
-- Present each contract change apart from the behavior-preserving candidates, naming the observable difference.
-- Leave an unanswered candidate pending; nothing is applied for it.
-
-## 5. Route and write scope
-
-1. Put the run's agreed behavior-preserving changes into one work item, whether it edits one module or several.
-2. Route it through the repository's feature workflow at the depth its own classification gives (with the `spec`
-   bundle, `session` when no contract or specification text changes).
-3. Route each agreed contract change as its own work item through the repository's normal development workflow.
-4. Do not follow `review-refactor references/applying.md "Work items and route"`; its direct-mode overall-refactor
-   route belongs to `review-refactor` runs.
-5. State the route and the edited paths in the round. The edited paths, following edits included (tests of the
-   changed code, documentation naming it), are the write scope; keep every edit inside it.
+Present all candidates of the run in one round, ranked by expected saving, each with its record fields and proposed
+disposition. Present dropped candidates as a count, kept costs with their reasons, and each contract change apart
+from the behavior-preserving candidates, naming the observable difference.

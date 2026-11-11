@@ -23,7 +23,7 @@ def test_baseline_is_a_core_playbook_with_its_own_report_reference() -> None:
     assert "sdd-baseline" in bundle.select(["core"])
     entry = raw(ENTRY)
     references = re.findall(r"\]\((references/[^)]+)\)", entry)
-    assert references == ["references/report-template.md"]
+    assert set(references) == {"references/report-template.md"}
     assert all((BUNDLE / "playbooks/sdd-baseline" / reference).is_file() for reference in references)
     assert not list((BUNDLE / "playbooks/sdd-baseline").rglob("*.py"))
 
@@ -66,7 +66,7 @@ def test_guidance_orders_evidence_before_activation_and_preserves_current_state(
     assert_rule(body, "reuse", "explicit user decision", "same source and effects")
     assert_rule(body, "edit only", "`.devkit/config.toml`", '`[development] approach = "sdd"`')
     assert "Preserve approval, worktree, other integration and project-check settings" in body
-    assert_rule(body, "neither", "successful adoption", "automatic rollback")
+    assert_rule(body, "installation, policy update or sync fails", "[report template](references/report-template.md)")
     assert_rule(
         body, "create no", "retrospective", "proposal", "spec Unit", "workflow approval", "envelope", "ADR", "discarded"
     )
@@ -79,3 +79,5 @@ def test_guidance_orders_evidence_before_activation_and_preserves_current_state(
     assert "project-to-spec" not in report
     assert_rule(report, "actual", "policy/asset inspection", "after activation")
     assert_rule(report, "real", "simulated decisions")
+    assert_rule(report, "neither", "successful adoption", "automatic rollback")
+    assert_rule(report, "resume from the existing report", "revalidating")
