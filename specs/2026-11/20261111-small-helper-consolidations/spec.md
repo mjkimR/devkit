@@ -4,11 +4,10 @@ title: Consolidate the remaining duplicated runtime helpers
 summary: 'Consolidates three deferred duplicates without changing behavior or projected bytes: a public devkit-cli UTF-8 output helper, subagent projection quoting through the shared frontmatter scalar, and shared Git tracked/ignored probes in devkit-core.'
 status: planned
 created: 2026-11-11
-related_capabilities: []
+related_capabilities: [CAP-CLI-agent-cli-toolkit, CAP-DIST-agent-projections]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-small-helper-consolidations] Consolidate the remaining duplicated runtime helpers
 
@@ -17,70 +16,112 @@ workflow: sdd-spec-feature
 Handed off from proposal PROP-small-helper-consolidations on 2026-11-11.
 - **Preserved Materials**: `docs/materials/2026-11/20261111-small-helper-consolidations`
 
-### 1. Background & Hypothesis
-
 Three small duplicates were deferred by the code pass (`docs/materials/2026-11/20261111-review-refactor-code-pass/report.md`):
-- X-13: `_utf8_output` is copied from devkit-cli (`devkit_cli.boundary`) into devkit-dist (`devkit_dist.features.host.cli`, the hidden `devkit host hook` command, which bypasses `@boundary` because its stdout follows the host's native protocol).
-- DS-09: subagent projection hand-rolls YAML quoting (`_yaml_quote`, `_yaml_scalar`, `_yaml_value` in `devkit_dist.features.distribution.services.bundles.subagents`) beside the shared `devkit_core.core.frontmatter.scalar`.
-- DS-10: devkit-dist asks Git whether paths are tracked or ignored in four places (host registrations, shared storage, the local render check and projection Git notices), plus a tracked-only check in sync.
 
-Hypothesis: each duplicate can have one owner with every caller's options kept, so no behavior, contract or projected byte changes. Evidence: `docs/materials/2026-11/20261111-small-helper-consolidations/planning-evidence.md`.
+- X-13: `_utf8_output` is copied from devkit-cli (`devkit_cli.boundary`) into devkit-dist
+  (`devkit_dist.features.host.cli`, the hidden `devkit host hook` command, which bypasses `@boundary` because its
+  stdout follows the host's native protocol).
+- DS-09: subagent projection hand-rolls YAML quoting (`_yaml_quote`, `_yaml_scalar`, `_yaml_value` in
+  `devkit_dist.features.distribution.services.bundles.subagents`) beside the shared
+  `devkit_core.core.frontmatter.scalar`.
+- DS-10: devkit-dist asks Git whether paths are tracked or ignored in four places (host registrations, shared
+  storage, the local render check and projection Git notices), plus a tracked-only check in sync.
+
+Each duplicate gets one owner that keeps every caller's options, so no behavior, contract or projected byte of a
+shipped role contract changes. Evidence: `docs/materials/2026-11/20261111-small-helper-consolidations/planning-evidence.md`.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Consolidate the remaining duplicated runtime helpers so that system capabilities are extended.
+- **US-1**: As a devkit maintainer, I want each of these helpers to have one owner, so that a fix to UTF-8 output,
+  YAML quoting or a Git path probe lands once and every caller gets it.
+- **US-2**: As a consumer of shipped subagent projections, I want the projected files to stay byte-identical, so
+  that the consolidation causes no sync churn or host-visible change.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: the Codex TOML quoter (`_toml_string`, `_toml_multiline`, `_toml_value`) stays as it is.
+2. **Scope Excluded**: shared storage's `ls-files --others --exclude-standard` query (a different question) and every
+   caller's own ignore mode, deadline and failure mapping stay with the caller.
+3. **Scope Excluded**: no new package dependency, feature edge (`.devkit/architecture.toml`) or ADR; no change to
+   `CAP-DIST-agent-projections` or to devkit-agt and devkit-mcp.
+4. **Scope Excluded**: no own minor version bump of devkit-cli; the added public name ships with the shared release
+   version (`CAP-CLI-agent-cli-toolkit` rule 10).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] devkit_cli exports one UTF-8 output helper
+- **Given** `devkit_cli` and `devkit_dist.adapters.cli`
+- **When** a test runs `devkit_cli.utf8_output()` with stdout and stderr as ASCII `io.TextIOWrapper` streams, then
+  once more with a closed stream
+- **Then** both open streams report `encoding == "utf-8"` and `errors == "backslashreplace"`, the closed stream
+  raises nothing, `"utf8_output"` is in the pinned `devkit_cli.__all__`, `devkit_dist.adapters.cli.utf8_output is
+  devkit_cli.utf8_output`, and `rg -n "def _utf8_output" packages/devkit-cli/src packages/devkit-dist/src` prints
+  nothing
 
-## 5. Carried Proposal Notes
+### [AC-02] The boundary and the hook keep locale-independent output
+- **Given** `LC_ALL=C` and `PYTHONIOENCODING=ascii`
+- **When** a `Boundary` command and the hidden `devkit host hook` command write non-ASCII text
+- **Then** the existing tests `test_output_is_utf8_whatever_the_locale` (devkit-cli and devkit-dist) and
+  `test_hook_output_is_utf8_whatever_the_locale` pass unchanged with exit `0` and UTF-8 stdout bytes
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] frontmatter.scalar gains quoting options with an unchanged default
+- **Given** `devkit_core.core.frontmatter.scalar(value, *, quote="'", always_quote=False)`
+- **When** it is called without options on every value of the existing parametrized scalar test
+- **Then** it returns the same strings as before (`off` → `'off'`, `plain title` → `plain title`); with
+  `quote='"'` it returns `"off"` for `off` and `Read` for `Read`; with `always_quote=True` it returns a quoted
+  scalar for a plain-safe value (`Read` → `'Read'`, or `"Read"` with `quote='"'`); every result is one line and
+  reads back as the same string as a mapping value and as a list item; any other `quote` value raises `ValueError`
 
-### 2. Technical Spike Questions
+### [AC-04] Subagent projections render through the shared scalar with identical shipped bytes
+- **Given** every shipped role contract (15 source contracts plus the 2 templated ones in their installed rendered
+  form under `.devkit/managed/*/subagents/`, 26 files) rendered for `claude-code`, `codex` and `antigravity`
+- **When** the projections are rendered after the change
+- **Then** each of the 78 renderings has the same SHA-256 as before the change, `uv run devkit sync --check` exits
+  `0`, and `_yaml_quote`, `_yaml_scalar`, `_YAML_PLAIN` and `_YAML_RESERVED` no longer exist in `subagents.py`
 
-- **Q1** (settled): devkit-dist depends on a new public devkit-cli helper. devkit-dist already pins and imports devkit-cli; moving the helper to devkit-core would add a devkit-cli -> devkit-core dependency, which `CAP-CLI-agent-cli-toolkit` excludes (devkit-cli depends on click and devkit-advisory only).
-- **Q2** (settled): no projected byte change. Using `scalar` as it is would turn every `description` plain (11 of 11 Claude Code projections here) and `"off"` into `'off'` (devkit-adaptive `swarm-planner`), and a plain description breaks the `CAP-DIST-agent-projections` rule that it is a quoted scalar. A double-quote option on `scalar` reproduces today's bytes for every shipped contract.
-- **Q3** (settled): the probes differ in ignore mode (index-aware in host registrations and shared storage, `--no-index` in the local render check and projection notices), in the deadline (shared storage) and in failure mapping (each caller's own). These stay per caller; the shared helpers take them as arguments or leave them to the caller.
+### [AC-05] Projection quoting keeps today's bytes for the edge values
+- **Given** a role contract whose description holds a line break, a tab, a double quote, a backslash and the control
+  character U+0001, and whose `claude-code` block sets the string setting `off` and a tool list with a plain item
+  and an item holding a flow indicator (`a,b`)
+- **When** the `claude-code` projection is rendered
+- **Then** the header holds `name: reviewer`, a double-quoted description whose bytes equal the hand-rolled
+  quoter's (`\n`, `\t`, `\"`, `\\`, `\x01` escapes), the setting as `"off"`, the plain list item unquoted and the
+  flow-indicator item double-quoted, and `yaml.safe_load` of the header returns the original values
 
-### 3. Proposed Design & Impact
+### [AC-06] Shared Git tracked and ignored probes
+- **Given** `devkit_core.core.git.tracked_paths(cwd, paths, *, deadline=None) -> set[str]` and
+  `ignored_paths(cwd, paths, *, no_index=False, deadline=None) -> set[str]`
+- **When** they run in a repository with a tracked file, a directory holding tracked files, a tracked file that an
+  ignore rule matches, an untracked ignored file, and a tracked file named `a*b` beside an untracked `axb`
+- **Then** `tracked_paths` returns the tracked file, the directory and `a*b` but not `axb` (literal pathspecs);
+  `ignored_paths` returns the untracked ignored file and, only with `no_index=True`, the tracked ignored file; no
+  match (Git exit `1`) is the empty set; an empty `paths` returns the empty set without running Git; outside a
+  repository both raise `GitError` with `returncode == 128`
 
-#### Planning decisions
+### [AC-07] The five devkit-dist probe sites use the shared helpers with their own policies
+- **Given** host registrations (`_tracked`, `_ignored`, `_Eligibility`), shared storage (`_eligible`,
+  `_initialize`), `local_render.require_ignored`, `projection_git_notices` and the locked-sync tracked check
+- **When** their existing tests run
+- **Then** they pass unchanged: registrations still answer not ignored on any Git failure, shared storage still
+  raises `ExclusionError` when `.devkit/.shared/` is not ignored, `require_ignored` still raises any `GitError`
+  other than exit `1`, and `projection_git_notices` still skips exit `128` "not a git repository" and turns other
+  failures into `PROJECTION_GIT_CHECK_FAILED`; no `"ls-files", "--"` or `"check-ignore"` call remains in those
+  modules apart from shared storage's `--others --exclude-standard` query
 
-1. **X-13**: `devkit_cli` exports a public `utf8_output()` (the current `_utf8_output` body and docstring); `Boundary` calls it, and `devkit_dist.adapters.cli` re-exports it beside the other `devkit_cli` names, where `devkit host hook` imports it. The devkit-dist copy is removed. The new name is added to the public-name pin in `packages/devkit-cli/tests/integration/test_lazy_and_package.py`; an added name changes the shipped payload, so devkit-cli takes the shared release version (`CAP-CLI-agent-cli-toolkit` rule 10), with no minor bump of its own.
-2. **DS-09**: `devkit_core.core.frontmatter.scalar` gains keyword-only options for the quote character used when quoting is needed (`'` by default, `"` for projections) and for always quoting; its current default output is unchanged. Subagent projection renders `description` always double-quoted and `name`, settings and list items with the double quote when quoting is needed; `_yaml_quote`, `_yaml_scalar` and `_YAML_PLAIN`/`_YAML_RESERVED` are removed. Projected bytes stay identical for every shipped role contract; the only new output is that NEL, LS, PS and other non-printable characters in a description are escaped (PyYAML double style), where the hand-rolled quoter wrote them raw. The Codex TOML quoter (`_toml_string`) is out of scope.
-3. **DS-10**: `devkit_core.core.git` gains `tracked_paths(cwd, paths, *, deadline=None) -> set[str]` (the given paths that are tracked or hold tracked files, one `ls-files -z` call with literal pathspecs) and `ignored_paths(cwd, paths, *, no_index=False, deadline=None) -> set[str]` (one `check-ignore --stdin -z` call; exit 1 is the empty set, any other failure raises `GitError`). The five sites use them and keep their own ignore mode, deadline and failure mapping (host registrations: a failure means not ignored; shared storage: `ExclusionError`; local render: `GitError` raised; projection notices: the exit-128 skip and the failure notice). Shared storage's `ls-files --others --exclude-standard` query is a different question and stays. Shared storage's trailing-slash directory check keeps passing `.devkit/.shared/`.
-4. No feature edge and no package dependency is added: the helpers live in `devkit_cli` (already a devkit-dist dependency) and `devkit_core.core` (imported by every site already). No PADR: none of the three decisions meets the decision-writing admission criteria.
+## 5. Assumptions
 
-#### Acceptance outline
+1. **Control-character escapes**: PyYAML's double style writes seven C0 controls with short escapes (`\0`, `\a`,
+   `\b`, `\v`, `\f`, `\r`, `\e`) where the hand-rolled quoter wrote `\x00`, `\x07`, `\x08`, `\x0B`, `\x0C`,
+   `\x0D`, `\x1B`. Both forms load as the same string and no shipped description holds one, so the shipped-bytes
+   contract holds; the planning evidence listed only NEL, LS, PS and non-printable characters as differences.
+2. **Flow list items**: `scalar`'s reads-back check covers block context only (`k: v`, `- v`), and PyYAML rejects
+   some plain values in a flow sequence (`[a?b]`) or splits them (`[a,b]`). Projection therefore always
+   double-quotes a list item holding a YAML indicator character and lets `scalar` decide otherwise; no shipped list
+   item holds one.
+3. **Literal pathspecs**: `tracked_paths` passes each path with the `:(literal)` magic. `check-ignore` reads its
+   input as path names; all current inputs are fixed devkit paths without glob characters, so no current result
+   changes.
 
-- A test of `devkit_cli.utf8_output` covers the UTF-8 `backslashreplace` reconfiguration and a closed stream; the `devkit host hook` and boundary tests pass unchanged.
-- A projection test renders every shipped role contract (or the repository's `devkit sync --dry-run`) with no byte change; `scalar` keeps its current output by default; a description with a line break, a control character and `off` as a setting value keep today's bytes.
-- `tracked_paths`/`ignored_paths` tests cover tracked directories, index-aware versus `--no-index` on a tracked ignored path, exit 1, a non-repository failure and a glob character in a path; the existing tests of the five sites pass unchanged.
+## 6. Source feedback
 
-#### Living Spec impact
-
-- `CAP-CLI-agent-cli-toolkit` section 4 (the `devkit_cli` public-name table) and `packages/devkit-cli/README.md` list `utf8_output()`.
-- `docs/development/reference/core.md`: the `devkit_core.core.frontmatter` (`scalar` options), `devkit_core.core.git` (the two helpers) and `devkit_dist.adapters.cli` (re-export) rows.
-- `CAP-DIST-agent-projections` is unchanged: its quoted-description rule keeps holding.
-
-### 4. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr small-helper-consolidations "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept small-helper-consolidations --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff small-helper-consolidations.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->
-
+None: the work comes from the deferred items X-13, DS-09 and DS-10 of the code pass report, not from FB records.
