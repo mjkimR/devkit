@@ -12,6 +12,10 @@ dev_effort: low                       # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - capabilities/integration/
+    - capabilities/delivery/
+    - usecases/delivery/
+    - docs/development/reference/
+    - packages/devkit/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -29,14 +33,40 @@ for a key no consumer needs. Source: `docs/materials/2026-11/20261111-review-ref
 
 ## 2. Technical Spike Questions
 
-- **Q1**: Does any consumer repository still carry `[integration] provider` (check the known consumers' config)?
-- **Q2**: Should `[integration]` stay in the reserved-table list as a namespace reservation?
+- **Q1**: Does any consumer repository still carry `[integration] provider`? **Yes, one**: `resource-indexer`
+  sets `provider = "spec"`; it pins devkit to rev `76bafbbb`, so it breaks only when it moves its pin
+  (`materials/legacy-key-inventory.md`). How to treat it is the open user decision (see Planning decisions).
+- **Q2**: Should `[integration]` stay in the reserved-table list? **Yes** (settled in Planning): removing it makes
+  devkit-dist reject the table on every configuration read instead of only in `devkit integration`, and it changes
+  devkit-dist for a key it never reads. The table stays a reserved namespace that currently accepts no keys.
 
 ## 3. Proposed Design & Impact
 
-- Drop the legacy acceptance so the key is an unknown setting.
-- Remove CAP-INT-mcp-services §5 "Legacy configuration" and the CAP-DLV-project-policy sentence.
-- Keep the reserved-table entry if Q2 says so. Tests change with it.
+- `effective()` in `devkit_agt/features/integration/services/providers.py` accepts `[integration]` only when absent or
+  empty: any key, `provider` included, raises `INTEGRATION_CONFIG_INVALID`. The message names the key; for
+  `provider` the fix says the readiness-provider selection is retired and the key is deleted. The `policy()` docstring
+  drops the legacy sentence. The policy digest is unchanged (it already excluded `provider`).
+- Living Spec: `CAP-INT-mcp-services` §5 states that `[integration]` MAY be absent or empty and every key, including
+  the retired `provider`, raises `INTEGRATION_CONFIG_INVALID`; `CAP-DLV-project-policy` §3 drops the legacy
+  sentence; `CAP-DLV-sdd-baseline-adoption` step 7 and `UC-adopt-sdd-from-adaptive-development` "Provider-free
+  activation" drop the ignored legacy value (activation still needs no provider setting).
+- Quick references: `docs/development/reference/integration.md` and the integration row of
+  `packages/devkit/README.md` follow the CAP text.
+- Tests: fixtures stop writing `provider = "fixture"`; a test proves `provider` is refused with the retirement fix,
+  and the unknown-key test keeps its actionable fix.
+
+### Planning decisions
+
+- Q2: keep `integration` in devkit-dist `RESERVED_TABLES`; devkit-dist and `docs/development/reference/distribution.md`
+  do not change.
+- Pending user decision (q1): treatment of the one consumer still carrying the key.
+
+### Non-Goals
+
+- No change to the `ready_provider` test fixtures or the exported `Readiness`/`Evidence` models: the fixtures guard
+  the §4 content boundary and read no configuration.
+- No edit of any consumer repository; no deprecation-warning period unless the user chooses it.
+- No new feature edge.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
