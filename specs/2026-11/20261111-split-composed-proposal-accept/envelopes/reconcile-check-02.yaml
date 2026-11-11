@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:22:51.857629Z'
+status: completed
+summary: 'Implementer self-verified the reconcile-check-01 P1 fix at medium: CAP-HARN-agent-guidance skills table (spec-next, spec-review-proposal local, spec-orchestrate) and Host-authorized acceptance paragraph name accept-plan; basic accept kept for direct acceptance, --check and non-local review; added as modified target; reconcile.md resolved; no other Living Spec file names the composed form via accept'
+findings: []
+checks:
+  stale_form_search: 'PASS rg accept --mode / proposal accept ... --mode in docs/capabilities docs/usecases docs/development: none'
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: ae0cdec0197365d18bcbcc3ef2615675d143f824
+  head: d36d16f220820e19d0f63cec1393665eefa21972
