@@ -335,7 +335,7 @@ PY
         echo "error: the commit-msg gate accepted an empty message" >&2
         exit 1
     fi
-    echo "--- devkit worktree: start sets up and syncs a fresh checkout, its commits pass the gates, finish merges"
+    echo "--- devkit worktree: start sets up and syncs a fresh checkout, its commits pass the gates, local integration lands it"
     uv run devkit add authoring >/dev/null
     cat >> .devkit/config.toml <<'TOML'
 
@@ -352,9 +352,13 @@ TOML
     printf 'task\n' > "$task/task.md"
     git -C "$task" add task.md
     git -C "$task" commit -q -m "docs: smoke task in a worktree"
-    finished=$(uv run devkit worktree finish dev-smoke-task --merge)
-    grep -q 'merged=yes push=no-upstream removed=yes branch_deleted=yes' <<<"$finished"
+    prepared=$(uv run devkit integration prepare dev-smoke-task --route local)
+    digest=$(grep -o 'digest=[0-9a-f]*' <<<"$prepared" | head -n 1 | cut -d= -f2)
+    test -n "$digest"
+    landed=$(uv run devkit integration integrate dev-smoke-task --route local --expected-digest "$digest")
+    grep -q '^\[INTEGRATION: status=completed' <<<"$landed"
     test ! -e "$task" && test -f task.md
+    test -z "$(git branch --list dev-smoke-task)"
     echo "--- optional MCP runtime: absent command, installed transport integrates a Git fixture"
     status=0
     uv run devkit mcp --help >/dev/null 2>"$work/mcp-extra.err" || status=$?

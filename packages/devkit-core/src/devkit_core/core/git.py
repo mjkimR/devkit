@@ -7,7 +7,8 @@ round-trippable. ``run_git_text`` applies that rule for callers that want text,
 ``is_ancestor`` is the shared ``merge-base --is-ancestor`` test. ``worktree_records`` and
 ``status_records`` read ``git worktree list --porcelain -z`` and ``git status --porcelain=v1 -z`` into records;
 their pure parsers serve callers that run Git themselves. ``dirty_paths`` and ``changed_paths`` are the
-uncommitted and committed path lists a write-scope check compares, and ``git_config`` reads one configuration value. These generic primitives live here; queries that encode one package's policy live in that package
+uncommitted and committed path lists a write-scope check compares, ``tracked_paths`` and ``ignored_paths`` answer
+which given paths are tracked or ignored, and ``git_config`` reads one configuration value. These generic primitives live here; queries that encode one package's policy live in that package
 and are built on them. ``repository_facts`` scopes a memo of where a repository is.
 """
 
@@ -403,6 +404,38 @@ def changed_paths(cwd: Path, base: str, head: str, *, deadline: Deadline | None 
     """
     output = run_git(cwd, "diff", "--no-renames", "--name-only", "-z", base, head, "--", deadline=deadline)
     return [name for name in _decode(output).split("\0") if name]
+
+
+def tracked_paths(cwd: Path, paths: Collection[str], *, deadline: Deadline | None = None) -> set[str]:
+    """The given ``paths`` (relative to ``cwd``) that are tracked or are directories holding tracked files.
+
+    One ``ls-files -z`` call with every path as a literal pathspec (``:(literal)``), so a glob character in a name
+    matches only itself. No paths is the empty set without running Git. Raises as ``run_git`` does.
+    """
+    if not paths:
+        return set()
+    specs = [f":(literal){path}" for path in paths]
+    names = [
+        name for name in _decode(run_git(cwd, "ls-files", "-z", "--", *specs, deadline=deadline)).split("\0") if name
+    ]
+    return {path for path in paths if any(n == path or n.startswith(path.rstrip("/") + "/") for n in names)}
+
+
+def ignored_paths(
+    cwd: Path, paths: Collection[str], *, no_index: bool = False, deadline: Deadline | None = None
+) -> set[str]:
+    """The given ``paths`` (relative to ``cwd``) that Git's ignore rules exclude, each as given.
+
+    One ``check-ignore [--no-index] --stdin -z`` call. Without ``no_index`` a tracked path is never ignored, as Git
+    sees it; ``no_index=True`` asks whether the rules alone match it. Git's exit ``1`` (none ignored) is the empty set;
+    no paths is the empty set without running Git; any other failure raises ``GitError`` as ``run_git`` does.
+    """
+    if not paths:
+        return set()
+    stdin = b"".join(path.encode("utf-8", errors="surrogateescape") + b"\0" for path in paths)
+    args = ("check-ignore", *(("--no-index",) if no_index else ()), "--stdin", "-z")
+    result = run_git_result(cwd, *args, input=stdin, ok_returncodes=(0, 1), deadline=deadline)
+    return set(_decode(result.stdout).split("\0")) & set(paths)
 
 
 def git_config(

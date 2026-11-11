@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:34:56.316098Z'
+status: completed
+summary: Under the Host-authorized scope extension, removed the retired [integration] provider writes from the devkit-spec delivery fixture, the smoke integration fixture and the SDD baseline scenarios; the 24 failing devkit-spec e2e delivery tests and the baseline scenarios pass (46 passed).
+findings: []
+checks: {}
+resolves: worker-01.yaml

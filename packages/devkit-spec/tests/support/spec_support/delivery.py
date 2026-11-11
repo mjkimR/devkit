@@ -53,8 +53,6 @@ def _make_synced_repo(tmp_path: Path, template: Path, *, extra_config: str = "")
     write(repo, ".gitignore", ".devkit/managed/\n")
     config_path = repo / ".devkit/config.toml"
     config_text = config_path.read_text(encoding="utf-8") if config_path.exists() else ""
-    if "[integration]" not in config_text:
-        config_text += '\n[integration]\nprovider = "spec"\n'
     if extra_config:
         config_text += "\n" + extra_config.strip() + "\n"
     config_path.write_text(config_text.lstrip(), encoding="utf-8")

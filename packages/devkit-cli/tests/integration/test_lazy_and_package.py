@@ -108,6 +108,7 @@ def test_the_public_names_are_pinned() -> None:
         "output_settings",
         "render_json",
         "report_exit_code",
+        "utf8_output",
     }
     assert all(hasattr(devkit_cli, name) for name in devkit_cli.__all__)
     boundary = Boundary("pinned")

@@ -1,0 +1,23 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:45:15.442997Z'
+status: completed
+summary: 'Development from specify to final-change-report: utf8_output public in devkit_cli and re-exported for devkit host hook; frontmatter.scalar quote/always_quote with projection quoting through it behind the kept identifier plain gate; tracked_paths/ignored_paths in devkit_core.core.git used by five devkit-dist probe sites. code-reviewer: 2 P3 fixed and reverified; reconcile-reviewer: pass. 78/78 shipped projections byte-identical. No sync outputs. Before/after: baseline = 78 projection hashes taken on c78848bc before source edits; after identical.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=full 6784 passed 4 skipped; just test-dist 1402 passed
+  lint: PASS just lint; just check 0 errors; devkit rules check --ci --base main errors=0
+  sync: PASS devkit sync --check exit 0
+diff_scope:
+  base: ''
+  head: b44f7a1f24e926242059b46d55ff5975d65a27e9
+scope_extensions:
+- path: packages/devkit-cli/README.md
+  task: 1
+  reason: the package README lists the devkit_cli public names that CAP-CLI-agent-cli-toolkit section 4 owns
+  requirements:
+  - AC-01
+activity_effort: medium

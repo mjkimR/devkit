@@ -92,7 +92,7 @@ def main() -> None:
             git(root, "config", "user.name", "devkit smoke")
             git(root, "config", "user.email", "smoke@example.test")
             (root / ".devkit").mkdir()
-            (root / ".devkit/config.toml").write_text('[integration]\nprovider = "smoke"\n')
+            (root / ".devkit/config.toml").write_text("")
             git(root, "add", ".")
             git(root, "commit", "-qm", "configure fixture")
             worktree = start(locate(root), "dev-smoke").path

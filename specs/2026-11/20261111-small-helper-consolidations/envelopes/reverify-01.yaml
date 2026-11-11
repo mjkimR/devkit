@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:41:16.433805Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified: the identifier-only plain gate stays in front of scalar, so tab, Bash(ls) and 1e3 items stay double-quoted; test extended; 78/78 projection hashes identical; test-dist 1402 passed; lint and pyright pass'
+findings:
+- issue: A flow-list item holding a tab between other characters is written unquoted and the projected header no longer parses
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/subagents.py:223,236-237
+  failure_condition: A role contract list setting such as tools has an item like a<TAB>b; PyYAML rejects the flow sequence
+  suggested_action: Quote such items, and add a tab item to the projection quoting test
+  resolution: resolved
+  severity: P3
+- issue: Non-shipped string settings, list items and names the old plain gate quoted are now plain (Bash(ls), a b, y, 1e3, 0o17), changing consumer projection bytes and letting a YAML 1.2 host read 1e3 as a number; not recorded in the spec
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/subagents.py:232,237
+  failure_condition: A project-owned role contract has a value outside ^[A-Za-z][A-Za-z0-9_./-]*$ that is not a YAML 1.1 special word
+  suggested_action: Keep the old plain gate in front of scalar, or record the byte change as an assumption
+  resolution: resolved
+  severity: P3
+checks: {}

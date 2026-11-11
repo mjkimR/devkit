@@ -89,4 +89,5 @@ UI is not approval.
 
 ## Completion
 
-`uv run devkit status` and `uv run devkit sync --check` both exit `0`.
+`uv run devkit sync --check` exits `0`. If it fails, run `uv run devkit status`
+to list every installed-state problem; it is a report, not the completion check.

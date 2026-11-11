@@ -127,6 +127,35 @@ def test_render_claude_and_codex_projections() -> None:
     assert 'Return "findings" with evidence.' in data["developer_instructions"]
 
 
+def test_claude_projection_header_keeps_its_quoting_bytes() -> None:
+    edge = CONTRACT.replace(
+        "description: Reviews a change against its specification and returns findings with evidence.",
+        'description: "a\\nb\\tc \\"q\\" \\\\ \\x01"',
+    ).replace(
+        "    tools: [Read, Grep, Glob]\n", '    tools: [Read, "a,b", "a\\tb", "Bash(ls)", "1e3"]\n    color: "off"\n'
+    )
+    contract = read_contract(edge.encode(), "x")
+    rendered = render_projection("claude-code", contract, ".devkit/managed/team/subagents/reviewer.md")
+    assert rendered is not None
+    head = rendered.decode().split("---\n")[1]
+    assert head.splitlines() == [
+        "name: reviewer",
+        'description: "Reviewer. a\\nb\\tc \\"q\\" \\\\ \\x01"',
+        'tools: [Read, "a,b", "a\\tb", "Bash(ls)", "1e3"]',
+        'color: "off"',
+        "maxTurns: 20",
+        "background: false",
+    ]
+    assert yaml.safe_load(head) == {
+        "name": "reviewer",
+        "description": 'Reviewer. a\nb\tc "q" \\ \x01',
+        "tools": ["Read", "a,b", "a\tb", "Bash(ls)", "1e3"],
+        "color": "off",
+        "maxTurns": 20,
+        "background": False,
+    }
+
+
 def test_render_antigravity_projection_carries_fixed_keys() -> None:
     body = CONTRACT.replace(
         "  antigravity: unsupported\n",

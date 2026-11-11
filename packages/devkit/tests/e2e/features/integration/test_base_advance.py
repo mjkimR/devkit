@@ -78,7 +78,7 @@ def test_conflicting_advance_changes_nothing(repo):
 
 def test_ff_only_in_the_source_policy_fast_forwards_and_refuses_an_advance(repo):
     base, worktree = repo
-    commit(worktree, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n')
+    commit(worktree, ".devkit/config.toml", '[worktree]\nmerge = "ff-only"\n')
     tip = git(worktree, "rev-parse", "HEAD")
     service = IntegrationService(base)
     assert service.prepare("dev-demo").request.approval_scope()["merge_method"] == "ff-only"
@@ -138,10 +138,10 @@ def test_receipt_and_asset_only_advance_is_absorbed(repo):
 @pytest.mark.parametrize(
     "config",
     [
-        '[integration]\nprovider = "fixture"\n[worktree]\ndelete_branch = false\n',
-        '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n',
-        '[integration]\nprovider = "fixture"\n[worktree]\npull_request = "required"\n',
-        '[integration]\nprovider = "fixture"\n[workflow.approvals]\ndev-integration = "auto"\n',
+        "[worktree]\ndelete_branch = false\n",
+        '[worktree]\nmerge = "ff-only"\n',
+        '[worktree]\npull_request = "required"\n',
+        '[workflow.approvals]\ndev-integration = "auto"\n',
     ],
 )
 def test_policy_advance_is_stale(repo, config):
@@ -231,8 +231,8 @@ def test_moved_target_conflict_refuses_at_prepare_with_nothing_changed(repo):
 @pytest.mark.parametrize(
     ("config", "branch_kept"),
     [
-        ('[integration]\nprovider = "fixture"\n[workflow.approvals]\ndev-integration = "auto"\n', False),
-        ('[integration]\nprovider = "fixture"\n[worktree]\ndelete_branch = false\n', True),
+        ('[workflow.approvals]\ndev-integration = "auto"\n', False),
+        ("[worktree]\ndelete_branch = false\n", True),
     ],
 )
 def test_moved_target_that_changed_integration_policy_integrates(repo, config, branch_kept):
@@ -279,7 +279,7 @@ def test_moved_target_digest_does_not_depend_on_identity_or_time_zone(repo, monk
 
 def test_moved_target_under_ff_only_still_refuses_at_prepare(repo):
     base, worktree = repo
-    commit(worktree, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n')
+    commit(worktree, ".devkit/config.toml", '[worktree]\nmerge = "ff-only"\n')
     moved = commit(base, "theirs.txt")
     with pytest.raises(MergeNotFastForwardError) as raised:
         IntegrationService(base).prepare("dev-demo")

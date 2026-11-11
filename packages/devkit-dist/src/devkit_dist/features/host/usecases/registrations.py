@@ -15,9 +15,9 @@ from typing import Any
 
 import tomlkit
 from devkit.advisory import Actor, AdvisoryError, Level
-from devkit_core.base.errors import ArgumentError, GitError
+from devkit_core.base.errors import ArgumentError
 from devkit_core.core import atomic_write_bytes
-from devkit_core.core.git import run_git_text, worktree_records
+from devkit_core.core.git import ignored_paths, run_git_text, tracked_paths, worktree_records
 from devkit_core.core.locks import file_lock
 
 from devkit_dist.features.host.models.errors import HostError
@@ -239,12 +239,12 @@ def _render(host: str, raw: bytes | None, entry: dict | None) -> bytes:
 
 
 def _tracked(root: Path, relative: str) -> bool:
-    return bool(run_git_text(root, "ls-files", "--", relative))
+    return relative in tracked_paths(root, [relative])
 
 
 def _ignored(root: Path, relative: str) -> bool:
     try:
-        return bool(run_git_text(root, "check-ignore", "--", relative))
+        return relative in ignored_paths(root, [relative])
     except AdvisoryError:
         return False
 
@@ -263,25 +263,16 @@ class _Eligibility:
 
     def tracked(self, relative: str) -> bool:
         if self._tracked is None:
-            # A pathspec without glob characters names the path itself or a directory holding tracked files.
-            names = run_git_text(self.root, "ls-files", "-z", "--", *self.relatives).split("\0")
-            self._tracked = {
-                item for item in self.relatives if any(n == item or n.startswith(item + "/") for n in names)
-            }
+            self._tracked = tracked_paths(self.root, self.relatives)
         return relative in self._tracked
 
     def ignored(self, relative: str) -> bool:
         if self._ignored is None:
             try:
-                paths = "".join(item + "\0" for item in self.relatives).encode()
-                output = run_git_text(self.root, "check-ignore", "--stdin", "-z", input=paths)
-                self._ignored = set(output.split("\0")) & set(self.relatives)
-            except AdvisoryError as exc:
-                # Exit status 1 means none is ignored; any other failure is answered path by path, as ``_ignored`` does.
-                if isinstance(exc, GitError) and exc.returncode == 1:
-                    self._ignored = set()
-                else:
-                    self._ignored = {item for item in self.relatives if _ignored(self.root, item)}
+                self._ignored = ignored_paths(self.root, self.relatives)
+            except AdvisoryError:
+                # A failure is answered path by path, as ``_ignored`` does.
+                self._ignored = {item for item in self.relatives if _ignored(self.root, item)}
         return relative in self._ignored
 
 

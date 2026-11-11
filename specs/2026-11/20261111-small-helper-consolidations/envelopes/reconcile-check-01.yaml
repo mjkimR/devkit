@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:44:12.509203Z'
+status: completed
+summary: 'reconcile-reviewer: targets CAP-CLI-agent-cli-toolkit and docs/development/reference/core.md match the code; no-impact for CAP-DIST-agent-projections, host, MCP, shared storage, local render and architecture confirmed; entrypoint rejection sound; no findings'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base main errors=0
+diff_scope:
+  base: 374e106c98782c12e2da54c619c2a2f08a59d277
+  head: 098d3106c1e75e0d92684f0ded8463e041ec73ac

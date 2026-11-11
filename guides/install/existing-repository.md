@@ -208,11 +208,16 @@ Repository-wide effects to present in the plan:
 When `.devkit/` exists, do not reinstall. Diagnose and repair instead:
 
 ```bash
-uv sync                          # install the locked packages
-uv run devkit sync --locked      # restore ignored managed copies without changing committed files
-uv run devkit status             # report problems
-uv run devkit list               # bundles, their selection state and presets
+uv sync                                   # install the locked packages
+uv run devkit sync --locked               # restore ignored managed copies without changing committed files
+uv run devkit sync --registrations-only   # only when the project uses MCP: register the selected hosts
+uv run devkit sync --check                # readiness: exit 0 means the checkout is synchronized
+uv run devkit status                      # report: lists every installed-state problem when the check fails
+uv run devkit list                        # bundles, their selection state and presets
 ```
+
+Without the registration step, a clone that uses MCP keeps `sync --check` at exit `1`
+([MCP onboarding](mcp.md#teammates-and-fresh-clones)).
 
 - When the user asked for an upgrade, follow the upgrade commands in
   [Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources).

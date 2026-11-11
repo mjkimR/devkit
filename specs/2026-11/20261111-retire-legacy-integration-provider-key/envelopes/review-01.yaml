@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:21:49.648230Z'
+status: completed
+summary: 'Self-review (low): AC-01..AC-04 implemented and tested in devkit-agt; out-of-scope devkit-spec and smoke fixtures still write the retired key and fail'
+findings:
+- issue: 'Fixtures outside the declared write scope still write [integration] provider and now fail with INTEGRATION_CONFIG_INVALID: packages/devkit-spec/tests/support/spec_support/delivery.py (_make_synced_repo adds provider = "spec"; 24 devkit-spec e2e tests in test_integration.py, test_integration_rule_runtime.py and test_plan_accept_cli.py fail with ''integration key provider is retired'') and tests/e2e/smoke_integration.py (writes provider = "smoke" before devkit integration prepare).'
+  evidence: packages/devkit-spec/tests/support/spec_support/delivery.py:56-57; tests/e2e/smoke_integration.py:95
+  failure_condition: Any test or smoke run that builds a repository through _make_synced_repo or smoke_integration.py and then calls IntegrationService.prepare or devkit integration prepare.
+  suggested_action: Host authorizes the two fixture edits (delete the two provider lines in delivery.py; write an empty config or drop the [integration] table in smoke_integration.py); optionally also packages/devkit-spec/tests/e2e/bundles/spec/test_sdd_baseline_scenarios.py, which still writes and asserts a provider value but does not fail because it never calls integration.
+  resolution: open
+  severity: P1
+checks:
+  tests: PASS just test-affected mode=full 6771 passed 4 skipped; PASS just test devkit integration+e2e integration 170 passed; FAIL devkit-spec e2e delivery 24 failed
+  lint: PASS just lint, just check, devkit rules check --ci --base main
+diff_scope:
+  base: 73b9039cb6dd2c3180b20c4fce04bb8d0595e428
+  head: 95ccd614a52b7d99c4d3e8a3217256f6953c706d

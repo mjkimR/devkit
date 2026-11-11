@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:43:37.038491Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both P3 fixes in 9411da34: AC-04 names nan-constant as its fixture''s extra-key case; docs _read rechecks S_ISREG and a new test covers a directory appearing after open; harness table unchanged from after.md'
+findings:
+- issue: AC-04 names only extra-key, but the facts nan-constant rows also differ because the fixture appends NaN under an extra top-level key x; the harness no longer shows the facts parse accepting NaN
+  evidence: specs/2026-11/20261111-shared-fingerprinted-memo/spec.md AC-04; evidence/memo_harness.py nan-constant fixture; evidence/after.md
+  failure_condition: A literal check of AC-04 against the harness output fails on the nan-constant rows
+  suggested_action: Amend AC-04 to name nan-constant as the extra-key case of its fixture, keeping before.md immutable
+  resolution: resolved
+  severity: P3
+- issue: The lazy _read of a file-list docs load no longer checks S_ISREG before read_bytes, widening the window in which a FIFO created after open could be opened
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/repositories/memo.py _read
+  failure_condition: A non-regular file appears at the memo path between ParseMemo.open and the first stored() call
+  suggested_action: Keep a cheap S_ISREG check on the lstat result in _read
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS pytest devkit-docs, devkit-core and rules workspace tests 855 passed 1 skipped
+  harness: PASS memo_harness.py rerun equals after.md
+  lint: PASS ruff check, ruff format, pyright devkit-docs 0 errors
+diff_scope:
+  base: ''
+  head: 9411da348de3c352ac9c13df32cbbaac448f1d35

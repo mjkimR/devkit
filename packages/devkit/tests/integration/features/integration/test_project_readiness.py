@@ -9,10 +9,10 @@ from testsupport.rules import git, init_repo, write
 
 
 @pytest.mark.parametrize("approach", ["adaptive-dev", "sdd"])
-@pytest.mark.parametrize("legacy", ["", '[integration]\nprovider="missing-provider"\n'])
-def test_merge_needs_no_readiness_provider_or_claims(tmp_path: Path, approach, legacy):
+@pytest.mark.parametrize("table", ["", "[integration]\n"], ids=["absent", "empty"])
+def test_merge_needs_no_readiness_provider_or_claims(tmp_path: Path, approach, table):
     base = init_repo(tmp_path / "base")
-    write(base, ".devkit/config.toml", f'[development]\napproach="{approach}"\n' + legacy)
+    write(base, ".devkit/config.toml", f'[development]\napproach="{approach}"\n' + table)
     git(base, "add", ".")
     git(base, "commit", "-qm", "configure")
     worktree = start(locate(base), "dev-demo").path
