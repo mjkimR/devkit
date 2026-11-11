@@ -63,8 +63,8 @@ request. A review-only request ends with findings and no product edits.
    `references/design-guidance.md` and run the project's applicable checks; fix exposed defects and recheck. If
    critique can improve the result, use one bounded critique/refinement pass; stop without a score or consensus quota.
 9. Report the applied improvement, why it serves the user goal, what was actually checked and material limits.
-   On the Impeccable track, also report changes outside the edit list, session output, consumer context files the
-   session created or changed, unverifiable attribution and each OOUX document the change made stale.
+   On the Impeccable track, also make the reports that `references/orchestration.md` "Accept the return" and
+   "Project files and user requests" require.
    Honor a requested output destination; otherwise report in conversation. Product artifacts follow project ownership.
 10. If the user asks you to install Impeccable, add ignore entries, remove Impeccable output or add the `PRODUCT.md`
     reference section, read `references/orchestration.md` before acting and follow its project-file rules; carry the

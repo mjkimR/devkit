@@ -56,9 +56,8 @@
 ## 4. Optional devkit execution example
 
 For the active Host's post-integration asynchronous verification, when `devkit exec` is available, inspect installed
-help and setup/resource prerequisites before use. Resolve a full locally available fixed commit SHA and pass the
-native argv after `--`. Replace bare `devkit` with the consumer's documented invocation prefix; the placeholders are
-examples, not executable consumer commands:
+help and setup/resource prerequisites before use. Replace bare `devkit` with the consumer's documented invocation
+prefix; the placeholders are examples, not executable consumer commands:
 
 ```sh
 devkit exec start --ref <full-commit-sha> -- <native-command> <native-args>
