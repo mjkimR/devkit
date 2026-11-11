@@ -12,7 +12,6 @@ from devkit_dist.features.project import read_development_approach
 from devkit_spec.base.errors import ApprovalKeyIgnoredWarning
 from devkit_spec.features.policy.services.config import APPROVAL_GATES, check_approvals, read_spec_config
 
-GATES = APPROVAL_GATES
 # Keys that name no gate: ``exception`` is a shared stage a person always handles (03 §2).
 NOT_GATES = ("exception", "plan-intent")
 
@@ -25,7 +24,7 @@ class InspectPolicyUseCase(BaseUseCase):
         check_approvals(workflow.approvals)
         worktree = read_worktree_config(root)
         spec = read_spec_config(root)
-        gates = [*GATES, *sorted(set(workflow.approvals) - set(GATES) - set(NOT_GATES))]
+        gates = [*APPROVAL_GATES, *sorted(set(workflow.approvals) - set(APPROVAL_GATES) - set(NOT_GATES))]
         notices: list[AdvisoryError] = [
             ApprovalKeyIgnoredWarning(
                 f"[workflow.approvals] {key} has no effect: "

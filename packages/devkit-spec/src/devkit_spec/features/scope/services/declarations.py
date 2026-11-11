@@ -7,18 +7,13 @@ from typing import Any
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 from devkit_docs.base.errors import EntrypointsPathError
+from devkit_docs.base.layout import SKELETON_MARKER, TARGET_DOCS
+from devkit_docs.features.governance.services.entrypoint_paths import entrypoint_bearing
+from devkit_docs.utils.paths import covers, normalize
 
 from devkit_spec.base.errors import ProposalNotFoundError, ScopeInputInvalidError, ScopeSpecNotFoundError
-from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, SKELETON_MARKER, TARGET_DOCS
-from devkit_spec.features.entrypoints import (
-    Reason,
-    classify_boundary,
-    covers,
-    entrypoint_bearing,
-    feedback_file,
-    normalize,
-    parse_boundaries,
-)
+from devkit_spec.base.units import proposal_anchor, proposal_unit
+from devkit_spec.features.entrypoints import Reason, classify_boundary, feedback_file, parse_boundaries
 from devkit_spec.features.scope.models.model import Diff, Granularity, ScopePath, ScopeSet, Source, Stage, Unresolved
 from devkit_spec.features.scope.models.source import InputPath
 
@@ -167,18 +162,15 @@ def from_proposal(root: InputPath, slug: str) -> ScopeSet:
 
     Raises ``ProposalNotFoundError`` when no bundle or single-file proposal has the slug.
     """
-    clean = slug
-    bundle = root / PROPOSALS / f"PROP-{clean}"
-    single = root / PROPOSALS / f"PROP-{clean}.md"
-    if (bundle / PROPOSAL_FILE).is_file():
-        anchor = bundle / PROPOSAL_FILE
-    elif single.is_file():
-        anchor = single
-    else:
-        raise ProposalNotFoundError(f"no proposal has the slug {clean!r}", target_files=[f"{PROPOSALS}/PROP-{clean}"])
-    scope = ScopeSet(id=_declared_id(anchor) or f"PROP-{clean}")
-    relative = f"{PROPOSALS}/PROP-{clean}/{TARGET_DOCS}"
-    blueprint = bundle / TARGET_DOCS
+    anchor = proposal_anchor(root, slug)
+    if not anchor.is_file():
+        # A bundle directory without proposal.md still falls back to the single-file proposal.
+        anchor = root / f"{proposal_unit(slug)}.md"
+        if not anchor.is_file():
+            raise ProposalNotFoundError(f"no proposal has the slug {slug!r}", target_files=[proposal_unit(slug)])
+    scope = ScopeSet(id=_declared_id(anchor) or f"PROP-{slug}")
+    relative = f"{proposal_unit(slug)}/{TARGET_DOCS}"
+    blueprint = root / relative
     targets = _targets(blueprint, relative)
     if targets is None:
         reason = "no-targets" if blueprint.is_file() else "missing-target-docs"

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
@@ -13,7 +12,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow.repositories.git import is_ancestor
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import FrontmatterError, run_git, run_git_text, status_records
+from devkit_core.core import FrontmatterError, changed_paths, dirty_paths, run_git_text
 
 from devkit_spec.base.errors import WorkerCheckFailedError, WorkerCheckNotRunNotice, WorkerScopeUnresolvedError
 from devkit_spec.features.worker.services.extensions import inspect_extensions
@@ -122,16 +121,6 @@ def run_check(root: Path, args: Sequence[str]) -> dict[str, Any]:
     }
 
 
-def dirty_paths(root: Path) -> list[str]:
-    # Both sides of a rename or copy are dirty.
-    paths = set()
-    for record in status_records(root):
-        paths.add(record.path)
-        if record.original is not None:
-            paths.add(record.original)
-    return sorted(paths)
-
-
 class InspectWorkerUseCase(BaseUseCase):
     """InspectWorker execution boundary."""
 
@@ -164,14 +153,8 @@ class InspectWorkerUseCase(BaseUseCase):
         }
         checks["ancestry"] = {"status": "pass" if is_ancestor(root, base, head) else "fail"}
         checks["head"] = {"status": "pass" if tip == head else "fail", "actual": tip}
-        # Disable rename detection so both removed and added names are checked against the scope.
-        changed = [
-            p
-            for p in os.fsdecode(run_git(root, "diff", "--no-renames", "--name-only", "-z", base, head, "--")).split(
-                "\0"
-            )
-            if p
-        ]
+        # Without rename detection both removed and added names are checked against the scope.
+        changed = changed_paths(root, base, head)
         result["changed_paths"] = changed
         if scope is not None:
             scope = [prefix(p) for p in scope]

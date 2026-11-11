@@ -11,6 +11,7 @@ from devkit_agt.features.worktree import BASE_KEY, UNIT_KEY, branch_marker, loca
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core import GitError, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
+from devkit_docs.base.layout import PROPOSAL_FILE
 
 from devkit_spec.base.axes import PROPOSAL_WORKFLOW, SPEC_WORKFLOW_PREFIX
 from devkit_spec.base.errors import (
@@ -20,7 +21,7 @@ from devkit_spec.base.errors import (
     WorkerScopeUnresolvedError,
     WorkerUnitUnresolvedError,
 )
-from devkit_spec.base.units import PROPOSAL_FILE, PROPOSAL_UNIT, SPEC_UNIT
+from devkit_spec.base.units import PROPOSAL_UNIT, SPEC_UNIT
 from devkit_spec.features.delivery.usecases.attach import attach_check
 from devkit_spec.features.entrypoints.repositories.bundle import parse_boundaries, parse_targets
 

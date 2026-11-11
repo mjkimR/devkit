@@ -1,8 +1,8 @@
 """Shared CLI rendering for scope registration results."""
 
 import click
+from devkit_dist.adapters.cli import sentinel
 
-from devkit_spec.adapters.cli import sentinel
 from devkit_spec.features.scope.models.location import Location
 from devkit_spec.features.scope.models.model import Record
 

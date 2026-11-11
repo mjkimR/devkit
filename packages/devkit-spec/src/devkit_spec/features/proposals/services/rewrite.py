@@ -22,9 +22,13 @@ from pathlib import Path
 from devkit_agt.features.rules import LineKind, LinkRelocation, relocate_links, scan
 from devkit_core.core import FrontmatterError, atomic_write_text
 from devkit_core.core.frontmatter import locate
-from devkit_docs.features.documents import Document, DocumentIndex, Reference, parse_document, visible_lines
-from devkit_docs.features.documents.models.ids import ID_SOURCE
-from devkit_docs.features.documents.models.model import BODY
+from devkit_docs.features.documents import (
+    Document,
+    DocumentIndex,
+    Reference,
+    body_references,
+    parse_document,
+)
 from devkit_docs.features.documents.repositories.index import SOURCE_DIRECTORIES
 from devkit_docs.features.documents.services.rewrite import rewrite
 
@@ -37,9 +41,7 @@ UNWRITABLE = "unwritable"
 # Links also report devkit's ``UnresolvedReason`` values: ``unmapped`` (a link into the proposal with no new
 # location), ``unreadable`` and ``unwritable``.
 
-_CODE_SPAN_ID = re.compile(rf"`({ID_SOURCE})`")
 _CODE_SPAN_PATH = re.compile(r"`([A-Za-z0-9_.-]+/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]*)`")
-_BRACKET_ID = re.compile(rf"\[({ID_SOURCE})\]")
 
 
 @dataclass(frozen=True)
@@ -194,25 +196,7 @@ def _body_references(path: str, text: str) -> list[Reference]:
     """The prose references of a file that declares no ID (a README, a material without frontmatter)."""
     block = locate(text)
     start, first_line = (block.end, block.body_line) if block is not None else (0, 1)
-    refs: list[Reference] = []
-    for line in visible_lines(text, start=start, first_line=first_line):
-        found = [(m, False) for m in _CODE_SPAN_ID.finditer(line.text)]
-        found += [(m, True) for m in _BRACKET_ID.finditer(line.text)]
-        for match, bracket in sorted(found, key=lambda item: item[0].start()):
-            refs.append(
-                Reference(
-                    target=match.group(1),
-                    source="",
-                    path=path,
-                    field=BODY,
-                    line=line.number,
-                    column=match.start(1) + 1,
-                    start=line.offset + match.start(1),
-                    end=line.offset + match.end(1),
-                    bracket=bracket,
-                )
-            )
-    return refs
+    return body_references(text, path=path, start=start, first_line=first_line)
 
 
 def rewrite_ids(

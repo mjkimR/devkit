@@ -1,26 +1,20 @@
 """Exact proposal status edits that preserve unrelated frontmatter and body text."""
 
-import re
-
 from devkit_core.base.errors import FrontmatterError
-from devkit_core.core.frontmatter import locate
-
-# The frontmatter ``status:`` line (plain or quoted value); a trailing comment ("#" after whitespace) stays.
-_STATUS = re.compile(r"""^status:[ \t]*(?:[A-Za-z-]+|"[A-Za-z-]*"|'[A-Za-z-]*')(?=[ \t]*\r?$|[ \t]+#)""", re.MULTILINE)
+from devkit_core.core.frontmatter import set_field
 
 
 def accepted_text(text: str) -> str:
-    """Replace the frontmatter status value, preserving comments, line endings and body.
+    """Replace the frontmatter status value, whatever it is, preserving comments, line endings and body
+    (``set_field``).
 
-    Raise ``ValueError`` when no replaceable status exists inside the frontmatter.
+    Raise ``ValueError`` when the frontmatter has no top-level ``status:`` line or never closes.
     A status-like line in the Markdown body never supplies the missing metadata.
     """
     try:
-        block = locate(text)
+        updated = set_field(text, "status", "accepted", missing=None)
     except FrontmatterError as exc:
         raise ValueError("proposal frontmatter is never closed") from exc
-    end = block.end if block else 0
-    updated, count = _STATUS.subn("status: accepted", text[:end], count=1)
-    if count != 1:
+    if updated is None:
         raise ValueError("proposal frontmatter has no replaceable status")
-    return updated + text[end:]
+    return updated

@@ -298,7 +298,7 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
 
     # 2. The approved invocation merges into base, removes worktree & branch, prunes proposal dir, sweeps scope record.
     completed = service.execute_cli("dev-feat", expected_digest=None if auto else digest)
-    assert completed.status == "completed", completed.to_dict()
+    assert completed.status == "completed", completed.compact_dict()
     assert completed.authority == ("policy" if auto else "host-conversation")
     assert completed.steps["merge"] == "completed"
     assert completed.steps["worktree_remove"] == "completed"
@@ -697,7 +697,7 @@ def test_moved_target_that_changed_tool_spec_integrates_through_the_spec_provide
     request = service.prepare("dev-feat").request
     assert request.acceptance is None and request.context.result_sha is None
     completed = service.execute_cli("dev-feat", expected_digest=request.digest)
-    assert completed.status == "completed", completed.to_dict()
+    assert completed.status == "completed", completed.compact_dict()
     assert git(repo, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
 
 

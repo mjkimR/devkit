@@ -16,11 +16,6 @@ from devkit_core.core import remove_empty_tree
 from devkit_spec.features.proposals.usecases.scaffold import PROPOSALS, require_slug
 
 
-def prune_proposals(root: Path, slug: str | None = None) -> list[str]:
-    """Compose the application entrypoint for internal callers."""
-    return PruneProposalsUseCase().execute(root, slug)
-
-
 class PruneProposalsUseCase(BaseUseCase):
     """Application entrypoint for prune proposals."""
 

@@ -17,7 +17,7 @@ from devkit_spec.base.errors import (
     ProposalSlugConflictError,
     ProposalSlugError,
 )
-from devkit_spec.features.proposals import clean_slug, create_proposal, create_spec
+from devkit_spec.features.proposals import CreateProposalUseCase, clean_slug, create_spec
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 
@@ -38,7 +38,7 @@ def test_create_proposal_bundle(workspace: Path) -> None:
     roadmap = workspace / "docs/roadmap/MS-foundation.md"
     roadmap.parent.mkdir(parents=True)
     roadmap.write_text("---\nid: MS-foundation\nstatus: planned\n---\n")
-    created = create_proposal(
+    created = CreateProposalUseCase().execute(
         workspace,
         "Fast Engine",
         title="Fast: Rule Engine",
@@ -86,8 +86,8 @@ def test_create_proposal_bundle(workspace: Path) -> None:
 
 
 def test_create_proposal_writes_the_task_kind_effort_and_close_fields_when_given(workspace: Path) -> None:
-    accept(workspace / create_proposal(workspace, "old-fix").path)
-    created = create_proposal(
+    accept(workspace / CreateProposalUseCase().execute(workspace, "old-fix").path)
+    created = CreateProposalUseCase().execute(
         workspace,
         "fix",
         task_kind="bugfix",
@@ -105,11 +105,11 @@ def test_create_proposal_writes_the_task_kind_effort_and_close_fields_when_given
 
 def test_create_proposal_supersedes_an_accepted_proposal_only(workspace: Path) -> None:
     with pytest.raises(ProposalNotFoundError) as missing:
-        create_proposal(workspace, "fix", supersedes="PROP-old-fix")
+        CreateProposalUseCase().execute(workspace, "fix", supersedes="PROP-old-fix")
     assert missing.value.target_files == ("--supersedes",)
-    create_proposal(workspace, "old-fix")
+    CreateProposalUseCase().execute(workspace, "old-fix")
     with pytest.raises(ProposalNotApprovedError) as draft:
-        create_proposal(workspace, "fix", supersedes="PROP-old-fix")
+        CreateProposalUseCase().execute(workspace, "fix", supersedes="PROP-old-fix")
     assert draft.value.code == "SPEC_PROPOSAL_NOT_APPROVED" and "draft, not accepted" in str(draft.value)
     assert draft.value.target_files == ("docs/proposals/PROP-old-fix/proposal.md",)
     assert not (workspace / "docs/proposals/PROP-fix").exists()
@@ -129,14 +129,14 @@ def test_create_proposal_refuses_values_outside_the_contract(
     workspace: Path, fields: dict[str, str], flag: str
 ) -> None:
     with pytest.raises(ArgumentError) as raised:
-        create_proposal(workspace, "fix", **fields)  # type: ignore[arg-type]
+        CreateProposalUseCase().execute(workspace, "fix", **fields)  # type: ignore[arg-type]
     assert raised.value.target_files == (flag,)
     assert not (workspace / "docs/proposals/PROP-fix").exists()
 
 
 def test_create_proposal_binds_sdd_proposal(workspace: Path) -> None:
     write_workflow(workspace, "sdd-proposal", PROPOSAL_WORKFLOW)
-    created = create_proposal(workspace, "bound")
+    created = CreateProposalUseCase().execute(workspace, "bound")
     meta = parse((workspace / created.path).read_text(encoding="utf-8")).data
     assert meta is not None and meta["workflow"] == "sdd-proposal"
     assert "workflow_hash" not in meta
@@ -145,7 +145,7 @@ def test_create_proposal_binds_sdd_proposal(workspace: Path) -> None:
 
 
 def test_create_proposal_without_target_docs(workspace: Path) -> None:
-    created = create_proposal(workspace, "lean")
+    created = CreateProposalUseCase().execute(workspace, "lean")
     assert created.target_docs is None
     assert not (workspace / "docs/proposals/PROP-lean/target-docs.md").exists()
     assert [path.name for path in (workspace / "docs/proposals/PROP-lean").iterdir()] == ["proposal.md"]
@@ -154,24 +154,24 @@ def test_create_proposal_without_target_docs(workspace: Path) -> None:
 
 
 def test_create_proposal_refuses_an_existing_proposal(workspace: Path, write: Write) -> None:
-    create_proposal(workspace, "dup")
+    CreateProposalUseCase().execute(workspace, "dup")
     with pytest.raises(ProposalExistsError):
-        create_proposal(workspace, "dup")
+        CreateProposalUseCase().execute(workspace, "dup")
     write("docs/proposals/PROP-single.md", "---\nid: PROP-single\n---\n")
     with pytest.raises(ProposalExistsError):
-        create_proposal(workspace, "single")
+        CreateProposalUseCase().execute(workspace, "single")
 
 
 def test_create_proposal_refuses_an_empty_slug(workspace: Path) -> None:
     with pytest.raises(ProposalSlugError) as raised:
-        create_proposal(workspace, "--!")
+        CreateProposalUseCase().execute(workspace, "--!")
     assert raised.value.code == "SPEC_PROPOSAL_SLUG_INVALID"
 
 
 def test_new_documents_get_slugs_the_id_convention_accepts(workspace: Path) -> None:
-    assert create_proposal(workspace, "fast_engine", today=TODAY).id == "PROP-fast-engine"
+    assert CreateProposalUseCase().execute(workspace, "fast_engine", today=TODAY).id == "PROP-fast-engine"
     for call in (
-        lambda: create_proposal(workspace, "2024-budget", today=TODAY),
+        lambda: CreateProposalUseCase().execute(workspace, "2024-budget", today=TODAY),
         lambda: CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "2024 Budget"),
         lambda: create_spec(workspace, "SPEC-20261006-foo", day=TODAY),
     ):
@@ -186,7 +186,7 @@ def test_slug_conflicts_with_an_existing_spec(workspace: Path, write: Write) -> 
     write("specs/2026-09/20260901-demo/spec.md", "---\nid: SPEC-demo\nstatus: completed\n---\n")
     write("docs/capabilities/broken.md", "---\nid: [unterminated\n")  # an unrelated broken document
     with pytest.raises(ProposalSlugConflictError) as raised:
-        create_proposal(workspace, "demo")
+        CreateProposalUseCase().execute(workspace, "demo")
     assert raised.value.target_files == ("specs/2026-09/20260901-demo/spec.md",)
     assert raised.value.advisory.mode == "INTERACTION"
     assert not (workspace / "docs/proposals/PROP-demo").exists()
@@ -194,11 +194,11 @@ def test_slug_conflicts_with_an_existing_spec(workspace: Path, write: Write) -> 
 
 def test_a_broken_spec_does_not_block_a_proposal(workspace: Path, write: Write) -> None:
     write("specs/2026-09/20260901-draft/spec.md", "---\nid: [unterminated\n")
-    create_proposal(workspace, "fresh")
+    CreateProposalUseCase().execute(workspace, "fresh")
 
 
 def test_create_padr(workspace: Path) -> None:
-    create_proposal(workspace, "fast-engine")
+    CreateProposalUseCase().execute(workspace, "fast-engine")
     created = CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "Use Go AST Parser", today=TODAY)
     assert created.to_dict() == {
         "id": "PADR-use-go-ast-parser",
@@ -231,7 +231,7 @@ def test_create_padr(workspace: Path) -> None:
 
 
 def test_create_padr_with_an_explicit_slug(workspace: Path) -> None:
-    create_proposal(workspace, "plans")
+    CreateProposalUseCase().execute(workspace, "plans")
     with pytest.raises(ProposalSlugError) as raised:
         CreateProposalDecisionUseCase().execute(workspace, "plans", "2024 roadmap")
     assert raised.value.advisory.fix is not None and "--slug" in raised.value.advisory.fix
@@ -247,8 +247,8 @@ def test_create_padr_with_an_explicit_slug(workspace: Path) -> None:
 
 
 def test_padr_ids_are_unique_across_proposals(workspace: Path) -> None:
-    create_proposal(workspace, "first")
-    create_proposal(workspace, "second")
+    CreateProposalUseCase().execute(workspace, "first")
+    CreateProposalUseCase().execute(workspace, "second")
     CreateProposalDecisionUseCase().execute(workspace, "first", "Same decision")
     with pytest.raises(ProposalDecisionExistsError) as raised:
         CreateProposalDecisionUseCase().execute(workspace, "second", "Same decision")
@@ -258,13 +258,13 @@ def test_padr_ids_are_unique_across_proposals(workspace: Path) -> None:
 def test_padr_needs_a_bundle_and_a_title(workspace: Path) -> None:
     with pytest.raises(ProposalNotFoundError):
         CreateProposalDecisionUseCase().execute(workspace, "absent", "Title")
-    create_proposal(workspace, "there")
+    CreateProposalUseCase().execute(workspace, "there")
     with pytest.raises(ProposalSlugError):
         CreateProposalDecisionUseCase().execute(workspace, "there", "?!")
 
 
 def test_create_padr_title_longer_than_proposal_slug_limit(workspace: Path) -> None:
-    create_proposal(workspace, "long-titles")
+    CreateProposalUseCase().execute(workspace, "long-titles")
     long_title = "Planning steps split between a spec reference and the worker contract"
     assert len(long_title) == 69
     created = CreateProposalDecisionUseCase().execute(workspace, "long-titles", long_title, today=TODAY)
@@ -282,6 +282,6 @@ def test_create_proposal_rolls_back_a_failed_write(workspace: Path, monkeypatch:
     with monkeypatch.context() as patch:
         patch.setattr(scaffold, "_target_docs", broken)
         with pytest.raises(OSError, match="disk full"):
-            create_proposal(workspace, "fast-engine", with_target_docs=True, today=TODAY)
+            CreateProposalUseCase().execute(workspace, "fast-engine", with_target_docs=True, today=TODAY)
     assert sorted(workspace.rglob("*")) == before
-    assert create_proposal(workspace, "fast-engine", with_target_docs=True, today=TODAY).target_docs
+    assert CreateProposalUseCase().execute(workspace, "fast-engine", with_target_docs=True, today=TODAY).target_docs

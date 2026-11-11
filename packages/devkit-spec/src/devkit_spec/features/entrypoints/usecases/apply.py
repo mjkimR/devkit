@@ -22,7 +22,7 @@ import yaml
 from devkit_core.core import FrontmatterError, atomic_write_text
 from devkit_core.core.frontmatter import locate, parse
 from devkit_docs.base.errors import EntrypointsPathError
-from devkit_docs.features.governance.services.entrypoint_paths import covers, normalize
+from devkit_docs.utils.paths import covers, normalize
 
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
 

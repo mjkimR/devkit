@@ -15,12 +15,13 @@ from devkit_dist.adapters.cli import (
     echo_json,
     echo_notices,
     exit_on_warnings,
+    fields_line,
     is_json,
     resolve_root,
+    sentinel,
     workspace_option,
 )
 
-from devkit_spec.adapters.cli import fields_line, sentinel
 from devkit_spec.features.policy.usecases.inspect import InspectPolicyUseCase
 
 

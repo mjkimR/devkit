@@ -7,15 +7,15 @@ from spec_support.proposals import TODAY, accept
 from spec_support.scope import git, make_repo
 
 from devkit_spec.base.errors import HandoffStaleError
-from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
-from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
+from devkit_spec.features.proposals import CreateProposalUseCase
 from devkit_spec.features.scope import load_token, open_session
 
 
 @pytest.fixture
 def accepted_worktree(tmp_path: Path) -> Path:
     repo = make_repo(tmp_path / "repo")
-    proposal = create_proposal(repo, "handoff", today=TODAY)
+    proposal = CreateProposalUseCase().execute(repo, "handoff", today=TODAY)
     accept(repo / proposal.path)
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "accepted proposal")
@@ -36,7 +36,7 @@ def test_handoff_registers_after_writing_spec_and_preserves_notices(accepted_wor
         assert load_token(open_session(root).location.token_path) is None
         observed.append("handoff-complete")
 
-    completed = handoff_and_register(root, "handoff", today=TODAY, before_registration=before_registration)
+    completed = HandoffProposalUseCase().execute(root, "handoff", today=TODAY, before_registration=before_registration)
     handed, registered = completed.handoff, completed.registered
     assert observed == ["handoff-complete"]
     assert registered is not None
@@ -53,7 +53,7 @@ def test_registration_failure_is_silent_after_a_successful_handoff(accepted_work
     session = open_session(root)
     session.location.token_path.write_text("existing-token\n")
 
-    completed = handoff_and_register(root, "handoff", today=TODAY)
+    completed = HandoffProposalUseCase().execute(root, "handoff", today=TODAY)
     handed, registered = completed.handoff, completed.registered
 
     assert registered is None
@@ -73,7 +73,7 @@ def test_guard_refusal_keeps_handoff_without_starting_registration(accepted_work
         raise HandoffStaleError("the invocation was cancelled after handoff")
 
     with pytest.raises(HandoffStaleError):
-        handoff_and_register(root, "handoff", today=TODAY, before_registration=cancelled)
+        HandoffProposalUseCase().execute(root, "handoff", today=TODAY, before_registration=cancelled)
 
     session = open_session(root)
     assert load_token(session.location.token_path) is None
@@ -112,12 +112,13 @@ def test_native_handoff_suppresses_registration_diagnostics(
     monkeypatch.setattr(native_handoff, "_prepare", lambda *args, **kwargs: (None, None))
     captured = []
 
-    def complete(root: Path, slug: str, **kwargs):
-        completed = handoff_and_register(root, slug, today=TODAY, **kwargs)
-        captured.append(completed)
-        return completed
+    class Complete(HandoffProposalUseCase):
+        def execute(self, root: Path, slug: str, **kwargs):
+            completed = super().execute(root, slug, today=TODAY, **kwargs)
+            captured.append(completed)
+            return completed
 
-    monkeypatch.setattr(native_handoff, "handoff_and_register", complete)
+    monkeypatch.setattr(native_handoff, "HandoffProposalUseCase", Complete)
     result = native_handoff.HandoffUseCase(base)._execute(preview, "medium")
 
     completed = captured[0]

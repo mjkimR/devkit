@@ -12,7 +12,7 @@ from distsupport.guidance import assert_rule
 from spec_support.bundle_text import raw, text
 from spec_support.proposals import TODAY
 
-from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase
 
 DELEGATE = "skills/spec-delegate/SKILL.md"
 BACKLOG = "skills/spec/references/backlog.md"
@@ -151,7 +151,9 @@ def test_xl_has_a_judgeable_definition_with_an_example_of_each_side(tmp_path: Pa
     assert_rule(raw(BACKLOG), "`size: xl`", "two or more specs", "different `task_kind`")
     assert_rule(raw("skills/spec/references/proposals-catalog.md"), "`size: xl`", "backlog.md#the-xl-size-gate")
     (tmp_path / ".devkit").mkdir()
-    scaffolded = (tmp_path / create_proposal(tmp_path, "x", today=TODAY).path).read_text(encoding="utf-8")
+    scaffolded = (tmp_path / CreateProposalUseCase().execute(tmp_path, "x", today=TODAY).path).read_text(
+        encoding="utf-8"
+    )
     assert XL_DEFINITION in scaffolded
     for document in (template, text("skills/spec/references/proposals-catalog.md"), scaffolded, text(BACKLOG)):
         assert "major overhaul" not in document

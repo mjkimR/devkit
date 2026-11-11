@@ -10,7 +10,7 @@ from devkit_dist.cli import cli as devkit_cli
 from spec_support.proposals import TODAY, accept
 from spec_support.scope import git, write
 
-from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase
 
 
 def _repo(tmp_path: Path) -> Path:
@@ -19,8 +19,8 @@ def _repo(tmp_path: Path) -> Path:
     git(root, "init", "-q", "-b", "main")
     write(root, ".devkit/config.toml", "")
     for slug in ("local", "remote", "idle", "taken"):
-        create_proposal(root, slug, today=TODAY)
-    accept(root / create_proposal(root, "done", today=TODAY).path)
+        CreateProposalUseCase().execute(root, slug, today=TODAY)
+    accept(root / CreateProposalUseCase().execute(root, "done", today=TODAY).path)
     git(root, "add", "-A")
     git(root, "commit", "-q", "-m", "proposals")
     git(root, "branch", "plan-local")

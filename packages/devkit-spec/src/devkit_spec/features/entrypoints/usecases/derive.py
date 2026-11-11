@@ -11,7 +11,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_docs.base.errors import UnresolvedIdError
 from devkit_docs.features.documents import Document, DocumentIndex, Kind, is_id
-from devkit_docs.utils.paths import _bundle_dir
+from devkit_docs.utils.paths import normalize
 
 from devkit_spec.base.errors import (
     DEVKIT,
@@ -21,6 +21,7 @@ from devkit_spec.base.errors import (
     EntrypointsInputMissingError,
     EntrypointsTargetError,
 )
+from devkit_spec.base.units import spec_bundle_dir
 from devkit_spec.features.entrypoints import (
     Applied,
     adopt_nested_selectors,
@@ -30,7 +31,6 @@ from devkit_spec.features.entrypoints import (
     exclude,
     fold_by_directory_selectors,
     load_bundle,
-    normalize,
     select,
     unmatched_selectors,
 )
@@ -125,7 +125,7 @@ class DeriveEntrypointsUseCase(BaseUseCase):
         documents = {document.path: document for document in index.documents}
         skipped: list[Skipped] = []
         if spec_dir is not None:
-            pairs, skipped = derive(root, load_bundle(root, _bundle_dir(root, spec_dir)), documents)
+            pairs, skipped = derive(root, load_bundle(root, spec_bundle_dir(root, spec_dir)), documents)
         else:
             per_bundle: list[list[Pair]] = []
             for spec in _specs(index, status or DEFAULT_STATUS):

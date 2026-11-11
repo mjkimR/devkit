@@ -19,10 +19,10 @@ from devkit_dist.adapters.cli import (
     exit_on_warnings,
     is_json,
     resolve_root,
+    sentinel,
     workspace_option,
 )
 
-from devkit_spec.adapters.cli import sentinel
 from devkit_spec.features.delivery.usecases.specs import CreateSpecUseCase
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
 

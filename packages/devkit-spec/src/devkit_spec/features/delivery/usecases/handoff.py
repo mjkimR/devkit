@@ -21,17 +21,6 @@ class CompletedHandoff:
     notices: list[AdvisoryError]
 
 
-def handoff_and_register(
-    root: Path,
-    slug: str,
-    *,
-    today: date | None = None,
-    before_registration: Callable[[], None] | None = None,
-) -> CompletedHandoff:
-    """Compose the application entrypoint for internal callers."""
-    return HandoffProposalUseCase().execute(root, slug, today=today, before_registration=before_registration)
-
-
 class HandoffProposalUseCase(BaseUseCase):
     """Application entrypoint for handoff and register."""
 

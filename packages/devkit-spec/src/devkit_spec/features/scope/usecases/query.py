@@ -8,7 +8,6 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_docs.utils.paths import _bundle_dir
 
 from devkit_spec.base.errors import (
     DEVKIT,
@@ -17,6 +16,7 @@ from devkit_spec.base.errors import (
     ScopeSpecNotFoundError,
     ScopeTokenMissingError,
 )
+from devkit_spec.base.units import spec_bundle_dir
 from devkit_spec.features.scope import (
     PairResult,
     Problem,
@@ -39,7 +39,7 @@ def _spec_dir(root: Path, value: str | None) -> str:
             target_files=["--spec"],
             fix=f"Pass --spec with a spec bundle directory ({DEVKIT} docs list spec --history lists them)",
         )
-    relative = _bundle_dir(root, value)
+    relative = spec_bundle_dir(root, value)
     if not (root / relative).is_dir():
         raise ScopeSpecNotFoundError(f"spec bundle not found: {relative}", target_files=[relative])
     return relative
@@ -74,7 +74,7 @@ class CompareScopesUseCase(BaseUseCase):
     ) -> tuple[list[ScopeSet], list[PairResult], dict[str, int]]:
         sets: list[ScopeSet] = [from_proposal(root, slug) for slug in proposals]
         for value in specs:
-            relative = _bundle_dir(root, value)
+            relative = spec_bundle_dir(root, value)
             sets.append(from_spec(root, relative))
         pairs = compare_all(sets)
         summary = {"sets": len(sets), "pairs": len(pairs), "overlapping": _overlapping(pairs)}

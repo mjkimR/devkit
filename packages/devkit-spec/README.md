@@ -91,7 +91,7 @@ The command writes and repairs nothing. See `CAP-DLV-delivery-workflows`.
 scope, entrypoints, worker inspection, delivery integration, policy and governance (the lifecycle rules). Each feature keeps
 its CLI and MCP adapters beside its use cases, services, repositories and models; only layers the feature needs
 are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts,
-and `adapters/cli.py` holds the sentinel output the commands share.
+and `adapters/cli.py` names the command prefix the shared `devkit_dist.adapters.cli` sentinels use.
 
 CLI and MCP execution entrypoints implement `devkit_core.base.usecase.BaseUseCase` with a typed
 `execute` method. Internal parsing, rendering and composition helpers remain functions. Constructors wire

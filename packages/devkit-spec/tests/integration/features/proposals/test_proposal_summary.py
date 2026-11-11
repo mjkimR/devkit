@@ -11,7 +11,7 @@ from devkit_dist.cli import cli as devkit_cli
 from spec_support.proposals import MONTH, STAMP, TODAY, accept, spec_dir
 
 from devkit_spec.base.errors import ProposalInvalidError
-from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase, create_spec, handoff_proposal
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 SUMMARY = "Defines how login sessions expire: sessions end after 30 minutes."
@@ -25,7 +25,7 @@ def _meta(path: Path) -> dict[str, object]:
 
 
 def test_creation_commands_write_the_summary(workspace: Path) -> None:
-    proposal = workspace / create_proposal(workspace, "a", summary=f"  {SUMMARY} ", today=TODAY).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "a", summary=f"  {SUMMARY} ", today=TODAY).path
     assert _meta(proposal)["summary"] == SUMMARY
     assert PLACEHOLDER not in proposal.read_text()
     padr = (
@@ -40,7 +40,7 @@ def test_creation_commands_write_the_summary(workspace: Path) -> None:
 
 
 def test_without_summary_proposal_md_has_a_placeholder(workspace: Path) -> None:
-    proposal = workspace / create_proposal(workspace, "a", today=TODAY).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "a", today=TODAY).path
     assert f"title: a\n{PLACEHOLDER}\nstatus: draft" in proposal.read_text()
     assert "summary" not in _meta(proposal)
     padr = workspace / CreateProposalDecisionUseCase().execute(workspace, "a", "Use JWT", today=TODAY).path
@@ -54,7 +54,7 @@ def test_without_summary_proposal_md_has_a_placeholder(workspace: Path) -> None:
 
 
 def test_handoff_carries_the_summary(workspace: Path) -> None:
-    proposal = workspace / create_proposal(workspace, "a", summary=SUMMARY, today=TODAY).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "a", summary=SUMMARY, today=TODAY).path
     CreateProposalDecisionUseCase().execute(workspace, "a", "Use JWT", summary="Sessions are signed JWTs.", today=TODAY)
     accept(proposal)
     result = handoff_proposal(workspace, "a", today=TODAY)
@@ -62,7 +62,7 @@ def test_handoff_carries_the_summary(workspace: Path) -> None:
     assert result.decisions[0].path == f"docs/decisions/{MONTH}/{STAMP}-use-jwt.md"
     assert _meta(workspace / result.decisions[0].path)["summary"] == "Sessions are signed JWTs."
 
-    plain = workspace / create_proposal(workspace, "b", today=TODAY).path
+    plain = workspace / CreateProposalUseCase().execute(workspace, "b", today=TODAY).path
     accept(plain)
     handoff_proposal(workspace, "b", today=TODAY)
     assert "summary" not in _meta(spec_dir(workspace, "b") / "spec.md")
@@ -70,7 +70,7 @@ def test_handoff_carries_the_summary(workspace: Path) -> None:
 
 @pytest.mark.parametrize("value", ["3", "[a, b]", "{a: b}"])
 def test_handoff_refuses_a_summary_that_is_not_a_string(workspace: Path, value: str) -> None:
-    proposal = workspace / create_proposal(workspace, "a", today=TODAY).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "a", today=TODAY).path
     accept(proposal, f"\nsummary: {value}")
     with pytest.raises(ProposalInvalidError) as raised:
         handoff_proposal(workspace, "a", today=TODAY)
@@ -81,13 +81,13 @@ def test_handoff_refuses_a_summary_that_is_not_a_string(workspace: Path, value: 
 @pytest.mark.parametrize("summary", ["", "   ", "로그인 세션을 정의한다.", "Defines the ログイン flow."])
 def test_empty_or_non_english_summary_is_an_argument_error(workspace: Path, summary: str) -> None:
     with pytest.raises(ArgumentError) as raised:
-        create_proposal(workspace, "a", summary=summary, today=TODAY)
+        CreateProposalUseCase().execute(workspace, "a", summary=summary, today=TODAY)
     assert raised.value.target_files == ("--summary",)
     assert "English sentences" in str(raised.value.advisory.fix)
     with pytest.raises(ArgumentError):
         create_spec(workspace, "b", summary=summary, day=TODAY)
     assert not (workspace / "docs/proposals").exists() and not (workspace / "specs").exists()
-    create_proposal(workspace, "c", today=TODAY)
+    CreateProposalUseCase().execute(workspace, "c", today=TODAY)
     with pytest.raises(ArgumentError):
         CreateProposalDecisionUseCase().execute(workspace, "c", "Use JWT", summary=summary, today=TODAY)
     assert not (workspace / "docs/proposals/PROP-c/decisions").exists()  # the scaffold writes no directory
@@ -125,7 +125,9 @@ def test_cli_summary_option(workspace: Path) -> None:
 def test_summary_length_boundary(workspace: Path, command: str, use_cli: bool, length: int) -> None:
     summary = "Defines " + "a" * (length - len("Defines ") - 1) + "."
     if command == "padr":
-        create_proposal(workspace, "existing", today=TODAY)  # a refused PADR must not create even its directory
+        CreateProposalUseCase().execute(
+            workspace, "existing", today=TODAY
+        )  # a refused PADR must not create even its directory
     before = {
         path.relative_to(workspace): path.read_bytes() if path.is_file() else None for path in workspace.rglob("*")
     }
@@ -156,7 +158,9 @@ def test_summary_length_boundary(workspace: Path, command: str, use_cli: bool, l
                 created = create_spec(workspace, "boundary", summary=padded, day=TODAY)
                 return workspace / created.dir / "spec.md"
             if command == "proposal":
-                return workspace / create_proposal(workspace, "boundary", summary=padded, today=TODAY).path
+                return (
+                    workspace / CreateProposalUseCase().execute(workspace, "boundary", summary=padded, today=TODAY).path
+                )
             return (
                 workspace
                 / CreateProposalDecisionUseCase()

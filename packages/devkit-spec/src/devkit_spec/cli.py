@@ -12,6 +12,7 @@ itself.
 from __future__ import annotations
 
 import click
+from devkit_dist.adapters.cli import version_option
 
 from devkit_spec.features.delivery.cli.proposals import proposal_group
 from devkit_spec.features.delivery.cli.specs import spec_new_cmd
@@ -23,24 +24,8 @@ from devkit_spec.features.worker.cli.commands import worker_group
 DISTRIBUTION = "devkit-spec"
 
 
-def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:
-    if not value or ctx.resilient_parsing:
-        return
-    from importlib.metadata import version
-
-    click.echo(f"[VERSION: {DISTRIBUTION} {version(DISTRIBUTION)}]")
-    ctx.exit()
-
-
 @click.group(name="spec")
-@click.option(
-    "--version",
-    is_flag=True,
-    expose_value=False,
-    is_eager=True,
-    callback=_print_version,
-    help=f"Print a [VERSION: {DISTRIBUTION} <version>] line and exit",
-)
+@version_option(DISTRIBUTION)
 def cli() -> None:
     """Spec-driven development: proposals, feature specs, their workflows and reconciliation."""
 

@@ -17,9 +17,9 @@ from devkit_agt.features.rules import workflow_ids
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project import read_development_approach
+from devkit_docs.base.layout import PROPOSALS
 
 from devkit_spec.base.errors import ProposalRejectedPendingWarning
-from devkit_spec.base.units import PROPOSALS
 
 
 def _anchors(root: Path) -> list[Path]:

@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 from devkit_docs.base.errors import EntrypointsPathError
+from devkit_docs.features.governance.services.entrypoint_paths import entrypoint_bearing
+from devkit_docs.utils.paths import covers, normalize, overlaps
 from spec_support.entrypoints import BUNDLE, CAP, documents, fixture
 from spec_support.types import Write
 
@@ -14,15 +16,11 @@ from devkit_spec.features.entrypoints import (
     adopt_nested_selectors,
     aggregate,
     classify_boundary,
-    covers,
     derive,
-    entrypoint_bearing,
     exclude,
     feedback_file,
     fold_by_directory_selectors,
     load_bundle,
-    normalize,
-    overlaps,
     parse_boundaries,
     select,
     unmatched_selectors,

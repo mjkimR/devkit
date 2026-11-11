@@ -1,11 +1,9 @@
-"""The delivery vocabulary every feature shares: task kinds, efforts, workflow ids and the size predicate."""
+"""The delivery vocabulary every feature shares: task kinds, the default effort, workflow ids and the size predicate.
+
+The effort field names and values of proposal frontmatter are the document layer's (``devkit_docs.base.layout``).
+"""
 
 from collections.abc import Mapping
-
-# The effort vocabulary of proposal frontmatter is the document layer's; delivery modules read it from here.
-from devkit_docs.base.layout import DEV_EFFORT as DEV_EFFORT
-from devkit_docs.base.layout import EFFORTS as EFFORTS
-from devkit_docs.base.layout import PLANNING_EFFORT as PLANNING_EFFORT
 
 TASK_KINDS = ("feature", "bugfix")
 DEFAULT_TASK_KIND = "feature"
@@ -21,7 +19,6 @@ def spec_workflow(task_kind: str) -> str:
 
 DEFAULT_WORKFLOW = spec_workflow(DEFAULT_TASK_KIND)
 BUGFIX_WORKFLOW = spec_workflow("bugfix")
-SPEC_WORKFLOWS = frozenset(spec_workflow(kind) for kind in TASK_KINDS)
 
 SIZE = "size"
 SIZES = ("S", "M", "L")

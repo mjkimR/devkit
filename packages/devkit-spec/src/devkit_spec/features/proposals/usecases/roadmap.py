@@ -36,7 +36,7 @@ def milestone_id(root: Path, value: str | None) -> str | None:
 def decomposition_source(root: Path, value: str | None, slug: str) -> str | None:
     if value is None:
         return None
-    from devkit_spec.features.proposals.usecases.backlog import check_backlog_editable
+    from devkit_spec.features.proposals.usecases.backlog import CheckBacklogUseCase
     from devkit_spec.features.proposals.usecases.scaffold import clean_slug
 
     value = value.strip()
@@ -46,4 +46,4 @@ def decomposition_source(root: Path, value: str | None, slug: str) -> str | None
             target_files=["--decomposed-from"],
             fix=f"Pass the PROP- ID of the draft being decomposed ({DEVKIT} docs list proposal lists them)",
         )
-    return check_backlog_editable(root, value, decomposition=True).id
+    return CheckBacklogUseCase().execute(root, value, decomposition=True).id
