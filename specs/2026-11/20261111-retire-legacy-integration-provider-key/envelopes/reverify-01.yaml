@@ -1,0 +1,23 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:40:43.849580Z'
+status: completed
+review: review-01.yaml
+summary: 'Self-reverify (low): the three fixtures no longer write the retired key; the 24 devkit-spec e2e delivery tests and the SDD baseline scenarios pass, and the smoke integration step passes.'
+findings:
+- issue: 'Fixtures outside the declared write scope still write [integration] provider and now fail with INTEGRATION_CONFIG_INVALID: packages/devkit-spec/tests/support/spec_support/delivery.py (_make_synced_repo adds provider = "spec"; 24 devkit-spec e2e tests in test_integration.py, test_integration_rule_runtime.py and test_plan_accept_cli.py fail with ''integration key provider is retired'') and tests/e2e/smoke_integration.py (writes provider = "smoke" before devkit integration prepare).'
+  evidence: packages/devkit-spec/tests/support/spec_support/delivery.py:56-57; tests/e2e/smoke_integration.py:95
+  failure_condition: Any test or smoke run that builds a repository through _make_synced_repo or smoke_integration.py and then calls IntegrationService.prepare or devkit integration prepare.
+  suggested_action: Host authorizes the two fixture edits (delete the two provider lines in delivery.py; write an empty config or drop the [integration] table in smoke_integration.py); optionally also packages/devkit-spec/tests/e2e/bundles/spec/test_sdd_baseline_scenarios.py, which still writes and asserts a provider value but does not fail because it never calls integration.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS devkit-spec e2e delivery+baseline 46 passed; PASS just test-affected mode=full 6771 passed 4 skipped
+  smoke: PASS smoke integration step and rest of smoke via probe copy without the pre-existing worktree finish --merge step; FAIL just smoke at worktree finish --merge WORKTREE_MERGE_RETIRED, unrelated to this unit
+  lint: PASS just lint, just check, devkit rules check --ci --base main
+diff_scope:
+  base: 22cde7886f2ad67470b5aa3af1776a7e3e6caab2
+  head: fd96eb8d657f3695fc1755f1cd8944d5056321c8
+activity_effort: low

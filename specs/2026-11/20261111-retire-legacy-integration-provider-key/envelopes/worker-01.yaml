@@ -1,0 +1,22 @@
+kind: worker
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:22:00.702184Z'
+status: failed
+summary: 'Specified, planned and implemented the retirement: effective() refuses every [integration] key (provider with the deletion fix), devkit-agt tests and the six Living Spec/reference documents updated; tasks 1.1-1.2 checked; self-review recorded in review-01 with one open P1. Remaining after the fixture fix: close review-01, write reconcile.md (targets CAP-INT-mcp-services, CAP-DLV-project-policy, CAP-DLV-sdd-baseline-adoption, UC-adopt-sdd-from-adaptive-development, docs/development/reference/integration.md, packages/devkit/README.md), final report.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=full 6771 passed 4 skipped (unit-integration tier); PASS devkit integration+e2e integration 170 passed; FAIL devkit-spec e2e delivery 24 failed
+  lint: PASS just lint; just check 0 errors; devkit rules check --ci --base main OK
+  sync_end: PASS devkit sync --check exit=0
+diff_scope:
+  base: ''
+  head: 95ccd614a52b7d99c4d3e8a3217256f6953c706d
+problem:
+  cause: 'The user-decided rejection breaks fixtures outside the declared write scope: packages/devkit-spec/tests/support/spec_support/delivery.py lines 56-57 add provider = spec to every _make_synced_repo repository, so 24 devkit-spec e2e tests in test_integration.py, test_integration_rule_runtime.py and test_plan_accept_cli.py fail with INTEGRATION_CONFIG_INVALID integration key provider is retired; tests/e2e/smoke_integration.py line 95 writes provider = smoke before devkit integration prepare, so just smoke would fail. Both are another package or repository tooling, not adjacent, so Tier B cannot admit them.'
+  attempts:
+  - Confirmed the cause by running the failing tests and matching the refusal message; did not edit either file; the default test-affected tier excludes e2e, so it passed.
+  recovery: Host extends the write scope to packages/devkit-spec/tests/support/spec_support/delivery.py and tests/e2e/smoke_integration.py (optionally packages/devkit-spec/tests/e2e/bundles/spec/test_sdd_baseline_scenarios.py, which still writes and asserts a provider value but passes) and sends a recovery worker to delete the provider lines, rerun devkit-spec e2e delivery and just smoke, then finish review, reconcile and final report.
+activity_effort: low

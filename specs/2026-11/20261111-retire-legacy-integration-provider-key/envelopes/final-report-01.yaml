@@ -1,0 +1,16 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:42:04.887068Z'
+status: completed
+summary: '[integration] accepts no keys: the retired provider is refused with a deletion fix (AC-01..AC-04); spec, smoke and baseline fixtures no longer write the key; six Living Spec/reference documents reconciled.'
+findings: []
+checks:
+  tests: PASS devkit-spec e2e delivery+SDD baseline 46 passed (24 failed before the fix); PASS just test-affected mode=full 6771 passed 4 skipped; PASS devkit integration+e2e integration 170 passed (previous turn)
+  build: PASS smoke wheel build and every smoke step incl. smoke_integration.py via an ignored copy without the pre-existing worktree finish --merge step; just smoke itself fails there with WORKTREE_MERGE_RETIRED on the base, FB-smoke-worktree-finish-merge-retired
+  lint: PASS just lint; just check 0 errors; devkit rules check --ci --base main; devkit sync --check exit=0
+diff_scope:
+  base: 22cde7886f2ad67470b5aa3af1776a7e3e6caab2
+  head: 4ea82453405221f5d818044cf72bbcc848db7e0e
+activity_effort: low

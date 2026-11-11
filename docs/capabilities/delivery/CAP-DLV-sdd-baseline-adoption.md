@@ -52,7 +52,7 @@ adaptive development.
    invented past alternatives or approvals. Existing accurate documents and SDD history are preserved.
 7. **Exact activation effects**: WHEN the ready source, retained scope and policy effects are presented, the agent
    MUST obtain or reuse explicit user authority bound to those same approach and asset effects before activation.
-   Integration requires no provider selection; legacy provider values are ignored and require no activation effect.
+   Integration requires no provider selection and no activation effect.
 8. **Evidence freshness**: IF relevant source or dirty content changes before activation, THEN the agent MUST
    revalidate affected evidence before claiming readiness.
 9. **Partial failure**: IF installation, policy update or sync fails, THEN the agent MUST report actual partial

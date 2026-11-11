@@ -50,7 +50,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    setup) MUST live in devkit's table; `[tool.spec]` holds only keys devkit has no table for.
 3. **Defaults**: a gate the project does not set is `ask` with `source=default` (devkit's default for every gate);
    `[tool.spec] worktree` and `depth_escalation` default to `"auto"`; `[worktree]` values are devkit's defaults (`pull_request = "auto"`,
-   `delete_branch = true`, `merge = "no-ff"`, no `setup`); integration needs no provider selection. Legacy `[integration] provider` is ignored; unknown integration keys retain actionable diagnostics (`CAP-INT-mcp-services`).
+   `delete_branch = true`, `merge = "no-ff"`, no `setup`); integration needs no provider selection, and `[integration]` accepts no keys (`CAP-INT-mcp-services`).
 4. **Decision boundaries and task intent**: `plan-accept`, `proposal-handoff`, and `dev-integration` are the three
    main decision boundaries, followed in policy output by configured custom gates. Each boundary
    permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is

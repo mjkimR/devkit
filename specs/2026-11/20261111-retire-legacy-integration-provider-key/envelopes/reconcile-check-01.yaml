@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:40:59.602988Z'
+status: completed
+summary: 'Self-checked reconcile (low): six targets reflect AC-01..AC-04; the AC-04 rg prints nothing; no ADR, glossary or entrypoint change; devkit-dist untouched per Non-Goal 2.'
+findings: []
+checks:
+  ac04_rg: PASS no match
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 22cde7886f2ad67470b5aa3af1776a7e3e6caab2
+  head: 8f9c0119cd7597ffd56e8914952ac09ee01a6857
+activity_effort: low

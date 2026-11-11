@@ -63,7 +63,7 @@ def ready_provider(monkeypatch: pytest.MonkeyPatch):
 @pytest.fixture
 def repo(tmp_path: Path, ready_provider) -> tuple[Path, Path]:
     base = init_repo(tmp_path / "repo")
-    write(base, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n')
+    write(base, ".devkit/config.toml", "")
     write(base, ".gitignore", ".devkit/transient/\n")
     git(base, "add", ".")
     git(base, "commit", "-qm", "configure integration")
