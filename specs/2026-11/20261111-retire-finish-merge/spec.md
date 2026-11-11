@@ -2,7 +2,7 @@
 id: SPEC-retire-finish-merge
 title: Retire worktree finish --merge
 summary: Retires worktree finish --merge so that integration integrate --route local is the one local landing route, dropping the finish guard group and the base push only that path ran.
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-WT-task-worktrees

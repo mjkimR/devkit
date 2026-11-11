@@ -22,6 +22,8 @@ Superseded in part by `ADR-role-worker-subagent`: the clause that the `devkit` b
 
 Superseded in part by `ADR-selective-package-versions`: the Single release version clauses and only the same-version qualifiers in the foundation, MCP runtime and harness dependency clauses. All other decisions remain in force.
 
+Superseded in part by `ADR-single-local-landing-route`: the clause that the `devkit.finish_guard` `workflow-envelopes` entry point stays with `devkit-agt`. All other decisions remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @minjae

@@ -21,6 +21,8 @@ aliases:
 
 Superseded in part by `ADR-recorded-adjacent-path-extensions-for-development-workers`: rejection of unlisted paths that satisfy recorded Tier B admission only. Remaining range, sync-output, worktree, Git and host-permission decisions remain in force.
 
+Superseded in part by `ADR-single-local-landing-route`: the clause that devkit refuses `devkit worktree finish --merge` while a unit is held. All other decisions remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR (user)

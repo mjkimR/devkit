@@ -23,6 +23,8 @@ supersedes:
 
 Superseded in part by `ADR-post-merge-verification`: the requirements for target-runtime readiness, content finish guards and receipt consistency before landing, readiness evidence equality and disclosure, and mandatory provider binding in the integration digest. Git identity, conflict, route, approval and unknown-outcome clauses remain.
 
+Superseded in part by `ADR-single-local-landing-route`: the clauses that `[worktree] merge` applies to `devkit worktree finish --merge`, that the CLI `finish --merge` builds a merge commit only when the target did not advance and takes the integration lock, that `devkit worktree finish --merge` keeps refusing a moved target, and the mention of `finish --merge` among the callers that pass no conflict settler. All other decisions remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: user, agent (user decisions are cited where the members record them)

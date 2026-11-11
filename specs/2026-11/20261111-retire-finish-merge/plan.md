@@ -13,7 +13,7 @@ spec: SPEC-retire-finish-merge
   no readiness evidence), `ADR-orchestration-workers` (devkit refuses `finish --merge` while a unit is held),
   `ADR-worktrees-and-scope` (`pull_request = "required"` makes devkit refuse `finish --merge`) and
   `ADR-package-ownership-and-release-version` (the `devkit.finish_guard` `workflow-envelopes` entry point stays with
-  devkit-agt). A new ADR, ADR-single-local-landing-route (to be written)
+  devkit-agt). A new ADR, `ADR-single-local-landing-route`
   (`docs/decisions/2026-11/20261111-single-local-landing-route.md`), supersedes exactly those clauses in part:
   - Decision: `devkit integration integrate --route local` is the only local landing route; `finish --merge` refuses
     with `WORKTREE_MERGE_RETIRED`; the library `finish` keeps cleanup only.

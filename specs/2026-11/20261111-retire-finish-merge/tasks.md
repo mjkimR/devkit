@@ -8,10 +8,10 @@ plan: PLAN-retire-finish-merge
 
 ## Phase 1: Decision
 
-- [ ] **Task 1.1**: Record ADR-single-local-landing-route (to be written), superseding in part the `finish --merge` clauses of
+- [x] **Task 1.1**: Record `ADR-single-local-landing-route`, superseding in part the `finish --merge` clauses of
   `ADR-local-and-pull-request-integration`, `ADR-orchestration-workers`, `ADR-worktrees-and-scope` and the
   `devkit.finish_guard` entry point clause of `ADR-package-ownership-and-release-version`
-  - **_Boundary**: `docs/decisions/2026-11/20261111-single-local-landing-route.md`
+  - **_Boundary**: `docs/decisions/2026-11/20261111-single-local-landing-route.md`, `docs/decisions/2026-11/20261102-local-and-pull-request-integration.md`, `docs/decisions/2026-11/20261102-orchestration-workers.md`, `docs/decisions/2026-11/20261102-worktrees-and-scope.md`, `docs/decisions/2026-11/20261102-package-ownership-and-release-version.md`
   - _Requirements: AC-07_
   - **Verification**: `uv run devkit rules check docs/decisions/2026-11/20261111-single-local-landing-route.md`
 
@@ -22,7 +22,7 @@ plan: PLAN-retire-finish-merge
   - _Requirements: AC-01, AC-02, AC-03_
   - **Verification**: `just test devkit tests/integration/features/worktree tests/e2e/features/worktree tests/integration/package/test_config_tables.py`
 - [ ] **Task 2.2**: Integration service cleanup call and the landing coverage moved from `finish --merge`, with tests
-  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/usecases/service.py`, `packages/devkit/tests/integration/features/integration/`
+  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/usecases/service.py`, `packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py`, `packages/devkit/tests/integration/features/integration/`, `packages/devkit/tests/e2e/features/integration/`
   - _Requirements: AC-04_
   - **Verification**: `just test devkit tests/integration/features/integration`
 - [ ] **Task 2.3**: Retire the `devkit.finish_guard` group and the workflow guard, with tests
