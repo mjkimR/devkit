@@ -6,6 +6,11 @@ For a Development extension, review the `(scope extension: <reason>)` annotation
 owning AC before the sole final/emergency worker record exists. Judge necessary same-feature documented ownership or
 project/plan-identified test mirror, or an exact existing Living Spec document whose reason names the affected
 contract ID. Without a documented feature root use the declared file's parent; never infer package-wide ownership.
+For a derived reference document (an exact existing quick reference, user guide or the README of a package or tool
+that owns a changed source), judge that each edited passage restates a public name, command or behavior the task changes, the
+reason names that symbol, command or contract ID, and no file or section was added; unrelated cleanup there is
+out-of-goal. Agent instruction files (`AGENTS.md`, `CLAUDE.md`), bundle and agent assets and release documents
+never qualify.
 Check added boundaries against the initial payload and task diff: derived scope alone proves no authority, and an
 omitted annotation is a material finding. Explicit payload denies prevail; protected classes, unrelated
 features/packages, new feature edges and test weakening cannot self-admit. Report missing annotation/record evidence

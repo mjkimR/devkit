@@ -1,0 +1,28 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T07:28:15.967005Z'
+status: completed
+summary: 'AC-01 and AC-03 met; AC-02 partly met: the Host reference lacks the reason and passage limit. README wording differs between capability and assets.'
+findings:
+- issue: The spec-delegate Host reference omits the derived reference class's reason requirement and restating-passage limit, and its exclusion leaves out release documents; the guidance test does not assert them (AC-02).
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/worker.md:31-34; packages/devkit-spec/tests/integration/bundles/spec/test_scope_extension_guidance.py:62-63
+  failure_condition: A Host validating with only the spec-delegate reference accepts a derived reference extension whose reason names no symbol, command or contract ID, or that adds a section.
+  resolution: open
+  severity: P2
+- issue: 'README wording differs: the capability says ''package or tool'', the ADR and bundle assets say ''package''; a CAP paragraph reflow left a short line.'
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-roles.md:168 and :315; ADR lines 41-42; development-worker.md.jinja:68-69
+  failure_condition: A worker reading only the bundle assets refuses a tool README the capability admits.
+  resolution: open
+  severity: P3
+assumptions:
+- Native code-reviewer subagent (isolation preferred); reviewed committed head
+unverified_areas:
+- AC-03 exercised through InspectWorkerUseCase, not the CLI process
+checks:
+  tests: PASS 32 passed
+diff_scope:
+  base: 2ad9b534c6b223b44febabaf358fe2b41e521544
+  head: 42a9f409f6d50a20ba91a7ae6c58002ba12e4c96
+activity_effort: medium

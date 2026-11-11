@@ -48,3 +48,17 @@ def test_review_and_host_check_annotation_before_record_and_final_agreement(envi
     assert_rule(host, "each `(sync output)` entry", "scope pass", "no evidence")
     assert_rule(host, "sync_start", "PASS exit=0")
     assert_rule(host, "seeded", "files", "receipt")
+
+
+@pytest.mark.parametrize("environment", ["local", "cloud"])
+def test_derived_reference_documents_qualify_without_agent_instructions(environment: str) -> None:
+    worker = raw("subagents/development-worker.md", environment)
+    assert_rule(worker, "derived reference document", "quick reference", "user guide", "readme of a package or tool")
+    assert_rule(worker, "restate a public name", "symbol, command or contract id", "add no file or section")
+    assert_rule(worker, "agent instruction files", "`agents.md`", "`claude.md`", "never qualify")
+    review = raw("skills/spec-review/references/scope-extension.md", environment)
+    assert_rule(review, "derived reference document", "restates a public name", "no file or section", "out-of-goal")
+    assert_rule(review, "agent instruction files", "`agents.md`", "never qualify")
+    host = raw("skills/spec-delegate/references/worker.md", environment)
+    assert_rule(host, "derived reference document", "reason names", "symbol, command or contract id")
+    assert_rule(host, "restating passages", "adds no file or section", "never `agents.md`/`claude.md`", "release")

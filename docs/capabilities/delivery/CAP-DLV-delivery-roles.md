@@ -163,6 +163,12 @@ Development worker write admission has three tiers (`ADR-recorded-adjacent-path-
   inside the approved goal. Same-feature documented ownership roots, project/plan-identified test mirrors, and exact
   existing Living Spec documents restating the changed behavior qualify. Without a documented root use the declared
   file's parent; never infer package-wide ownership. A Living Spec reason MUST name the affected contract ID.
+  An exact existing derived reference document also qualifies
+  (`ADR-derived-reference-documents-as-worker-scope-extensions`): a quick reference (`docs/development/reference/`),
+  a user guide (`guides/`) or the README of a package or tool that owns a source the unit changes, when its edited
+  passages restate a public name, command or behavior the task changes. Its reason MUST name that symbol, command
+  or contract ID; the edit MUST add no document or section and change only the restating passages. Agent
+  instruction files (`AGENTS.md`, `CLAUDE.md`), bundle and agent assets and release documents MUST NOT qualify.
 - **Tier C, denied**: explicit payload denies MUST prevail, including over a directory declaration. Other units,
   `.devkit/`, host projections, governance-rule implementations, architecture/dependency declarations, CI/release
   configuration, outside-repository paths, other packages/features and new feature edges MUST NOT self-admit.
@@ -304,10 +310,10 @@ annotations; the highest worker sequence supplies repeated-path metadata. A hist
 scope: its annotation must still exist. Missing/mismatched evidence or recognizable protected trees fail with
 `SPEC_WORKER_SCOPE_EXTENSION_INVALID` (exit 1; correct the record or obtain Host authority). Malformed annotation
 or input leaves the check not-run with `SPEC_WORKER_SCOPE_UNRESOLVED` or the envelope format cause; it never passes.
-Recognizable protected classes include `.devkit/`, agent projections, `.github/`, other unit/proposal trees,
-architecture documents, rule directories and known dependency manifests/lockfiles. Semantic adjacency, custom
-protected paths, explicit payload denies and test weakening remain reviewer judgments. With no extensions the list
-is empty and the added check passes. Host validation MUST verify this evidence before overriding scope, then name
+Recognizable protected classes include `.devkit/`, agent projections, agent instruction files (`AGENTS.md`,
+`CLAUDE.md`), `.github/`, other unit/proposal trees, architecture documents, rule directories and known dependency
+manifests/lockfiles. Semantic adjacency, custom protected paths, explicit payload denies and test weakening remain
+reviewer judgments. With no extensions the list is empty and the added check passes. Host validation MUST verify this evidence before overriding scope, then name
 every admitted extension in the complete override. A narrower `--scope`/`--scope-file` still fails omitted paths;
 inspection MUST NOT union extensions into an explicit scope. Sync-output receipt checks remain independent.
 
