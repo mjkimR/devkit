@@ -8,7 +8,6 @@ related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-compress-spec-main-loop-guidance] Compress the spec guidance of the main development loop
 
@@ -65,58 +64,48 @@ A second peripheral pass tried both policies on the same groups:
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Compress the spec guidance of the main development loop so that system capabilities are extended.
+- **US-1**: As an agent running the main development loop, I want the spec guidance I read on every run to carry
+  only what I need on the common path, so that my attention stays on the rules that change my next step.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Procedures and rules stay**: no procedure, rule, authority or approval boundary is removed, relaxed or
+   tightened; no new rule is added.
+2. **Pinned tests stay as strong**: a pinned guidance test changes only to follow a kept rule's new location or
+   wording.
+3. **No code, CLI or version change**: devkit commands, codes, `[FIX]` text and package versions stay unchanged.
+4. **No behavior evaluation**: regressions surface as feedback and the affected commit is reverted or repaired.
+5. **Outside scope**: documents other than the 16 listed in AC-01, `docs/decisions/` and projections.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Only the two policies change the scoped documents
+- **Given** the 16 scoped sources of the spec bundle: the constitution (`AGENTS.md.jinja`), the `spec` skill and its
+  envelope, worker-records and completion references, `sdd-spec-feature`, the development-worker contract, the
+  specify, plan, tasks, review, sync, delegate, orchestrate and integrate skills, and `isolated-execution`
+- **When** the pass edits them
+- **Then** each removed or reduced sentence either restates a check a devkit command or rule refuses before any
+  effect, with a stable code and an actionable `[FIX]` (Policy 1), or is a rare branch moved to a reference of the
+  same skill linked directly from its entry document (Policy 2); wording changes are incidental
+- **And** authority, approval, irreversible or outward effects, judgment criteria and rules detected only after
+  effects stay in the guidance; a late-refused rule keeps at least a one-line essence
+
+### [AC-02] Every change is traceable and revertable alone
+- **Given** an edited document
+- **When** its change is committed
+- **Then** it lands in its own commit (a moved branch together with the reference that receives it)
+- **And** the change report lists bytes before and after per document and, per removed or reduced sentence, the
+  enforcing code path and code (Policy 1) or the receiving reference and trigger line (Policy 2)
+- **And** rejected candidates are listed with their reason
+
+### [AC-03] Checks stay green
+- **Given** the finished branch
+- **When** `devkit rules check --ci --base <base>`, `just test-affected --base <base>` and `devkit sync --check`
+  run
+- **Then** they pass, with headings, anchors and section numbers other files cite still resolving, Jinja branches
+  intact and explicit-only guards kept
 
 ## 5. Carried Proposal Notes
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
-
-### 2. Technical Spike Questions
-
-- **Q1**: What did the second peripheral pass (the two policies above, same date) yield per document? Which
-  candidates did it reject, and why?
-- **Q2**: For each main-loop rule, does a command or rule enforce it before effects, with a code and `[FIX]` that
-  give the correct action? Authority, approval, irreversible or outward effects, judgment and post-effect
-  detection always stay in the guidance.
-- **Q3**: Which rare branches of the main-loop entry documents (constitution, `spec` skill, `sdd-spec-feature`,
-  development-worker contract, integrate and orchestrate skills) can move to references without hiding a rule
-  the common path needs?
-
-### 3. Proposed Design & Impact
-
-- Scope: the spec constitution, the `spec` skill, `sdd-spec-feature`, the development-worker contract,
-  envelope/worker-records/completion references, specify/plan/tasks/review/sync, delegate/orchestrate/integrate,
-  and isolated-execution.
-- Apply Policy 1 and Policy 2 only. Wording compression is incidental.
-- Conservative mode:
-  - one document per commit, so each can be reverted alone;
-  - a retained-constraint map for every removed or merged sentence;
-  - no new or relaxed rules;
-  - a pinned test changes only after its rule is confirmed kept.
-- No pre-built behavior evaluation: problems surface as feedback and the affected commit is reverted or repaired.
-  Package versions stay unchanged.
-- Report sizes before and after for each document.
-
-### 4. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr compress-spec-main-loop-guidance "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept compress-spec-main-loop-guidance --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff compress-spec-main-loop-guidance.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->
-
+- Q1 (second peripheral pass yield) is answered in §1; Q2 and Q3 are answered per document by the change report
+  (AC-02).
