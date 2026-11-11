@@ -12,7 +12,7 @@ plan: PLAN-remove-test-only-public-apis
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py`, `packages/devkit/tests/e2e/features/worktree/test_lifecycle.py`, `packages/devkit/tests/integration/features/worktree/test_branches.py`, `packages/devkit/src/devkit_agt/features/worktree/__init__.py` (scope extension: its module docstring names the removed before_remove hook)
   - _Requirements: AC-01_
   - **Verification**: `just test devkit packages/devkit/tests/e2e/features/worktree packages/devkit/tests/integration/features/worktree`
-- [ ] **Task 1.2**: Remove `renames` and `ignore_submodules` from `status_records`, with core tests
+- [x] **Task 1.2**: Remove `renames` and `ignore_submodules` from `status_records`, with core tests
   - **_Boundary**: `packages/devkit-core/src/devkit_core/core/git.py`, `packages/devkit-core/tests/integration/core/test_git_observation.py`
   - _Requirements: AC-02_
   - **Verification**: `just test devkit-core packages/devkit-core/tests/integration/core/test_git_observation.py`

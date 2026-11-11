@@ -67,11 +67,6 @@ def test_rename_copy_and_untracked_nested_repository(repo: Path) -> None:
         StatusRecord("R ", "new.txt", "old.txt"),
         StatusRecord("??", "nested/"),
     ]
-    assert status_records(repo, renames=False) == [
-        StatusRecord("A ", "new.txt"),
-        StatusRecord("D ", "old.txt"),
-        StatusRecord("??", "nested/"),
-    ]
 
 
 def test_copy_is_one_record_with_its_source(repo: Path) -> None:
@@ -90,7 +85,7 @@ def test_pathspecs_untracked_and_options(repo: Path) -> None:
     (repo / "a.txt").write_text("changed\n")
     assert status_records(repo, "dir") == [StatusRecord("??", "dir/x")]
     assert status_records(repo, untracked="normal") == [StatusRecord(" M", "a.txt"), StatusRecord("??", "dir/")]
-    assert status_records(repo, untracked="no", ignore_submodules="none", optional_locks=True) == [
+    assert status_records(repo, untracked="no", optional_locks=True) == [
         StatusRecord(" M", "a.txt")
     ]
 
