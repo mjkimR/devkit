@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-remove-unused-cli-options
-status: pending
+status: resolved
 targets:
   - file: docs/decisions/2026-11/20261111-remove-unused-cli-options-without-shims.md
     resolution: modified
@@ -44,8 +44,8 @@ and keeps its decision text (AC-03).
 `host status` (AC-04); the rules reference drops `--summary-only` and the `[RULE_COUNTS]` line (AC-05).
 `CAP-DLV-cli-and-output` drops `next --workflow` and `handoff --date` from the synopsis and attributes
 `[BOUND_ELSEWHERE]` to library callers; `CAP-DLV-workflow-definitions` states that only the library evaluates against
-an unbound definition file, that an unbound anchor follows the configured default and that `completed` is the date the
-handoff ran; `CAP-DLV-workflow-orchestration` limits `--workflow` anchor resolution to `bind` (AC-06, AC-07).
+an unbound definition file, that an unbound anchor follows the configured default and that `completed` is the date `devkit workflow handoff` ran (the library
+`apply_handoff` may take another `when`); `CAP-DLV-workflow-orchestration` limits `--workflow` anchor resolution to `bind` (AC-06, AC-07).
 `CAP-DOCS-document-lookup` drops the `--query` filter and points ID and title lookup at `devkit docs search` (AC-08).
 
 The spec bundle text (`spec-integrate/SKILL.md.jinja`, `spec/references/worktree.md.jinja`,

@@ -2,7 +2,7 @@
 id: SPEC-remove-unused-cli-options
 title: Remove unused CLI options
 summary: 'Removes CLI options no documented workflow or caller uses: worktree finish --local-only, host status --host, rules check/fix --summary-only, workflow next --workflow, workflow handoff --date and docs list --query.'
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities:
   - CAP-WT-task-worktrees

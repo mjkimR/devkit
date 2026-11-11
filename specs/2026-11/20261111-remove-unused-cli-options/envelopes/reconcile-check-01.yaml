@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T02:14:07.039406Z'
+status: completed
+summary: 'reconcile-reviewer: 14 targets agree with the diff; ADR partial supersession correct; one P2 on the handoff completed-date wording'
+findings:
+- issue: CAP-DLV-workflow-definitions states unqualified that completed is the date the handoff ran, while apply_handoff keeps its library when parameter
+  evidence: docs/capabilities/delivery/CAP-DLV-workflow-definitions.md:186; packages/devkit/src/devkit_agt/features/workflow/usecases/handoff.py:220
+  failure_condition: A library caller passing when records a date the capability says cannot happen
+  suggested_action: Qualify the sentence to devkit workflow handoff and name the library when parameter
+  resolution: open
+  severity: P2
+checks: {}
+diff_scope:
+  base: 425d8e46837c4a03859090099475c3597c33bc45
+  head: 9967bcf61761d2adf416d7715811e51b051c01f1
