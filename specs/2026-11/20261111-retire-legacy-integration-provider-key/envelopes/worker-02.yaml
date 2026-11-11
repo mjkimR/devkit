@@ -1,0 +1,18 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:42:18.516108Z'
+status: completed
+summary: 'Recovery turn: resolved worker-01 under the Host-authorized scope (delivery.py, smoke_integration.py, test_sdd_baseline_scenarios.py drop the retired provider key; resolution-01), closed review-01 P1 (reverify-01), reconciled six documents (reconcile.md resolved, spec completed), recorded FB-smoke-worktree-finish-merge-retired and the final report. just smoke fails on the base at worktree finish --merge (pre-existing, outside scope); every other smoke step passed via an ignored copy.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: 'PASS devkit-spec e2e delivery+baseline 46 passed (before: 24 failed); PASS just test-affected mode=full 6771 passed 4 skipped'
+  smoke: FAIL just smoke exit=2 at pre-existing worktree finish --merge WORKTREE_MERGE_RETIRED; PASS probe copy without lines 355-357 incl. smoke_integration.py
+  lint: PASS just lint; just check 0 errors; devkit rules check --ci --base main
+  sync_end: PASS exit=0
+diff_scope:
+  base: 22cde7886f2ad67470b5aa3af1776a7e3e6caab2
+  head: ae50d240d45aa5b14f7342d99fd511e9428336a3
+activity_effort: low
