@@ -298,6 +298,43 @@ def test_alias_references_are_fixed_in_current_documents(tmp_path: Path) -> None
     assert check(RULE, tmp_path) == []
 
 
+@pytest.mark.parametrize("value", ["UC-old", "'UC-old'", '"UC-old"'])
+@pytest.mark.parametrize(
+    "field",
+    [
+        "usecases: [&shared VALUE, *shared]",
+        "usecases:\n  - &shared VALUE\n  - *shared",
+        "usecases: [!!str &shared VALUE, *shared]",
+        "usecases: [&shared VALUE]\nrelated_usecases: [*shared]",
+    ],
+)
+def test_alias_fixes_preserve_yaml_anchors(tmp_path: Path, value: str, field: str) -> None:
+    header = field.replace("VALUE", value) + "\n"
+    files = {
+        "docs/new.md": _aliased("UC-current-long", "UC-old"),
+        "docs/cap.md": _doc("CAP-A-a", header=header),
+    }
+    check(RULE, tmp_path, files)
+    fixed = check(RULE, tmp_path, fix=True)
+    assert fixed and all(v.fixed for v in fixed)
+    assert (tmp_path / "docs/cap.md").read_text() == files["docs/cap.md"].replace("UC-old", "UC-current-long")
+    assert check(RULE, tmp_path) == []
+
+
+@pytest.mark.parametrize("value", ["SPEC-old", "'SPEC-old'", '"SPEC-old"'])
+def test_alias_fixes_preserve_anchors_shared_by_scalar_and_list_fields(tmp_path: Path, value: str) -> None:
+    path = "docs/proposals/PROP-idea/proposal.md"
+    files = {
+        "specs/2026-10/20261001-new/spec.md": _aliased("SPEC-current-long", "SPEC-old"),
+        path: _doc("PROP-idea", header=f"spec: &shared {value}\ndepends_on: [*shared]\n", status="draft"),
+    }
+    check(RULE, tmp_path, files)
+    fixed = check(RULE, tmp_path, fix=True)
+    assert fixed and all(v.fixed for v in fixed)
+    assert (tmp_path / path).read_text() == files[path].replace("SPEC-old", "SPEC-current-long")
+    assert check(RULE, tmp_path) == []
+
+
 def test_alias_references_in_history_stay(tmp_path: Path) -> None:
     files = {
         "docs/new.md": _aliased("UC-new", "UC-old"),

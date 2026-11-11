@@ -1,6 +1,6 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { parseDocument } from 'yaml';
+import { parseFrontmatter } from './frontmatter';
 import { normalizeTree, type RepositoryDataSource, type TreeItem } from './repository';
 import { cachedResult, cacheGeneration, cacheResult } from './cache';
 
@@ -39,15 +39,9 @@ export function parseBlob(path: string, content: string, encoding: string): Repo
 				: (() => {
 						throw new Error(`Unsupported encoding: ${encoding}`);
 					})();
-	const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-	let meta: Record<string, any> = {};
-	if (match) {
-		const yaml = parseDocument(match[1]);
-		if (yaml.errors.length) throw new Error(yaml.errors[0].message);
-		const value = yaml.toJS({ maxAliasCount: 100 });
-		if (value && typeof value === 'object' && !Array.isArray(value)) meta = value;
-	}
-	const body = match ? raw.slice(match[0].length) : raw;
+	const parsed = parseFrontmatter(raw);
+	const meta = parsed.meta ?? {};
+	const body = parsed.body;
 	const title =
 		typeof meta.title === 'string'
 			? meta.title
