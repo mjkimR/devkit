@@ -1,0 +1,72 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T03:31:21.252471Z'
+status: needs_input
+summary: 'First Planning turn: scout and one challenger round; design settled as one feature spec (no decomposition) retiring register/query/compare/update and the update path, dropping collect --mode, and one paths-changed pipeline, with PADR-collect-only-scope-observation superseding ADR-worktrees-and-scope in part. Four questions decide the journal, compare, creation dirty paths and --base.'
+findings: []
+checks:
+  rules: PASS 0 reports
+diff_scope:
+  base: ba3bcce4483f71a8659f9170f076260ab935b6de
+  head: 9a8de52d95739d11ecd3a0aaf319df5222b2646d
+questions:
+- id: q1
+  title: Journal after the reader retires
+  prompt: What happens to the scope registry journal (journal.jsonl) once `scope query --history` is retired?
+  context: Nothing reads the journal except `query --history`, which has no caller; it is diagnostic only, never an input to a verdict, and grows without retention. Keeping it means keeping the Event model, append locking and two warning codes. Decides CAP-COLL rule 8 and 4.3, the codes table and AC-05/AC-06.
+  options:
+  - id: a
+    description: Remove the journal and its reader; an existing journal file is left untouched.
+    recommended: true
+  - id: b
+    description: Keep the writes and add `devkit spec scope history` on the shared --limit/-n paging grammar (offset paging replaces the stable cursor).
+    recommended: false
+  - id: c
+    description: Keep the writes without any reader; the file is read by hand for diagnostics.
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Retire scope compare
+  prompt: Should `devkit spec scope compare` be retired, folded into collect, or kept?
+  context: No guidance invokes compare; it compares declarations of proposals and spec bundles without Git, the only way to compare queued Backlog drafts or drafts accepted on the base, which collect does not observe until they have a plan-* or dev-* source. Future-only overlap does not serialize Planning, so the practical loss is small. Decides UC-run-parallel-work-safely step 1 and scenario 1 and CAP-DLV-proposal-planning.
+  options:
+  - id: a
+    description: Retire it with no replacement; documents say queued drafts are not observed.
+    recommended: true
+  - id: b
+    description: Fold it into collect as repeatable --proposal/--spec declaration inputs.
+    recommended: false
+  - id: c
+    description: Keep compare as it is.
+    recommended: false
+  allow_note: true
+- id: q3
+  title: Creation records keep dirty paths
+  prompt: Should creation registration keep recording the worktree's uncommitted paths at handoff or spec new?
+  context: Handoff writes the promoted ADRs, supersession edits and moved materials without committing, and today the record captures them as observed paths. Collect falls back to the record for sources it cannot read live (a registry shared with another host, a timed-out source). Keeping them costs nothing extra if the dirty listing comes from collect's own observation service, so the pipeline is still one.
+  options:
+  - id: a
+    description: Keep recording them through collect's observation service; only observe_git's range code goes.
+    recommended: true
+  - id: b
+    description: Record declarations only and accept the loss for snapshot-only sources.
+    recommended: false
+  allow_note: true
+- id: q4
+  title: Keep collect --base
+  prompt: Should `collect --base` stay when --mode is removed?
+  context: 'No guidance passes --base, but it is the only override for remote-tracking dev-*/plan-* refs: they have no devkitBase marker, and when <remote>/HEAD and the main checkout branch differ (normal after `--fetch` when local main is behind) every such ref reports unknown-base with its committed layer missing. Decides the PADR outcome and CAP-COLL 4.9 base selection.'
+  options:
+  - id: a
+    description: Keep --base as an explicit override.
+    recommended: true
+  - id: b
+    description: Drop --base and prefer <remote>/HEAD as the base of remote-tracking candidates (a 4.9 behavior change).
+    recommended: false
+  - id: c
+    description: Drop --base and accept unknown-base for those candidates.
+    recommended: false
+  allow_note: true
+activity_effort: medium
