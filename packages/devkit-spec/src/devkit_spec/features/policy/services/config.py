@@ -48,7 +48,6 @@ WORKTREE_LEVELS = ("auto", "required")
 DEPTH_ESCALATION = ("auto", "ask")
 APPROVAL_GATES = ("plan-accept", "proposal-handoff", "dev-integration")
 """Main business decision boundaries, independently delegated through ask or auto."""
-INTEGRATION_GATE = "dev-integration"
 INTEGRATION_POLICIES = ("ask", "auto")
 FEEDBACK_CHOICES = {
     "capture": ("observed", "requested-only"),

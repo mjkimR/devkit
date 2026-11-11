@@ -6,13 +6,16 @@ round-trippable. ``run_git_text`` applies that rule for callers that want text,
 ``run_git_result`` serves commands whose nonzero exit is an answer, and
 ``is_ancestor`` is the shared ``merge-base --is-ancestor`` test. ``worktree_records`` and
 ``status_records`` read ``git worktree list --porcelain -z`` and ``git status --porcelain=v1 -z`` into records;
-their pure parsers serve callers that run Git themselves. These generic primitives live here; queries that encode one package's policy live in that package
+their pure parsers serve callers that run Git themselves. ``dirty_paths`` and ``changed_paths`` are the
+uncommitted and committed path lists a write-scope check compares, and ``git_config`` reads one configuration value. These generic primitives live here; queries that encode one package's policy live in that package
 and are built on them. ``repository_facts`` scopes a memo of where a repository is.
 """
 
 from __future__ import annotations
 
+import contextlib
 import os
+import signal
 import subprocess
 from collections.abc import Collection, Iterator
 from contextlib import contextmanager
@@ -77,6 +80,8 @@ def run_git(
     timeout: float | None = DEFAULT_TIMEOUT,
     index: str | None = None,
     deadline: Deadline | None = None,
+    isolated_env: bool = False,
+    new_session: bool = False,
 ) -> bytes:
     """Run ``git -C <cwd> <args...>`` and return its standard output.
 
@@ -98,6 +103,12 @@ def run_git(
     expired deadline starts no Git, Git gets the time left on it, and a Git still running when it runs out is killed.
     Both raise ``deadline.exceeded("git <subcommand>")`` (``DeadlineExceededError`` unless the deadline
     has an error factory); every other failure is still ``GitError``.
+
+    ``isolated_env`` drops every inherited ``GIT_*`` variable (``GIT_DIR``, ``GIT_WORK_TREE``, ``GIT_INDEX_FILE``,
+    ...) before the ones above are set, so a hook's or a caller's repository overrides never redirect a command run
+    in another work tree. ``new_session`` starts Git in a session of its own and, on a timeout or any other
+    interruption, kills its whole process group, so the hooks and filters Git started (``post-checkout``, Git LFS)
+    stop with it; the timeout is still a ``GitError`` whose ``__cause__`` is ``subprocess.TimeoutExpired``.
     """
     memo = _memo.get() if args in _FACTS and input is None and index is None and deadline is None else None
     key: tuple[object, ...] = ()
@@ -107,10 +118,20 @@ def run_git(
         except OSError:  # the process directory is gone: run Git unmemoized, as outside a scope
             memo = None
         else:
-            key = (where, args, *(os.environ.get(name) for name in _ENVIRONMENT))
+            environment = () if isolated_env else tuple(os.environ.get(name) for name in _ENVIRONMENT)
+            key = (where, args, isolated_env, *environment)
             if key in memo:
                 return memo[key]
-    stdout = run_git_result(cwd, *args, input=input, timeout=timeout, index=index, deadline=deadline).stdout
+    stdout = run_git_result(
+        cwd,
+        *args,
+        input=input,
+        timeout=timeout,
+        index=index,
+        deadline=deadline,
+        isolated_env=isolated_env,
+        new_session=new_session,
+    ).stdout
     if memo is not None:
         memo[key] = stdout
     return stdout
@@ -124,6 +145,8 @@ def run_git_result(
     timeout: float | None = DEFAULT_TIMEOUT,
     index: str | None = None,
     deadline: Deadline | None = None,
+    isolated_env: bool = False,
+    new_session: bool = False,
 ) -> GitResult:
     """Run Git as ``run_git`` does and return its exit status and standard output when the status is accepted.
 
@@ -139,14 +162,18 @@ def run_git_result(
             raise ValueError("run_git takes a timeout or a deadline, not both")
         deadline.check(label)
         timeout = max(deadline.remaining(), 0.001)
-    env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}
+    inherited = {key: value for key, value in os.environ.items() if not (isolated_env and key.startswith("GIT_"))}
+    env = {**inherited, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}
     if index is not None:
         env["GIT_INDEX_FILE"] = index
     stdin = subprocess.DEVNULL if input is None else None
     try:
-        completed = subprocess.run(
-            command, input=input, stdin=stdin, capture_output=True, check=False, timeout=timeout, env=env
-        )
+        if new_session:
+            completed = _run_in_session(command, input, env, timeout)
+        else:
+            completed = subprocess.run(
+                command, input=input, stdin=stdin, capture_output=True, check=False, timeout=timeout, env=env
+            )
     except subprocess.TimeoutExpired as exc:
         if deadline is not None:
             raise deadline.exceeded(label) from exc
@@ -165,6 +192,30 @@ def run_git_result(
     return GitResult(completed.returncode, completed.stdout)
 
 
+def _run_in_session(
+    command: tuple[str, ...], input: bytes | None, env: dict[str, str], timeout: float | None
+) -> subprocess.CompletedProcess[bytes]:
+    """Run ``command`` in a session of its own with its output captured; a timeout (``TimeoutExpired``, re-raised)
+    or any other exception first kills the whole process group and reaps Git."""
+    process = subprocess.Popen(
+        command,
+        env=env,
+        stdin=subprocess.DEVNULL if input is None else subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    with process:
+        try:
+            stdout, stderr = process.communicate(input, timeout=timeout)
+        except BaseException:
+            with contextlib.suppress(ProcessLookupError, PermissionError):
+                os.killpg(process.pid, signal.SIGKILL)
+            process.wait()
+            raise
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+
+
 def run_git_text(
     cwd: Path,
     *args: str,
@@ -172,6 +223,8 @@ def run_git_text(
     timeout: float | None = DEFAULT_TIMEOUT,
     index: str | None = None,
     deadline: Deadline | None = None,
+    isolated_env: bool = False,
+    new_session: bool = False,
 ) -> str:
     """``run_git`` with its output decoded as UTF-8 with ``surrogateescape`` and one trailing newline removed.
 
@@ -179,7 +232,16 @@ def run_git_text(
     other trailing whitespace, which a path may carry, is kept. A caller that needs the output byte for byte (a file's
     content from ``git show``) uses ``run_git``. Raises as ``run_git`` does.
     """
-    output = run_git(cwd, *args, input=input, timeout=timeout, index=index, deadline=deadline)
+    output = run_git(
+        cwd,
+        *args,
+        input=input,
+        timeout=timeout,
+        index=index,
+        deadline=deadline,
+        isolated_env=isolated_env,
+        new_session=new_session,
+    )
     return output.decode("utf-8", errors="surrogateescape").removesuffix("\n")
 
 
@@ -323,3 +385,44 @@ def status_records(
         *(("--", *pathspecs) if pathspecs else ()),
     ]
     return parse_status_records(run_git(cwd, *args, deadline=deadline))
+
+
+def dirty_paths(
+    cwd: Path, *, untracked: str = "all", optional_locks: bool = False, deadline: Deadline | None = None
+) -> list[str]:
+    """Every path ``git status`` reports in ``cwd``, both sides of a rename or copy, sorted and without duplicates.
+
+    Built on ``status_records`` (``untracked`` and ``optional_locks`` as there); paths are Git's, so an untracked
+    directory listed whole (``untracked="normal"``) keeps its trailing ``/``. Raises as ``run_git`` does.
+    """
+    records = status_records(cwd, untracked=untracked, optional_locks=optional_locks, deadline=deadline)
+    return sorted({name for record in records for name in (record.path, record.original) if name})
+
+
+def changed_paths(cwd: Path, base: str, head: str, *, deadline: Deadline | None = None) -> list[str]:
+    """The paths that differ between the commits ``base`` and ``head``, in Git's order.
+
+    Runs ``git diff --no-renames --name-only -z <base> <head> --``: without rename detection, a renamed file lists
+    both its removed and its added name. Paths decode as UTF-8 with ``surrogateescape``; both revisions are passed as
+    given, so a caller taking them from input validates them first. Raises as ``run_git`` does.
+    """
+    output = run_git(cwd, "diff", "--no-renames", "--name-only", "-z", base, head, "--", deadline=deadline)
+    return [name for name in _decode(output).split("\0") if name]
+
+
+def git_config(
+    cwd: Path, key: str, *, local: bool = False, type: str | None = None, deadline: Deadline | None = None
+) -> str | None:
+    """The value of the configuration ``key`` as ``git config --get`` prints it, ``None`` when it is unset (exit 1).
+
+    ``local=True`` reads only the repository's own configuration (``--local``); ``type`` is ``--type``'s value
+    (``bool`` canonicalizes ``yes``/``on``/``1`` to ``true``). One trailing newline is removed, as by ``run_git_text``;
+    a key set to the empty string is ``""``. Any other failure raises ``GitError``.
+    """
+    args = ["config", *(("--local",) if local else ()), *((f"--type={type}",) if type else ()), "--get", key]
+    try:
+        return run_git_text(cwd, *args, deadline=deadline)
+    except GitError as exc:
+        if exc.returncode == 1:
+            return None
+        raise

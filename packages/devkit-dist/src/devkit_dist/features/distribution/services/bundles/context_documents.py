@@ -34,6 +34,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import FrontmatterError
 from devkit_core.core import frontmatter
+from devkit_core.core.extensions import ExtensionFailed, call_extensions
 
 from devkit_dist.features.distribution.models.errors import BundleError, ContextDocumentsExtensionFailedNotice
 from devkit_dist.features.distribution.models.results import ContextDocument
@@ -225,16 +226,10 @@ def provided_directories(root: Path, working: Path, directory: str) -> tuple[Pro
     listed: list[str] = []
     mentioned: list[str] = []
     notices: list[AdvisoryError] = []
-    try:
-        entries = sorted(metadata.entry_points(group=PROVIDER_GROUP), key=lambda item: (item.name, item.value))
-    except (Exception, SystemExit) as exc:
-        return ProvidedDirectories((), ()), [_failed("discovery", str(exc) or type(exc).__name__)]
-    for entry in entries:
-        try:
-            provided = _provided(entry, root, working, directory)
-        except (Exception, SystemExit) as exc:
-            notices.append(_failed(entry.name, str(exc) or type(exc).__name__))
+    for outcome in call_extensions(PROVIDER_GROUP, lambda entry: _provided(entry, root, working, directory)):
+        if isinstance(outcome, ExtensionFailed):
+            notices.append(_failed(outcome.name, outcome.problem))
             continue
-        listed.extend(provided.listed)
-        mentioned.extend(provided.mentioned)
+        listed.extend(outcome.result.listed)
+        mentioned.extend(outcome.result.mentioned)
     return ProvidedDirectories(tuple(listed), tuple(mentioned)), notices

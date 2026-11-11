@@ -34,15 +34,18 @@ from devkit_dist.adapters.cli import (
     boundary,
     echo_json,
     echo_notices,
+    echo_page,
     exit_on_problems,
     exit_on_warnings,
+    fields_line,
     is_json,
     resolve_root,
+    sentinel,
     workspace_option,
 )
 from devkit_docs.utils.paging import page
 
-from devkit_spec.adapters.cli import echo_page, fields_line, sentinel
+from devkit_spec.adapters.cli import COMMAND
 from devkit_spec.features.entrypoints import Applied
 from devkit_spec.features.entrypoints.models.derive import Pair, Skipped, State
 from devkit_spec.features.entrypoints.usecases.derive import DEFAULT_STATUS, DeriveEntrypointsUseCase, _check_options
@@ -132,7 +135,7 @@ def derive_cmd(
         args += [item for exclude in excludes for item in ("--exclude", exclude)]
         args += ["--skipped"] if list_skipped else []
         args += [*(["-w", workspace_root] if workspace_root is not None else []), "--limit", str(limit)]
-        echo_page(len(documents), offset, limit, len(shown), args)
+        echo_page(COMMAND, len(documents), offset, limit, len(shown), args)
         click.echo(fields_line("SUMMARY", **summary))
     echo_notices(notices)
     exit_on_problems(errors)

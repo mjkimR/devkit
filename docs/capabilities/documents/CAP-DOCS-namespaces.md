@@ -56,7 +56,7 @@ Every document belongs to exactly one namespace:
 
 1. A document under `docs/packages/<name>/` belongs to `<name>`.
 2. The files of a spec bundle (`specs/<YYYY-MM>/<bundle>/...`, month-level feedback excluded) or a proposal bundle
-   (`docs/proposals/<bundle>/...`) belong to the namespace the bundle's `spec.md` or `proposal.md` names in its
+   (`docs/proposals/PROP-<slug>/...`) belong to the namespace the bundle's `spec.md` or `proposal.md` names in its
    `namespace` frontmatter field, so a bundle keeps its package wherever the work happens. A single-file proposal
    (`docs/proposals/PROP-<slug>.md`) belongs to the namespace its own `namespace` field names. A value that is not a
    registered name counts as `global` (`RULE-spec-format` reports it in a bundle's `spec.md` or `proposal.md` and in a single-file proposal).

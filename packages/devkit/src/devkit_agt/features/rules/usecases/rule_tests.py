@@ -22,7 +22,6 @@ so importing ``devkit_agt.features.rules`` stays free of it.
 from __future__ import annotations
 
 import importlib.util
-import inspect
 import os
 import sys
 from collections.abc import Sequence
@@ -35,7 +34,7 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.plugins import TESTS_DIRECTORY
 
-from devkit_agt.features.rules.models.contracts import Rule
+from devkit_agt.features.rules.models.contracts import Rule, rule_file
 from devkit_agt.features.rules.models.errors import RulesTestUnavailableError
 from devkit_agt.features.rules.services.builtins.base import managed_counterpart
 from devkit_agt.features.rules.services.registry import PLUGIN_NAMESPACE
@@ -96,10 +95,10 @@ def rule_folder(rule: Rule) -> Path | None:
     levels below it.
     """
     cls = type(rule)
-    try:
-        file = Path(inspect.getfile(cls)).resolve()
-    except (TypeError, OSError):
+    source = rule_file(rule)
+    if source is None:
         return None
+    file = source.resolve()
     top, _, dotted = cls.__module__.partition(".")
     folder = file.parent
     if not top.startswith(f"{PLUGIN_NAMESPACE}_") or not dotted:

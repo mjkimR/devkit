@@ -16,8 +16,6 @@ if TYPE_CHECKING:
 
 TITLE_LIMIT = 40
 QUESTION_PREFIX = "question:"
-# How an answer reaches the engine: a decision record, the executor's --given, or an answer envelope.
-ANSWER_CHANNELS = ("record", "given", "envelope")
 
 
 @dataclass(frozen=True)

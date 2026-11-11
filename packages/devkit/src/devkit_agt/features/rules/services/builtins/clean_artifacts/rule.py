@@ -57,8 +57,6 @@ class CleanArtifactsRule(BaseRule):
                     line=1,
                     message=f"{message} should not be committed",
                     remediation="Remove the generated artifact from the change and add an ignore rule",
-                    severity=self.severity,
-                    phase=self.phase,
                 )
             )
         return violations

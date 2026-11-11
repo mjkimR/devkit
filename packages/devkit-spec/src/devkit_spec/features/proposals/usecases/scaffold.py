@@ -30,19 +30,14 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse, scalar
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+from devkit_docs.base.layout import EFFORTS, PROPOSAL_FILE, PROPOSALS, TARGET_DOCS
 from devkit_docs.features.documents import DocumentIndex
 from devkit_docs.features.documents.models.namespace import GLOBAL
 from devkit_docs.features.documents.repositories.config import read_docs_config
 from devkit_docs.features.documents.services.namespaces import detect, require
 from devkit_docs.utils.text import foreign_letters
 
-from devkit_spec.base.axes import (
-    DEFAULT_EFFORT,
-    DEFAULT_TASK_KIND,
-    EFFORTS,
-    PROPOSAL_WORKFLOW,
-    TASK_KINDS,
-)
+from devkit_spec.base.axes import DEFAULT_EFFORT, DEFAULT_TASK_KIND, PROPOSAL_WORKFLOW, TASK_KINDS
 from devkit_spec.base.errors import (
     ProposalDecisionExistsError,
     ProposalExistsError,
@@ -56,7 +51,7 @@ from devkit_spec.base.errors import (
     ProposalWorkflowError,
     SpecError,
 )
-from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS, proposal_unit
+from devkit_spec.base.units import proposal_anchor, proposal_unit
 from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.repositories.branches import SLUG_LIMIT, planning_branch_elsewhere
 from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
@@ -170,9 +165,7 @@ def _check_superseded(root: Path, proposal_id: str | None) -> None:
     any other status; nothing for ``None``."""
     if proposal_id is None:
         return
-    old = proposal_id.removeprefix("PROP-")
-    bundle, single = bundle_dir(root, old), single_file(root, old)
-    anchor = bundle / PROPOSAL_FILE if bundle.is_dir() else single
+    anchor = proposal_anchor(root, proposal_id.removeprefix("PROP-"))
     rel = anchor.relative_to(root).as_posix()
     if not anchor.is_file():
         raise ProposalNotFoundError(
@@ -299,46 +292,6 @@ class CreatedProposal:
             "next_command": self.next_command,
             "notices": [notice.to_dict() for notice in self.notices],
         }
-
-
-def create_proposal(
-    root: Path,
-    slug: str,
-    *,
-    title: str | None = None,
-    target_area: str | None = None,
-    milestone: str | None = None,
-    task_kind: str | None = None,
-    planning_effort: str | None = None,
-    dev_effort: str | None = None,
-    namespace: str | None = None,
-    summary: str | None = None,
-    supersedes: str | None = None,
-    decomposed_from: str | None = None,
-    needs_decompose: bool = False,
-    with_target_docs: bool = False,
-    today: date | None = None,
-    cwd: Path | None = None,
-) -> CreatedProposal:
-    """Compose the application entrypoint for internal callers."""
-    return CreateProposalUseCase().execute(
-        root,
-        slug,
-        title=title,
-        target_area=target_area,
-        milestone=milestone,
-        task_kind=task_kind,
-        planning_effort=planning_effort,
-        dev_effort=dev_effort,
-        namespace=namespace,
-        summary=summary,
-        supersedes=supersedes,
-        decomposed_from=decomposed_from,
-        needs_decompose=needs_decompose,
-        with_target_docs=with_target_docs,
-        today=today,
-        cwd=cwd,
-    )
 
 
 def _proposal(

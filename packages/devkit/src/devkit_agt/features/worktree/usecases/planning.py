@@ -16,8 +16,8 @@ from devkit_agt.features.worktree.models.errors import (
     NotFoundError,
     PullRequestPolicyError,
     RunFromBaseError,
-    from_base_error,
     pull_request_policy_fix,
+    refuse_linked,
 )
 from devkit_agt.features.worktree.models.lifecycle import Position
 from devkit_agt.features.worktree.models.planning import FinishPlan
@@ -78,13 +78,11 @@ def plan_finish(
     (``WORKTREE_COMMIT_FAILED``).
     """
     check_branch(branch)
-    if position.linked:
-        raise from_base_error(
-            RunFromBaseError,
-            "prepare integration from the retained base checkout",
-            position.base,
-            position.root,
-        )
+    refuse_linked(
+        position,
+        RunFromBaseError,
+        "prepare integration from the retained base checkout",
+    )
     if pull_request == "required":
         raise PullRequestPolicyError(
             "required PR policy prevents local integration", fix=pull_request_policy_fix(branch)

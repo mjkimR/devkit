@@ -36,7 +36,9 @@ what a task is.
 
 ``prose_lines`` and ``fenced_lines`` are the fence-only views (comment and
 indented lines count as prose) that link extraction and citations use, and
-``code_spans`` the inline code of a prose line.
+``code_spans`` the inline code of a prose line. ``closing_run`` and
+``closes_later`` are the inline-span continuation test ``scan`` applies, for a
+reader that masks spans of its own (devkit-docs' reference masker).
 
 Lines end with ``\\n`` only, as in ``devkit_core.core.frontmatter``; a ``\\r``
 before it stays part of ``line`` and is left out of ``text``.
@@ -174,19 +176,31 @@ def _closes_later(following: Iterable[str], closer: Callable[[str], bool]) -> bo
     return False
 
 
-def _closing_backticks(line: str, start: int, width: int) -> int:
-    """Index of the first backtick run of exactly ``width`` at or after ``start``, or ``-1``."""
+def closing_run(line: str, start: int, char: str, width: int) -> int:
+    """Index of the first run of exactly ``width`` ``char`` characters at or after ``start``, else ``-1``.
+
+    A longer or shorter run is skipped whole, so ``` `` ``` never closes a single-backtick code span.
+    """
     index = start
     while index < len(line):
-        if line[index] != "`":
+        if line[index] != char:
             index += 1
             continue
         run = index
-        while index < len(line) and line[index] == "`":
+        while index < len(line) and line[index] == char:
             index += 1
         if index - run == width:
             return run
     return -1
+
+
+def closes_later(following: Iterable[str], char: str, width: int) -> bool:
+    """Whether a run of exactly ``width`` ``char`` closes a span on a following line of the same paragraph.
+
+    The paragraph ends at the first line that cannot continue it: a blank line, a fence, a list item, an ATX heading
+    or an HTML block, as ``scan`` reads them. A span opener that nothing in its paragraph closes is literal.
+    """
+    return _closes_later(following, lambda later: closing_run(later, 0, char, width) >= 0)
 
 
 def _mask_inline(line: str, comment: bool, span: int, following: Iterable[str]) -> tuple[str, bool, int]:
@@ -202,7 +216,7 @@ def _mask_inline(line: str, comment: bool, span: int, following: Iterable[str]) 
     out = list(line)
     index = 0
     if span:
-        close = _closing_backticks(line, 0, span)
+        close = closing_run(line, 0, "`", span)
         if close < 0:
             return line, False, span
         index, span = close + span, 0
@@ -225,7 +239,7 @@ def _mask_inline(line: str, comment: bool, span: int, following: Iterable[str]) 
                 index = end
                 continue
             width = len(line[index:]) - len(line[index:].lstrip("`"))
-            if _closes_later(following, lambda later, width=width: _closing_backticks(later, 0, width) >= 0):
+            if closes_later(following, "`", width):
                 return "".join(out), False, width
             index += width
             continue

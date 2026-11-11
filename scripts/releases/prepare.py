@@ -35,7 +35,7 @@ def build(root: Path, paths: dict, texts: dict) -> dict:
     for name, metadata in sorted(paths.items()):
         target = location / name
         # Backend source trees need no editing byproducts; use the manifest's exclusions.
-        from devkit_dist.features.distribution.services.bundles.manifest import IGNORED_NAMES, IGNORED_SUFFIXES
+        from devkit_dist.features.distribution.models.content import IGNORED_NAMES, IGNORED_SUFFIXES
 
         shutil.copytree(
             metadata.parent,

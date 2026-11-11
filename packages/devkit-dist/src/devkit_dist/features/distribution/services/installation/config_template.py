@@ -13,9 +13,9 @@ entry-point name order, are called with no argument, and render the same for eve
 
 Rendering only adds: a key whose name the file already mentions (set, or commented anywhere), or a table whose
 header it mentions (commented or not) or defines, is left out, so no line is changed and an uncommented line stays
-where the developer put it. An extension that fails to load, raises, returns anything but valid tables, or (for
-``devkit.config_tables``) is not named after a reserved table is left out with a
-``CONFIG_TEMPLATE_EXTENSION_FAILED`` warning.
+where the developer put it. An extension that fails to load, raises (``SystemExit`` included), returns anything but
+valid tables, or (for ``devkit.config_tables``) is not named after a reserved table is left out with a
+``CONFIG_TEMPLATE_EXTENSION_FAILED`` warning; a group that cannot be listed is one such warning named ``discovery``.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ from typing import Any
 
 import tomlkit
 from devkit.advisory import AdvisoryError
+from devkit_core.core.extensions import ExtensionFailed, call_extensions
 from tomlkit.container import Container
 from tomlkit.items import AoT, Table
 
@@ -104,22 +105,25 @@ def _load_templates(
 ) -> tuple[list[ToolTemplate], list[AdvisoryError]]:
     """The templates registered under ``group`` in entry-point name order, and a warning for each one that failed.
 
-    ``check_name`` returns why an entry-point name is not accepted, or ``None``.
+    ``check_name`` returns why an entry-point name is not accepted, or ``None``. Each entry point is isolated by
+    ``call_extensions``: one that is refused, fails to load, raises (``SystemExit`` included) or returns invalid tables
+    is left out with a warning, and a failure to list the group is one warning named ``discovery``.
     """
-    found: list[ToolTemplate] = []
-    notices: list[AdvisoryError] = []
-    for entry in sorted(metadata.entry_points(group=group), key=lambda item: (item.name, item.value)):
+
+    def tables(entry: metadata.EntryPoint) -> tuple[TemplateTable, ...]:
         problem = check_name(entry.name)
         if problem is not None:
-            notices.append(_failed(entry.name, problem, group=group))
+            raise ValueError(problem)  # refused before the entry point is loaded
+        return check_tables(entry.load()())
+
+    found: list[ToolTemplate] = []
+    notices: list[AdvisoryError] = []
+    for outcome in call_extensions(group, tables):
+        if isinstance(outcome, ExtensionFailed):
+            notices.append(_failed(outcome.name, outcome.problem, group=group))
             continue
-        try:
-            tables = check_tables(entry.load()())
-        except Exception as exc:
-            notices.append(_failed(entry.name, str(exc) or type(exc).__name__, group=group))
-            continue
-        dist = getattr(entry, "dist", None)
-        found.append(ToolTemplate(entry.name, tables, dist.name if dist is not None else None))
+        dist = getattr(outcome.entry, "dist", None)
+        found.append(ToolTemplate(outcome.name, outcome.result, dist.name if dist is not None else None))
     return found, notices
 
 

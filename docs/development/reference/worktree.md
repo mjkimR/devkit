@@ -88,7 +88,7 @@ A `finish` that a refusal stopped after it changed something prints its progress
 | `WORKTREE_BRANCH_DELETE_FAILED` | `ERROR` (`INTERACTION`) | `BranchDeleteFailedError` | `git branch -d` failed after the removal; carries the partial result, a rerun deletes the branch. |
 | `WORKTREE_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `WorktreeConfigError` | A malformed `[worktree]` table. |
 | `WORKTREE_PUSH_REJECTED` | `WARNING` | `PushRejectedWarning` | The upstream moved on and rejected the push of the merged base; `[FIX]` fetches it and merges it with `git merge --no-ff -m "chore(merge): integrate <remote>/<ref> into <base>" FETCH_HEAD` (keeping the task's SHAs, unlike `git pull --rebase`), then pushes. |
-| `POST_FINISH_EXTENSION_FAILED` | `WARNING` | `PostFinishExtensionFailedNotice` | A `devkit.post_finish` extension raised an exception other than an advisory, or returned something other than a list; the finish succeeded. |
+| `POST_FINISH_EXTENSION_FAILED` | `WARNING` | `PostFinishExtensionFailedNotice` | A `devkit.post_finish` extension raised an exception other than an advisory (`SystemExit` included) or returned something other than a list, or the group could not be listed; the finish succeeded. |
 | `POST_FINISH_NOTICE` | `NOTICE` | `PostFinishNotice` | A line a `devkit.post_finish` extension returned (`brief`). |
 | `WORKTREE_PUSH_FAILED` | `WARNING` | `PushFailedWarning` | The merged base branch did not reach its upstream for another reason; `[FIX]` is the push. |
 | `WORKTREE_REMOTE_UNCHECKED` | `WARNING` | `RemoteUncheckedWarning` | `start` could not ask a remote whether it has the new branch; its remote-tracking ref from the last fetch stood in. |

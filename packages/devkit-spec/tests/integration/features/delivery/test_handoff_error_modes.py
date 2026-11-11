@@ -85,7 +85,7 @@ def test_a_refused_handoff_commit_is_an_input_error_whose_fix_commits_in_the_wor
         return {"rev-parse": "f" * 40}.get(args[0], "")
 
     monkeypatch.setattr(native_handoff, "run_git_text", refuse)
-    monkeypatch.setattr(native_handoff, "_dirty_paths", lambda root: ["specs/x/spec.md"])
+    monkeypatch.setattr(native_handoff, "dirty_paths", lambda root, **_kwargs: ["specs/x/spec.md"])
     monkeypatch.setattr(native_handoff, "guard_execution", lambda: None)
     with pytest.raises(HandoffCommitRefusedError) as caught:
         native_handoff._commit_handoff(tmp_path, "idea", "f" * 40)

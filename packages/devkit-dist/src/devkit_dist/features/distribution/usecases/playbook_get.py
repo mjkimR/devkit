@@ -14,11 +14,10 @@ from devkit_dist.features.distribution.models.errors import PlaybookAliasAmbiguo
 from devkit_dist.features.distribution.models.results import PlaybookResult
 from devkit_dist.features.distribution.models.settings import SLUG
 from devkit_dist.features.distribution.services.bundles.common import read_frontmatter
-from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader, read_playbook_header
+from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader
 from devkit_dist.features.distribution.services.installation.local_render import LocalRenderStaleError
-from devkit_dist.features.distribution.services.installation.overrides import override_rel
 from devkit_dist.features.distribution.services.installation.reading import (
-    read_owned,
+    read_playbook,
     read_synchronized,
     synchronized_project_root,
 )
@@ -108,11 +107,7 @@ class GetPlaybook(BaseUseCase):
 
 def _header(root: Path, receipt: Receipt, asset: AssetRecord, bundle: str) -> tuple[str, PlaybookHeader, bytes]:
     """The effective entrypoint of a playbook asset, its validated header and its bytes."""
-    selector = f"{bundle}/{asset.id}"
     if len(asset.entrypoints) != 1:
-        raise ReceiptError(f"{RECEIPT_PATH}: expected exactly one playbook entrypoint for {selector}")
+        raise ReceiptError(f"{RECEIPT_PATH}: expected exactly one playbook entrypoint for {bundle}/{asset.id}")
     name = asset.entrypoints[0]
-    if name not in asset.paths or not name.startswith((f"{MANAGED_PATH}/{bundle}/", override_rel(bundle, ""))):
-        raise ReceiptError(f"{RECEIPT_PATH}: invalid playbook entrypoint: {name}")
-    data = read_owned(root, receipt, name)
-    return name, read_playbook_header(data, name), data
+    return name, *read_playbook(root, receipt, asset, name)

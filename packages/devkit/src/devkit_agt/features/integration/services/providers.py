@@ -1,11 +1,15 @@
-"""Git policy normalization and local-only scoped post-finish extensions."""
+"""Git policy normalization, local-only scoped post-finish extensions and the checks both routes repeat before
+and after Git effects."""
 
 from __future__ import annotations
 
+import sys
+from collections.abc import Collection
 from importlib import metadata
 from pathlib import Path
 from typing import Any, cast
 
+from devkit_core.core.extensions import ExtensionFailed, call_extensions
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project import development_approach
 from devkit_dist.features.project.repositories.project import commit_config as committed_config
@@ -15,13 +19,16 @@ from devkit_agt.features.integration.models.contracts import (
     CleanupScope,
     CleanupTarget,
     IntegrationContext,
+    IntegrationRequest,
     ScopedCleanup,
     digest,
 )
 from devkit_agt.features.integration.models.errors import (
     CleanupContractError,
     IntegrationConfigError,
+    StaleRequestError,
 )
+from devkit_agt.features.worktree import POLICY_DEFAULTS, worktree_policy
 
 CONFIG_PATH = ".devkit/config.toml"
 POST_FINISH_GROUP = "devkit.post_finish"
@@ -45,12 +52,9 @@ def effective(config: dict[str, Any]) -> dict[str, Any]:
             fix="Remove unknown keys from [integration]; provider selection is no longer required",
         )
     approvals = table(table(config, "workflow"), "approvals")
-    worktree = table(config, "worktree")
     return {
         "dev-integration": approvals.get("dev-integration", "ask"),
-        "pull_request": worktree.get("pull_request", "auto"),
-        "delete_branch": worktree.get("delete_branch", True),
-        "merge": worktree.get("merge", "no-ff"),
+        **(worktree_policy(config) or POLICY_DEFAULTS),
         "development_approach": development_approach(config).approach,
     }
 
@@ -99,24 +103,33 @@ def identity(entry: metadata.EntryPoint) -> str:
 
 
 def cleanup_extensions() -> dict[str, tuple[str, ScopedCleanup]]:
+    """Every ``devkit.post_finish`` extension by name with its identity; ``CleanupContractError`` at the first one
+    that fails to load or lacks the scoped local-only contract, a duplicate name, or a group that cannot be listed
+    (named ``discovery``)."""
+    seen: set[str] = set()
+
+    def scoped(entry: metadata.EntryPoint) -> tuple[str, ScopedCleanup]:
+        extension = entry.load()
+        if (
+            entry.name in seen
+            or getattr(extension, "integration_local_only", None) is not True
+            or not all(
+                callable(getattr(extension, method, None))
+                for method in ("integration_plan", "integration_validate", "integration_run")
+            )
+        ):
+            raise TypeError("scoped local-only contract required")
+        seen.add(entry.name)
+        return identity(entry), cast(ScopedCleanup, extension)
+
     found: dict[str, tuple[str, ScopedCleanup]] = {}
-    for entry in sorted(metadata.entry_points(group=POST_FINISH_GROUP), key=lambda item: (item.name, item.value)):
-        try:
-            extension = entry.load()
-            if (
-                entry.name in found
-                or getattr(extension, "integration_local_only", None) is not True
-                or not all(
-                    callable(getattr(extension, method, None))
-                    for method in ("integration_plan", "integration_validate", "integration_run")
-                )
-            ):
-                raise TypeError("scoped local-only contract required")
-            found[entry.name] = (identity(entry), cast(ScopedCleanup, extension))
-        except Exception as exc:
+    for outcome in call_extensions(POST_FINISH_GROUP, scoped, fail_fast=True):
+        if isinstance(outcome, ExtensionFailed):
             raise CleanupContractError(
-                f"post-finish extension {entry.name} cannot execute within an approved scope ({type(exc).__name__})"
-            ) from exc
+                f"post-finish extension {outcome.name} cannot execute within an approved scope"
+                f" ({type(outcome.error).__name__})"
+            ) from outcome.error
+        found[outcome.name] = outcome.result
     return found
 
 
@@ -137,3 +150,23 @@ def cleanup_scopes(
         extension.integration_validate(context, targets)
         scopes.append(CleanupScope(name, ident, targets))
     return tuple(scopes)
+
+
+def revalidate_cleanup(
+    request: IntegrationRequest, context: IntegrationContext, done: Collection[str], *, changed: str
+) -> None:
+    """Refuse with ``StaleRequestError(changed)`` when the installed post-finish extensions differ from the approved
+    ones; otherwise revalidate the approved targets of every scope whose cleanup is not in ``done``."""
+    extensions = cleanup_extensions()
+    if {name: ident for name, (ident, _) in extensions.items()} != {
+        scope.extension: scope.identity for scope in request.cleanup
+    }:
+        raise StaleRequestError(changed)
+    for scope in request.cleanup:
+        if scope.extension not in done:
+            extensions[scope.extension][1].integration_validate(context, scope.targets)
+
+
+def runtime_in(path: str | Path) -> bool:
+    """Whether the running interpreter lives inside ``path``, the worktree an approved cleanup removes."""
+    return Path(sys.executable).absolute().is_relative_to(path) or Path(sys.prefix).resolve().is_relative_to(path)

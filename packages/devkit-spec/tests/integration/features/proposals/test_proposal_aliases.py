@@ -19,14 +19,14 @@ from devkit_spec.base.errors import (
     ProposalTargetExistsError,
     SpecExistsError,
 )
-from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase, create_spec, handoff_proposal
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 RULE = load_rule(Path(devkit_docs.__file__).parent / "bundles/docs/bundle/rules/document_reference/rule.py")
 
 
 def _proposal(root: Path, slug: str, aliases: str = "") -> Path:
-    proposal = root / create_proposal(root, slug, today=TODAY).path
+    proposal = root / CreateProposalUseCase().execute(root, slug, today=TODAY).path
     accept(proposal, f"\naliases: [{aliases}]" if aliases else "")
     return proposal
 
@@ -114,10 +114,10 @@ def test_scaffolding_treats_a_spec_alias_like_a_declared_spec(workspace: Path, w
         "specs/2026-01/20260101-current/spec.md", "---\nid: SPEC-current\nstatus: completed\naliases: [SPEC-old]\n---\n"
     )
     with pytest.raises(ProposalSlugConflictError):
-        create_proposal(workspace, "old", today=TODAY)
+        CreateProposalUseCase().execute(workspace, "old", today=TODAY)
     with pytest.raises(SpecExistsError):
         create_spec(workspace, "old", day=TODAY)
-    create_proposal(workspace, "fresh", today=TODAY)
+    CreateProposalUseCase().execute(workspace, "fresh", today=TODAY)
     write("docs/decisions/2026-01/20260101-kept.md", "---\nid: ADR-kept\nstatus: accepted\n---\n")
     write(
         "docs/proposals/PROP-fresh/decisions/PADR-first.md",
@@ -139,5 +139,5 @@ def test_handoff_refuses_an_alias_that_would_become_a_dated_spec_id(workspace: P
 def test_new_proposal_refuses_a_slug_declared_as_an_alias(workspace: Path, write: Write) -> None:
     write("docs/proposals/PROP-current/proposal.md", "---\nid: PROP-current\nstatus: draft\naliases: [PROP-old]\n---\n")
     with pytest.raises(ProposalExistsError, match="already declared as an alias"):
-        create_proposal(workspace, "old", today=TODAY)
+        CreateProposalUseCase().execute(workspace, "old", today=TODAY)
     assert not (workspace / "docs/proposals/PROP-old").exists()

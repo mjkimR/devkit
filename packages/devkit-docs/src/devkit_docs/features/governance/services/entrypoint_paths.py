@@ -1,9 +1,10 @@
-"""The entrypoint path contract: literal workspace-relative paths and which documents carry them.
+"""The entrypoint path contract: which documents carry entrypoints, and whether an entrypoint exists.
 
-An entrypoint is a file or directory relative to the workspace root, written with ``/``. ``./`` and a trailing
-``/`` are normalized away; ``.`` names the whole workspace. An empty value, an absolute path, a ``..`` segment, a
-backslash, a colon (drive), a glob character (``*?[]``), NUL or a line break is invalid. Paths compare by whole
-segments and case-sensitively: ``src/a`` covers ``src/a/b.py`` but not ``src/ab``.
+An entrypoint is a file or directory relative to the workspace root, written with ``/``; ``devkit_docs.utils.paths``
+normalizes and compares the values (``normalize``, ``covers``, ``overlaps``). ``./`` and a trailing ``/`` are
+normalized away; ``.`` names the whole workspace. An empty value, an absolute path, a ``..`` segment, a backslash, a
+colon (drive), a glob character (``*?[]``), NUL or a line break is invalid. Paths compare by whole segments and
+case-sensitively: ``src/a`` covers ``src/a/b.py`` but not ``src/ab``.
 
 Capabilities and use cases carry ``entrypoints``: documents under ``docs/capabilities/`` or ``docs/usecases/``, and
 under the same directories of a namespace's docs root ``docs/packages/<name>/``. Their paths stay
@@ -19,9 +20,6 @@ from devkit_core.core import UnsafePathError, resolve_within
 from devkit_docs.features.documents import definitions
 from devkit_docs.features.documents.services.namespaces import living_path
 from devkit_docs.utils.paths import ROOT
-from devkit_docs.utils.paths import covers as covers
-from devkit_docs.utils.paths import normalize as normalize
-from devkit_docs.utils.paths import overlaps as overlaps
 
 
 def entrypoint_bearing(path: str) -> bool:

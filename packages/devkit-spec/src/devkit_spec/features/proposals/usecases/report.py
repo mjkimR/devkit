@@ -11,13 +11,14 @@ from devkit.advisory import AdvisoryError
 from devkit_agt.features.worktree import find, locate
 from devkit_core.base.errors import YamlBindingUnavailableError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import run_git, status_records
+from devkit_core.core import dirty_paths, run_git
 from devkit_core.core.frontmatter import parse
 from devkit_core.core.yaml import safe_load
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.configuration import approval_language
+from devkit_docs.base.layout import DEV_EFFORT, EFFORTS, PLANNING_EFFORT
 
-from devkit_spec.base.axes import DEFAULT_EFFORT, DEV_EFFORT, EFFORTS, PLANNING_EFFORT
+from devkit_spec.base.axes import DEFAULT_EFFORT
 from devkit_spec.base.errors import (
     ProposalNotFoundError,
     ReportArgumentError,
@@ -107,11 +108,11 @@ def source(root: Path, slug: str, sha: str) -> Source:
                 target_files=[anchor],
                 fix=f"Pass the slug of a committed proposal ({devkit_command('docs list proposal')} shows them)",
             )
-        dirty = status_records(root, untracked="normal", optional_locks=True)
+        dirty = dirty_paths(root, untracked="normal", optional_locks=True)
         if dirty:
             raise ReportSourceDirtyError(
                 "the source checkout has uncommitted changes; the report reads committed records only",
-                target_files=[name for record in dirty for name in (record.path, record.original) if name][:20],
+                target_files=dirty[:20],
                 fix=f"Once the user has decided what happens to the changes in [TARGET] and the checkout is clean, run "
                 f"`{_command(slug)}`",
             )

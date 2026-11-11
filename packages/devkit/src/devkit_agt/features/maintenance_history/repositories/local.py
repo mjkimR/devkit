@@ -3,29 +3,18 @@
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from pathlib import Path
 from typing import Any
+
+from devkit_core.core.files import atomic_write_bytes
 
 from ..models.errors import InputError
 from ..models.records import canonical, run_parts
 
 
 def write_record(run: Path, record: dict[str, Any]) -> None:
-    with tempfile.NamedTemporaryFile(dir=run, prefix=".record-", delete=False) as stream:
-        temporary = Path(stream.name)
-        try:
-            stream.write(canonical(record))
-            stream.flush()
-            os.fsync(stream.fileno())
-        except BaseException:
-            temporary.unlink(missing_ok=True)
-            raise
-    try:
-        os.replace(temporary, run / "record.json")
-    finally:
-        temporary.unlink(missing_ok=True)
+    """Replace ``record.json`` in ``run`` atomically, readable and writable by its owner only."""
+    atomic_write_bytes(run / "record.json", canonical(record), mode=0o600)
 
 
 def read_record(run: Path) -> dict[str, Any]:

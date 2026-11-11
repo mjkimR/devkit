@@ -28,8 +28,9 @@ from devkit_core.core.yaml import safe_compose
 from devkit_docs.base.errors import EntrypointsPathError
 from devkit_docs.features.documents import Document
 from devkit_docs.features.governance import document_index, is_proposal_anchor, namespaces
+from devkit_docs.features.governance.services.entrypoint_paths import exists
+from devkit_docs.utils.paths import normalize
 
-from devkit_spec.features.entrypoints import exists, normalize
 from devkit_spec.features.governance.services.applicability import LifecycleRule as BaseRule
 from devkit_spec.features.governance.services.applicability import applies
 

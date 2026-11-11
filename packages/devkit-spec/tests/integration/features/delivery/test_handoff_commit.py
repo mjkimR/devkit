@@ -14,12 +14,11 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit_core.core import StatusRecord, status_records
+from devkit_core.core import StatusRecord, dirty_paths, status_records
 from spec_support.delivery import _cli, _complete_proposal, _make_synced_repo, _start_worktree
 from spec_support.scope import git
 
 from devkit_spec.features.delivery.cli.proposals import proposal_group
-from devkit_spec.features.delivery.usecases import native_handoff
 from devkit_spec.features.delivery.usecases.native_handoff import HandoffBaseDirtyError, HandoffUseCase
 
 SUBJECT = "spec: hand off idea to Development"
@@ -127,7 +126,7 @@ def test_dirty_paths_read_a_worktree_column_rename(base: Path) -> None:
     (base / "old.txt").rename(base / "new.txt")
     git(base, "add", "-N", "new.txt")
     assert status_records(base, untracked="no") == [StatusRecord(" R", "new.txt", "old.txt")]  # worktree column only
-    assert native_handoff._dirty_paths(base) == ["new.txt", "old.txt"]
+    assert dirty_paths(base, optional_locks=True) == ["new.txt", "old.txt"]
 
 
 # AC-02

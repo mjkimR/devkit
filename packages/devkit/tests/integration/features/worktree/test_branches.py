@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import devkit_agt.features.worktree.services.extensions as extensions
+import devkit_core.core.extensions as core_extensions
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
@@ -284,7 +285,7 @@ def test_the_guard_runs_before_the_merge_and_only_with_merge(repo: Path) -> None
 def entries(monkeypatch: pytest.MonkeyPatch, wanted: str, **callables: Any) -> None:
     """Make ``callables`` the only extensions of the entry-point group ``wanted``."""
     fake = [SimpleNamespace(name=name, value=f"fake:{name}", load=lambda c=c: c) for name, c in callables.items()]
-    monkeypatch.setattr(extensions.metadata, "entry_points", lambda group=None: fake if group == wanted else [])
+    monkeypatch.setattr(core_extensions.metadata, "entry_points", lambda group=None: fake if group == wanted else [])
 
 
 def test_finish_guard_extensions_block_and_fail_closed(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:

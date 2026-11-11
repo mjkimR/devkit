@@ -3,19 +3,27 @@
 from __future__ import annotations
 
 import copy
-import math
 import re
 import stat
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.models.development import development_approach
+from devkit_dist.features.project.models.settings import PLAYBOOK_KEYS, SLUG, playbook_value
 from devkit_dist.features.project.repositories.project import read_toml
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 LOCAL_CONFIG_PATH = ".devkit/config.local.toml"
+# The runtime tables both files may set: (table, its only key, the default, the value's type).
+RUNTIME_TABLES: tuple[tuple[str, str, object, type], ...] = (
+    ("execution", "environment", "local", str),
+    ("mcp", "register", True, bool),
+    ("presentation", "language", "auto", str),
+    ("shared", "adapter", "local", str),
+)
 
 
 class LocalKeyForbiddenError(ConfigError):
@@ -41,19 +49,14 @@ def _invalid(path: Path | str, message: str) -> ConfigError:
 
 
 def validate_runtime_tables(data: dict[str, Any], path: Path | str) -> None:
-    for table, key, default, expected in (
-        ("execution", "environment", "local", str),
-        ("mcp", "register", True, bool),
-        ("presentation", "language", "auto", str),
-        ("shared", "adapter", "local", str),
-    ):
+    for table, key, default, expected in RUNTIME_TABLES:
         value = data.get(table, {})
         if not isinstance(value, dict) or set(value) - {key}:
             raise _invalid(path, f"{table}: expected only {key}")
         setting = value.get(key, default)
         if type(setting) is not expected or (table == "execution" and setting not in ("local", "cloud")):
             raise _invalid(path, f"{table}.{key}: invalid value {setting!r}")
-        if table == "shared" and (not isinstance(setting, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", setting)):
+        if table == "shared" and (not isinstance(setting, str) or not SLUG.fullmatch(setting)):
             raise _invalid(path, "shared.adapter: expected a lowercase adapter ID")
 
 
@@ -72,26 +75,16 @@ def read_local_config(root: Path) -> dict[str, Any]:
     playbooks = data.get("playbooks", {})
     if not isinstance(playbooks, dict):
         raise _invalid(path, "playbooks: expected table")
-    if set(playbooks) - {"limit", "max_bytes", "min_score", "min_similarity", "mode"}:
+    if set(playbooks) - PLAYBOOK_KEYS:
         raise _invalid(path, "playbooks: unknown keys")
     for key, value in playbooks.items():
-        valid = False
-        if key in ("limit", "max_bytes"):
-            low, high = (1, 20) if key == "limit" else (1024, 65536)
-            valid = type(value) is int and low <= value <= high
-        elif key in ("min_score", "min_similarity"):
-            valid = type(value) in (int, float) and math.isfinite(value) and value >= 0
-            if key == "min_similarity":
-                valid = valid and value <= 1
-        elif key == "mode":
-            valid = isinstance(value, str) and value.lower() in ("auto", "dense", "hybrid", "lexical")
-        if not valid:
+        if playbook_value(key, value) is None:
             raise _invalid(path, f"playbooks.{key}: invalid value")
     bundles = data.get("bundles", {})
     if not isinstance(bundles, dict):
         raise _invalid(path, "bundles: expected table")
     for name, settings in bundles.items():
-        if not re.fullmatch(r"[a-z][a-z0-9-]*", name) or not isinstance(settings, dict):
+        if not SLUG.fullmatch(name) or not isinstance(settings, dict):
             raise _invalid(path, f"bundles.{name}: invalid bundle table")
         if set(settings) - {"variables"}:
             raise LocalKeyForbiddenError(f"{path}: bundles.{name}: only variables are local", target_files=[str(path)])
@@ -118,19 +111,38 @@ def merge_config(shared: dict[str, Any], local: dict[str, Any], *, path: Path | 
     return merged
 
 
+def read_shared_config(root: Path, *, check: Callable[[dict[str, Any]], None] | None = None) -> dict[str, Any] | None:
+    """``.devkit/config.toml`` of ``root``, ``None`` when it does not exist.
+
+    It must be a regular file (not a symlink) of schema 1 whose runtime tables (``RUNTIME_TABLES``) are valid; the
+    effective reader checks the rest it reads, and ``installation.config`` the keys only it knows. ``check`` runs
+    right after the schema check, so a caller's own key check keeps its place before the runtime tables.
+    """
+    shared_file = root / CONFIG_PATH
+    if shared_file.is_symlink() or (shared_file.exists() and not shared_file.is_file()):
+        raise _invalid(CONFIG_PATH, "config must be a regular file")
+    shared = read_toml(shared_file, CONFIG_PATH)
+    if shared is None:
+        return None
+    if "schema" in shared and (type(shared["schema"]) is not int or shared["schema"] != 1):
+        raise _invalid(CONFIG_PATH, "unsupported config schema")
+    if check is not None:
+        check(shared)
+    validate_runtime_tables(shared, CONFIG_PATH)
+    return shared
+
+
 def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
     """Read only the explicit workspace; every present local input is validated.
 
     ``sources`` name each value's file workspace-relative (``.devkit/config.toml``, ``.devkit/config.local.toml``)
     or ``default``, as errors about these files do.
     """
-    shared_file = root / CONFIG_PATH
-    if shared_file.is_symlink() or (shared_file.exists() and not shared_file.is_file()):
-        raise _invalid(CONFIG_PATH, "config must be a regular file")
-    shared = read_toml(shared_file, CONFIG_PATH) or {}
-    if "schema" in shared and (type(shared["schema"]) is not int or shared["schema"] != 1):
-        raise _invalid(CONFIG_PATH, "unsupported config schema")
-    validate_runtime_tables(shared, CONFIG_PATH)
+    return effective_config(root, read_shared_config(root) or {}, local=local)
+
+
+def effective_config(root: Path, shared: dict[str, Any], *, local: bool = True) -> EffectiveConfig:
+    """``read_effective_config`` over ``shared``, the configuration ``read_shared_config`` already read and checked."""
     development = development_approach(shared)
     overlay = read_local_config(root) if local else {}
     values = merge_config(shared, overlay, path=LOCAL_CONFIG_PATH)
@@ -146,12 +158,7 @@ def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
 
     record(shared, CONFIG_PATH)
     record(overlay, LOCAL_CONFIG_PATH)
-    for table, key, value in (
-        ("execution", "environment", "local"),
-        ("mcp", "register", True),
-        ("presentation", "language", "auto"),
-        ("shared", "adapter", "local"),
-    ):
+    for table, key, value, _ in RUNTIME_TABLES:
         values.setdefault(table, {}).setdefault(key, value)
         sources.setdefault(f"{table}.{key}", "default")
     values.setdefault("development", {})["approach"] = development.approach

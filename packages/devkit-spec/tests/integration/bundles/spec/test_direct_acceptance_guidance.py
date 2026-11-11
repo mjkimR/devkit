@@ -8,7 +8,7 @@ from pathlib import Path
 from distsupport.guidance import assert_rule
 from spec_support.bundle_text import flat, raw, text
 
-from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase
 
 ACCEPT = "devkit spec proposal accept"
 
@@ -67,6 +67,6 @@ def test_the_lowering_rule_names_the_session_reclassification() -> None:
 
 def test_the_scaffold_lifecycle_holds_for_a_direct_acceptance(tmp_path: Path) -> None:
     (tmp_path / ".devkit").mkdir()
-    scaffold = flat((tmp_path / create_proposal(tmp_path, "idea").path).read_text(encoding="utf-8"))
+    scaffold = flat((tmp_path / CreateProposalUseCase().execute(tmp_path, "idea").path).read_text(encoding="utf-8"))
     assert f"{ACCEPT} idea --by user" in scaffold and "--direct" in scaffold
     assert "set status: accepted and merge the Planning branch" not in scaffold

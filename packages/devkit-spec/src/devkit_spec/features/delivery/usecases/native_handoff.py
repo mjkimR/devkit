@@ -11,20 +11,13 @@ from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import StartResult, branch_marker, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import GitError, StatusRecord, run_git, run_git_text, status_records
+from devkit_core.core import GitError, dirty_paths, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.invocation import guard_execution
+from devkit_docs.base.layout import DEV_EFFORT, EFFORTS, PLANNING_EFFORT, PROPOSAL_FILE
 
-from devkit_spec.base.axes import (
-    DEFAULT_EFFORT,
-    DEFAULT_TASK_KIND,
-    DEV_EFFORT,
-    EFFORTS,
-    PLANNING_EFFORT,
-    PROPOSAL_WORKFLOW,
-    TASK_KINDS,
-)
+from devkit_spec.base.axes import DEFAULT_EFFORT, DEFAULT_TASK_KIND, PROPOSAL_WORKFLOW, TASK_KINDS
 from devkit_spec.base.errors import (
     HandoffBaseDirtyError,
     HandoffCommitRefusedError,
@@ -36,8 +29,8 @@ from devkit_spec.base.errors import (
     ProposalWrongWorktreeError,
     SpecConfigError,
 )
-from devkit_spec.base.units import PROPOSAL_FILE, proposal_unit
-from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
+from devkit_spec.base.units import proposal_unit
+from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
 from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
@@ -59,7 +52,7 @@ def _existing(root: Path, slug: str, head: str) -> bool:
             reason = f"devkit did not create it for branch dev-{slug}"
         elif run_git(path, "rev-parse", "HEAD").decode().strip() != head:
             reason = "its HEAD is not the accepted base commit"
-        elif run_git(path, "status", "--porcelain", "--untracked-files=normal").strip():
+        elif dirty_paths(path, untracked="normal", optional_locks=True):
             reason = "it has uncommitted changes"
     except AdvisoryError as exc:
         reason = f"it cannot be inspected ({exc.code}): {exc.message}"
@@ -76,16 +69,6 @@ HANDOFF_SUBJECT = "spec: hand off {slug} to Development"
 """The subject of the composed handoff's one commit (``ADR-composed-handoff-commits-its-own-transaction``)."""
 
 
-def _dirty_paths(root: Path) -> list[str]:
-    """Every path ``git status`` reports in ``root``, untracked files one by one, in Git's order."""
-    return _names(status_records(root, optional_locks=True))
-
-
-def _names(records: list[StatusRecord]) -> list[str]:
-    """Each record's path, followed by the source of a rename or copy, in Git's order."""
-    return [name for record in records for name in (record.path, record.original) if name]
-
-
 def _commit_handoff(root: Path, slug: str, base: str) -> str:
     """Commit the whole handoff delta once in ``root`` and return HEAD read after ``git commit`` returns.
 
@@ -94,7 +77,7 @@ def _commit_handoff(root: Path, slug: str, base: str) -> str:
     ``git commit`` failure after which HEAD moved anyway (a hook that commits or amends, then fails) returns the landed
     HEAD for verification.
     """
-    dirty = _dirty_paths(root)
+    dirty = dirty_paths(root, optional_locks=True)
     run_git_text(root, "add", "-A")
     guard_execution()
     subject = HANDOFF_SUBJECT.format(slug=slug)
@@ -116,7 +99,7 @@ def _commit_handoff(root: Path, slug: str, base: str) -> str:
 def _verify_handoff_commit(root: Path, slug: str, base: str, head: str) -> None:
     """Raise ``HandoffStaleError`` unless ``head`` is one direct child of ``base`` and ``root`` is clean."""
     parents = run_git_text(root, "rev-list", "--parents", "-n", "1", head).split()[1:]
-    left = _dirty_paths(root)
+    left = dirty_paths(root, optional_locks=True)
     if parents != [base] or left:
         raise HandoffStaleError(
             f"the handoff commit {head} of PROP-{slug} is not one clean direct child of the reviewed base {base}",
@@ -152,9 +135,8 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             f"{position.branch or '- (detached HEAD)'}",
             fix=f"Run {command} in the main worktree on its base branch",
         )
-    dirty = status_records(position.base, untracked="normal", optional_locks=True)
-    if dirty:
-        paths = _names(dirty)
+    paths = dirty_paths(position.base, untracked="normal", optional_locks=True)
+    if paths:
         raise HandoffBaseDirtyError(
             "the base checkout has uncommitted changes",
             *([f"{len(paths) - 20} more paths"] if len(paths) > 20 else []),
@@ -203,13 +185,12 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
     workspace = Workspace(root)
     ref = workspace.resolve_unit(unit)
     evaluation = workspace.evaluate_unit(ref, lint=False)
-    passed = {gate.name for _stage, gate in evaluation.passed_gates if gate.satisfied}
-    missing = sorted({"plan-accept"} - passed)
+    missing = not any(gate.name == "plan-accept" and gate.satisfied for _stage, gate in evaluation.passed_gates)
     if ref.doc.id != PROPOSAL_WORKFLOW or not evaluation.complete or evaluation.errors or missing:
         details = [f"workflow: {ref.doc.id}" if ref.doc.id != PROPOSAL_WORKFLOW else ""]
         details += [f"unmet: {check.name}" for check in evaluation.unmet]
         details += [f"problem ({error.code}): {error.message}" for error in evaluation.errors]
-        details += [f"missing approval: {name}" for name in missing]
+        details += ["missing approval: plan-accept" if missing else ""]
         raise HandoffNotReadyError(
             f"PROP-{slug} has no completed {PROPOSAL_WORKFLOW} Planning with its own plan-accept",
             *(line for line in details if line),
@@ -320,12 +301,12 @@ class HandoffUseCase(BaseUseCase):
         try:
             if run_git(root, "rev-parse", "HEAD").decode().strip() != preview.head:
                 raise HandoffStaleError("the new worktree no longer contains the reviewed base commit")
-            if run_git(root, "status", "--porcelain", "--untracked-files=normal").strip():
+            if dirty_paths(root, untracked="normal", optional_locks=True):
                 raise HandoffStaleError(
                     "setup changed tracked or untracked worktree files; inspect them before handoff"
                 )
             guard_execution()
-            completed = handoff_and_register(root, preview.slug, before_registration=guard_execution)
+            completed = HandoffProposalUseCase().execute(root, preview.slug, before_registration=guard_execution)
             handed, registered = completed.handoff, completed.registered
             result["handoff"] = handed.to_dict()
             result["notices"] += [item.to_dict() for item in completed.notices]

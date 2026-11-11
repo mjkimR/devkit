@@ -16,7 +16,7 @@ from spec_support.proposals import TODAY, write_workflow
 from spec_support.scope import git, write
 
 import devkit_spec
-from devkit_spec.features.proposals import accept_proposal, create_proposal
+from devkit_spec.features.proposals import AcceptProposalUseCase, CreateProposalUseCase
 from devkit_spec.features.proposals.usecases import accept as accept_module
 
 PROPOSAL_DEFINITION = (
@@ -50,7 +50,7 @@ def _repo(tmp_path: Path, *, config: str = "") -> Path:
 
 def _draft(root: Path, slug: str = "small", *, intent: bool = True, swept: bool = True) -> Path:
     """A bound draft with its plan-intent recorded and its acceptance session swept; returns proposal.md."""
-    created = create_proposal(root, slug, today=TODAY)
+    created = CreateProposalUseCase().execute(root, slug, today=TODAY)
     assert created.workflow == "sdd-proposal"
     if intent:
         write(
@@ -236,7 +236,7 @@ def test_the_check_and_acceptance_need_no_intent_record(tmp_path: Path) -> None:
 def test_an_eligible_check_without_pending_conditions(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     _draft(root)
-    checked = accept_proposal(root, "small", by="user", note="settled", direct=True, check=True)
+    checked = AcceptProposalUseCase().execute(root, "small", by="user", note="settled", direct=True, check=True)
     assert (checked.form, checked.checked, checked.pending, checked.status) == ("direct", True, (), "draft")
     assert checked.to_dict()["decision"] is None and checked.to_dict()["eligible"] is True
     result = _accept(root, "small", "--direct", "--check", "--note", "settled")
@@ -285,7 +285,7 @@ def test_a_proposal_with_crlf_line_endings_is_accepted(tmp_path: Path) -> None:
     proposal = _draft(root)
     proposal.write_bytes(proposal.read_bytes().replace(b"\n", b"\r\n"))
     before = proposal.read_bytes()
-    accept_proposal(root, "small", by="user", note="settled", direct=True)
+    AcceptProposalUseCase().execute(root, "small", by="user", note="settled", direct=True)
     assert proposal.read_bytes() == before.replace(b"status: draft", b"status: accepted", 1)
 
 
@@ -299,7 +299,7 @@ def test_any_failure_after_the_status_write_restores_it(tmp_path: Path, monkeypa
 
     monkeypatch.setattr(accept_module, "record_answer", fail)
     with pytest.raises(OSError, match="disk full"):
-        accept_proposal(root, "small", by="user", note="settled", direct=True)
+        AcceptProposalUseCase().execute(root, "small", by="user", note="settled", direct=True)
     assert proposal.read_bytes() == before and _plan_accepts(root, "small") == []
 
 
@@ -313,7 +313,7 @@ def test_a_failure_while_collecting_the_reasons_still_restores(tmp_path: Path, m
 
     monkeypatch.setattr(accept_module, "_not_open_details", fail)
     with pytest.raises(OSError, match="unit unreadable"):
-        accept_proposal(root, "small", by="user", note="settled", direct=True)
+        AcceptProposalUseCase().execute(root, "small", by="user", note="settled", direct=True)
     assert proposal.read_bytes() == before and _plan_accepts(root, "small") == []
 
 
@@ -321,7 +321,7 @@ def test_the_status_line_keeps_its_comment(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     proposal = _draft(root)
     before = proposal.read_text(encoding="utf-8")
-    accept_proposal(root, "small", by="user", note="settled", direct=True)
+    AcceptProposalUseCase().execute(root, "small", by="user", note="settled", direct=True)
     # Only the value changes: the scaffolded comment and every other line stay.
     assert proposal.read_text(encoding="utf-8") == before.replace("status: draft", "status: accepted", 1)
 
@@ -356,7 +356,7 @@ def test_forms_the_command_does_not_accept(tmp_path: Path, case: str) -> None:
     elif case == "rejected":
         _edit(proposal, "status: draft", "status: rejected")
     elif case == "recorded":
-        accept_proposal(root, "small", by="user", note="settled", direct=True)
+        AcceptProposalUseCase().execute(root, "small", by="user", note="settled", direct=True)
     elif case == "single-file":
         slug = "solo"
         write(root, "docs/proposals/PROP-solo.md", "---\nid: PROP-solo\nstatus: draft\n---\n\n# Solo\n")

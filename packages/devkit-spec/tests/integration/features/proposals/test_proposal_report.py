@@ -116,7 +116,7 @@ def test_dirty_source_names_real_paths_and_both_rename_names(repo):
     assert result.exit_code == 2, result.output
     error = json.loads(result.stdout)["error"]
     assert error["code"] == "SPEC_REPORT_SOURCE_DIRTY"
-    assert error["advisory"]["target_files"] == ["ignore.txt", ".gitignore", 'quo"te.txt']
+    assert error["advisory"]["target_files"] == [".gitignore", "ignore.txt", 'quo"te.txt']  # sorted
 
 
 def test_report_refusals_have_their_own_codes_and_targets(repo):

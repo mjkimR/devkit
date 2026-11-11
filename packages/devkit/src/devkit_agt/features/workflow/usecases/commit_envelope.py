@@ -16,6 +16,7 @@ from devkit_agt.features.workflow.models.errors import (
     EnvelopeCommitStateError,
     EnvelopeCommitUncertainError,
     WorkflowError,
+    workflow_command,
 )
 from devkit_agt.features.workflow.repositories.envelope_commit import EnvelopeCommitRepository
 from devkit_agt.features.workflow.repositories.unit.frontmatter import parse
@@ -31,9 +32,7 @@ class CommitEnvelopeUseCase(BaseUseCase):
         repo = EnvelopeCommitRepository(workspace.root)
         target = f"{unit}/{file}"
         selector = f" --anchor {shlex.quote(anchor)}" if anchor is not None else ""
-        retry = (
-            f"uv run devkit workflow envelope commit --unit {shlex.quote(unit)}{selector} --file {shlex.quote(file)}"
-        )
+        retry = workflow_command(f"envelope commit --unit {shlex.quote(unit)}{selector} --file {shlex.quote(file)}")
         try:
             before = repo.state()
             raw_unit = Path(unit)

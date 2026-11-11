@@ -1,8 +1,8 @@
 """Prepare and execute scoped integration after Host-carried conversational approval."""
 
 import json
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from pathlib import Path
 
 import click
@@ -26,19 +26,17 @@ from devkit_agt.features.integration.models.contracts import (
 )
 from devkit_agt.features.integration.usecases.operations import IntegrateUseCase, PrepareIntegrationUseCase
 from devkit_agt.features.integration.usecases.service import IntegrationService
-from devkit_agt.features.worktree import RunFromBaseError
+from devkit_agt.features.worktree import rerun_from_base
 
 
-@contextmanager
-def _rerun_on_base(root: Path, command: Callable[[str], str]) -> Iterator[None]:
+def _rerun_on_base(root: Path, command: Callable[[str], str]) -> AbstractContextManager[None]:
     """Name the same command for the base checkout's devkit project when it ran in the worktree it would remove
     (``WORKTREE_RUN_FROM_BASE``): ``command(workspace)`` is that command with ``-w workspace``."""
-    try:
-        yield
-    except RunFromBaseError as error:
-        if error.base is not None and error.checkout is not None and root.is_relative_to(error.checkout):
-            error.fix = command(str(error.base / root.relative_to(error.checkout)))
-        raise
+    return rerun_from_base(
+        lambda base, checkout: (
+            command(str(base / root.relative_to(checkout))) if root.is_relative_to(checkout) else None
+        )
+    )
 
 
 def _seeded(seeded: tuple[SeededArtifact, ...]) -> str:

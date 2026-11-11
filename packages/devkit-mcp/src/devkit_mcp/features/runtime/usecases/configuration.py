@@ -33,12 +33,9 @@ print(json.dumps({"prefix": sys.prefix, "paths": paths,
 """
 
 
-def _linked_source(path: Path) -> bool:
-    return any((parent / ".git").is_file() for parent in (path, *path.parents))
-
-
 def _any_linked_source(paths: list[Path]) -> bool:
-    """``any(_linked_source(path) for path in paths)``, checking each shared parent directory once."""
+    """Whether a path, or a directory above one, holds a ``.git`` file (a linked worktree's), checking each shared
+    parent directory once."""
     checked: set[Path] = set()
     for path in paths:
         for parent in (path, *path.parents):
@@ -111,7 +108,7 @@ class BuildLaunchDescriptorUseCase(BaseUseCase):
         for candidate in dict.fromkeys(candidates):
             if (
                 not candidate.is_file()
-                or _linked_source(candidate)
+                or _any_linked_source([candidate])
                 or any(candidate.is_relative_to(task) for task in tasks)
             ):
                 continue

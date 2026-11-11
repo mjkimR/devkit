@@ -16,6 +16,7 @@ from devkit_agt.features.generated.models.errors import (
     StaleError,
     UnmergedError,
 )
+from devkit_agt.features.generated.models.listing import LISTED, unlisted
 from devkit_agt.features.generated.repositories.registry import (
     Artifact,
     Registry,
@@ -37,6 +38,7 @@ from devkit_agt.features.generated.usecases.engine import (
 )
 
 __all__ = [
+    "LISTED",
     "Artifact",
     "ArtifactRun",
     "CheckArtifacts",
@@ -59,5 +61,6 @@ __all__ = [
     "load_registry_at",
     "matches",
     "operation",
+    "unlisted",
     "unmerged",
 ]

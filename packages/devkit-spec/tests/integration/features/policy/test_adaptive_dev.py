@@ -6,7 +6,7 @@ from devkit_agt.features.rules import RuleContext, evaluate_rules
 from devkit_spec.features.governance.usecases.spec_lifecycle import SpecLifecycleRule
 from devkit_spec.features.governance.usecases.task_coverage import TaskCoverageRule
 from devkit_spec.features.policy import LifecycleInactiveError
-from devkit_spec.features.proposals.usecases.scaffold import create_proposal
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalUseCase
 from devkit_spec.features.proposals.usecases.specs import create_spec
 
 
@@ -15,7 +15,7 @@ def config(root):
     (root / ".devkit/config.toml").write_text('[development]\napproach="adaptive-dev"\n')
 
 
-@pytest.mark.parametrize("operation", [create_spec, create_proposal])
+@pytest.mark.parametrize("operation", [create_spec, CreateProposalUseCase().execute])
 def test_mutation_refuses_before_writes(tmp_path, operation):
     config(tmp_path)
     before = list(tmp_path.rglob("*"))
@@ -42,14 +42,14 @@ def test_unbound_document_is_omitted_but_retained_unit_checked(tmp_path):
 def test_composed_and_direct_accept_handoff_refuse(tmp_path):
     from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
     from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
-    from devkit_spec.features.proposals.usecases.accept import accept_proposal
+    from devkit_spec.features.proposals.usecases.accept import AcceptProposalUseCase
     from devkit_spec.features.proposals.usecases.handoff import handoff_proposal
 
     config(tmp_path)
     for operation in (
         lambda: PlanAcceptUseCase(tmp_path).execute("demo", effort="medium"),
         lambda: HandoffUseCase(tmp_path).execute("demo", "medium"),
-        lambda: accept_proposal(tmp_path, "demo", by="user"),
+        lambda: AcceptProposalUseCase().execute(tmp_path, "demo", by="user"),
         lambda: handoff_proposal(tmp_path, "demo"),
     ):
         with pytest.raises(LifecycleInactiveError):

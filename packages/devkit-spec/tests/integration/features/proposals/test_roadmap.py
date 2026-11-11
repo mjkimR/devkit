@@ -13,7 +13,7 @@ from devkit_dist.cli import cli
 from spec_support.proposals import TODAY, accept
 
 from devkit_spec.base.errors import ProposalInPlanningError
-from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase, create_spec, handoff_proposal
 
 
 def milestone(root: Path) -> None:
@@ -44,7 +44,7 @@ def new_member(workspace: Path, milestone_id: str) -> Result:
 @pytest.mark.parametrize("value", ["Phase 1", "MS-missing", "", "PROP-parent"])
 def test_invalid_milestone_never_creates_bundle(workspace: Path, value: str) -> None:
     with pytest.raises(ArgumentError):
-        create_proposal(workspace, "child", milestone=value)
+        CreateProposalUseCase().execute(workspace, "child", milestone=value)
     assert "milestone" not in inspect.signature(create_spec).parameters
     assert not (workspace / "docs/proposals/PROP-child").exists()
     assert not (workspace / "specs").exists()
@@ -52,7 +52,7 @@ def test_invalid_milestone_never_creates_bundle(workspace: Path, value: str) -> 
 
 def test_cli_and_handoff_preserve_provenance(workspace: Path) -> None:
     milestone(workspace)
-    create_proposal(workspace, "parent")
+    CreateProposalUseCase().execute(workspace, "parent")
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -87,8 +87,8 @@ def test_cli_and_handoff_preserve_provenance(workspace: Path) -> None:
 
 @pytest.mark.parametrize("value", ["PROP-parent", " PROP-parent:", "PROP-Parent", "PROP-parent.md"])
 def test_decomposition_records_the_normalized_parent_id(workspace: Path, value: str) -> None:
-    create_proposal(workspace, "parent")
-    created = create_proposal(workspace, "child", decomposed_from=value)
+    CreateProposalUseCase().execute(workspace, "parent")
+    created = CreateProposalUseCase().execute(workspace, "child", decomposed_from=value)
     data = parse((workspace / created.path).read_text()).data
     assert data is not None and data["decomposed_from"] == "PROP-parent"
 
@@ -96,19 +96,19 @@ def test_decomposition_records_the_normalized_parent_id(workspace: Path, value: 
 @pytest.mark.parametrize("value", ["PROP-child:", "PROP-Child"])
 def test_decomposition_rejects_the_proposal_itself_in_any_spelling(workspace: Path, value: str) -> None:
     with pytest.raises(ArgumentError):
-        create_proposal(workspace, "child", decomposed_from=value)
+        CreateProposalUseCase().execute(workspace, "child", decomposed_from=value)
 
 
 def test_decomposition_rejects_noneditable_parent(workspace: Path) -> None:
-    parent = workspace / create_proposal(workspace, "parent").path
+    parent = workspace / CreateProposalUseCase().execute(workspace, "parent").path
     accept(parent)
     with pytest.raises(ProposalInPlanningError):
-        create_proposal(workspace, "child", decomposed_from="PROP-parent")
+        CreateProposalUseCase().execute(workspace, "child", decomposed_from="PROP-parent")
     assert not (workspace / "docs/proposals/PROP-child").exists()
 
 
 def test_decomposition_rejects_planning_branch(workspace: Path) -> None:
-    create_proposal(workspace, "parent")
+    CreateProposalUseCase().execute(workspace, "parent")
     subprocess.run(["git", "init", "-q", str(workspace)], check=True)
     subprocess.run(
         [
@@ -128,7 +128,7 @@ def test_decomposition_rejects_planning_branch(workspace: Path) -> None:
     )
     subprocess.run(["git", "-C", str(workspace), "branch", "plan-parent"], check=True)
     with pytest.raises(ProposalInPlanningError):
-        create_proposal(workspace, "child", decomposed_from="PROP-parent")
+        CreateProposalUseCase().execute(workspace, "child", decomposed_from="PROP-parent")
 
 
 @pytest.mark.parametrize("status", ["done", "dropped", "active", "planned"])
@@ -146,7 +146,7 @@ def test_milestone_membership_notices_preserve_milestone(workspace: Path, status
         "scope_confirmed: true\ndecomposition_confirmed: true\n---\n"
     )
     before = path.read_bytes()
-    result = create_proposal(workspace, "member", milestone="MS-old" if alias else "MS-foundation")
+    result = CreateProposalUseCase().execute(workspace, "member", milestone="MS-old" if alias else "MS-foundation")
     data = parse((workspace / result.path).read_text()).data
     assert data is not None and data["milestone"] == "MS-foundation"
     assert path.read_bytes() == before
@@ -214,7 +214,7 @@ def test_invalid_milestone_placement_never_writes(workspace: Path, location: str
     path.parent.mkdir(parents=True)
     path.write_text(f"---\nid: MS-foundation\nstatus: {status}\n---\n")
     with pytest.raises(ArgumentError) as raised:
-        create_proposal(workspace, "member", milestone="MS-foundation")
+        CreateProposalUseCase().execute(workspace, "member", milestone="MS-foundation")
     assert "global or a namespace roadmap root" in str(raised.value)
     assert "docs list milestone --all-namespaces" in str(raised.value.advisory.fix)
     assert not (workspace / "docs/proposals").exists()
@@ -247,7 +247,7 @@ def test_archived_namespace_milestone_notice_preserves_milestone(workspace: Path
     register_api(workspace)
     path = namespace_milestone(workspace, "docs/packages/api/roadmap/_archive", status)
     before = path.read_bytes()
-    result = create_proposal(workspace, "member", milestone="MS-api-launch")
+    result = CreateProposalUseCase().execute(workspace, "member", milestone="MS-api-launch")
     data = parse((workspace / result.path).read_text()).data
     assert data is not None and data["milestone"] == "MS-api-launch"
     assert path.read_bytes() == before
@@ -281,7 +281,7 @@ def test_duplicate_milestone_identity_never_writes(workspace: Path) -> None:
     path.parent.mkdir()
     path.write_text("---\nid: MS-foundation\nstatus: done\n---\n")
     with pytest.raises(ArgumentError):
-        create_proposal(workspace, "member", milestone="MS-foundation")
+        CreateProposalUseCase().execute(workspace, "member", milestone="MS-foundation")
     assert not (workspace / "docs/proposals").exists()
 
 
@@ -294,5 +294,5 @@ def test_alias_to_duplicate_canonical_milestone_never_writes(workspace: Path, al
         alias = "aliases: [MS-unique]\n" if owner == alias_owner else ""
         path.write_text(f"---\nid: MS-foundation\nstatus: {state}\n{alias}---\n")
     with pytest.raises(ArgumentError):
-        create_proposal(workspace, "member", milestone="MS-unique")
+        CreateProposalUseCase().execute(workspace, "member", milestone="MS-unique")
     assert not (workspace / "docs/proposals").exists()

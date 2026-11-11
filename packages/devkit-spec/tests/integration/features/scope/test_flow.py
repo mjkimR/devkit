@@ -27,19 +27,19 @@ from devkit_spec.features.scope import (
     FlockLocker,
     Granularity,
     Record,
+    RegisterScopeUseCase,
+    ReleaseScopeUseCase,
     ScopePath,
     Session,
     Source,
     Stage,
+    UpdateScopeUseCase,
     auto_register,
     default_namespace,
     locate,
     open_session,
     own,
-    register,
-    release,
     slug_from_spec,
-    update,
 )
 from devkit_spec.features.scope.repositories import location as location_module
 from devkit_spec.features.scope.repositories.location import SHARED_DIR, TOKEN_FILE, load_token, save_token
@@ -76,10 +76,10 @@ def test_locate_defaults_and_configuration(repo: Path, tmp_path: Path) -> None:
 
 def test_register_update_release_flow(repo: Path) -> None:
     session = open_session(repo)
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.status == AckStatus.FAILED and isinstance(ack.error, ScopeTokenMissingError)
 
-    registered = register(session, SPEC)
+    registered = RegisterScopeUseCase().execute(session, SPEC)
     stored = registered.record
     assert (stored.task_id, stored.base_revision, stored.base_ref, stored.worktree) == (
         "SPEC-s",
@@ -101,19 +101,19 @@ def test_register_update_release_flow(repo: Path) -> None:
     )
     session.registry.register(other, Deadline(5))
     write(repo, "src/new.py", "n = 1\n")
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert (ack.status, ack.revision, ack.added, ack.removed, ack.overlaps) == (AckStatus.APPLIED, 2, 1, 0, 1)
     assert ack.request_id and ack.error is None
     assert (ack.pairs[0].code[0].path, ack.pairs[0].code[0].other) == ("src/a", "src/a/a.py")
-    again = update(session, SPEC)
+    again = UpdateScopeUseCase().execute(session, SPEC)
     assert (again.status, again.added, again.revision) == (AckStatus.APPLIED, 0, 3)
-    replay = update(session, SPEC, again.request_id)
+    replay = UpdateScopeUseCase().execute(session, SPEC, again.request_id)
     assert (replay.status, replay.revision) == (AckStatus.APPLIED, 3), "an applied request id is not written twice"
 
-    released = release(session)
+    released = ReleaseScopeUseCase().execute(session)
     assert (released.task, released.revision, released.already) == ("SPEC-s", 3, False)
     assert not session.location.token_path.exists()
-    assert release(session).registered is False, "releasing again changes nothing"
+    assert ReleaseScopeUseCase().execute(session).registered is False, "releasing again changes nothing"
     events = _events(session)
     assert [event["event"] for event in events] == ["update", "register", "update", "update", "update", "release"]
     first_update = events[0]
@@ -124,9 +124,9 @@ def test_register_update_release_flow(repo: Path) -> None:
 
 def test_second_registration_in_a_worktree_is_refused(repo: Path) -> None:
     session = open_session(repo)
-    register(session, SPEC, "first")
+    RegisterScopeUseCase().execute(session, SPEC, "first")
     with pytest.raises(ScopeTokenExistsError):
-        register(session, SPEC, "second")
+        RegisterScopeUseCase().execute(session, SPEC, "second")
     assert [item.task_id for item in session.registry.query(session.location.namespace, Deadline(5))[0]] == ["first"]
 
 
@@ -141,7 +141,7 @@ def test_a_registration_that_loses_the_token_race_is_rolled_back(repo: Path, mon
 
     monkeypatch.setattr(flow, "save_token", raced)
     with pytest.raises(ScopeTokenExistsError) as raised:
-        register(session, SPEC, "second")
+        RegisterScopeUseCase().execute(session, SPEC, "second")
     assert raised.value.details == ()
     records = session.registry.query(namespace, Deadline(5))[0]
     assert [(item.task_id, item.shared_worktree) for item in records] == [("first", False)], (
@@ -178,9 +178,9 @@ def test_token_files_are_complete_or_ignored(tmp_path: Path, monkeypatch: pytest
     session = open_session(repo)
     session.location.token_path.write_text("")  # an interrupted save without hard links
     with pytest.raises(ScopeTokenExistsError):
-        register(session, SPEC)
-    assert release(session).registered is False and not session.location.token_path.exists()
-    assert register(session, SPEC).record.task_id == "SPEC-s"
+        RegisterScopeUseCase().execute(session, SPEC)
+    assert ReleaseScopeUseCase().execute(session).registered is False and not session.location.token_path.exists()
+    assert RegisterScopeUseCase().execute(session, SPEC).record.task_id == "SPEC-s"
 
 
 def test_save_token_is_exclusive(tmp_path: Path) -> None:
@@ -200,7 +200,7 @@ def test_a_failed_rollback_is_a_detail_of_the_original_error(repo: Path, monkeyp
 
     monkeypatch.setattr(flow, "save_token", unwritable)
     with pytest.raises(ScopeSharedPathError) as raised:
-        register(session, SPEC)
+        RegisterScopeUseCase().execute(session, SPEC)
     assert raised.value.details == ()
     assert session.registry.query(session.location.namespace, Deadline(5))[0] == [], "the record is rolled back"
 
@@ -209,7 +209,7 @@ def test_a_failed_rollback_is_a_detail_of_the_original_error(repo: Path, monkeyp
 
     monkeypatch.setattr(session.registry, "release", timed_out)
     with pytest.raises(ScopeSharedPathError) as raised:
-        register(session, SPEC)
+        RegisterScopeUseCase().execute(session, SPEC)
     assert "read-only git directory" in raised.value.message, "the original error is kept"
     assert len(raised.value.details) == 1 and "SPEC-s could not be removed" in raised.value.details[0]
     assert "scope timeout" in raised.value.details[0]
@@ -217,26 +217,26 @@ def test_a_failed_rollback_is_a_detail_of_the_original_error(repo: Path, monkeyp
 
 def test_a_retried_request_is_answered_from_the_stored_record(repo: Path) -> None:
     session = open_session(repo)
-    register(session, SPEC)
+    RegisterScopeUseCase().execute(session, SPEC)
     write(repo, "src/new.py", "n = 1\n")
     write(repo, "src/other.py", "o = 1\n")
-    applied = update(session, SPEC)
+    applied = UpdateScopeUseCase().execute(session, SPEC)
     assert (applied.status, applied.revision, applied.added, applied.removed) == (AckStatus.APPLIED, 2, 2, 0)
     (repo / SPEC).rename(repo / "specs/moved")  # collecting again would fail
-    replay = update(session, SPEC, applied.request_id)
+    replay = UpdateScopeUseCase().execute(session, SPEC, applied.request_id)
     assert replay.error is None
     assert (replay.status, replay.revision, replay.added, replay.removed) == (AckStatus.APPLIED, 2, 2, 0), (
         "a replay reports the counts its request recorded"
     )
     assert replay.record == applied.record
-    assert update(session, SPEC).status == AckStatus.FAILED, "a new request collects again"
+    assert UpdateScopeUseCase().execute(session, SPEC).status == AckStatus.FAILED, "a new request collects again"
 
 
 def test_observed_scope_forks_from_the_base_branch(repo: Path, tmp_path: Path) -> None:
     linked = tmp_path / "repo-wt-task"
     git(repo, "worktree", "add", "-q", "-b", "task", str(linked))
     session = open_session(linked)
-    registered = register(session, SPEC)
+    registered = RegisterScopeUseCase().execute(session, SPEC)
     assert registered.record.base_ref == "refs/heads/main"
     write(linked, "src/a/a.py", "a = 2\n")
     git(linked, "commit", "-q", "-am", "task")
@@ -244,12 +244,12 @@ def test_observed_scope_forks_from_the_base_branch(repo: Path, tmp_path: Path) -
     git(repo, "commit", "-q", "-am", "upstream")
     git(linked, "merge", "-q", "--no-edit", "main")
 
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     observed = {path.path for path in ack.record.scopes if path.source is Source.OBSERVED} if ack.record else set()
     assert observed == {"src/a/a.py"}, "what the task merged in from its base branch is not observed"
 
     git(repo, "branch", "-m", "main", "trunk")
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.status == AckStatus.APPLIED and ack.record is not None
     assert ack.record.base_ref == "refs/heads/trunk", "a renamed base branch is detected again"
     assert not [item for item in ack.record.unresolved if item.reason == "missing-base-ref"]
@@ -257,20 +257,20 @@ def test_observed_scope_forks_from_the_base_branch(repo: Path, tmp_path: Path) -
 
     git(repo, "switch", "-q", "--detach")
     git(repo, "branch", "-D", "trunk")
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.status == AckStatus.APPLIED and ack.record is not None
     assert ("refs/heads/trunk", "missing-base-ref") in {(item.value, item.reason) for item in ack.record.unresolved}
     observed = {path.path for path in ack.record.scopes if path.source is Source.OBSERVED}
     assert {"src/a/a.py", "src/b/b.py"} <= observed, "an unresolvable base ref falls back to base_revision"
 
     git(repo, "switch", "-q", "-c", "next")
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.record is not None and ack.record.base_ref == "refs/heads/next", "the next detection replaces it"
     assert not [item for item in ack.record.unresolved if item.reason == "missing-base-ref"]
 
 
 def _observed(session: Session) -> set[str]:
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.record is not None, ack.error
     return {path.path for path in ack.record.scopes if path.source is Source.OBSERVED}
 
@@ -286,7 +286,7 @@ def test_a_base_checkout_on_another_branch_adds_no_upstream_paths(repo: Path, tm
     linked = tmp_path / "repo-wt-task"
     git(repo, "worktree", "add", "-q", "-b", "task", str(linked), "main")
     session = open_session(linked)
-    assert register(session, SPEC).record.base_ref == "refs/heads/other"
+    assert RegisterScopeUseCase().execute(session, SPEC).record.base_ref == "refs/heads/other"
     write(linked, "src/a/a.py", "a = 2\n")
     git(linked, "commit", "-q", "-am", "task")
     assert _observed(session) == {"src/a/a.py"}, "the range is never wider than base_revision..HEAD"
@@ -303,7 +303,7 @@ def test_a_worktree_forked_from_another_branch_adds_no_upstream_paths(repo: Path
     task = tmp_path / "repo-wt-task"
     git(repo, "worktree", "add", "-q", "-b", "task", str(task), "release")  # the base checkout stays on main
     session = open_session(task)
-    assert register(session, SPEC).record.base_ref == "refs/heads/main"
+    assert RegisterScopeUseCase().execute(session, SPEC).record.base_ref == "refs/heads/main"
     write(task, "src/a/a.py", "a = 2\n")
     git(task, "commit", "-q", "-am", "task")
     assert _observed(session) == {"src/a/a.py"}, "release's own commits are not the task's"
@@ -311,7 +311,7 @@ def test_a_worktree_forked_from_another_branch_adds_no_upstream_paths(repo: Path
 
 def test_update_statuses_for_stale_timeout_and_orphaned_records(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     session = open_session(repo)
-    register(session, SPEC)
+    RegisterScopeUseCase().execute(session, SPEC)
     original = session.registry.update
 
     def moved_on(token: str, expected: int, request: str, record: Record, deadline: Deadline) -> Record:
@@ -319,49 +319,53 @@ def test_update_statuses_for_stale_timeout_and_orphaned_records(repo: Path, monk
         return original(token, expected, request, record, deadline)
 
     monkeypatch.setattr(session.registry, "update", moved_on)
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.status == AckStatus.STALE and isinstance(ack.error, ScopeStaleRevisionError)
     monkeypatch.undo()
 
     unlock = FlockLocker().acquire(session.location.shared_path / session.location.namespace / ".lock", Deadline(5))
     timer = threading.Timer(0.5, unlock)  # the holder lets go before the journal append gives up
     timer.start()
-    ack = update(Session(session.location, session.registry, Deadline(0.2)), SPEC)
+    ack = UpdateScopeUseCase().execute(Session(session.location, session.registry, Deadline(0.2)), SPEC)
     timer.join()
     assert ack.status == AckStatus.TIMEOUT and isinstance(ack.error, ScopeTimeoutError)
     assert ack.notices == [], "the journal append runs under its own deadline"
 
     assert [event["status"] for event in _events(session) if event["event"] == "update"] == ["stale", "timeout"]
     (session.location.shared_path / session.location.namespace / "SPEC-s.json").unlink()
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert isinstance(ack.error, ScopeRecordMissingError)
     with pytest.raises(ScopeRecordMissingError):
         own(session)
-    released = release(session)
+    released = ReleaseScopeUseCase().execute(session)
     assert released.already and not session.location.token_path.exists(), "an orphaned token is removed"
 
 
 def test_release_of_a_named_task(repo: Path) -> None:
     session = open_session(repo)
     # Without a token nothing of this worktree is registered: release succeeds and changes nothing (its --help).
-    nothing = release(session, "SPEC-s")
+    nothing = ReleaseScopeUseCase().execute(session, "SPEC-s")
     assert (nothing.registered, nothing.already) == (False, False)
-    register(session, SPEC)
+    RegisterScopeUseCase().execute(session, SPEC)
     session.registry.register(
         Record(namespace=session.location.namespace, task_id="SPEC-x", worktree="/wt/x"), Deadline(5)
     )
     with pytest.raises(ScopeTokenMismatchError):
-        release(session, "SPEC-x")
-    assert release(session, "SPEC-nope").already and session.location.token_path.exists()
-    assert release(session, "SPEC-s").task == "SPEC-s"
+        ReleaseScopeUseCase().execute(session, "SPEC-x")
+    assert ReleaseScopeUseCase().execute(session, "SPEC-nope").already and session.location.token_path.exists()
+    assert ReleaseScopeUseCase().execute(session, "SPEC-s").task == "SPEC-s"
 
 
 def test_an_unreadable_own_record_keeps_the_token(repo: Path) -> None:
     session = open_session(repo)
-    register(session, SPEC)
+    RegisterScopeUseCase().execute(session, SPEC)
     path = session.location.shared_path / session.location.namespace / "SPEC-s.json"
     path.write_text(path.read_text() + "trailing garbage")  # still names the token hash
-    for call in (lambda: release(session), lambda: release(session, "SPEC-s"), lambda: own(session)):
+    for call in (
+        lambda: ReleaseScopeUseCase().execute(session),
+        lambda: ReleaseScopeUseCase().execute(session, "SPEC-s"),
+        lambda: own(session),
+    ):
         with pytest.raises(AdvisoryError) as raised:
             call()
         error = raised.value
@@ -373,37 +377,37 @@ def test_an_unreadable_own_record_keeps_the_token(repo: Path) -> None:
         assert error.target_files == (session.location.shown(path),) and error.details == ("SPEC-s.json: parse",)
         assert "token is kept" in error.message
     assert session.location.token_path.exists(), "the token of a record that cannot be read is kept"
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.status == AckStatus.FAILED and ack.error is not None and ack.error.code == "SPEC_SCOPE_RECORD_INVALID"
 
 
 def test_unrelated_unreadable_records_do_not_block_release(repo: Path) -> None:
     session = open_session(repo)
-    register(session, SPEC)
+    RegisterScopeUseCase().execute(session, SPEC)
     directory = session.location.shared_path / session.location.namespace
     (directory / "SPEC-other.json").write_text("{not json")  # another task's corrupt record
-    assert release(session, "SPEC-gone").already and session.location.token_path.exists()
+    assert ReleaseScopeUseCase().execute(session, "SPEC-gone").already and session.location.token_path.exists()
     with pytest.raises(AdvisoryError) as raised:
-        release(session, "SPEC-other")  # that task's own record file is the unreadable one
+        ReleaseScopeUseCase().execute(session, "SPEC-other")  # that task's own record file is the unreadable one
     assert raised.value.target_files == (session.location.shown(directory / "SPEC-other.json"),)
-    released = release(session, "SPEC-s")
+    released = ReleaseScopeUseCase().execute(session, "SPEC-s")
     assert (released.task, released.already) == ("SPEC-s", False) and not session.location.token_path.exists()
 
-    register(session, SPEC)
+    RegisterScopeUseCase().execute(session, SPEC)
     (directory / "SPEC-s.json").unlink()  # the record is gone: the token is orphaned
     with pytest.raises(ScopeRecordMissingError):
         own(session)
-    assert isinstance(update(session, SPEC).error, ScopeRecordMissingError)
-    released = release(session)
+    assert isinstance(UpdateScopeUseCase().execute(session, SPEC).error, ScopeRecordMissingError)
+    released = ReleaseScopeUseCase().execute(session)
     assert released.already and not session.location.token_path.exists(), "the orphaned token is removed"
 
 
 def test_journal_failure_is_one_warning(repo: Path) -> None:
     session = open_session(repo)
     (session.location.shared_path / session.location.namespace / "journal.jsonl").mkdir(parents=True)
-    registered = register(session, SPEC)
+    registered = RegisterScopeUseCase().execute(session, SPEC)
     assert [notice.code for notice in registered.notices] == ["SPEC_SCOPE_JOURNAL_UNAVAILABLE"]
-    ack = update(session, SPEC)
+    ack = UpdateScopeUseCase().execute(session, SPEC)
     assert ack.status == AckStatus.APPLIED and [notice.code for notice in ack.notices] == [
         "SPEC_SCOPE_JOURNAL_UNAVAILABLE"
     ]
@@ -422,7 +426,7 @@ def test_auto_register_only_in_a_linked_worktree_at_either_level(repo: Path, tmp
 
     for level in ("required", "auto"):
         write(linked, ".devkit/config.toml", f'[tool.spec]\nworktree = "{level}"\n')
-        release(session)
+        ReleaseScopeUseCase().execute(session)
         assert auto_register(linked, SPEC, source="handoff") is not None, level
     plain = tmp_path / "plain"
     write(plain, ".devkit/config.toml", "")

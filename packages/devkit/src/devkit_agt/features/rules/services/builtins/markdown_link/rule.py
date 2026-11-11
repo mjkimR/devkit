@@ -7,8 +7,6 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVERRIDES_PATH
-
 from devkit_agt.features.rules.models.contracts import Autofixable, Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.models.markdown import (
     LocalTarget,
@@ -18,6 +16,7 @@ from devkit_agt.features.rules.models.markdown import (
     split_lines,
 )
 from devkit_agt.features.rules.models.settings import match_path
+from devkit_agt.features.rules.repositories.workspace.cache import is_pinned
 from devkit_agt.features.rules.services.builtins.base import BaseRule
 
 _FILE_URL = re.compile(r"file:", re.IGNORECASE)
@@ -163,7 +162,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         if not target.is_relative_to(root) or target.suffix != ".md" or not target.is_file():
             return None
         rel = target.relative_to(root).as_posix()
-        if any(target.is_relative_to(root / pinned) for pinned in (MANAGED_PATH, OVERRIDES_PATH)):
+        if is_pinned(target, root):
             return None
         if any(match_path(pattern, rel) for pattern in ctx.exclude) or ctx.is_file_targeted(rel):
             return None
@@ -180,8 +179,6 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                 message=f"Machine-local file link '{link.target}'",
                 remediation="Use a relative link, or the document's full ID in backticks for an ID-bearing document",
                 fixable=False,
-                severity=self.severity,
-                phase=self.phase,
             )
             for _, rel, link in targeted
             if _FILE_URL.match(link.target)
@@ -199,8 +196,6 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                     else f"Verify relative path '{broken.target.path}' exists"
                 ),
                 fixable=broken.candidate is not None,
-                severity=self.severity,
-                phase=self.phase,
             )
             for broken in self._broken_links(ctx, targeted)
         ]

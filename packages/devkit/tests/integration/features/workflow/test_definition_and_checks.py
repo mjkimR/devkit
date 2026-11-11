@@ -233,7 +233,7 @@ def test_managed_definition_paths_from_receipt(tmp_path: Path) -> None:
 def test_malformed_receipt_is_an_error_not_an_empty_source(workspace: Path) -> None:
     (workspace / ".devkit/installation.json").write_text("not json")
     with pytest.raises(ReceiptError):
-        discover_definitions(workspace, workspace / ".devkit/workflows")
+        Workspace(workspace).definitions()
 
 
 def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path) -> None:
@@ -250,7 +250,7 @@ def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path)
         ],
     )
     defs = workspace / ".devkit/workflows"
-    docs, errors = discover_definitions(workspace, defs)
+    docs, errors = discover_definitions(workspace, defs, load_receipt(workspace))
     # A recorded definition missing from disk is reported, not silently skipped (R9).
     assert [(str(e), e.code, e.target_files, e.fix, e.mode.value) for e in errors] == [
         (

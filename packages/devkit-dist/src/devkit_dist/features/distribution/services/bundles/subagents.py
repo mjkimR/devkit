@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from devkit_dist.features.distribution.models.errors import BundleError
-from devkit_dist.features.distribution.models.settings import SLUG
+from devkit_dist.features.distribution.models.settings import NATIVE_DIRS, SLUG
 from devkit_dist.features.distribution.models.subagents import LEVELS, ModelSettings, SubagentPolicy
 from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, read_frontmatter
 from devkit_dist.features.distribution.services.subagents import resolve_settings
@@ -148,7 +148,7 @@ def read_contract(data: bytes, context: str, asset_id: str | None = None) -> Con
     return Contract(role, title.strip(), description.strip(), skill, hosts, body, extensions, level)
 
 
-SUBAGENT_DIRS = {"claude-code": ".claude/agents", "codex": ".codex/agents", "antigravity": ".agents/agents"}
+SUBAGENT_DIRS = {agent: subagents for agent, (_, subagents) in NATIVE_DIRS.items()}
 
 
 def projection_path(agent: str, role: str) -> str:

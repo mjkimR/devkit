@@ -47,7 +47,7 @@ def test_auto_local_exact_effects_without_confirmation(auto_repo, method, delete
     assert not worktree.exists()
     assert ("refs/heads/dev-demo" in git(base, "show-ref")) is not delete
     assert git(base, "rev-parse", "HEAD^{tree}") == git(base, "rev-parse", f"{tip}^{{tree}}")
-    assert result.to_dict()["network_operations"] == "excluded"
+    assert result.compact_dict()["request"]["network_operations"] == "excluded"
 
 
 def test_auto_pr_refused_before_port_access(auto_repo, monkeypatch):

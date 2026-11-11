@@ -134,8 +134,8 @@ the tables installed engines register for the reserved top-level names (`devkit.
 after the table: devkit-agt registers `workflow`, `worktree` and `maintenance`), and the registered `[tool.<name>]` tables of
 installed tools (`devkit.config_template`). Values show defaults, or marked examples when unset by default
 (`CAP-DIST-sync-and-transactions`). A template extension that fails is left out
-with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning (`ConfigTemplateExtensionFailedNotice`: it failed to load, raised,
-has a name that is not a `[tool.<name>]` name, or for `devkit.config_tables` not a reserved table, or returned no
+with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning (`ConfigTemplateExtensionFailedNotice`: the group could not be
+listed (named `discovery`), or it failed to load, raised (`SystemExit` included), has a name that is not a `[tool.<name>]` name, or for `devkit.config_tables` not a reserved table, or returned no
 valid tables; `what_to_report` names the entry point), in the command's `notices`, or in the sync result's when a
 selection command created the file.
 
@@ -188,7 +188,7 @@ they run in their own `notices` list.
 | `GATE_HOOK_INSTALL_SKIPPED` | `WARNING` | `HookInstallSkippedNotice` | automatic hook installation could not safely run | `details`: reason code and paths; `fix`: remediation |
 | `STATUS_CHECK_EXTENSION_FAILED` | `WARNING` | `StatusCheckExtensionFailedNotice` | discovery, load, execution or result validation of an optional `devkit.status_checks` provider failed | message: provider name and target (or discovery); `what_to_report`: report the failure to the provider package maintainer; core status and later checks remain available |
 | `CONTEXT_DOCUMENTS_EXTENSION_FAILED` | `WARNING` | `ContextDocumentsExtensionFailedNotice` | a `devkit.context_documents` provider failed to load, raised or returned anything but a pair of sequences of safe workspace-relative directories; `devkit get-context` still lists the declared directory and carries the warning under its `notices` | message: the entry point and the problem; `what_to_report`: the entry point whose directories are left out |
-| `POST_SYNC_EXTENSION_FAILED` | `WARNING` | `PostSyncExtensionFailedNotice` | a post-sync extension raised an exception other than an advisory, or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
+| `POST_SYNC_EXTENSION_FAILED` | `WARNING` | `PostSyncExtensionFailedNotice` | a post-sync extension raised an exception other than an advisory (`SystemExit` included) or returned something other than a list, or the group's entry points could not be listed (named `discovery`) | `details`: the hook; `what_to_report`: the failure |
 | `PRESENTATION_LANGUAGE_UNSUPPORTED` | `WARNING` | `PresentationLanguageUnsupportedNotice` | a shared or local `[presentation] language` other than `auto`, `en` or `ko` fell back to `en`; also returned by `devkit status` and `devkit config show` | `target_files`: the configuration file; `fix`: the accepted values and the file |
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
 | `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`); never by `sync --locked`, which restores a committed selection | `fix`: `uv run devkit add <bundle>` for one bundle, else `uv run devkit list`; one `[DETAIL]` per bundle with its exact `uv run devkit add` command and presets |

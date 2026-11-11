@@ -6,9 +6,10 @@ from typing import Any
 from devkit.advisory import AdvisoryError, ExitCode
 from devkit_core.base.errors import GitError
 from devkit_core.core import is_ancestor
+from devkit_docs.utils.paths import covers
 
 from devkit_adaptive.base import errors as e
-from devkit_adaptive.features.assignment.models.values import Assignment, Result, covers
+from devkit_adaptive.features.assignment.models.values import Assignment, Result
 from devkit_adaptive.features.assignment.repositories import git
 
 

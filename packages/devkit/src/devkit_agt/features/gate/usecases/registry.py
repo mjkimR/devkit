@@ -1,4 +1,4 @@
-"""Gate registry: built-in gates plus gate packages deployed by ``devkit sync``.
+"""BaseGate registry: built-in gates plus gate packages deployed by ``devkit sync``.
 
 Bundles ship gates as ``kind = "gate"`` assets, each a plugin package
 directory. ``devkit sync`` copies the selected ones under
@@ -31,13 +31,13 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.core import PluginPackage, load_subclasses
+from devkit_core.core.paths import display_path
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.project.repositories.receipt import load_receipt, verified_asset_packages
 
 from devkit_agt.features.gate.models.base import BaseGate
-from devkit_agt.features.gate.models.contracts import Gate, Stage
+from devkit_agt.features.gate.models.contracts import Stage
 from devkit_agt.features.gate.models.errors import GateDefinitionError, GateLoadError
-from devkit_agt.features.gate.models.paths import display_path
 from devkit_agt.features.gate.usecases.gates import NonEmptyMessageGate, RulesCheckGate, VerifyCommandsGate
 
 GATE_KIND = "gate"
@@ -47,7 +47,7 @@ PLUGIN_NAMESPACE = "devkit_gate"
 
 @dataclass(frozen=True)
 class DeployedGates:
-    """Gate packages to load, in receipt order, and the receipt entries that cannot be loaded."""
+    """BaseGate packages to load, in receipt order, and the receipt entries that cannot be loaded."""
 
     packages: tuple[PluginPackage, ...] = ()
     errors: tuple[AdvisoryError, ...] = ()  # ``RECEIPT_INVALID`` or ``ASSET_FILE_INVALID``
@@ -82,11 +82,11 @@ def _validate(gate: BaseGate) -> None:
 
 class GateRegistry:
     def __init__(self) -> None:
-        self._gates: dict[str, Gate] = {}
+        self._gates: dict[str, BaseGate] = {}
         self.sources: dict[str, str] = {}
         self.errors: list[AdvisoryError] = []
 
-    def register(self, gate: Gate, source: str = BUILTIN) -> None:
+    def register(self, gate: BaseGate, source: str = BUILTIN) -> None:
         if gate.id in self._gates:
             self.errors.append(
                 GateLoadError(f"duplicate gate id {gate.id!r} from {source} (already from {self.sources[gate.id]})")
@@ -95,17 +95,17 @@ class GateRegistry:
         self._gates[gate.id] = gate
         self.sources[gate.id] = source
 
-    def get(self, gate_id: str) -> Gate | None:
+    def get(self, gate_id: str) -> BaseGate | None:
         return self._gates.get(gate_id)
 
-    def get_all(self) -> list[Gate]:
+    def get_all(self) -> list[BaseGate]:
         stages = list(Stage)
         return sorted(self._gates.values(), key=lambda g: (stages.index(g.stage), g.order, g.id))
 
-    def for_stage(self, stage: Stage) -> list[Gate]:
+    def for_stage(self, stage: Stage) -> list[BaseGate]:
         return [gate for gate in self.get_all() if gate.stage is stage]
 
-    def load_packages(self, packages: Iterable[PluginPackage], root: Path | None = None) -> list[Gate]:
+    def load_packages(self, packages: Iterable[PluginPackage], root: Path | None = None) -> list[BaseGate]:
         """Register every concrete ``BaseGate`` subclass defined in the given plugin packages.
 
         A package that fails to import, or any of whose gates fails to
@@ -119,7 +119,7 @@ class GateRegistry:
             self.errors.append(
                 GateLoadError(f"failed to load gate package {name}: {failure.message}", target_files=[name])
             )
-        loaded: list[Gate] = []
+        loaded: list[BaseGate] = []
         for plugin in load.plugins:
             self.register(plugin.instance, display_path(plugin.path, root))
             loaded.append(plugin.instance)

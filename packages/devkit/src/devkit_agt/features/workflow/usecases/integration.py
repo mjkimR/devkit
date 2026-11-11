@@ -15,7 +15,7 @@ import os
 from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 
-from devkit_core.core.git import run_git, run_git_text
+from devkit_core.core.git import changed_paths, run_git, run_git_text
 
 from devkit_agt.features.workflow.services.envelope import ENVELOPES_DIR, collect_envelopes, is_envelope_name
 
@@ -25,11 +25,8 @@ EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # what a branch without
 def changed_units(base: Path, merge_base: str, tip: str) -> list[str]:
     """The repository-relative unit directories (``.`` at the top) whose ``envelopes/`` files changed between
     ``merge_base`` (the empty tree when there is none) and ``tip``."""
-    changed = run_git_text(
-        base, "diff", "--name-only", "-z", "--no-renames", merge_base or EMPTY_TREE, tip, "--"
-    ).split("\0")
     units = set()
-    for name in filter(None, changed):
+    for name in changed_paths(base, merge_base or EMPTY_TREE, tip):
         path = PurePosixPath(name)
         if path.parent.name == ENVELOPES_DIR and is_envelope_name(path.name):
             units.add(path.parent.parent.as_posix())

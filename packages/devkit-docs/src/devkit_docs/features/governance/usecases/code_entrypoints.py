@@ -4,7 +4,7 @@ Checks the capabilities and use cases (``docs/capabilities/``, ``docs/usecases/`
 ``docs/packages/<name>/``) that declare ``entrypoints``:
 
 - the field is a list, and each item a string;
-- each item is a literal workspace-relative path (``devkit_docs.features.governance.services.entrypoint_paths.normalize``: no glob, absolute path,
+- each item is a literal workspace-relative path (``devkit_docs.utils.paths.normalize``: no glob, absolute path,
   ``..`` segment, backslash, colon or control character);
 - each path is a file or directory inside the workspace, symbolic links resolved (one pointing outside counts as
   missing). A snapshot run (``check --staged``, ``--ci``) checks against the snapshot's tree, where an empty
@@ -18,19 +18,17 @@ document declaring it is caught by the commit gate and CI, not only by a whole-w
 
 from __future__ import annotations
 
-from typing import Any
-
 import yaml
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
-from devkit_core.core.yaml import safe_compose
 
 from devkit_docs.base.errors import EntrypointsPathError
-from devkit_docs.features.documents import Document, DocumentIndex, definition
+from devkit_docs.features.documents import Document, DocumentIndex, definition, field_node
 from devkit_docs.features.governance import document_index, reportable
-from devkit_docs.features.governance.services.entrypoint_paths import covers, entrypoint_bearing, exists, normalize
+from devkit_docs.features.governance.services.entrypoint_paths import entrypoint_bearing, exists
+from devkit_docs.utils.paths import covers, normalize
 
 RULE_ID = "RULE-code-entrypoints"
 FIELD = "entrypoints"
@@ -125,13 +123,11 @@ def _lines(text: str) -> tuple[int, list[int]]:
         return 1, []
     first = text.count("\n", 0, block.header_start) + 1
     try:
-        root: Any = safe_compose(block.header, source="capability frontmatter")
+        found = field_node(block.header, FIELD, source="capability frontmatter")
     except yaml.YAMLError:
         return 1, []
-    if not isinstance(root, yaml.MappingNode):
+    if found is None:
         return 1, []
-    for key, value in root.value:
-        if isinstance(key, yaml.ScalarNode) and key.value == FIELD:
-            items = value.value if isinstance(value, yaml.SequenceNode) else []
-            return first + key.start_mark.line, [first + item.start_mark.line for item in items]
-    return 1, []
+    key, value = found
+    items = value.value if isinstance(value, yaml.SequenceNode) else []
+    return first + key.start_mark.line, [first + item.start_mark.line for item in items]

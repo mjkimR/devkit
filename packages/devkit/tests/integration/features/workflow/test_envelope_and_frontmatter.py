@@ -16,7 +16,7 @@ from devkit_agt.features.workflow import (
     evaluate_definition,
     load_envelopes,
     parse_definition,
-    read_binding,
+    read_anchor,
     write_binding,
 )
 from devkit_agt.features.workflow.services.envelope import skeleton, write_envelope
@@ -42,7 +42,9 @@ def test_field_stringifies_scalars() -> None:
 def test_update_preserves_other_lines_and_nested_keys() -> None:
     text = "---\nid: x\nworkflow: old\nmeta:\n  workflow: nested\n# comment\n---\nbody\n"
     out = fm.update(text, {"workflow": "new", "owner": "agent"})
-    assert out == "---\nid: x\nmeta:\n  workflow: nested\n# comment\nworkflow: new\nowner: agent\n---\nbody\n"
+    assert out == "---\nid: x\nworkflow: new\nmeta:\n  workflow: nested\n# comment\nowner: agent\n---\nbody\n"
+    commented = fm.update("---\nworkflow: old  # bound by new\n---\n", {"workflow": "next"})
+    assert commented == "---\nworkflow: next  # bound by new\n---\n"
 
 
 def test_update_handles_crlf_and_missing_block() -> None:
@@ -64,10 +66,10 @@ def test_render_roundtrip() -> None:
 def test_binding_read_write(tmp_path: Path) -> None:
     anchor = tmp_path / "task.md"
     anchor.write_text("---\nid: a\nstatus: planned\n---\n# a\n")
-    assert read_binding(anchor) == Binding()
-    assert not read_binding(anchor).bound
+    assert read_anchor(anchor).binding == Binding()
+    assert not read_anchor(anchor).binding.bound
     write_binding(anchor, Binding("wf"))
-    assert read_binding(anchor) == Binding("wf")
+    assert read_anchor(anchor).binding == Binding("wf")
     assert anchor.read_text().startswith("---\nid: a\nstatus: planned\nworkflow: wf\n---\n# a\n")
     write_binding(anchor, Binding("wf"))
     assert "workflow_hash" not in anchor.read_text()

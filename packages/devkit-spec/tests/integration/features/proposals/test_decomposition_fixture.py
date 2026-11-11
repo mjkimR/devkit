@@ -13,7 +13,7 @@ from devkit_dist.cli import cli as devkit_cli
 from spec_support.proposals import TODAY
 from spec_support.scope import git, write
 
-from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase
 
 FEEDBACK = """---
 id: FB-wide-observation
@@ -56,9 +56,9 @@ def _repo(tmp_path: Path) -> Path:
     root.mkdir()
     git(root, "init", "-q", "-b", "main")
     write(root, ".devkit/config.toml", "")
-    create_proposal(root, "wide", today=TODAY)
-    create_proposal(root, "taken", today=TODAY)
-    later = root / create_proposal(root, "later", today=TODAY).path
+    CreateProposalUseCase().execute(root, "wide", today=TODAY)
+    CreateProposalUseCase().execute(root, "taken", today=TODAY)
+    later = root / CreateProposalUseCase().execute(root, "later", today=TODAY).path
     later.write_text(
         later.read_text(encoding="utf-8").replace("status: draft", "status: draft\ndepends_on: [PROP-wide]", 1),
         encoding="utf-8",

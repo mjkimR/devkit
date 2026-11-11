@@ -15,6 +15,7 @@ CHECK_PREFIX = "check:"
 HANDOFF_REQUEST = "handoff"
 
 
+# The time of day in an ISO 8601 timestamp: hours and minutes, optionally seconds and a fraction.
 _TIME_OF_DAY = re.compile(r"[T ]\d{2}:\d{2}(?P<seconds>:\d{2}(?:[.,](?P<fraction>\d+))?)?")
 
 
@@ -97,14 +98,14 @@ class Decisions:
     def next_sequence(self) -> int:
         return self.max_seq + 1
 
+    def accepted_returns(self) -> list[Decision]:
+        """The accepted ``return`` records, in order."""
+        return [r for r in self.records if r.kind == "return" and r.action == "accept"]
+
     def returns_end(self) -> datetime | None:
         """The end of the latest accepted ``return`` record's ``Instant``; ``None`` without one.
 
         Anything stamped at or after it was written after every return of these records.
         """
-        ends = [
-            instant.end
-            for r in self.records
-            if r.kind == "return" and r.action == "accept" and (instant := record_instant(r.at)) is not None
-        ]
+        ends = [instant.end for r in self.accepted_returns() if (instant := record_instant(r.at)) is not None]
         return max(ends, default=None)

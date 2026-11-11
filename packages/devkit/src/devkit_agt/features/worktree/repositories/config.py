@@ -12,19 +12,25 @@ stale_after = "14d"     # an activity branch idle this long is reported by `devk
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
+from typing import Any
 
 from devkit_dist.features.project.repositories.project import config_table, read_project_config
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
 
-from devkit_agt.features.worktree.models.config import WorktreeConfig
+from devkit_agt.features.worktree.models.config import PERIOD, WorktreeConfig
 from devkit_agt.features.worktree.models.errors import WorktreeConfigError
 
 PULL_REQUEST_POLICIES = ("auto", "required")
 MERGE_METHODS = ("no-ff", "ff-only")
-PERIOD = re.compile(r"([1-9][0-9]{0,3})([dw])")
 KEYS = ("pull_request", "delete_branch", "merge", "setup", "stale_after")
+POLICY_PROBLEMS = {
+    "pull_request": 'pull_request must be "auto" or "required"',
+    "delete_branch": "delete_branch must be true or false",
+    "merge": 'merge must be "no-ff" or "ff-only"',
+}
+# The integration policy keys of ``[worktree]`` and their defaults.
+POLICY_DEFAULTS: dict[str, Any] = {"pull_request": "auto", "delete_branch": True, "merge": "no-ff"}
 
 
 def config_tables() -> tuple[TemplateTable, ...]:
@@ -65,6 +71,28 @@ def config_tables() -> tuple[TemplateTable, ...]:
     )
 
 
+def worktree_policy(config: dict[str, Any]) -> dict[str, Any] | None:
+    """The integration policy of a parsed ``.devkit/config.toml``: ``pull_request``, ``delete_branch`` and ``merge``
+    of its ``[worktree]`` table, each at its default when unset; ``None`` when ``worktree`` is not a table.
+
+    Values are not validated: ``invalid_policy_keys`` names the invalid ones and each reader refuses them its own way.
+    """
+    table = config.get("worktree", {})
+    if not isinstance(table, dict):
+        return None
+    return {key: table.get(key, default) for key, default in POLICY_DEFAULTS.items()}
+
+
+def invalid_policy_keys(policy: dict[str, Any]) -> list[str]:
+    """The keys of a ``worktree_policy`` whose values are invalid, in ``POLICY_DEFAULTS`` order."""
+    valid = {
+        "pull_request": policy["pull_request"] in PULL_REQUEST_POLICIES,
+        "delete_branch": type(policy["delete_branch"]) is bool,
+        "merge": policy["merge"] in MERGE_METHODS,
+    }
+    return [key for key in POLICY_DEFAULTS if not valid[key]]
+
+
 def read_worktree_config(root: Path) -> WorktreeConfig:
     """The ``[worktree]`` settings of the project at ``root``; defaults when the table or the file is missing."""
     data = read_project_config(root).get("worktree")
@@ -74,22 +102,15 @@ def read_worktree_config(root: Path) -> WorktreeConfig:
     unknown = sorted(set(table) - set(KEYS))
     if unknown:
         raise WorktreeConfigError(f"config worktree: unknown fields: {unknown}")
-    if table.get("pull_request", "auto") not in PULL_REQUEST_POLICIES:
-        raise WorktreeConfigError('config worktree: pull_request must be "auto" or "required"')
-    if not isinstance(table.get("delete_branch", True), bool):
-        raise WorktreeConfigError("config worktree: delete_branch must be true or false")
-    if table.get("merge", "no-ff") not in MERGE_METHODS:
-        raise WorktreeConfigError('config worktree: merge must be "no-ff" or "ff-only"')
+    policy = worktree_policy({"worktree": table})
+    assert policy is not None
+    invalid = invalid_policy_keys(policy)
+    if invalid:
+        raise WorktreeConfigError(f"config worktree: {POLICY_PROBLEMS[invalid[0]]}")
     setup = table.get("setup")
     if setup is not None and (not isinstance(setup, str) or not setup.strip()):
         raise WorktreeConfigError("config worktree: setup must be a non-empty shell command")
     stale_after = table.get("stale_after", "14d")
     if not isinstance(stale_after, str) or PERIOD.fullmatch(stale_after) is None:
         raise WorktreeConfigError('config worktree: stale_after must be "<N>d" or "<N>w", such as "14d"')
-    return WorktreeConfig(
-        table.get("pull_request", "auto"),
-        table.get("delete_branch", True),
-        setup,
-        stale_after,
-        table.get("merge", "no-ff"),
-    )
+    return WorktreeConfig(policy["pull_request"], policy["delete_branch"], setup, stale_after, policy["merge"])

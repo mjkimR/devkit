@@ -36,8 +36,8 @@ from devkit_spec.base.errors import (
 )
 from devkit_spec.features.proposals import (
     SKELETON_MARKER,
+    CreateProposalUseCase,
     HandoffResult,
-    create_proposal,
     handoff_proposal,
 )
 from devkit_spec.features.proposals.usecases import specs as specs_module
@@ -50,7 +50,7 @@ def _new(
     root: Path, slug: str, *, title: str | None = None, target_area: str | None = None, with_target_docs: bool = False
 ) -> Path:
     """A scaffolded bundle; returns its proposal.md."""
-    created = create_proposal(
+    created = CreateProposalUseCase().execute(
         root, slug, title=title, target_area=target_area, with_target_docs=with_target_docs, today=TODAY
     )
     return root / created.path
@@ -1003,7 +1003,9 @@ def test_an_effort_hint_outside_the_axis_writes_nothing(workspace: Path, field: 
 
 
 def test_handoff_returns_dev_effort_and_never_copies_effort_hints_to_spec(workspace: Path, write: Write) -> None:
-    proposal = create_proposal(workspace, "with-effort", planning_effort="low", dev_effort="high", today=TODAY)
+    proposal = CreateProposalUseCase().execute(
+        workspace, "with-effort", planning_effort="low", dev_effort="high", today=TODAY
+    )
     accept(workspace / proposal.path)
     result = handoff_proposal(workspace, "with-effort", today=TODAY)
     assert result.dev_effort == "high"

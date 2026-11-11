@@ -6,6 +6,7 @@ from importlib import metadata
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError, Level
+from devkit_core.core.extensions import ExtensionFailed, call_extensions
 
 from devkit_dist.features.distribution.models.errors import StatusCheckExtensionFailedNotice
 
@@ -27,21 +28,21 @@ def status_check_notices(root: Path) -> list[AdvisoryError]:
     Validate the entire result before accepting any advisory, retaining its identity and result order.
     Interrupts propagate; an extension calling sys.exit() cannot conceal the core status report.
     """
-    try:
-        entries = sorted(metadata.entry_points(group=GROUP), key=lambda entry: (entry.name, entry.value))
-    except (Exception, SystemExit) as exc:
-        return [_failed("discovery", str(exc) or type(exc).__name__)]
     notices: list[AdvisoryError] = []
-    for entry in entries:
-        try:
-            result = entry.load()(root)
-            if not isinstance(result, (list, tuple)) or any(
-                not isinstance(item, AdvisoryError) or item.level not in (Level.WARNING, Level.NOTICE)
-                for item in result
-            ):
-                raise TypeError("expected a list or tuple of WARNING/NOTICE AdvisoryError values")
-        except (Exception, SystemExit) as exc:
-            notices.append(_failed(f"{entry.name} ({entry.value})", str(exc) or type(exc).__name__))
+    for outcome in call_extensions(GROUP, lambda entry: _checked(entry, root)):
+        if isinstance(outcome, ExtensionFailed):
+            name = outcome.name if outcome.entry is None else f"{outcome.entry.name} ({outcome.entry.value})"
+            notices.append(_failed(name, outcome.problem))
             continue
-        notices.extend(result)
+        notices.extend(outcome.result)
     return notices
+
+
+def _checked(entry: metadata.EntryPoint, root: Path) -> list[AdvisoryError] | tuple[AdvisoryError, ...]:
+    """What the provider ``entry`` returned for ``root``; ``TypeError`` unless every item is a WARNING or NOTICE."""
+    result = entry.load()(root)
+    if not isinstance(result, (list, tuple)) or any(
+        not isinstance(item, AdvisoryError) or item.level not in (Level.WARNING, Level.NOTICE) for item in result
+    ):
+        raise TypeError("expected a list or tuple of WARNING/NOTICE AdvisoryError values")
+    return result

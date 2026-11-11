@@ -7,7 +7,7 @@ from click.testing import CliRunner
 from devkit_dist.cli import cli as devkit_cli
 from spec_support.types import Write
 
-from devkit_spec.features.proposals import prune_proposals
+from devkit_spec.features.proposals import PruneProposalsUseCase
 
 
 def test_only_empty_trees_are_removed(workspace: Path, write: Write) -> None:
@@ -15,17 +15,17 @@ def test_only_empty_trees_are_removed(workspace: Path, write: Write) -> None:
     (workspace / "docs/proposals/PROP-done/materials").mkdir()
     write("docs/proposals/PROP-live/proposal.md", "x\n")
     write("docs/proposals/PROP-notes/materials/note.txt", "kept\n")
-    assert prune_proposals(workspace) == ["docs/proposals/PROP-done"]
+    assert PruneProposalsUseCase().execute(workspace) == ["docs/proposals/PROP-done"]
     assert not (workspace / "docs/proposals/PROP-done").exists()
     assert (workspace / "docs/proposals/PROP-live/proposal.md").is_file()
     assert (workspace / "docs/proposals/PROP-notes/materials/note.txt").is_file()
-    assert prune_proposals(workspace) == []
+    assert PruneProposalsUseCase().execute(workspace) == []
 
 
 def test_a_slug_prunes_one_proposal(workspace: Path) -> None:
     (workspace / "docs/proposals/PROP-a").mkdir(parents=True)
     (workspace / "docs/proposals/PROP-b").mkdir()
-    assert prune_proposals(workspace, "a") == ["docs/proposals/PROP-a"]
+    assert PruneProposalsUseCase().execute(workspace, "a") == ["docs/proposals/PROP-a"]
     assert (workspace / "docs/proposals/PROP-b").is_dir()
 
 

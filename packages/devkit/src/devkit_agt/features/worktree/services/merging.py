@@ -19,7 +19,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
-from devkit_core.core.git import is_ancestor, run_git, run_git_result, run_git_text
+from devkit_core.core.git import git_config, is_ancestor, run_git, run_git_result, run_git_text
 from devkit_core.core.locks import file_lock
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.project import commit_config
@@ -31,19 +31,14 @@ from devkit_agt.features.worktree.models.errors import (
     MergeFailedError,
     MergeNotFastForwardError,
 )
-from devkit_agt.features.worktree.models.merging import SIDES, ConflictSettler
-from devkit_agt.features.worktree.repositories.config import MERGE_METHODS
+from devkit_agt.features.worktree.models.merging import SIDES, ConflictSettler, merge_message
+from devkit_agt.features.worktree.repositories.config import MERGE_METHODS, invalid_policy_keys, worktree_policy
 
 COMMIT_TIMEOUT = 30.0  # seconds for `git commit-tree`, a signing program included
 MERGE_TREE_TIMEOUT = 120.0  # seconds for `git merge-tree --write-tree`
 MERGE_TREE_VERSION = (2, 38)  # the first Git with `merge-tree --write-tree`
 LOCK_NAME = "devkit-integration.lock"  # in the common Git directory; serializes devkit integration executors
 _VERSION = re.compile(r"git version (\d+)\.(\d+)")
-
-
-def merge_message(branch: str, target_branch: str) -> str:
-    """The devkit-composed merge commit message; both names are validated branch names, never caller text."""
-    return f"chore(merge): integrate {branch} into {target_branch}"
 
 
 @contextmanager
@@ -59,9 +54,12 @@ def source_merge_method(base: Path, source: str) -> str | None:
         data = commit_config(base, source)
     except (GitError, ConfigError):
         return None
-    table = data.get("worktree") if data is not None else None
-    value = table.get("merge") if isinstance(table, dict) else None
-    return value if value in MERGE_METHODS else None
+    if data is None or not isinstance(table := data.get("worktree"), dict) or "merge" not in table:
+        return None
+    policy = worktree_policy(data)
+    if policy is None or "merge" in invalid_policy_keys(policy):
+        return None
+    return policy["merge"]
 
 
 def merge_method(base: Path, configured: str, source: str) -> str:
@@ -81,12 +79,7 @@ def check_identity(base: Path) -> None:
 
 def _signs(base: Path) -> bool:
     """Whether ``commit.gpgSign`` asks for signed commits; ``git commit-tree`` does not read it on its own."""
-    try:
-        return run_git_text(base, "config", "--type=bool", "--get", "commit.gpgSign") == "true"
-    except GitError as exc:
-        if exc.returncode == 1:  # unset
-            return False
-        raise
+    return git_config(base, "commit.gpgSign", type="bool") == "true"
 
 
 def git_version(base: Path) -> tuple[int, int]:

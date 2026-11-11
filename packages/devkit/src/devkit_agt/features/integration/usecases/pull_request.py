@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from devkit.advisory import AdvisoryError, Level
-from devkit_core.core.git import run_git_text
+from devkit_core.core.git import git_config, run_git_text
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
 
 import devkit_agt.features.integration.services.providers as providers
+import devkit_agt.features.integration.usecases.service as service_module
 from devkit_agt.features.integration.models.contracts import (
     IntegrationContext,
     IntegrationRequest,
@@ -22,6 +22,7 @@ from devkit_agt.features.integration.models.contracts import (
     prepare_command,
 )
 from devkit_agt.features.integration.models.errors import IntegrationConfigError, StaleRequestError
+from devkit_agt.features.integration.repositories.github import GitHub, PullRequestError
 from devkit_agt.features.worktree import (
     FinishResult,
     MergeNotFastForwardError,
@@ -29,12 +30,12 @@ from devkit_agt.features.worktree import (
     fast_forward,
     finish,
     integration_lock,
+    invalid_policy_keys,
     is_ancestor,
     locate,
     plan_finish,
     validate_finish,
 )
-from devkit_agt.features.worktree.repositories.pull_request import GitHub, PullRequestError
 
 if TYPE_CHECKING:
     from devkit_agt.features.integration.usecases.service import IntegrationService, _Record
@@ -84,15 +85,18 @@ def prepare(service: IntegrationService, branch: str) -> IntegrationResult:
     if position.branch is None:
         raise _error("INTEGRATION_TARGET_UPSTREAM", "Target checkout is detached")
     target = position.branch
+    no_upstream = _error(
+        "INTEGRATION_TARGET_UPSTREAM",
+        "Target has no remote upstream",
+        "Set a same-named target upstream and prepare again",
+    )
     try:
-        remote = run_git_text(root, "config", "--get", f"branch.{target}.remote")
-        remote_ref = run_git_text(root, "config", "--get", f"branch.{target}.merge")
+        remote = git_config(root, f"branch.{target}.remote")
+        remote_ref = git_config(root, f"branch.{target}.merge")
     except AdvisoryError as exc:
-        raise _error(
-            "INTEGRATION_TARGET_UPSTREAM",
-            "Target has no remote upstream",
-            "Set a same-named target upstream and prepare again",
-        ) from exc
+        raise no_upstream from exc
+    if remote is None or remote_ref is None:
+        raise no_upstream
     if not remote or remote == "." or remote.startswith("-") or remote_ref != f"refs/heads/{target}":
         raise _error(
             "INTEGRATION_TARGET_UPSTREAM",
@@ -114,12 +118,7 @@ def prepare(service: IntegrationService, branch: str) -> IntegrationResult:
     source = run_git_text(root, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
     source_config = _policy(root, source)
     source_policy = providers.effective(source_config)
-    if any(
-        type(policy["delete_branch"]) is not bool
-        or policy["merge"] not in {"no-ff", "ff-only"}
-        or policy["pull_request"] not in {"auto", "required"}
-        for policy in (target_policy, source_policy)
-    ):
+    if any(invalid_policy_keys(policy) for policy in (target_policy, source_policy)):
         raise IntegrationConfigError("Invalid source or target worktree policy")
     if target_policy["merge"] == "ff-only" or source_policy["merge"] == "ff-only":
         raise _error("INTEGRATION_MERGE_COMMIT_FORBIDDEN", "Effective policy forbids a merge commit")
@@ -143,10 +142,7 @@ def prepare(service: IntegrationService, branch: str) -> IntegrationResult:
         # required-PR policy may forbid it (``ADR-moved-target-merge``).
         exc.fix = PULL_REQUEST_NOT_FF_FIX
         raise
-    if plan.worktree_identity and (
-        Path(sys.executable).absolute().is_relative_to(plan.path)
-        or Path(sys.prefix).resolve().is_relative_to(plan.path)
-    ):
+    if plan.worktree_identity and providers.runtime_in(plan.path):
         raise _error("INTEGRATION_RUNTIME_IN_WORKTREE", "Runtime is inside the cleanup target")
     already = bool(pr and pr["state"] == "MERGED")
     if already:
@@ -283,15 +279,13 @@ def _validate(service: IntegrationService, result: IntegrationResult, *, merged:
         target=request.local_target,
         check_upstream=False,
     )
-    extensions = providers.cleanup_extensions()
-    if {n: i for n, (i, _) in extensions.items()} != {s.extension: s.identity for s in request.cleanup}:
-        raise StaleRequestError("Cleanup extension installation changed")
-    for scope in request.cleanup:
-        if result.cleanup_steps[scope.extension] != "completed":
-            extensions[scope.extension][1].integration_validate(service._context(result), scope.targets)
+    done = {name for name, state in result.cleanup_steps.items() if state == "completed"}
+    providers.revalidate_cleanup(
+        request, service._context(result), done, changed="Cleanup extension installation changed"
+    )
 
 
-def execute(service: IntegrationService, record: _Record, wait: float) -> IntegrationResult:
+def execute(service: IntegrationService, record: _Record) -> IntegrationResult:
     result, request, root = record.result, record.result.request, service.root
     guard_execution()
     plan, repository, port = request.context.finish, request.repository, _port(service)
@@ -335,7 +329,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
             result.pull_request = pr
             result.steps[operation] = "completed"
         operation = "lock"
-        with integration_lock(Path(plan.common_dir), timeout=wait):
+        with integration_lock(Path(plan.common_dir), timeout=service_module.LOCK_WAIT):
             guard_execution()
             operation = "merge"
             pr = port.view(repository, result.pull_request["number"])
@@ -498,10 +492,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     delete_branch=plan.delete_branch,
                     before_step=before_step,
                 )
-                record.finalized = True
-                if plan.worktree_identity:
-                    result.steps["worktree_remove"] = "completed"
-                result.steps["branch_delete" if plan.delete_branch else "marker_clear"] = "completed"
+                service._finalized(record)
             _validate(service, result, merged=True, finalized=True)
             operation = "post_finish"
             # The local route's loop: an incomplete scope is a warning, later scopes still run.

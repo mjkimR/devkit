@@ -24,13 +24,16 @@ of the index goes through it.
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from devkit.advisory import AdvisoryError
 from devkit_core.core import FrontmatterError, require_libyaml
 
 from devkit_docs.base.errors import DocumentInvalidWarning, DuplicateIdError, UnresolvedIdError
+from devkit_docs.base.layout import anchor_of, is_spec_anchor
 from devkit_docs.features.documents.models.kinds import Kind, definition, definitions
 from devkit_docs.features.documents.models.model import Document, Reference
 from devkit_docs.features.documents.models.parse import parse_document
@@ -218,12 +221,12 @@ class DocumentIndex:
         if memo is not None:
             memo.save()
         index.documents.sort(key=lambda document: document.path)
-        specs = {d.path: d for d in index.documents if d.path.endswith("/spec.md")}
+        specs = {d.path: d for d in index.documents if is_spec_anchor(d.path)}
         for document in index.documents:
             if document.kind is Kind.MILESTONE and document.status.lower() in {"done", "dropped"}:
                 index.historical.add(document.path)
-            bundle = _spec_bundle(document.path)
-            spec = specs.get(f"{bundle}/spec.md") if bundle else None
+            anchor = anchor_of(document.path)
+            spec = specs.get(anchor) if anchor else None
             # Statuses compare case-insensitively, as the spec rules compare them (``RULE-spec-lifecycle``).
             if spec is not None and spec.status.lower() == COMPLETED and not in_feedback(document.path):
                 index.historical.add(document.path)
@@ -240,6 +243,26 @@ class DocumentIndex:
         """Work history: a file of a completed spec bundle outside its ``feedback/``, or a done or dropped
         milestone. The rules check these only when they are named as explicit targets."""
         return document.path in self.historical
+
+    def is_historical_path(self, path: str) -> bool:
+        """Whether the workspace-relative ``path`` is work history, whether or not it holds a document: a historical
+        document's path, or any file outside ``feedback/`` that shares the first three path segments of one (a
+        completed spec bundle's ``specs/<month>/<bundle>``, a done or dropped milestone's directory), so an ID-less
+        file of a completed bundle is history too."""
+        if path in self.historical:
+            return True
+        prefixes = {_prefix(historical) for historical in self.historical}
+        return _prefix(path) in prefixes and not in_feedback(path)
+
+    @contextmanager
+    def problems_on_refusal(self) -> Iterator[None]:
+        """Attach ``problems`` as ``notices`` to an ``AdvisoryError`` raised inside the block: the documents left out
+        while indexing still reach the caller with the refusal (``ARCH-08-1-agent-output`` section 4)."""
+        try:
+            yield
+        except AdvisoryError as exc:
+            vars(exc)["notices"] = tuple(self.problems)
+            raise
 
     @staticmethod
     def is_terminal(document: Document) -> bool:
@@ -319,10 +342,9 @@ class DocumentIndex:
         return _grouped(refs, lambda ref: ref.source)
 
 
-def _spec_bundle(path: str) -> str | None:
-    """``specs/<month>/<bundle>`` for a file inside a spec bundle, else ``None``."""
-    parts = path.split("/")
-    return "/".join(parts[:3]) if len(parts) >= 4 and parts[0] == "specs" else None
+def _prefix(path: str) -> str:
+    """The first three segments of ``path``."""
+    return "/".join(path.split("/")[:3])
 
 
 def _grouped(refs: Iterable[Reference], key: Callable[[Reference], str]) -> dict[str, list[Reference]]:

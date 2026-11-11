@@ -20,14 +20,12 @@ on that line included (``trailing_comment``: a ``#`` outside a quoted value).
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, count_tasks
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import locate
+from devkit_core.core.frontmatter import set_field
 from devkit_docs.features.governance import FIX_COMMAND, explicitly_targeted
-from devkit_docs.utils.text import trailing_comment
 
 from devkit_spec.features.governance.services.applicability import LifecycleRule as BaseRule
 from devkit_spec.features.governance.services.applicability import applies, binding_violations
@@ -35,7 +33,6 @@ from devkit_spec.features.governance.services.applicability import applies, bind
 RULE_ID = "RULE-spec-lifecycle"
 COMPLETED = "completed"
 RESOLVED = "resolved"
-_STATUS_LINE = re.compile(r"^status:[ \t]*[^\r\n]*", re.MULTILINE)
 # A quoted YAML scalar on one line: "..." with backslash escapes, '...' with '' for a quote.
 
 
@@ -214,17 +211,8 @@ def has_status_line(ctx: RuleContext, path: str) -> bool:
 
 def with_status(text: str, status: str) -> str | None:
     """``text`` with its frontmatter ``status:`` line set to ``status``, keeping a trailing comment (the templates'
-    ``# draft | planned | ...``); ``None`` when there is no such line."""
+    ``# draft | planned | ...``; ``set_field``); ``None`` when there is no such line or the block never closes."""
     try:
-        block = locate(text)
+        return set_field(text, "status", status, missing=None)
     except FrontmatterError:
         return None
-    if block is None or not _STATUS_LINE.search(block.header):
-        return None
-
-    def replace(match: re.Match[str]) -> str:
-        comment = trailing_comment(match.group(), len("status:"))
-        return f"status: {status}" + (comment or "")
-
-    header = _STATUS_LINE.sub(replace, block.header)
-    return text[: block.header_start] + header + text[block.header_end :]

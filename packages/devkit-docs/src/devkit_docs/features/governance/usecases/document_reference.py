@@ -43,7 +43,7 @@ from devkit_docs.features.documents import Document, DocumentIndex, Reference, i
 from devkit_docs.features.documents.models.ids import ID_SOURCE, Kind
 from devkit_docs.features.documents.models.markdown import visible_lines
 from devkit_docs.features.documents.models.model import is_unit_anchor
-from devkit_docs.features.documents.services.dependencies import cycle_members, target_problem
+from devkit_docs.features.documents.services.dependencies import cycle_members, on_cycles, target_problem
 from devkit_docs.features.documents.services.namespaces import docs_roots
 from devkit_docs.features.documents.services.rewrite import rewrite
 from devkit_docs.features.governance import FIX_COMMAND, document_index, is_material, namespaces, reportable
@@ -174,24 +174,15 @@ class DocumentReferenceRule(BaseRule):
             for d in index.documents
             if d.kind is Kind.MILESTONE
         }
+        milestone_cycles = on_cycles(graph)
         for document in index.documents:
-            if document.id not in graph or not reportable(ctx, index, document):
-                continue
-            pending = list(graph[document.id])
-            seen: set[str] = set()
-            while pending:
-                current = pending.pop()
-                if current == document.id:
-                    add(
-                        document,
-                        1,
-                        f"milestone dependency cycle includes {document.id}",
-                        "Remove a depends_on edge to break the cycle",
-                    )
-                    break
-                if current not in seen:
-                    seen.add(current)
-                    pending.extend(graph.get(current, []))
+            if document.id in milestone_cycles and reportable(ctx, index, document):
+                add(
+                    document,
+                    1,
+                    f"milestone dependency cycle includes {document.id}",
+                    "Remove a depends_on edge to break the cycle",
+                )
         cyclic = cycle_members(index)
         for document in index.documents:
             if document.id in cyclic and reportable(ctx, index, document):

@@ -12,7 +12,7 @@ from spec_support.proposals import TODAY, accept, spec_dir
 from spec_support.scope import git, write
 
 from devkit_spec.base.errors import ProposalWrongWorktreeError
-from devkit_spec.features.proposals import create_proposal, handoff_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase, handoff_proposal
 
 SLUG = "rate-limits"
 
@@ -24,7 +24,7 @@ def repo(tmp_path: Path) -> Path:
     root.mkdir()
     git(root, "init", "-q", "-b", "main")
     write(root, ".devkit/config.toml", "")
-    accept(root / create_proposal(root, SLUG, today=TODAY).path)
+    accept(root / CreateProposalUseCase().execute(root, SLUG, today=TODAY).path)
     git(root, "add", "-A")
     git(root, "commit", "-q", "-m", "proposal")
     return root
@@ -86,7 +86,7 @@ def test_both_worktree_levels_guard_a_linked_worktree(repo: Path, level: str) ->
 
 
 def test_outside_git_nothing_is_checked(workspace: Path) -> None:
-    accept(workspace / create_proposal(workspace, SLUG, today=TODAY).path)
+    accept(workspace / CreateProposalUseCase().execute(workspace, SLUG, today=TODAY).path)
     handoff_proposal(workspace, SLUG, today=TODAY)
     assert (spec_dir(workspace, SLUG) / "spec.md").is_file()
 

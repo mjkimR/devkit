@@ -1,4 +1,4 @@
-"""Assignment values and literal authority predicates."""
+"""Assignment values and the event fold."""
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -14,14 +14,6 @@ class Result:
     payload: dict[str, Any]
     notices: list[AdvisoryError] = field(default_factory=list)
     errors: list[AdvisoryError] = field(default_factory=list)
-
-
-def covers(entry: str, path: str) -> bool:
-    return entry == "." or path == entry or path.startswith(entry + "/")
-
-
-def overlaps(first: str, second: str) -> bool:
-    return covers(first, second) or covers(second, first)
 
 
 def fold(events: list[Event]) -> dict[str, Assignment]:

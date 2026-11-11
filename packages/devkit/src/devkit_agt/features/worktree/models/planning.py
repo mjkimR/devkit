@@ -1,7 +1,6 @@
 """Immutable approved worktree finish scope."""
 
-from dataclasses import asdict, dataclass
-from typing import Any
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -20,6 +19,3 @@ class FinishPlan:
     delete_branch: bool
     merge_method: str = "no-ff"
     already_merged: bool = False  # the target already contains the source: a cleanup-only plan builds nothing
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)

@@ -15,7 +15,7 @@ from devkit_core.core import frontmatter as core_frontmatter
 
 from devkit_agt.features.workflow.models.checks import DECLARABLE, Check, CheckClass
 from devkit_agt.features.workflow.models.errors import DefinitionError, LayoutError
-from devkit_agt.features.workflow.models.ids import IDENT_HINT, is_ident
+from devkit_agt.features.workflow.models.ids import IDENT_PATTERN, is_ident
 from devkit_agt.features.workflow.models.layout import LayoutSpec, parse_layout_spec
 
 SCHEMA_VERSION = 1
@@ -243,7 +243,7 @@ def _declared(raw: Any) -> tuple[Check, ...]:
         if unknown := set(item) - {"name", "class", "description"}:
             raise DefinitionError(f"checks[{i}]: unknown keys {sorted(unknown)}")
         if not is_ident(item["name"]):
-            raise DefinitionError(f"checks[{i}].name: {item['name']!r} must match {IDENT_HINT}")
+            raise DefinitionError(f"checks[{i}].name: {item['name']!r} must match {IDENT_PATTERN}")
         try:
             class_ = CheckClass(str(item.get("class") or ""))
         except ValueError as exc:  # not a CheckClass member

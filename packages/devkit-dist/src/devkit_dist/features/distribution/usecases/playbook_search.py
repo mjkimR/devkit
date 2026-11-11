@@ -9,14 +9,12 @@ installed and lexical otherwise.
 from __future__ import annotations
 
 import dataclasses
-import math
 from pathlib import Path
 
 from devkit_cli import render_json
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
-from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.results import PlaybookCandidate, SearchResult
 from devkit_dist.features.distribution.models.settings import (
     DEFAULT_PLAYBOOK_LIMIT,
@@ -24,21 +22,23 @@ from devkit_dist.features.distribution.models.settings import (
     DEFAULT_PLAYBOOK_MIN_SCORE,
     DEFAULT_PLAYBOOK_MIN_SIMILARITY,
     DEFAULT_PLAYBOOK_MODE,
-    PLAYBOOK_LIMIT_MAX,
-    PLAYBOOK_LIMIT_MIN,
-    PLAYBOOK_MAX_BYTES_MAX,
-    PLAYBOOK_MAX_BYTES_MIN,
 )
-from devkit_dist.features.distribution.services.bundles.playbooks import is_latin_text, read_playbook_header
+from devkit_dist.features.distribution.services.bundles.playbooks import is_latin_text
 from devkit_dist.features.distribution.services.installation.config import read_playbook_config
-from devkit_dist.features.distribution.services.installation.overrides import override_rel
 from devkit_dist.features.distribution.services.installation.reading import (
-    read_owned,
+    read_playbook,
     read_synchronized,
     synchronized_project_root,
 )
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
-from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, RECEIPT_PATH
+from devkit_dist.features.project import (
+    PLAYBOOK_LIMIT_MAX,
+    PLAYBOOK_LIMIT_MIN,
+    PLAYBOOK_MAX_BYTES_MAX,
+    PLAYBOOK_MAX_BYTES_MIN,
+    PLAYBOOK_MODES,
+    playbook_value,
+)
 from devkit_dist.features.search import SearchDocument, SearchIndex, SearchMode, tokenize
 
 MAX_QUERY_BYTES = 512
@@ -74,26 +74,24 @@ def _bounds(
         min_similarity = float(config.get("min_similarity", DEFAULT_PLAYBOOK_MIN_SIMILARITY))
     max_bytes = max_bytes if max_bytes is not None else int(config.get("max_bytes", DEFAULT_PLAYBOOK_MAX_BYTES))
     mode = (mode if mode is not None else str(config.get("mode", DEFAULT_PLAYBOOK_MODE))).lower()
-    if not PLAYBOOK_LIMIT_MIN <= limit <= PLAYBOOK_LIMIT_MAX:
-        raise ArgumentError(
-            f"--limit {limit}: expected {PLAYBOOK_LIMIT_MIN}..{PLAYBOOK_LIMIT_MAX}", target_files=["--limit"]
-        )
-    if not math.isfinite(min_score) or min_score < 0:
-        raise ArgumentError(
-            f"--min-score {min_score}: expected a finite nonnegative number", target_files=["--min-score"]
-        )
-    if not 0 <= min_similarity <= 1:
-        raise ArgumentError(
-            f"--min-similarity {min_similarity}: expected a number between 0 and 1", target_files=["--min-similarity"]
-        )
-    if not PLAYBOOK_MAX_BYTES_MIN <= max_bytes <= PLAYBOOK_MAX_BYTES_MAX:
-        raise ArgumentError(
-            f"--max-bytes {max_bytes}: expected {PLAYBOOK_MAX_BYTES_MIN}..{PLAYBOOK_MAX_BYTES_MAX}",
-            target_files=["--max-bytes"],
-        )
-    modes = [item.value for item in SearchMode]
-    if mode not in modes:
-        raise ArgumentError(f"--mode {mode}: expected one of {', '.join(modes)}", target_files=["--mode"])
+    expected = {
+        "limit": f"{PLAYBOOK_LIMIT_MIN}..{PLAYBOOK_LIMIT_MAX}",
+        "min_score": "a finite nonnegative number",
+        "min_similarity": "a number between 0 and 1",
+        "max_bytes": f"{PLAYBOOK_MAX_BYTES_MIN}..{PLAYBOOK_MAX_BYTES_MAX}",
+        "mode": f"one of {', '.join(PLAYBOOK_MODES)}",
+    }
+    given = {
+        "limit": limit,
+        "min_score": min_score,
+        "min_similarity": min_similarity,
+        "max_bytes": max_bytes,
+        "mode": mode,
+    }
+    for key, value in given.items():
+        if playbook_value(key, value) is None:
+            option = "--" + key.replace("_", "-")
+            raise ArgumentError(f"{option} {value}: expected {expected[key]}", target_files=[option])
     return _Bounds(limit, min_score, min_similarity, max_bytes, SearchMode(mode))
 
 
@@ -141,12 +139,8 @@ class SearchPlaybooks(BaseUseCase):
         with project_lock(root, shared=True):
             receipt = read_synchronized(root)
             for asset in receipt.assets("playbook"):
-                # An overridden playbook is read from its override, never from the managed copy.
-                allowed = (f"{MANAGED_PATH}/{asset.bundle}/", override_rel(asset.bundle, ""))
                 for name in asset.entrypoints:
-                    if not name.startswith(allowed) or name not in asset.paths:
-                        raise ReceiptError(f"{RECEIPT_PATH}: invalid playbook entrypoint: {name}")
-                    metadata = read_playbook_header(read_owned(root, receipt, name), name)
+                    metadata, _ = read_playbook(root, receipt, asset, name)
                     candidate = PlaybookCandidate(
                         asset.bundle,
                         asset.id,

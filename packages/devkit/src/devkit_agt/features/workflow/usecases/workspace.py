@@ -238,7 +238,7 @@ class Workspace:
                 f"workflow {doc.id} is invalid",
                 *problems,
                 target_files=[self.rel(doc.path)] if doc.path else (),
-                fix=f"Run `uv run devkit workflow validate` and fix every problem in {doc.id}",
+                fix=f"Run `{workflow_command('validate')}` and fix every problem in {doc.id}",
             )
         return doc
 
@@ -488,7 +488,7 @@ class Workspace:
                 raise GivenInvalidError(
                     f"--given {name!r} is not a gate of {doc.id} nor a registered runner or human check",
                     target_files=["--given"],
-                    fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `uv run devkit workflow checks`",
+                    fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `{workflow_command('checks')}`",
                 )
 
     def options(self, unit: UnitRef, *, given: Sequence[str] = (), lint: bool = True) -> Options:

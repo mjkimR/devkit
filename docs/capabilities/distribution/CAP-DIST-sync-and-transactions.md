@@ -292,9 +292,10 @@ spec = "core"
   not after the comments that follow it, so a commented tool table never takes the entry as its own once
   uncommented. The edit follows the line-ending rule of **Append-only**: existing lines keep their bytes, line endings
   included, and the added lines end in CRLF when every line ending of the file is CRLF, and in LF otherwise.
-- **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table
-  (`devkit.config_template`) or a reserved table (`devkit.config_tables`), or returns anything but valid tables is
-  left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
+- **Failures**: an extension that fails to load, raises (`SystemExit` included), is not named like a `[tool.<name>]`
+  table (`devkit.config_template`) or a reserved table (`devkit.config_tables`), or returns anything but valid tables
+  is left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, as is a group whose entry points cannot be listed
+  (one warning named `discovery`), and the command succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
 - **Result**: `devkit config template` prints `path`, `state` and `added`. `state` is `unchanged` exactly when the
   file's bytes stay the same, and otherwise `created` or `updated`; `added` names every key and table written, in
   file order, the commented ones included. A second run after a write reports `unchanged` with `added: []`.
@@ -412,8 +413,8 @@ entry-point group, in sorted entry-point name order, as
 Each returned string becomes a `POST_SYNC_NOTICE` (its `details` name the extension); each returned `AdvisoryError`
 keeps its code and level, except that an `ERROR` is lowered to `WARNING`. Both join the result's `notices` (for
 `override create|remove`, the change's `notices`). An `AdvisoryError` an extension raises is kept the same way, with an
-`extension: <name>` detail; any other exception, or a return value of another type, becomes a
-`POST_SYNC_EXTENSION_FAILED` warning; an extension can never fail or roll back the sync, because the files are already on disk.
+`extension: <name>` detail; any other exception (`SystemExit` included), a return value of another type, or a group
+whose entry points cannot be listed (named `discovery`) becomes a `POST_SYNC_EXTENSION_FAILED` warning; an extension can never fail or roll back the sync, because the files are already on disk.
 This is how a package built on devkit reacts to a changed workspace without devkit knowing it; since the lock is
 released, an extension may call devkit reads such as `get_context`. `devkit-agt` registers one,
 `gate-hooks`, which installs shared Git hook dispatchers and active gate entries and keeps the commented gate settings template current

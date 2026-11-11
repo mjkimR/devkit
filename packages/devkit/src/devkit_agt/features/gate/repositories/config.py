@@ -39,7 +39,7 @@ from typing import Any
 from devkit_dist.features.project.repositories.project import config_table, read_project_config, read_toml
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
-from devkit_agt.features.gate.models.contracts import Gate
+from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.errors import GateConfigError, GateDefinitionError
 from devkit_agt.features.rules.models.settings import check_setting_value, describe_setting_type
 
@@ -60,7 +60,7 @@ class GatesConfig:
     gates: dict[str, GateEntry] = field(default_factory=dict)
     sources: tuple[Path, ...] = ()  # files that contributed, lowest precedence first
 
-    def enabled(self, gate: Gate) -> bool:
+    def enabled(self, gate: BaseGate) -> bool:
         entry = self.gates.get(gate.id)
         return gate.enabled_by_default if entry is None or entry.enabled is None else entry.enabled
 
@@ -130,7 +130,38 @@ def load_gates_config(repo_root: Path, common_git_dir: Path) -> GatesConfig:
     return parse_gates(merged, tuple(sources))
 
 
-def resolve_settings(gate: Gate, values: dict[str, Any]) -> Any:
+@dataclass(frozen=True)
+class Setting:
+    """One field of a gate's settings dataclass (``item``), its annotation and how ``describe_setting_type`` names
+    it (``kind``)."""
+
+    item: dataclasses.Field[Any]
+    hint: Any
+    kind: str
+
+
+def declared_settings(gate: BaseGate) -> tuple[Setting, ...] | None:
+    """The fields of ``gate.settings``; ``None`` for a gate without settings.
+
+    A ``settings`` that is not a dataclass instance, or a field whose annotation the rule engine's settings checker
+    does not support, is a defect of the gate (``GateDefinitionError``).
+    """
+    defaults = gate.settings
+    if defaults is None:
+        return None
+    if not dataclasses.is_dataclass(defaults) or isinstance(defaults, type):
+        raise GateDefinitionError(f"gate {gate.id!r}: settings must be a dataclass instance or None")
+    try:
+        hints = typing.get_type_hints(type(defaults))
+        return tuple(
+            Setting(item, hints[item.name], describe_setting_type(hints[item.name]))
+            for item in dataclasses.fields(defaults)
+        )
+    except Exception as exc:
+        raise GateDefinitionError(f"gate {gate.id!r}: invalid settings declaration: {exc}") from exc
+
+
+def resolve_settings(gate: BaseGate, values: dict[str, Any]) -> Any:
     """Apply configured values over the gate's default settings dataclass.
 
     Each value is checked against its field's annotation with the rule
@@ -138,21 +169,14 @@ def resolve_settings(gate: Gate, values: dict[str, Any]) -> Any:
     defect of the gate (``GateDefinitionError``); an unknown key or a value of
     the wrong type is ``GateConfigError``.
     """
-    defaults = gate.settings
     context = f"{GATES_TABLE}.{SETTINGS_KEY}.{gate.id}"
-    if defaults is None:
+    settings = declared_settings(gate)
+    if settings is None:
         if values:
             raise GateConfigError(f"config {context}: gate has no settings, got {', '.join(sorted(values))}")
         return None
-    if not dataclasses.is_dataclass(defaults) or isinstance(defaults, type):
-        raise GateDefinitionError(f"gate {gate.id!r}: settings must be a dataclass instance or None")
-    try:
-        hints = typing.get_type_hints(type(defaults))
-        for item in dataclasses.fields(defaults):
-            describe_setting_type(hints[item.name])
-    except Exception as exc:
-        raise GateDefinitionError(f"gate {gate.id!r}: invalid settings declaration: {exc}") from exc
-    names = {f.name for f in dataclasses.fields(defaults)}
+    hints = {setting.item.name: setting.hint for setting in settings}
+    names = set(hints)
     unknown = set(values) - names
     if unknown:
         raise GateConfigError(
@@ -164,4 +188,4 @@ def resolve_settings(gate: Gate, values: dict[str, Any]) -> Any:
             resolved[key] = check_setting_value(hints[key], value)
         except ValueError as exc:
             raise GateConfigError(f"config {context}.{key}: {exc}") from None
-    return dataclasses.replace(defaults, **resolved)
+    return dataclasses.replace(gate.settings, **resolved)

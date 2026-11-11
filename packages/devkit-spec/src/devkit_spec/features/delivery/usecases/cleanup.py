@@ -11,7 +11,7 @@ prefix, which names the proposal. A project that deploys the ``spec`` bundle the
 do:
 
 - ``docs/proposals/PROP-<slug>/``: a handoff deleted the proposal in the worktree; the merge removed its tracked
-  files here but leaves the empty directories (``prune_proposals``);
+  files here but leaves the empty directories (``PruneProposalsUseCase``);
 - the task's work scope record: its worktree is gone, so the record is stale (``CAP-COLL-work-scope-registry``).
   Only the records of the finished worktree are removed, at the revision read here, as ``scope sweep --apply``
   would remove them; other stale records stay for an explicit sweep. A ``--no-worktree`` task ran in the base
@@ -47,11 +47,18 @@ from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as D
 
 from devkit_spec.base.errors import PostFinishCleanupNotice, ProposalCleanupWarning, SpecError
 from devkit_spec.base.units import proposal_unit
-from devkit_spec.features.proposals.usecases.prune import prune_proposals
+from devkit_spec.features.proposals.usecases.prune import PruneProposalsUseCase
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 from devkit_spec.features.scope.models.model import Verdict
 from devkit_spec.features.scope.repositories.location import load_token
-from devkit_spec.features.scope.usecases.flow import Session, journal, open_session, own, release, sweep_events
+from devkit_spec.features.scope.usecases.flow import (
+    ReleaseScopeUseCase,
+    Session,
+    journal,
+    open_session,
+    own,
+    sweep_events,
+)
 
 SOURCE = "post-finish"
 KIND_PROPOSAL = "proposal-prune"
@@ -80,7 +87,7 @@ def _prune_slug(slug: str) -> str:
 def _prune_step(base: Path, slug: str) -> tuple[bool, list[str | AdvisoryError]]:
     lines: list[str | AdvisoryError] = []
     try:
-        pruned = prune_proposals(base, slug)
+        pruned = PruneProposalsUseCase().execute(base, slug)
     except SpecError:  # a slug that cannot name a proposal has none to prune
         pruned = []
     except OSError as exc:  # a directory that cannot be listed or removed: report it and still sweep
@@ -121,7 +128,7 @@ def _worktree_records(session: Session, base: Path, worktree: Path) -> dict[str,
 def _sweep(base: Path, worktree: Path) -> list[str | AdvisoryError]:
     session = open_session(base)
     if worktree.resolve() == base.resolve():  # a --no-worktree task: the base checkout's own record
-        released = release(session, source=SOURCE)
+        released = ReleaseScopeUseCase().execute(session, source=SOURCE)
         done = [f"released the scope record of {released.task}"] if released.task and not released.already else []
         return [*done, *released.notices]
     namespace = session.location.namespace
@@ -208,7 +215,7 @@ def _run_scoped_sweep(
         return True, []
     if worktree.resolve() == base.resolve():
         task_id = next(iter(current))
-        released = release(session, task_id=task_id, source=SOURCE)
+        released = ReleaseScopeUseCase().execute(session, task_id=task_id, source=SOURCE)
         done = [f"released the scope record of {released.task}"] if released.task and not released.already else []
         return True, [*done, *released.notices]
     namespace = session.location.namespace

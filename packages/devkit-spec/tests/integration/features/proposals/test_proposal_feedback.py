@@ -10,7 +10,7 @@ from spec_support.proposals import MONTH, STAMP, TODAY, accept, spec_dir, write_
 from spec_support.types import Write
 
 from devkit_spec.base.errors import ProposalHandoffError, ProposalInvalidError, ProposalTargetExistsError
-from devkit_spec.features.proposals import create_proposal, handoff_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase, handoff_proposal
 from devkit_spec.features.proposals.usecases import handoff as handoff_module
 from devkit_spec.features.proposals.usecases import specs as specs_module
 
@@ -20,7 +20,7 @@ def _feedback(name: str, status: str = "open", body: str = "") -> str:
 
 
 def _new(root: Path, slug: str = "review") -> Path:
-    proposal = root / create_proposal(root, slug, today=TODAY).path
+    proposal = root / CreateProposalUseCase().execute(root, slug, today=TODAY).path
     accept(proposal)
     return proposal.parent
 
@@ -175,7 +175,7 @@ def test_source_feedback_reference_survives_handoff_without_resolution(
     workspace: Path, write: Write, task_kind: str
 ) -> None:
     write_workflow(workspace, f"sdd-spec-{task_kind}")
-    proposal = workspace / create_proposal(workspace, "review", today=TODAY, task_kind=task_kind).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "review", today=TODAY, task_kind=task_kind).path
     accept(proposal)
     with proposal.open("a") as stream:
         stream.write("\n## Source feedback\n\n- `FB-source`: address the recorded observation.\n")

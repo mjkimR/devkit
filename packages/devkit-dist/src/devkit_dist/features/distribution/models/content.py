@@ -2,7 +2,8 @@
 
 Neutral helpers shared by bundle packaging (``devkit_dist.features.distribution.services.bundles``)
 and installation (``devkit_dist.features.distribution.services.installation``); they know nothing
-about the consumer workspace.
+about the consumer workspace. ``is_by_product`` is the one filter of editing by-products that bundle sources and
+snapshot trees skip.
 """
 
 from __future__ import annotations
@@ -10,6 +11,16 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from pathlib import PurePath
+
+# By-products of editing a source in place (Finder metadata, bytecode caches); never bundle or snapshot content.
+IGNORED_NAMES = frozenset({".DS_Store", "__pycache__"})
+IGNORED_SUFFIXES = (".pyc",)
+
+
+def is_by_product(rel: PurePath) -> bool:
+    """Whether the path ``rel``, relative to the tree it was found in, is an editing by-product, or lies inside one."""
+    return any(part in IGNORED_NAMES for part in rel.parts) or rel.name.endswith(IGNORED_SUFFIXES)
 
 
 @dataclass(frozen=True)

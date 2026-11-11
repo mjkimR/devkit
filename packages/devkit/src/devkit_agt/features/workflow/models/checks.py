@@ -8,7 +8,7 @@ from typing import Any
 
 from devkit_core.core.paths import is_safe_relpath
 
-from devkit_agt.features.workflow.models.errors import CheckError
+from devkit_agt.features.workflow.models.errors import CheckError, workflow_command
 
 __all__ = [
     "DECLARABLE",
@@ -226,7 +226,7 @@ class Registry:
         """Validate against the registry and expand an alias to its primitive."""
         check = self.lookup(inv.name)
         if check is None:
-            raise CheckError(f"unregistered check {inv.name!r} (see `uv run devkit workflow checks`)")
+            raise CheckError(f"unregistered check {inv.name!r} (see `{workflow_command('checks')}`)")
         if check.alias:
             if inv.args:
                 raise CheckError(f"check {inv.name!r} takes no arguments (it is an alias of {check.alias})")

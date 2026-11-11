@@ -15,7 +15,7 @@ from spec_support.proposals import MONTH, STAMP, TODAY, WORKFLOW, spec_dir, writ
 from spec_support.types import Write
 
 from devkit_spec.base.errors import SpecExistsError, SpecSlugError, SpecWorkflowError, SpecWriteError
-from devkit_spec.features.proposals import SKELETON_MARKER, create_proposal, create_spec
+from devkit_spec.features.proposals import SKELETON_MARKER, CreateProposalUseCase, create_spec
 
 
 def _spec_new(workspace: Path, *args: str) -> Result:
@@ -142,7 +142,7 @@ def test_refuses_a_taken_slug(workspace: Path, write: Write) -> None:
     with pytest.raises(SpecExistsError) as raised:
         create_spec(workspace, "old", day=TODAY)
     assert raised.value.target_files == ("specs/2026-09/20260901-old/spec.md",)
-    create_proposal(workspace, "idea")
+    CreateProposalUseCase().execute(workspace, "idea")
     with pytest.raises(SpecExistsError):
         create_spec(workspace, "idea", day=TODAY)
     write(f"specs/{MONTH}/{STAMP}-dir/notes.md", "x\n")

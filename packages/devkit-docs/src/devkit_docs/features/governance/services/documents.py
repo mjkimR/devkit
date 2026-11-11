@@ -37,7 +37,6 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
-from devkit_docs.base.layout import PROPOSAL_FILE, PROPOSALS
 from devkit_docs.features.documents import SOURCE_DIRECTORIES, Document, DocumentIndex
 from devkit_docs.features.documents.models.namespace import Namespace
 from devkit_docs.features.documents.repositories.config import read_docs_config
@@ -95,17 +94,6 @@ def reportable(ctx: RuleContext, index: DocumentIndex, document: Document) -> bo
     if not ctx.is_file_targeted(document.path):
         return False
     return not index.is_historical(document) or explicitly_targeted(ctx, document.path)
-
-
-def is_proposal_anchor(path: str) -> bool:
-    """Whether ``path`` is a proposal anchor: ``docs/proposals/PROP-<slug>/proposal.md`` or a single-file proposal
-    ``docs/proposals/PROP-<slug>.md``."""
-    if not path.startswith(f"{PROPOSALS}/"):
-        return False
-    parts = path.removeprefix(f"{PROPOSALS}/").split("/")
-    if len(parts) == 1:
-        return parts[0].startswith("PROP-") and parts[0].endswith(".md")
-    return len(parts) == 2 and parts[0].startswith("PROP-") and parts[1] == PROPOSAL_FILE
 
 
 def is_material(document: Document) -> bool:

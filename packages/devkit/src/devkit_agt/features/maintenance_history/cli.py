@@ -18,7 +18,7 @@ from devkit_dist.adapters.cli import (
 )
 
 from .models.records import PLAYBOOKS, HistoryResult
-from .usecases.operations import HistoryOperation, HistoryRequest
+from .usecases.operations import FinishRun, GetRunFile, InitHistory, ListRuns, PublishRun, StartRun, UpdateRun
 
 WORKSPACE = workspace_option()
 REPOSITORY = click.option("--repository", help="Credential-free owner/repo; defaults to config or origin")
@@ -66,11 +66,7 @@ def init_cmd(
 ) -> None:
     """Initialize or validate an authorized history branch; write no local file."""
     emit(
-        HistoryOperation().execute(
-            HistoryRequest(
-                "init", resolve_root(workspace_root), repository=repository, branch=branch, authority=authority
-            )
-        ),
+        InitHistory().execute(resolve_root(workspace_root), repository=repository, branch=branch, authority=authority),
         output_format,
     )
 
@@ -101,19 +97,16 @@ def start_cmd(
 ) -> None:
     """Capture inspected Git content and create a unique local run directory."""
     emit(
-        HistoryOperation().execute(
-            HistoryRequest(
-                "start",
-                resolve_root(workspace_root),
-                repository=repository,
-                playbook=playbook,
-                scope=scope,
-                into=into,
-                report=report,
-                timezone=zone,
-                supersedes=supersedes,
-                prior_runs=prior_runs,
-            )
+        StartRun().execute(
+            resolve_root(workspace_root),
+            repository=repository,
+            playbook=playbook,
+            scope=scope,
+            into=into,
+            report=report,
+            zone=zone,
+            supersedes=supersedes,
+            prior_runs=prior_runs,
         ),
         output_format,
     )
@@ -142,19 +135,16 @@ def finish_cmd(
     output_format: str,
 ) -> None:
     """Freeze report and --file digests; later publication selects only frozen files."""
+    resolve_root(workspace_root)  # --workspace-root is validated as for every history command
     emit(
-        HistoryOperation().execute(
-            HistoryRequest(
-                "finish",
-                resolve_root(workspace_root),
-                run=run,
-                outcome=outcome,
-                result=result,
-                report=report,
-                files=files,
-                applied_commits=applied_commits,
-                follow_ups=follow_ups,
-            )
+        FinishRun().execute(
+            run,
+            outcome=outcome,
+            result=result,
+            report=report,
+            files=files,
+            applied_commits=applied_commits,
+            follow_ups=follow_ups,
         ),
         output_format,
     )
@@ -180,16 +170,8 @@ def publish_cmd(
 ) -> None:
     """Publish a finished run and explicitly selected frozen files atomically."""
     emit(
-        HistoryOperation().execute(
-            HistoryRequest(
-                "publish",
-                resolve_root(workspace_root),
-                run=run,
-                authority=authority,
-                repository=repository,
-                branch=branch,
-                files=files,
-            )
+        PublishRun().execute(
+            resolve_root(workspace_root), run, authority=authority, repository=repository, branch=branch, files=files
         ),
         output_format,
     )
@@ -213,15 +195,12 @@ def update_cmd(
 ) -> None:
     """Append integration state without changing the frozen report or record."""
     emit(
-        HistoryOperation().execute(
-            HistoryRequest(
-                "update",
-                resolve_root(workspace_root),
-                run=run,
-                authority=authority,
-                integration_state=integration_state,
-                applied_commits=applied_commits,
-            )
+        UpdateRun().execute(
+            resolve_root(workspace_root),
+            run,
+            authority=authority,
+            integration_state=integration_state,
+            applied_commits=applied_commits,
         ),
         output_format,
     )
@@ -251,18 +230,15 @@ def list_cmd(
 ) -> None:
     """List newest runs from history indexes, including later amendments."""
     emit(
-        HistoryOperation().execute(
-            HistoryRequest(
-                "list",
-                resolve_root(workspace_root),
-                playbook=playbook,
-                source_sha=source_sha,
-                outcome_filter=outcome,
-                include_superseded=include_superseded,
-                limit=limit,
-                repository=repository,
-                branch=branch,
-            )
+        ListRuns().execute(
+            resolve_root(workspace_root),
+            playbook=playbook,
+            source_sha=source_sha,
+            outcome=outcome,
+            include_superseded=include_superseded,
+            limit=limit,
+            repository=repository,
+            branch=branch,
         ),
         output_format,
     )
@@ -281,10 +257,8 @@ def get_cmd(
 ) -> None:
     """Read a published file, preserving its bytes as base64 in the result."""
     emit(
-        HistoryOperation().execute(
-            HistoryRequest(
-                "get", resolve_root(workspace_root), run_id=run_id, file=file, repository=repository, branch=branch
-            )
+        GetRunFile().execute(
+            resolve_root(workspace_root), run_id=run_id, file=file, repository=repository, branch=branch
         ),
         output_format,
     )

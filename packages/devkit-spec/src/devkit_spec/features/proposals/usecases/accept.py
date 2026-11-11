@@ -1,6 +1,6 @@
 """Record the user's acceptance of a proposal in one validated step (``devkit spec proposal accept``).
 
-``accept_proposal`` is the one writer of an acceptance (``ADR-direct-acceptance-command-and-handoff-guard``), run
+``AcceptProposalUseCase`` is the one writer of an acceptance (``ADR-direct-acceptance-command-and-handoff-guard``), run
 after explicit acceptance or owning policy delegation. Its form follows from the status and ``direct``:
 
 - ``planning``: a proposal in review (``status: reviewing``) on its ``plan-<slug>``, the acceptance after Planning;
@@ -53,6 +53,7 @@ from devkit_spec.base.errors import (
     ProposalPolicyNotAutoError,
     ProposalWrongWorktreeError,
 )
+from devkit_spec.base.units import proposal_anchor
 from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.repositories.branches import (
     PLANNING_PREFIX,
@@ -69,11 +70,10 @@ from devkit_spec.features.proposals.usecases.handoff import (
     TASK_KIND,
     proposal_gates,
 )
-from devkit_spec.features.proposals.usecases.scaffold import PROPOSAL_FILE, bundle_dir, require_slug, single_file
+from devkit_spec.features.proposals.usecases.scaffold import PROPOSAL_FILE, require_slug
 from devkit_spec.features.proposals.usecases.specs import text_value
 
 PLANNING, DIRECT, REPAIR = "planning", "direct", "repair"
-FORMS = (PLANNING, DIRECT, REPAIR)
 ACTOR = "user"
 """User authority is recorded explicitly; policy authority requires owning plan-accept=auto."""
 DRAFT, REVIEWING, REJECTED = "draft", "reviewing", "rejected"
@@ -83,7 +83,7 @@ WORKER = "worker"
 
 @dataclass(frozen=True)
 class AcceptResult:
-    """What ``accept_proposal`` checked or wrote; paths are workspace-relative.
+    """What ``AcceptProposalUseCase`` checked or wrote; paths are workspace-relative.
 
     ``status`` is the proposal's status after the command (its current one under ``checked``), ``decision`` the
     ``gate:plan-accept`` record written (``None`` under ``checked``), ``pending`` the conditions a ``checked`` run
@@ -114,13 +114,6 @@ class AcceptResult:
             "decision": self.decision,
             "pending": list(self.pending),
         }
-
-
-def accept_proposal(
-    root: Path, slug: str, *, by: str, note: str = "", direct: bool = False, check: bool = False
-) -> AcceptResult:
-    """Compose the application entrypoint for internal callers."""
-    return AcceptProposalUseCase().execute(root, slug, by=by, note=note, direct=direct, check=check)
 
 
 def _form(slug: str, status: str, direct: bool, recorded: bool, rel: str) -> str:
@@ -260,17 +253,17 @@ class AcceptProposalUseCase(BaseUseCase):
             )
         root = root.resolve()
         slug = require_slug(slug.strip().removeprefix("PROP-"))
-        bundle, single = bundle_dir(root, slug), single_file(root, slug)
-        if not bundle.is_dir():
-            if single.is_file():
+        path = proposal_anchor(root, slug)
+        if path.name != PROPOSAL_FILE:
+            if path.is_file():
                 raise ProposalAcceptRefusedError(
                     f"PROP-{slug} is a single-file proposal, which has no gate records",
-                    target_files=[single.relative_to(root).as_posix()],
+                    target_files=[path.relative_to(root).as_posix()],
                     fix="Its acceptance is its status line alone: after the user's explicit acceptance set status: "
                     "accepted by hand",
                 )
             raise ProposalNotFoundError(f"proposal PROP-{slug} not found", target_files=[f"PROP-{slug}"])
-        path = bundle / PROPOSAL_FILE
+        bundle = path.parent
         rel = path.relative_to(root).as_posix()
         try:
             original = path.read_bytes()

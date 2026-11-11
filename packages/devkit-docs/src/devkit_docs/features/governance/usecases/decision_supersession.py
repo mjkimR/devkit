@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 
 from devkit_docs.features.documents import Document, DocumentIndex, is_id
-from devkit_docs.features.documents.models.ids import ID_SOURCE
 from devkit_docs.features.documents.models.supersession import replacement_texts, same_text, supersedes_ids
 from devkit_docs.features.governance import document_index, field_line, is_material
 
 RULE_ID = "RULE-decision-supersession"
-_PARTIAL = re.compile(rf"Superseded in part by `({ID_SOURCE})`")
 type Add = Callable[[str, int], None]
 
 

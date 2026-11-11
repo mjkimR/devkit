@@ -19,6 +19,7 @@ from typing import Any
 import yaml
 from devkit_core.core.yaml import safe_load
 
+from devkit_agt.features.workflow.models.checks import GATE_PREFIX
 from devkit_agt.features.workflow.models.decision_records import (
     CHECK_PREFIX,
     HANDOFF_REQUEST,
@@ -34,8 +35,6 @@ DECISIONS_DIR = "decisions"
 FILE = re.compile(r"(\d{2,})-(.+)\.yaml")
 REQUEST_ID = re.compile(rf"{IDENT_PATTERN}(:[A-Za-z0-9_.-]+)?")
 
-KINDS = ("approve", "choose", "feedback", "return")
-GATE_PREFIX = "gate:"
 FEEDBACK_PREFIX = "feedback:"
 RETURN_PREFIX = "return:"
 REQUIRED_KEYS = ("request", "kind", "action", "workflow", "at")
@@ -62,9 +61,6 @@ def expected_kind(request_id: str) -> str | None:
     if request_id.startswith(RETURN_PREFIX):
         return "return"
     return None
-
-
-# The time of day in an ISO 8601 timestamp: hours and minutes, optionally seconds and a fraction.
 
 
 def utc_timestamp(now: datetime | None = None, *, after: datetime | None = None) -> str:

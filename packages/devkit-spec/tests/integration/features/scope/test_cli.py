@@ -10,7 +10,7 @@ from devkit_dist.cli import cli as devkit_cli
 from spec_support.proposals import accept
 from spec_support.scope import CAP_A, CAP_PLANNED, SPEC, git, make_repo, write
 
-from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase
 from devkit_spec.features.scope.usecases import flow
 
 SPEC_B = "specs/2026-10/20261002-b"
@@ -258,7 +258,7 @@ def test_unreadable_record_is_a_warning(repo: Path) -> None:
 
 
 def test_handoff_registers_inside_a_linked_worktree(repo: Path, tmp_path: Path) -> None:
-    created = create_proposal(repo, "demo")
+    created = CreateProposalUseCase().execute(repo, "demo")
     accept(repo / created.path)
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "proposal")
@@ -276,7 +276,7 @@ def test_handoff_registers_inside_a_linked_worktree(repo: Path, tmp_path: Path) 
 
 
 def test_handoff_in_the_base_checkout_does_not_register(repo: Path) -> None:
-    created = create_proposal(repo, "demo")
+    created = CreateProposalUseCase().execute(repo, "demo")
     accept(repo / created.path)
     git(repo, "checkout", "-q", "-b", "dev-demo")  # a --no-worktree Development: the base checkout on its branch
     result = CliRunner().invoke(

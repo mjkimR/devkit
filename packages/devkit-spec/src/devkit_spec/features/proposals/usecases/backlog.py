@@ -17,8 +17,9 @@ from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import ProposalInPlanningError, ProposalNotFoundError
+from devkit_spec.base.units import proposal_anchor, proposal_unit
 from devkit_spec.features.policy.repositories.branches import planning_branches
-from devkit_spec.features.proposals.usecases.scaffold import bundle_dir, require_slug, single_file
+from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
 
 @dataclass(frozen=True)
@@ -31,11 +32,6 @@ class BacklogCheck:
         return {"id": self.id, "path": self.path, "status": self.status, "editable": True}
 
 
-def check_backlog_editable(root: Path, raw_slug: str, *, decomposition: bool = False) -> BacklogCheck:
-    """Compose the application entrypoint for internal callers."""
-    return CheckBacklogUseCase().execute(root, raw_slug, decomposition=decomposition)
-
-
 class CheckBacklogUseCase(BaseUseCase):
     """Application entrypoint for check backlog editable."""
 
@@ -43,11 +39,10 @@ class CheckBacklogUseCase(BaseUseCase):
         """The draft proposal ``raw_slug`` when Backlog may change it; ``ProposalInPlanningError`` while its
         ``plan-<slug>`` exists or once it left ``draft``, ``ProposalNotFoundError`` when there is none."""
         slug = require_slug(raw_slug.strip().removeprefix("PROP-"))
-        bundle, single = bundle_dir(root, slug), single_file(root, slug)
-        anchor = bundle / "proposal.md" if bundle.is_dir() else single
+        anchor = proposal_anchor(root, slug)
         rel = anchor.relative_to(root).as_posix()
         if not anchor.is_file():
-            missing = f"{bundle.relative_to(root).as_posix()}/proposal.md"
+            missing = f"{proposal_unit(slug)}/proposal.md"
             raise ProposalNotFoundError(
                 f"PROP-{slug} has no proposal: neither {missing} nor {rel} exists", target_files=[missing]
             )

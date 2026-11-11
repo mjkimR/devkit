@@ -8,7 +8,7 @@ from devkit_core.core.frontmatter import parse
 from spec_support.proposals import TODAY, accept
 
 from devkit_spec.base.errors import ProposalInvalidError, ProposalSlugConflictError
-from devkit_spec.features.proposals import create_proposal, handoff_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase, handoff_proposal
 
 
 def snapshot(root: Path) -> dict[str, bytes]:
@@ -16,7 +16,7 @@ def snapshot(root: Path) -> dict[str, bytes]:
 
 
 def setup(root: Path, edges: str) -> None:
-    anchor = root / create_proposal(root, "child").path
+    anchor = root / CreateProposalUseCase().execute(root, "child").path
     accept(anchor, "\n" + edges)
     subprocess.run(["git", "-C", str(root), "init", "-q", "-b", "dev-child"], check=True)
 

@@ -11,7 +11,7 @@ from click.testing import CliRunner
 from devkit_dist.cli import cli
 from spec_support.scope import git, write
 
-from devkit_spec.features.scope import Deadline, auto_register, open_session, register
+from devkit_spec.features.scope import Deadline, RegisterScopeUseCase, auto_register, open_session
 from devkit_spec.features.scope.models.observation import CollectionOptions
 from devkit_spec.features.scope.repositories import collection_git
 from devkit_spec.features.scope.repositories.collection_git import InputLimitError
@@ -98,7 +98,7 @@ def test_token_and_registry_bytes_unchanged(repo: Path, tmp_path: Path, monkeypa
     linked = tmp_path / "linked"
     git(repo, "worktree", "add", "-qb", "dev-b", str(linked), "main")
     unit = task(linked, "b")
-    register(open_session(linked), unit)
+    RegisterScopeUseCase().execute(open_session(linked), unit)
     session = open_session(linked)
     directory = session.location.shared_path
     before = {p: p.read_bytes() for p in directory.rglob("*") if p.is_file()}
@@ -154,7 +154,7 @@ def test_terminal_worktree_dirty_changes_remain_visible(repo: Path) -> None:
 
 def test_other_host_record_path_is_not_read(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     session = open_session(repo)
-    record = register(session, UNIT).record
+    record = RegisterScopeUseCase().execute(session, UNIT).record
     adapter = collection.CollectionRegistry
     original = adapter.query
 
@@ -276,7 +276,7 @@ def test_creation_failure_and_logging_failure_are_silent(
     def broken(*args, **kwargs):
         raise OSError("injected")
 
-    monkeypatch.setattr(flow, "register", broken)
+    monkeypatch.setattr(flow.RegisterScopeUseCase, "execute", broken)
     assert auto_register(linked, UNIT, source="spec-new") is None
     with monkeypatch.context() as local:
         local.setattr(flow._log, "info", broken)
@@ -390,7 +390,7 @@ def test_custom_registration_alias_reconciles_with_live_anchor_and_caps_refs(rep
     git(linked, "add", ".")
     git(linked, "commit", "-qm", "before registration")
     cap = git(linked, "rev-parse", "HEAD")
-    register(open_session(linked), unit, task_id="custom-running-task")
+    RegisterScopeUseCase().execute(open_session(linked), unit, task_id="custom-running-task")
     data = collect(repo, base="main")
     live = [
         o
@@ -424,7 +424,7 @@ def test_timeout_kills_descendant_even_after_parent_exit(tmp_path: Path, monkeyp
 
 
 def test_registered_terminal_clean_snapshot_is_not_compared_with_active_task(repo: Path, tmp_path: Path) -> None:
-    register(open_session(repo), UNIT)
+    RegisterScopeUseCase().execute(open_session(repo), UNIT)
     write(repo, f"{UNIT}/spec.md", "---\nid: SPEC-a\nstatus: completed\n---\n")
     git(repo, "add", ".")
     git(repo, "commit", "-qm", "finish a")
@@ -492,7 +492,7 @@ def test_dense_text_with_long_observation_ids_respects_result_limit(
 
 
 def test_ambiguous_dirty_worktree_prevents_terminal_snapshot_exclusion(repo: Path) -> None:
-    register(open_session(repo), UNIT)
+    RegisterScopeUseCase().execute(open_session(repo), UNIT)
     write(repo, f"{UNIT}/spec.md", "---\nid: SPEC-a\nstatus: completed\n---\n")
     git(repo, "add", ".")
     git(repo, "commit", "-qm", "terminal")

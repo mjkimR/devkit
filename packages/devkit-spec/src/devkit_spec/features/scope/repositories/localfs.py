@@ -17,14 +17,21 @@ import json
 import os
 import socket
 import stat
-import time
 from collections.abc import Callable, Collection, Iterator, Mapping
 from dataclasses import replace
 from pathlib import Path
 from typing import Protocol
 
 from devkit.advisory import Level
-from devkit_core.core import GitError, LockUnsupportedError, UnsafePathError, atomic_write_text, file_lock, run_git
+from devkit_core.core import (
+    GitError,
+    LockUnsupportedError,
+    UnsafePathError,
+    atomic_write_text,
+    file_lock,
+    flock_fd,
+    run_git,
+)
 
 from devkit_spec.base.errors import (
     ScopeLockUnsupportedError,
@@ -89,10 +96,6 @@ class ReadFlockLocker:
     """Shared flock on an existing, read-opened regular file; no creation or cleanup."""
 
     def acquire(self, lock_file: Path, deadline: Deadline) -> Unlock:
-        try:
-            import fcntl
-        except ImportError as exc:  # pragma: no cover - not on Linux or macOS
-            raise ScopeLockUnsupportedError("fcntl.flock is not available on this platform") from exc
         # NONBLOCK prevents opening a FIFO from waiting before descriptor validation.
         fd = os.open(lock_file, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         try:
@@ -100,15 +103,10 @@ class ReadFlockLocker:
                 raise ScopeSharedPathError(
                     f"the lock file {lock_file} is not a regular file", target_files=[str(lock_file)]
                 )
-            while True:
-                try:
-                    fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
-                    break
-                except BlockingIOError:
-                    remaining = deadline.remaining()
-                    if remaining <= 0:
-                        raise deadline.exceeded("waiting for the namespace lock") from None
-                    time.sleep(min(0.01, remaining))
+            flock_fd(fd, target=lock_file, shared=True, deadline=deadline, what="waiting for the namespace lock")
+        except LockUnsupportedError as exc:  # pragma: no cover - not on Linux or macOS
+            os.close(fd)
+            raise ScopeLockUnsupportedError(str(exc)) from exc
         except BaseException:
             os.close(fd)
             raise

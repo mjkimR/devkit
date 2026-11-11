@@ -17,6 +17,9 @@ from devkit_core.core.frontmatter import Frontmatter, FrontmatterBlock
 from devkit_core.core.git import (
     StatusRecord,
     WorktreeRecord,
+    changed_paths,
+    dirty_paths,
+    git_config,
     is_ancestor,
     parse_status_records,
     parse_worktree_records,
@@ -25,8 +28,8 @@ from devkit_core.core.git import (
     status_records,
     worktree_records,
 )
-from devkit_core.core.locks import file_lock
-from devkit_core.core.paths import is_safe_relpath, normalize_relpath, resolve_within
+from devkit_core.core.locks import file_lock, flock_fd
+from devkit_core.core.paths import display_path, is_safe_relpath, normalize_relpath, resolve_within
 from devkit_core.core.plugins import (
     LoadedPlugin,
     PluginFailure,
@@ -58,7 +61,12 @@ __all__ = [
     "YamlBindingUnavailableError",
     "atomic_write_bytes",
     "atomic_write_text",
+    "changed_paths",
+    "dirty_paths",
+    "display_path",
     "file_lock",
+    "flock_fd",
+    "git_config",
     "is_ancestor",
     "is_safe_relpath",
     "iter_plugin_packages",

@@ -15,7 +15,7 @@ from pathlib import Path
 from types import FrameType
 
 import click
-from devkit_dist.adapters.cli import boundary
+from devkit_dist.adapters.cli import boundary, version_option
 
 from devkit_viewer.features.browse.http.server import ViewerServer
 from devkit_viewer.features.browse.usecases.register import RegisterRepositoriesUseCase
@@ -24,24 +24,8 @@ DISTRIBUTION = "devkit-viewer"
 DEFAULT_PORT = 8765
 
 
-def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:
-    if not value or ctx.resilient_parsing:
-        return
-    from importlib.metadata import version
-
-    click.echo(f"[VERSION: {DISTRIBUTION} {version(DISTRIBUTION)}]")
-    ctx.exit()
-
-
 @click.group(name="viewer")
-@click.option(
-    "--version",
-    is_flag=True,
-    expose_value=False,
-    is_eager=True,
-    callback=_print_version,
-    help=f"Print a [VERSION: {DISTRIBUTION} <version>] line and exit",
-)
+@version_option(DISTRIBUTION)
 def cli() -> None:
     """A local, read-only page for the Living Spec, proposals, specs and roadmap of devkit repositories."""
 

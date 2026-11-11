@@ -14,7 +14,7 @@ from devkit.advisory import AdvisoryError
 from .errors import InputError
 
 PLAYBOOKS = ("weekly-report", "drift-reconciliation", "review-refactor", "performance-pass")
-RUN_ID = re.compile(r"(weekly-report|drift-reconciliation|review-refactor|performance-pass)-(\d{8}T\d{6}Z)-[0-9a-f]{8}")
+RUN_ID = re.compile(rf"({'|'.join(map(re.escape, PLAYBOOKS))})-(\d{{8}}T\d{{6}}Z)-[0-9a-f]{{8}}")
 IDENTITY = {"name": "devkit maintenance history", "email": "maintenance-history@devkit.invalid"}
 ROOT_DATE = "2000-01-01T00:00:00Z"
 ROOT_README = b"# devkit maintenance history\n\nHistory marker: devkit-maintenance-history-v1\nRuns: runs/<playbook>/<run-id>/; indexes: index/<playbook>/<year>.jsonl\nNever merge this branch into a code branch.\n"

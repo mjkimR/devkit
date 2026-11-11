@@ -9,6 +9,7 @@ from typing import Any
 from devkit_core.base.errors import UnsafePathError
 from devkit_core.core.paths import normalize_relpath
 
+from devkit_dist.features.distribution.models.settings import PROTECTED_ROOTS
 from devkit_dist.features.distribution.models.snapshots import (
     SnapshotCandidate,
     SnapshotConflictError,
@@ -18,8 +19,6 @@ from devkit_dist.features.distribution.models.snapshots import (
 from devkit_dist.features.distribution.repositories.snapshots import read_tree, symlinked_ancestor
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.snapshots.provenance import file_changes, load_provenance
-
-PROTECTED = frozenset({".git", ".devkit", ".agents", ".claude", ".codex"})
 
 
 def destination_path(root: Path, destination: Path, source: Path) -> Path:
@@ -39,7 +38,7 @@ def destination_path(root: Path, destination: Path, source: Path) -> Path:
                 fix=f"Pass the resolved destination path instead: {resolved}",
             ) from exc
         raise SnapshotInvalidError("snapshot destination must be a new directory inside the consumer root") from exc
-    if any(part.casefold() in PROTECTED for part in parts) or parts[0].casefold() == "agents.md":
+    if any(part.casefold() in PROTECTED_ROOTS for part in parts) or parts[0].casefold() == "agents.md":
         raise SnapshotInvalidError("snapshot destination overlaps Git, devkit or agent state")
     path = root
     for part in parts:

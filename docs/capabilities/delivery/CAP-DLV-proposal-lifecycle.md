@@ -316,20 +316,25 @@ uv run devkit spec proposal check fast-engine                        # before an
 ### 4.7 Library
 
 ```python
-from devkit_spec.features.proposals import accept_proposal, create_proposal, handoff_proposal, prune_proposals
+from devkit_spec.features.proposals import (
+    AcceptProposalUseCase,
+    CreateProposalUseCase,
+    PruneProposalsUseCase,
+    handoff_proposal,
+)
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
-created = create_proposal(root, "fast-engine", title="Fast Engine", with_target_docs=True)  # CreatedProposal
+created = CreateProposalUseCase().execute(root, "fast-engine", title="Fast Engine", with_target_docs=True)  # CreatedProposal
 padr = CreateProposalDecisionUseCase()
 padr.execute(root, "fast-engine", "Use AST parser", summary="Parses rules with an AST.")  # CreatedDecision
 padr.execute(root, "fast-engine", "2024 roadmap", padr_slug="roadmap-2024")  # PADR-roadmap-2024
-accepted = accept_proposal(root, "small-fix", by="user", note="<reason>", direct=True)  # AcceptResult (check=True: read-only)
+accepted = AcceptProposalUseCase().execute(root, "small-fix", by="user", note="<reason>", direct=True)  # AcceptResult (check=True: read-only)
 result = handoff_proposal(root, "fast-engine")  # HandoffResult
 result.dir, result.workflow, result.dev_effort, result.decisions, result.rewritten, result.unresolved, result.notices
-prune_proposals(root, "fast-engine")  # list of removed dirs
+PruneProposalsUseCase().execute(root, "fast-engine")  # list of removed dirs
 ```
 
-`create_proposal` also takes `target_area`, `milestone`, `task_kind`, `planning_effort`, `dev_effort`, `namespace`, `summary`, `supersedes`, `decomposed_from`,
+`CreateProposalUseCase().execute` also takes `target_area`, `milestone`, `task_kind`, `planning_effort`, `dev_effort`, `namespace`, `summary`, `supersedes`, `decomposed_from`,
 `needs_decompose` and `cwd` (the
 directory whose namespace applies when `namespace` is omitted);
 `carry_proposal_body` and `ensure_ac_ids` implement 4.2, `RelocationPlan`, `Rewritten` and `Unresolved` 4.3.

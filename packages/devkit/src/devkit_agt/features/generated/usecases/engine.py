@@ -40,6 +40,7 @@ from devkit_agt.features.generated.models.errors import (
     OutputUndeclaredError,
     UnmergedError,
 )
+from devkit_agt.features.generated.models.listing import LISTED, unlisted
 from devkit_agt.features.generated.repositories.registry import PROJECT_FILE, Artifact, Registry, load_registry
 from devkit_agt.features.generated.services.conflicts import classify
 
@@ -51,7 +52,6 @@ CONTINUE = {
     "revert": "git revert --continue",
     "am": "git am --continue",
 }
-LISTED = 20  # paths listed in an advisory's details
 WORKTREE_TIMEOUT = 300.0  # seconds for checking out the temporary worktree of `check`
 
 
@@ -142,8 +142,7 @@ def _literal(paths: Iterable[str]) -> list[str]:
 
 
 def _listed(paths: Sequence[str]) -> list[str]:
-    extra = len(paths) - LISTED
-    return [*paths[:LISTED], *([f"... and {extra} more"] if extra > 0 else [])]
+    return [*paths[:LISTED], *unlisted(len(paths))]
 
 
 def unmerged(top: Path) -> dict[str, frozenset[int]]:
@@ -216,7 +215,7 @@ def _regenerate(checkout: Path, artifact: Artifact) -> tuple[str, ...]:
         raise OutputUndeclaredError(
             f"{artifact.id}: {artifact.command} changed {len(undeclared)} file(s) outside its paths and updates;"
             " the changes are left in the work tree and nothing was staged",
-            *([f"... and {len(undeclared) - LISTED} more"] if len(undeclared) > LISTED else []),
+            *unlisted(len(undeclared)),
             target_files=[PROJECT_FILE, *undeclared[:LISTED]],
             fix=f"Declare these files under paths or updates of [artifacts.{artifact.id}] in {PROJECT_FILE},"
             " or change the command so it writes only its files, then rerun",
@@ -363,9 +362,10 @@ class RegenerateArtifacts(BaseUseCase):
         plan = _plan(load_registry(checkout), ids)
         conflicts = sorted(unmerged(checkout))
         if conflicts:
-            extra = [f"... and {len(conflicts) - LISTED} more"] if len(conflicts) > LISTED else []
             raise UnmergedError(
-                f"{len(conflicts)} unmerged path(s); nothing ran", *extra, target_files=conflicts[:LISTED]
+                f"{len(conflicts)} unmerged path(s); nothing ran",
+                *unlisted(len(conflicts)),
+                target_files=conflicts[:LISTED],
             )
         return RunResult(_run_all(checkout, plan))
 

@@ -1,4 +1,4 @@
-"""Gate contracts: stages, results, the context a gate runs in, and the ``Gate`` protocol."""
+"""Gate contracts: stages, results, and the context a gate runs in; ``BaseGate`` is the gate contract."""
 
 from __future__ import annotations
 
@@ -7,13 +7,18 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.gate.models.errors import GateDefinitionError, GateResultError
+
+
+def more_line(total: int, listed: int) -> list[str]:
+    """The ``... and N more`` line closing a listing that shows ``listed`` of ``total`` items; none when all show."""
+    return [f"... and {total - listed} more"] if total > listed else []
 
 
 class Stage(StrEnum):
@@ -109,17 +114,3 @@ class GateContext:
             )
         path = Path(self.args[0])
         return path if path.is_absolute() else self.repo_root / path
-
-
-class Gate(Protocol):
-    id: str
-    description: str
-    stage: Stage
-    # Lower runs first within a stage. Message transforms use < 100, checks default to 100.
-    order: int
-    # A gate may ship disabled and be switched on per project or per clone.
-    enabled_by_default: bool
-    # Dataclass instance holding default settings, or ``None`` when the gate has none.
-    settings: Any
-
-    def run(self, ctx: GateContext) -> GateResult | None: ...

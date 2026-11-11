@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any
 
 from devkit_core.base.usecase import BaseUseCase
+from devkit_core.core.paths import display_path
 
 from devkit_agt.features.rules.models.config import RulesConfig
 from devkit_agt.features.rules.models.contracts import Rule
-from devkit_agt.features.rules.models.paths import display_path
 from devkit_agt.features.rules.models.phases import declared_promotion, effective_phase
 from devkit_agt.features.rules.models.policy import effective_severity
 from devkit_agt.features.rules.models.settings import SettingsResolver

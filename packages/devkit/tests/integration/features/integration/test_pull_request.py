@@ -3,9 +3,10 @@ from __future__ import annotations
 import pytest
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.integration import IntegrationService
+from devkit_agt.features.integration.models.contracts import Repository
+from devkit_agt.features.integration.repositories.github import GitHub
 from devkit_agt.features.worktree import MergeNotFastForwardError
-from devkit_agt.features.worktree.models.pull_request import Repository
-from devkit_agt.features.worktree.repositories.pull_request import CommandResult, GitHub
+from devkit_agt.features.worktree.repositories.gh import CommandResult
 from testsupport.rules import git, write
 
 
@@ -122,7 +123,7 @@ def test_checked_merge_and_ordered_cleanup(remote_service):
     service, fake, base, worktree = remote_service
     source = git(worktree, "rev-parse", "HEAD")
     result = run(service)
-    assert result.status == "completed", result.to_dict()
+    assert result.status == "completed", result.compact_dict()
     assert result.landing["checked"] and fake.merge_calls == 1
     assert git(base, "rev-parse", "HEAD^2") == source
     assert not worktree.exists()
@@ -148,7 +149,7 @@ def test_unchecked_landing_continues_cleanup(remote_service, mode):
     service, fake, _base, worktree = remote_service
     fake.mode = mode
     result = run(service)
-    assert result.status == "completed", result.to_dict()
+    assert result.status == "completed", result.compact_dict()
     assert result.landing["reason"] == mode and not result.landing["checked"]
     assert result.verification == "pending"
     assert not worktree.exists()
@@ -222,7 +223,7 @@ def test_dependent_pr_preserves_local_and_remote_cleanup_identity(remote_service
     assert worktree.exists() and fake.ref(result.request.repository, "refs/heads/dev-demo")
     fake.block_delete = False
     result = fresh(service)
-    assert result.status == "completed", result.to_dict()
+    assert result.status == "completed", result.compact_dict()
 
 
 def test_fresh_cli_retry_preserves_source_until_remote_cleanup_completes(remote_service):
@@ -231,7 +232,7 @@ def test_fresh_cli_retry_preserves_source_until_remote_cleanup_completes(remote_
     fake.block_delete = True
     digest = service.prepare("dev-demo", "pull-request").request.digest
     result = service.execute_cli("dev-demo", "pull-request", expected_digest=digest)
-    assert result.status == "partial", result.to_dict()
+    assert result.status == "partial", result.compact_dict()
     assert result.errors[0].code == "INTEGRATION_REMOTE_DELETE_BLOCKED"
     assert result.steps["merge"] == "completed"
     assert worktree.exists() and git(base, "rev-parse", "refs/heads/dev-demo") == source
@@ -243,7 +244,7 @@ def test_fresh_cli_retry_preserves_source_until_remote_cleanup_completes(remote_
     restarted.github = fake
     digest = restarted.prepare("dev-demo", "pull-request").request.digest
     recovered = restarted.execute_cli("dev-demo", "pull-request", expected_digest=digest)
-    assert recovered.status == "completed", recovered.to_dict()
+    assert recovered.status == "completed", recovered.compact_dict()
     assert fake.merge_calls == 1 and git(base, "rev-parse", "HEAD") == landed
     assert not worktree.exists() and not git(base, "branch", "--list", "dev-demo")
     assert fake.ref(recovered.request.repository, "refs/heads/dev-demo") is None
@@ -258,7 +259,7 @@ def test_restart_cleanup_reports_no_recorded_landing(remote_service):
     restarted = IntegrationService(base)
     restarted.github = fake
     result = run(restarted)
-    assert result.status == "completed", result.to_dict()
+    assert result.status == "completed", result.compact_dict()
     assert result.landing["reason"] == "not-recorded"
 
 
@@ -346,7 +347,7 @@ def test_pr_ignores_content_provider_and_reports_pending(remote_service, ready_p
 
 @pytest.mark.parametrize("deletion", [False, True])
 def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeypatch, deletion):
-    import devkit_agt.features.worktree.repositories.pull_request as adapter
+    import devkit_agt.features.integration.repositories.github as adapter
     from devkit_core.base.errors import GitError
 
     service, fake, base, worktree = remote_service
@@ -370,7 +371,7 @@ def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeyp
     restarted.github = fake
     digest = restarted.prepare("dev-demo", "pull-request").request.digest
     recovered = restarted.execute_cli("dev-demo", "pull-request", expected_digest=digest)
-    assert recovered.status == "completed", recovered.to_dict()
+    assert recovered.status == "completed", recovered.compact_dict()
     assert fake.merge_calls == 1 and not worktree.exists()
     assert fake.ref(recovered.request.repository, "refs/heads/dev-demo") is None
 
@@ -431,7 +432,7 @@ def test_incomplete_cleanup_is_a_warning_and_later_scopes_still_run(remote_servi
     first, second = Cleanup(CleanupResult(False)), Cleanup(CleanupResult(True))
     _cleanups(monkeypatch, ("a-first", first), ("b-second", second))
     result = run(service)
-    assert result.status == "partial" and not result.errors, result.to_dict()
+    assert result.status == "partial" and not result.errors, result.compact_dict()
     assert first.runs == second.runs == 1 and not worktree.exists()
     assert result.cleanup_steps == {"a-first": "failed", "b-second": "completed"}
     assert result.steps["post_finish"] == "failed" and result.failing_operation == "post_finish"
@@ -452,5 +453,5 @@ def test_branch_without_worktree_reports_worktree_remove_skipped(remote_service)
     service, _fake, base, worktree = remote_service
     git(base, "worktree", "remove", str(worktree))
     result = run(service)
-    assert result.status == "completed", result.to_dict()
+    assert result.status == "completed", result.compact_dict()
     assert result.steps["worktree_remove"] == "skipped"

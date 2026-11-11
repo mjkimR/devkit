@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+
 from devkit_docs.features.documents.models.ids import Kind, is_id
 from devkit_docs.features.documents.models.model import Document, is_unit_anchor
 from devkit_docs.features.documents.repositories.index import DocumentIndex
@@ -31,6 +33,12 @@ def cycle_members(index: DocumentIndex) -> set[str]:
         for d in index.documents
         if live_unit(d)
     }
+    return on_cycles(graph)
+
+
+def on_cycles(graph: Mapping[str, Sequence[str]]) -> set[str]:
+    """The vertices of ``graph`` (each vertex's direct successors) that reach themselves; a successor that is no key
+    of ``graph`` is terminal."""
     cycles: set[str] = set()
     for source in sorted(graph):
         pending = list(graph[source])

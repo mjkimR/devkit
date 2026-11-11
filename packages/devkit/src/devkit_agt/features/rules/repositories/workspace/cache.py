@@ -38,12 +38,20 @@ from devkit_agt.features.rules.repositories.workspace.file_facts import FileFact
 if TYPE_CHECKING:
     from devkit_agt.features.rules.repositories.workspace.catalog import DocumentCatalog
 
-__all__ = ["WorkspaceCache"]
+__all__ = ["WorkspaceCache", "is_pinned"]
 
 T = TypeVar("T")
 
 # Workspace-relative directories holding copies whose hashes the installation receipt pins.
 _PINNED_DIRS = (MANAGED_PATH, OVERRIDES_PATH)
+
+
+def is_pinned(path: Path, workspace_root: Path) -> bool:
+    """Whether ``path`` lies (lexically) under ``.devkit/managed/`` or ``.devkit/overrides/`` of ``workspace_root``:
+    a receipt-pinned copy that rules never read nor write."""
+    return any(path.is_relative_to(workspace_root / pinned) for pinned in _PINNED_DIRS)
+
+
 _IGNORED_DIRS = {".git", ".venv", ".pytest_cache", ".ruff_cache", "node_modules", "__pycache__"}
 _T = TypeVar("_T", bound=ast.AST)
 
@@ -364,7 +372,7 @@ class WorkspaceCache:
             self._files_cache.clear()
 
     def _pinned(self, path: Path) -> bool:
-        return any(path.is_relative_to(self.workspace_root / pinned) for pinned in _PINNED_DIRS)
+        return is_pinned(path, self.workspace_root)
 
     @staticmethod
     def _pinned_name(relative: str) -> bool:

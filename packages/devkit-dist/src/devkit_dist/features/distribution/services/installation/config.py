@@ -16,7 +16,6 @@ tables of installed tools, each at its default.
 
 from __future__ import annotations
 
-import math
 import os
 import re
 from contextlib import nullcontext
@@ -32,15 +31,7 @@ from tomlkit.exceptions import TOMLKitError
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content
 from devkit_dist.features.distribution.models.errors import SelectionError
-from devkit_dist.features.distribution.models.settings import (
-    AGENT_NAMES,
-    DEFAULT_PRESET,
-    PLAYBOOK_LIMIT_MAX,
-    PLAYBOOK_LIMIT_MIN,
-    PLAYBOOK_MAX_BYTES_MAX,
-    PLAYBOOK_MAX_BYTES_MIN,
-    SLUG,
-)
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES, DEFAULT_PRESET, SLUG
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.services.bundles.templates import NAME, Scalar
 from devkit_dist.features.distribution.services.installation.config_template import (
@@ -55,13 +46,24 @@ from devkit_dist.features.distribution.services.installation.config_template imp
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_bundles
 from devkit_dist.features.distribution.services.installation.transaction import project_lock, replace_file
 from devkit_dist.features.distribution.services.subagents import parse_subagents
-from devkit_dist.features.project import development_approach
+from devkit_dist.features.project import (
+    PLAYBOOK_KEYS,
+    PLAYBOOK_LIMIT_MAX,
+    PLAYBOOK_LIMIT_MIN,
+    PLAYBOOK_MAX_BYTES_MAX,
+    PLAYBOOK_MAX_BYTES_MIN,
+    PLAYBOOK_MODES,
+    development_approach,
+    playbook_value,
+)
 from devkit_dist.features.project.models.invocation import devkit_command
-from devkit_dist.features.project.repositories.local_config import read_effective_config, validate_runtime_tables
-from devkit_dist.features.project.repositories.project import read_toml
+from devkit_dist.features.project.repositories.local_config import (
+    EffectiveConfig,
+    effective_config,
+    read_shared_config,
+)
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
-from devkit_dist.features.search import SearchMode
 
 SCHEMA = 1
 # A line ending an edit adds (the commented template, a selection entry): a LF that no CR precedes.
@@ -159,19 +161,23 @@ def _config_path(root: Path) -> Path:
     return path
 
 
-def _load(root: Path) -> dict[str, Any] | None:
-    data = read_toml(_config_path(root), CONFIG_PATH)
-    if data is None:
-        return None
-    if "schema" in data and (type(data["schema"]) is not int or data["schema"] != SCHEMA):
-        raise ConfigError("unsupported config schema")
+def _load(root: Path) -> tuple[dict[str, Any] | None, EffectiveConfig]:
+    """The shared configuration (``None`` without the file) and the effective one, each file validated once.
+
+    The checks keep their order: file and schema, the top-level keys (``_known_fields``), the runtime tables, the
+    development approach and the ``[tool.*]`` tables; ``effective_config`` then reads the local overlay.
+    """
+    data = read_shared_config(root, check=_known_fields)
+    if data is not None:
+        development_approach(data)
+        validate_tool_tables(data.get("tool"))
+    return data, effective_config(root, data or {})
+
+
+def _known_fields(data: dict[str, Any]) -> None:
     unknown = set(data) - FIELDS
     if unknown:
         raise ConfigError(f"config: unknown fields: {sorted(unknown)}")
-    validate_runtime_tables(data, CONFIG_PATH)
-    development_approach(data)
-    validate_tool_tables(data.get("tool"))
-    return data
 
 
 def validate_tool_tables(tool: object) -> None:
@@ -298,53 +304,36 @@ def merge_selection(
     return {name: list(dict.fromkeys([*current.get(name, []), *presets])) for name, presets in requested.items()}
 
 
+# What ``validate_playbooks_config`` says a key's value must be, in the order it checks the keys.
+_PLAYBOOK_EXPECTED = {
+    "limit": f"limit must be an integer between {PLAYBOOK_LIMIT_MIN} and {PLAYBOOK_LIMIT_MAX}",
+    "min_score": "min_score must be a finite nonnegative number",
+    "max_bytes": f"max_bytes must be an integer between {PLAYBOOK_MAX_BYTES_MIN} and {PLAYBOOK_MAX_BYTES_MAX}",
+    "mode": f"mode must be one of {', '.join(PLAYBOOK_MODES)}",
+    "min_similarity": "min_similarity must be a number between 0 and 1",
+}
+
+
 def validate_playbooks_config(playbooks: object) -> dict[str, int | float | str]:
     if playbooks is None:
         return {}
     if not isinstance(playbooks, dict):
         raise ConfigError("config playbooks: expected a table")
-    unknown = set(playbooks) - {"min_score", "limit", "max_bytes", "mode", "min_similarity"}
+    unknown = set(playbooks) - PLAYBOOK_KEYS
     if unknown:
         raise ConfigError(f"config playbooks: unknown fields: {sorted(unknown)}")
     result: dict[str, int | float | str] = {}
-    if "limit" in playbooks:
-        val = playbooks["limit"]
-        if type(val) is not int or not PLAYBOOK_LIMIT_MIN <= val <= PLAYBOOK_LIMIT_MAX:
-            raise ConfigError(
-                f"config playbooks: limit must be an integer between {PLAYBOOK_LIMIT_MIN} and {PLAYBOOK_LIMIT_MAX}"
-            )
-        result["limit"] = val
-    if "min_score" in playbooks:
-        val = playbooks["min_score"]
-        if not isinstance(val, (int, float)) or not math.isfinite(val) or val < 0:
-            raise ConfigError("config playbooks: min_score must be a finite nonnegative number")
-        result["min_score"] = float(val)
-    if "max_bytes" in playbooks:
-        val = playbooks["max_bytes"]
-        if type(val) is not int or not PLAYBOOK_MAX_BYTES_MIN <= val <= PLAYBOOK_MAX_BYTES_MAX:
-            raise ConfigError(
-                "config playbooks: max_bytes must be an integer between"
-                f" {PLAYBOOK_MAX_BYTES_MIN} and {PLAYBOOK_MAX_BYTES_MAX}"
-            )
-        result["max_bytes"] = val
-    if "mode" in playbooks:
-        val = playbooks["mode"]
-        modes = [mode.value for mode in SearchMode]
-        if not isinstance(val, str) or val.lower() not in modes:
-            raise ConfigError(f"config playbooks: mode must be one of {', '.join(modes)}")
-        result["mode"] = val.lower()
-    if "min_similarity" in playbooks:
-        val = playbooks["min_similarity"]
-        if not isinstance(val, (int, float)) or isinstance(val, bool) or not 0 <= val <= 1:
-            raise ConfigError("config playbooks: min_similarity must be a number between 0 and 1")
-        result["min_similarity"] = float(val)
+    for key, expected in _PLAYBOOK_EXPECTED.items():
+        if key in playbooks:
+            value = playbook_value(key, playbooks[key])
+            if value is None:
+                raise ConfigError(f"config playbooks: {expected}")
+            result[key] = value
     return result
 
 
 def read_playbook_config(root: Path) -> dict[str, int | float | str]:
-    _load(root)
-    data = read_effective_config(root).values
-    return validate_playbooks_config(data.get("playbooks"))
+    return validate_playbooks_config(_load(root)[1].values.get("playbooks"))
 
 
 def bundle_variables(raw: object) -> dict[str, dict[str, Scalar]]:
@@ -371,11 +360,9 @@ def bundle_variables(raw: object) -> dict[str, dict[str, Scalar]]:
 
 
 def read_config(root: Path, *, effective: bool = True) -> ProjectConfig:
-    data = _load(root)
-    overlay = read_effective_config(root)
-    if effective:
-        data = overlay.values
-    return parse_config(data)
+    """The project configuration; ``effective`` takes the local overlay in, which is validated either way."""
+    data, overlay = _load(root)
+    return parse_config(overlay.values if effective else data)
 
 
 def parse_config(data: dict[str, Any] | None) -> ProjectConfig:

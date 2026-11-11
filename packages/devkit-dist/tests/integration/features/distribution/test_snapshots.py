@@ -324,14 +324,14 @@ def test_source_commit_is_bound_to_the_captured_head(checkout, monkeypatch: pyte
         subprocess.run(["git", "-C", str(source), *args], check=True, capture_output=True)
     guide = source / "src/private_content/alpha/bundle/guide.md.jinja"
     guide.write_text(guide.read_text().replace("alpha body.", "new copied bytes."))
-    real_run = subprocess.run
+    real_git = repository.run_git
     advanced = False
 
-    def advance_head(args, **kwargs):
+    def advance_head(cwd, *args, **kwargs):
         nonlocal advanced
         if "ls-tree" in args and not advanced:
             advanced = True
-            real_run(
+            subprocess.run(
                 [
                     "git",
                     "-C",
@@ -347,9 +347,9 @@ def test_source_commit_is_bound_to_the_captured_head(checkout, monkeypatch: pyte
                 check=True,
                 capture_output=True,
             )
-        return real_run(args, **kwargs)
+        return real_git(cwd, *args, **kwargs)
 
-    monkeypatch.setattr(repository.subprocess, "run", advance_head)
+    monkeypatch.setattr(repository, "run_git", advance_head)
     create(checkout)
     assert advanced
     assert json.loads((destination / "snapshot.json").read_text())["source"]["commit"] is None

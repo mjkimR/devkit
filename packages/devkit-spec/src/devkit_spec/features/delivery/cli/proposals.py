@@ -61,12 +61,12 @@ from devkit_dist.adapters.cli import (
     is_json,
     output_settings,
     resolve_root,
+    sentinel,
     workspace_option,
 )
 from devkit_dist.features.project.models.invocation import devkit_command
+from devkit_docs.base.layout import EFFORTS
 
-from devkit_spec.adapters.cli import sentinel
-from devkit_spec.base.axes import EFFORTS
 from devkit_spec.base.errors import SpecError
 from devkit_spec.base.units import proposal_unit
 from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase

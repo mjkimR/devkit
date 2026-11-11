@@ -24,7 +24,7 @@ from devkit_agt.features.workflow.models.definition import (
     WorkflowDocument,
     parse_definition,
 )
-from devkit_agt.features.workflow.models.envelope import Envelope, Envelopes, Finding, Hold
+from devkit_agt.features.workflow.models.envelope import Envelope, EnvelopeFlags, Envelopes, Finding, Hold
 from devkit_agt.features.workflow.models.errors import (
     AnchorAmbiguousError,
     AnchorInvalidError,
@@ -92,7 +92,7 @@ from devkit_agt.features.workflow.repositories.definitions import (
 from devkit_agt.features.workflow.repositories.git import is_ancestor
 from devkit_agt.features.workflow.repositories.project.config import WorkflowConfig, load_workflow_config
 from devkit_agt.features.workflow.repositories.project.roles import discover_roles
-from devkit_agt.features.workflow.repositories.unit.binding import read_anchor, read_binding, write_binding
+from devkit_agt.features.workflow.repositories.unit.binding import read_anchor, write_binding
 from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions, new_decision, write_decision
 from devkit_agt.features.workflow.services.definition.validation import (
     DefinitionReport,
@@ -152,6 +152,7 @@ __all__ = [
     "EnvelopeFindingClosedError",
     "EnvelopeFindingsError",
     "EnvelopeFlagError",
+    "EnvelopeFlags",
     "EnvelopeFormatError",
     "EnvelopeFromError",
     "EnvelopeItemsError",
@@ -238,7 +239,6 @@ __all__ = [
     "parse_layout_spec",
     "plan_handoff",
     "read_anchor",
-    "read_binding",
     "record_answer",
     "render_envelope",
     "validate_definition",

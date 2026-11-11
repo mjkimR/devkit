@@ -4,6 +4,7 @@ import pytest
 from devkit_core.core import FrontmatterError
 
 from devkit_docs.features.documents import Kind, is_id, kind_of, parse_document
+from devkit_docs.features.documents.models.parse import body_references
 
 
 def _refs(text: str) -> list[tuple[str, str, int, bool]]:
@@ -171,3 +172,20 @@ def test_indented_prose_is_referenced(body: str) -> None:
 @pytest.mark.parametrize("body", ["    `UC-a`\n", "text\n\n    `UC-a`\n", "text\n\n    code\n\n    `UC-a`\n"])
 def test_indented_code_is_not(body: str) -> None:
     assert _refs(_doc(body)) == []
+
+
+def test_body_references_of_a_file_without_an_id() -> None:
+    text = "---\ntitle: x\n---\n# `UC-a` heading\n\nSee [ADR-b].\n"
+    block_end = text.index("# ")
+    refs = body_references(text, path="README.md", start=block_end, first_line=4)
+    assert [(ref.target, ref.source, ref.path, ref.line, ref.bracket) for ref in refs] == [
+        ("UC-a", "", "README.md", 4, False),  # no source ID: a heading keeps every reference
+        ("ADR-b", "", "README.md", 6, True),
+    ]
+    assert text[refs[1].start : refs[1].end] == "ADR-b"
+
+
+def test_body_references_skip_the_source_id_only_in_headings() -> None:
+    text = "# `UC-a` and `UC-b`\n\n`UC-a` again\n"
+    refs = body_references(text, path="docs/a.md", source_id="UC-a")
+    assert [(ref.target, ref.source, ref.line) for ref in refs] == [("UC-b", "UC-a", 1), ("UC-a", "UC-a", 3)]

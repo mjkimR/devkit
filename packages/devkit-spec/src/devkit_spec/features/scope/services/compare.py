@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from devkit_spec.features.entrypoints import covers
+from devkit_docs.utils.paths import covers
+
 from devkit_spec.features.scope.models.model import Evidence, PairResult, ScopeSet
 
 

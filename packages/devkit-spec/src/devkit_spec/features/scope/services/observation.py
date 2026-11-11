@@ -10,9 +10,10 @@ from typing import Any
 from devkit_core.core import GitError
 from devkit_core.core.frontmatter import parse
 from devkit_docs.base.errors import EntrypointsPathError
+from devkit_docs.base.layout import PROPOSAL_FILE, PROPOSALS
+from devkit_docs.utils.paths import normalize
 
-from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, is_spec_dir, proposal_unit
-from devkit_spec.features.entrypoints import normalize
+from devkit_spec.base.units import is_spec_dir, proposal_unit
 from devkit_spec.features.policy.repositories.branches import base_marker_key, unit_marker_key
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import (

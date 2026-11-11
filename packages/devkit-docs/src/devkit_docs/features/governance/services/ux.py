@@ -36,9 +36,9 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import locate
 
 from devkit_docs.features.documents import Document, DocumentIndex, Kind, kind_of, visible_lines
+from devkit_docs.features.documents.models.markdown import body_start
 from devkit_docs.features.governance.services.documents import is_material
 
 ELEMENTS = ("screen", "modal", "panel")
@@ -217,18 +217,13 @@ class Model:
         return screen.element if screen is not None else None
 
 
-def _body(text: str) -> tuple[int, int]:
-    """The offset and first line number of the body after the frontmatter."""
-    try:
-        block = locate(text)
-    except FrontmatterError:
-        return 0, 1
-    return (block.end, block.body_line) if block is not None else (0, 1)
-
-
 def _lines(text: str) -> Iterator[tuple[int, str]]:
-    """``(number, raw text)`` of each prose line of the body: code blocks and comments are skipped."""
-    start, first = _body(text)
+    """``(number, raw text)`` of each prose line of the body (the whole text after an unclosed frontmatter): code
+    blocks and comments are skipped."""
+    try:
+        start, first = body_start(text)
+    except FrontmatterError:
+        start, first = 0, 1
     for line in visible_lines(text, start=start, first_line=first, mask_links=False, keep_id_spans=True):
         yield line.number, text[line.offset : line.offset + len(line.text)]
 

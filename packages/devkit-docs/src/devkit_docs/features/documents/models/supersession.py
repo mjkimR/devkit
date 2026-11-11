@@ -6,10 +6,9 @@ import re
 from dataclasses import dataclass
 
 from devkit_agt.features.rules.models.markdown import LineKind, scan
-from devkit_core.core.frontmatter import locate
 
 from devkit_docs.features.documents.models.ids import ID_SOURCE
-from devkit_docs.features.documents.models.markdown import visible_lines
+from devkit_docs.features.documents.models.markdown import body_start, visible_lines
 
 _START = re.compile(
     rf"^\s*(?:[-+*]\s+|\d+[.)]\s+)?Supersede(?P<pointer>d in part by|s in part) `(?P<id>{ID_SOURCE})`(?P<colon>:)?"
@@ -31,9 +30,7 @@ def replacement_texts(source: str) -> list[ReplacementText]:
     """Read starts from masked prose and payloads from source, bounded by paragraph/item/heading ends."""
     # Lines split on "\n" only, as the scanner does, so raw and visible line numbers agree.
     raw = [line.removesuffix("\r") for line in source.split("\n")]
-    block = locate(source)
-    start = block.end if block is not None else 0
-    first_line = source[:start].count("\n") + 1
+    start, first_line = body_start(source)
     visible = {line.number: line.text for line in visible_lines(source, start=start, first_line=first_line)}
     comments = {
         line.number for line in scan(source, start=start, first_line=first_line) if line.kind is LineKind.COMMENT

@@ -84,8 +84,6 @@ class CliContractRule(BaseRule):
                             column=citation.column,
                             message=problem,
                             remediation=REMEDIATION,
-                            severity=self.severity,
-                            phase=self.phase,
                         )
                     )
         return violations

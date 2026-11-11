@@ -579,3 +579,34 @@ def test_status_plans_only_subagents_and_still_finds_a_policy_change(tmp_path: P
     update_config(target, presets={"team": ["guide"]})
     sync_project(target, [item])
     assert get_project_status(target, [item]).errors == []  # an unselected subagent is not planned
+
+
+def test_planned_subagent_changes_compare_canonical_inputs_with_the_receipt(tmp_path: Path) -> None:
+    from devkit_dist.features.distribution.services.installation.config import read_config
+    from devkit_dist.features.distribution.services.installation.receipt import read_receipt
+    from devkit_dist.features.distribution.usecases.sync import planned_subagent_changes
+
+    item = make_bundle(tmp_path, "team", CONTRACT.replace("Return", "Answer in {{ vars.language }}. Return"))
+    source = item.bundle.root / "subagents/reviewer.md"
+    source.rename(source.with_suffix(".md.jinja"))
+    manifest = item.bundle.root / "bundle.toml"
+    manifest.write_text(
+        manifest.read_text().replace("reviewer.md", "reviewer.md.jinja")
+        + '[variables.language]\ntype = "string"\ndefault = "English"\n'
+    )
+    item = InstalledBundle("team-content", "0.1.0", load_bundle(item.bundle.root))
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    sync_project(target, [item])
+    receipt = read_receipt(target)
+    assert receipt is not None
+    assert planned_subagent_changes(target, [item], read_config(target, effective=False), receipt) == []
+    # A personal value never makes the canonical projection the receipt records differ.
+    (target / ".devkit/config.local.toml").write_text('[bundles.team.variables]\nlanguage = "Korean"\n')
+    assert planned_subagent_changes(target, [item], read_config(target, effective=False), receipt) == []
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[bundles.team.variables]\nlanguage = "German"\n')
+    assert planned_subagent_changes(target, [item], read_config(target, effective=False), receipt) == [
+        ".codex/agents/reviewer.toml"
+    ]

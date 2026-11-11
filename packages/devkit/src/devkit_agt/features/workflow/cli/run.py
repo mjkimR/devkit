@@ -5,7 +5,7 @@ from __future__ import annotations
 import click
 from devkit_dist.adapters.cli import FORMAT_OPTION, Reported, boundary, echo_json, is_json
 
-from devkit_agt.features.workflow.cli.app import ANCHOR, NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
+from devkit_agt.features.workflow.cli.app import ANCHOR, GIVEN, NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
 from devkit_agt.features.workflow.cli.render import render_evaluation, render_requests
 from devkit_agt.features.workflow.models.decisions import ACTIONS
 from devkit_agt.features.workflow.usecases.answers import RecordAnswerUseCase, ReturnToStageUseCase
@@ -17,7 +17,7 @@ from devkit_agt.features.workflow.usecases.operations import EvaluateUnitUseCase
 @UNIT
 @ANCHOR
 @click.option("--workflow", "workflow_ref", default=None, help="Evaluate against this workflow instead of the binding")
-@click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
+@GIVEN
 @click.option(
     "--view",
     type=click.Choice(["next", "requests"]),
@@ -74,7 +74,7 @@ def next_cmd(
 @click.option("--value", "values", multiple=True, help="Chosen option id (choose) or the text (feedback)")
 @click.option("--note", default="", help="Free-text note, recommended on decline")
 @click.option("--by", "by", default="", help="Who answered (person or host)")
-@click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
+@GIVEN
 @NO_LINT
 @FORMAT_OPTION
 @boundary
@@ -117,7 +117,7 @@ def answer_cmd(
 @click.option("--to", "stage", required=True, help="Stage the unit goes back to (the current one or an earlier one)")
 @click.option("--note", default="", help="Why the unit goes back")
 @click.option("--by", "by", default="", help="Who decided (person or host)")
-@click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
+@GIVEN
 @NO_LINT
 @FORMAT_OPTION
 @boundary
@@ -157,7 +157,7 @@ def return_cmd(
     "--date", "when", default=None, help="Completion date recorded in the history, YYYY-MM-DD (default: today)"
 )
 @click.option("--by", "by", default="", help="Who chose the candidate given with --workflow")
-@click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
+@GIVEN
 @NO_LINT
 @FORMAT_OPTION
 @boundary

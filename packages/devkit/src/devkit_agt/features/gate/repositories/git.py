@@ -27,18 +27,6 @@ def common_git_dir(cwd: Path) -> Path:
     return _path(cwd, "rev-parse", "--path-format=absolute", "--git-common-dir")
 
 
-def config_value(cwd: Path, key: str) -> str | None:
-    """The effective value of a Git config key, or ``None`` when it is unset."""
-    try:
-        output = run_git(cwd, "config", "--get", key)
-    except GitError as exc:
-        if exc.returncode == 1:  # the key is not set
-            return None
-        raise
-    value = os.fsdecode(output).strip()
-    return value or None
-
-
 def config_scope(cwd: Path, key: str) -> str | None:
     """The scope (``local``, ``worktree``, ``global``, ``system``, ``command``) of a key's effective value."""
     try:

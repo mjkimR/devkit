@@ -69,11 +69,10 @@ feature_dependencies.workflow = ["devkit_agt.features.rules", "devkit_dist.featu
 feature_dependencies.gate = ["devkit_agt.features.compact", "devkit_agt.features.rules", "devkit_dist.features.project"]
 feature_dependencies.isolated_execution = ["devkit_agt.features.worktree", "devkit_dist.features.project"]
 feature_dependencies.worktree = ["devkit_dist.features.project"]
-feature_dependencies.integration = ["devkit_agt.features.worktree", "devkit_agt.features.rules", "devkit_agt.features.generated", "devkit_dist.features.project"]
+feature_dependencies.integration = ["devkit_agt.features.worktree", "devkit_agt.features.generated", "devkit_dist.features.project"]
 feature_dependencies.generated = ["devkit_agt.features.compact", "devkit_dist.features.project"]
 feature_dependencies.compact = ["devkit_dist.features.project"]
-feature_dependencies.maintenance_history = ["devkit_agt.features.rules", "devkit_dist.features.project"]
-root_modules = ["bootstrap"]
+feature_dependencies.maintenance_history = ["devkit_agt.features.rules", "devkit_agt.features.worktree", "devkit_dist.features.project"]
 data_roots = ["bundles"]
 embedded_test_roots = ["features/rules/services/builtins"]
 dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
@@ -89,10 +88,9 @@ public_modules = [
     "devkit_agt.features.workflow.repositories.git",
 
     "devkit_agt.features.rules.models.settings",
-    "devkit_agt.features.worktree.repositories.pull_request",
     "devkit_agt.features.worktree.models.lifecycle",
     "devkit_agt.features.worktree.models.planning",
-    "devkit_agt.features.worktree.models.pull_request",
+    "devkit_agt.features.worktree.repositories.gh",
 ]
 
 [[packages]]

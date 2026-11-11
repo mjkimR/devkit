@@ -8,14 +8,18 @@ come from the shared scanner (``devkit_agt.features.rules.scan``):
   blanked (a line wholly inside one is yielded blank);
 - on top of that, backslash escapes, inline code spans (a backtick run closed
   by the next run of the same length) and ``~~strikethrough~~`` are blanked;
-  a span may continue on the following lines of its paragraph (it ends at a
-  blank line or a fence), and an opener that nothing closes is a literal;
+  a span may continue on the following lines of its paragraph (it ends where
+  the shared scanner ends one: a blank line, a fence, a list item, an ATX
+  heading or an HTML block; ``closes_later``), and an opener that nothing
+  closes is a literal;
 - with ``mask_links``, a link or image label (``[label](...)``, ``[label][ref]``,
   ``[label]:`` and ``![alt]``) is blanked, so a link's text never counts as a
   bracket reference;
 - with ``keep_id_spans``, a single-backtick code span holding exactly one
   document ID stays visible: `` `CAP-...` `` is how prose references a
   document.
+
+``body_start`` is where the body of a document text starts, after its frontmatter block.
 """
 
 from __future__ import annotations
@@ -25,7 +29,8 @@ import re
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
-from devkit_agt.features.rules.models.markdown import LineKind, scan
+from devkit_agt.features.rules.models.markdown import LineKind, closes_later, closing_run, scan
+from devkit_core.core.frontmatter import locate
 
 from devkit_docs.features.documents.models.ids import is_id
 
@@ -40,20 +45,13 @@ class VisibleLine:
     text: str
 
 
-def _closing_run(line: str, start: int, char: str, width: int) -> int:
-    """Index of the next run of exactly ``width`` ``char`` characters at or after ``start``, else ``-1``."""
-    index = start
-    while index < len(line):
-        if line[index] != char:
-            index += 1
-            continue
-        end = index
-        while end < len(line) and line[end] == char:
-            end += 1
-        if end - index == width:
-            return index
-        index = end
-    return -1
+def body_start(text: str) -> tuple[int, int]:
+    """The offset and the 1-based line number of the body of ``text``: after its frontmatter block, else ``(0, 1)``.
+
+    Raises ``FrontmatterError`` when the text opens a block that never closes; each caller decides what that means.
+    """
+    block = locate(text)
+    return (block.end, block.body_line) if block is not None else (0, 1)
 
 
 # A line without any of these characters is all prose.
@@ -80,7 +78,7 @@ class _Masker:
         index, size = 0, len(line)
         if self.span is not None:
             char, width = self.span
-            close = _closing_run(line, 0, char, width)
+            close = closing_run(line, 0, char, width)
             if close < 0:
                 return " " * size
             blank(0, close + width)
@@ -100,9 +98,9 @@ class _Masker:
                 while run_end < size and line[run_end] == "`":
                     run_end += 1
                 width = run_end - index
-                close = _closing_run(line, run_end, "`", width)
+                close = closing_run(line, run_end, "`", width)
                 if close < 0:
-                    if _closes_later(following, "`", width):
+                    if closes_later(following, "`", width):
                         blank(index, size)
                         self.span = ("`", width)
                         break
@@ -117,9 +115,9 @@ class _Masker:
                 run_end = index
                 while run_end < size and line[run_end] == "~":
                     run_end += 1
-                close = _closing_run(line, run_end, "~", 2) if run_end - index == 2 else -1
+                close = closing_run(line, run_end, "~", 2) if run_end - index == 2 else -1
                 if close < 0:
-                    if run_end - index == 2 and _closes_later(following, "~", 2):
+                    if run_end - index == 2 and closes_later(following, "~", 2):
                         blank(index, size)
                         self.span = ("~", 2)
                         break
@@ -136,22 +134,6 @@ class _Masker:
                         blank(index, end + 1)
             index += 1
         return "".join(out)
-
-
-def _closes_later(following: Iterable[str], char: str, width: int) -> bool:
-    """Whether a run of exactly ``width`` ``char`` appears on the following lines before the paragraph ends.
-
-    A blank line ends the paragraph, and so does a fence opener (a ``~~~`` or a backtick fence indented at most three
-    spaces), which interrupts a paragraph.
-    """
-    for line in following:
-        stripped = line.strip()
-        indent = len(line) - len(line.lstrip(" "))
-        if not stripped or (indent <= 3 and stripped.startswith(("```", "~~~"))):
-            return False
-        if _closing_run(line, 0, char, width) >= 0:
-            return True
-    return False
 
 
 def visible_lines(

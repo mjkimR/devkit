@@ -13,7 +13,7 @@ from spec_support.proposals import TODAY, accept, spec_dir
 from spec_support.types import Write
 
 from devkit_spec.base.errors import ProposalInvalidError
-from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase, create_spec, handoff_proposal
 
 CONFIG = '[[tool.docs.namespaces]]\nname = "api"\npath = "services/api"\n'
 
@@ -26,12 +26,12 @@ def _meta(path: Path) -> dict[str, object]:
 
 def test_proposal_and_spec_record_the_namespace(workspace: Path, write: Write) -> None:
     write(".devkit/config.toml", CONFIG)
-    proposal = workspace / create_proposal(workspace, "a", namespace="api", today=TODAY).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "a", namespace="api", today=TODAY).path
     assert "target_area: capabilities/<area>/\nnamespace: api\npriority: high" in proposal.read_text()
-    assert _meta(workspace / create_proposal(workspace, "b", namespace="global", today=TODAY).path)["namespace"] == (
-        "global"
-    )
-    assert "namespace" not in _meta(workspace / create_proposal(workspace, "c", today=TODAY).path)
+    assert _meta(workspace / CreateProposalUseCase().execute(workspace, "b", namespace="global", today=TODAY).path)[
+        "namespace"
+    ] == ("global")
+    assert "namespace" not in _meta(workspace / CreateProposalUseCase().execute(workspace, "c", today=TODAY).path)
 
     spec = spec_dir(workspace, "d") / "spec.md"
     create_spec(workspace, "d", namespace="api", day=TODAY)
@@ -43,7 +43,7 @@ def test_proposal_and_spec_record_the_namespace(workspace: Path, write: Write) -
 
 def test_unknown_namespace_is_an_argument_error(workspace: Path, write: Write) -> None:
     with pytest.raises(ArgumentError) as raised:
-        create_proposal(workspace, "a", namespace="api", today=TODAY)
+        CreateProposalUseCase().execute(workspace, "a", namespace="api", today=TODAY)
     assert str(raised.value.advisory.fix).startswith("Pass one of global (registered in")
     write(".devkit/config.toml", CONFIG)
     with pytest.raises(ArgumentError) as raised:
@@ -76,12 +76,12 @@ def test_cli_namespace_option(workspace: Path, write: Write) -> None:
 
 def test_handoff_carries_the_namespace(workspace: Path, write: Write) -> None:
     write(".devkit/config.toml", CONFIG)
-    proposal = workspace / create_proposal(workspace, "a", namespace="api", today=TODAY).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "a", namespace="api", today=TODAY).path
     accept(proposal)
     handoff_proposal(workspace, "a", today=TODAY)
     assert _meta(spec_dir(workspace, "a") / "spec.md")["namespace"] == "api"
 
-    plain = workspace / create_proposal(workspace, "b", today=TODAY).path
+    plain = workspace / CreateProposalUseCase().execute(workspace, "b", today=TODAY).path
     accept(plain)
     handoff_proposal(workspace, "b", today=TODAY)
     assert "namespace" not in _meta(spec_dir(workspace, "b") / "spec.md")
@@ -90,7 +90,7 @@ def test_handoff_carries_the_namespace(workspace: Path, write: Write) -> None:
 @pytest.mark.parametrize("value", ["web", "3", "[api]"])
 def test_handoff_refuses_an_unknown_namespace(workspace: Path, write: Write, value: str) -> None:
     write(".devkit/config.toml", CONFIG)
-    proposal = workspace / create_proposal(workspace, "a", today=TODAY).path
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "a", today=TODAY).path
     accept(proposal, f"\nnamespace: {value}")
     with pytest.raises(ProposalInvalidError) as raised:
         handoff_proposal(workspace, "a", today=TODAY)

@@ -215,11 +215,6 @@ class RegisterScopeUseCase(BaseUseCase):
         return Registered(location, stored, token, notices)
 
 
-def register(session: Session, spec_dir: str, task_id: str | None = None, *, source: str = "") -> Registered:
-    """Register scope for an internal composite operation."""
-    return RegisterScopeUseCase().execute(session, spec_dir, task_id, source=source)
-
-
 def _rollback(registry: Registry, stored: Record, token: str) -> list[str]:
     """Release the record just registered, under its own deadline; the failure as a detail line, if any."""
     try:
@@ -237,7 +232,7 @@ def auto_register(root: Path, spec_dir: str, *, source: str) -> Registered | Non
         session = open_session(root)
         if not session.location.linked:
             return None
-        registered = register(session, spec_dir, source=source)
+        registered = RegisterScopeUseCase().execute(session, spec_dir, source=source)
         for notice in registered.notices:
             _automatic_diagnostic(notice.code)
         registered.notices = []
@@ -488,11 +483,6 @@ class UpdateScopeUseCase(BaseUseCase):
         return ack
 
 
-def update(session: Session, spec_dir: str, request_id: str | None = None, *, source: str = "") -> Ack:
-    """Update scope for an internal composite operation."""
-    return UpdateScopeUseCase().execute(session, spec_dir, request_id, source=source)
-
-
 # --- release ------------------------------------------------------------------------------------------------------
 
 
@@ -545,8 +535,3 @@ class ReleaseScopeUseCase(BaseUseCase):
         remove_token(location.token_path)
         notices = journal(registry, location.namespace, [record_event(EventKind.RELEASE, target, source)])
         return Released(target.task_id, target.revision, registered=True, already=False, notices=notices)
-
-
-def release(session: Session, task_id: str | None = None, *, source: str = "") -> Released:
-    """Release scope for an internal composite operation."""
-    return ReleaseScopeUseCase().execute(session, task_id, source=source)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -10,8 +9,8 @@ from pathlib import Path
 from typing import Any
 
 from devkit_dist.features.host.models.errors import HookDefinitionError
+from devkit_dist.features.project import SLUG
 
-NAME = re.compile(r"[a-z][a-z0-9-]*\Z")
 SUPPORTED_HOSTS = ("codex",)  # host adapters with a hook configuration writer
 
 
@@ -55,7 +54,7 @@ def parse_hook(raw: bytes, target: str) -> HookDefinition:
         )
     if any(not isinstance(data[key], str) or not data[key] for key in required):
         raise HookDefinitionError("host, event and handler must be nonempty strings", target_files=[target])
-    if not NAME.fullmatch(data["host"]) or not NAME.fullmatch(data["handler"]):
+    if not SLUG.fullmatch(data["host"]) or not SLUG.fullmatch(data["handler"]):
         raise HookDefinitionError("host and handler must be lowercase slugs", target_files=[target])
     matcher, timeout = data.get("matcher", ""), data.get("timeout", 10)
     if not isinstance(matcher, str) or type(timeout) is not int or not 1 <= timeout <= 600:

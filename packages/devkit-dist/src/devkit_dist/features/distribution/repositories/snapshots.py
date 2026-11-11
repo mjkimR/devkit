@@ -5,13 +5,14 @@ from __future__ import annotations
 import fcntl
 import os
 import shutil
-import subprocess
 import tempfile
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
 
-from devkit_dist.features.distribution.models.content import Content, normal_mode
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
+from devkit_dist.features.distribution.models.content import Content, is_by_product, normal_mode
 from devkit_dist.features.distribution.models.snapshots import (
     SnapshotConflictError,
     SnapshotInvalidError,
@@ -46,7 +47,7 @@ def read_tree(root: Path) -> dict[str, Content]:
     try:
         for entry in sorted(root.rglob("*")):
             rel = entry.relative_to(root)
-            if "__pycache__" in rel.parts or entry.name.endswith(".pyc") or ".DS_Store" in rel.parts:
+            if is_by_product(rel):
                 continue
             if entry.is_symlink() or not (entry.is_file() or entry.is_dir()):
                 raise SnapshotInvalidError(f"nonregular snapshot source: {rel.as_posix()}")
@@ -58,30 +59,28 @@ def read_tree(root: Path) -> dict[str, Content]:
 
 
 def source_commit(root: Path, originals: Mapping[Path, Content]) -> str | None:
-    """Return HEAD only when every copied input's bytes/mode matches its committed blob."""
+    """Return HEAD only when every copied input's bytes/mode matches its committed blob.
 
-    def git(*args: str) -> subprocess.CompletedProcess[bytes]:
-        return subprocess.run(["git", "-C", str(root), *args], capture_output=True, timeout=10, check=False)
+    ``None`` when the source is not in a Git repository or a Git command fails or runs past 10 seconds.
+    """
+
+    def git(*args: str) -> bytes:
+        return run_git(root, *args, timeout=10)
 
     try:
-        top, head = git("rev-parse", "--show-toplevel"), git("rev-parse", "HEAD")
-        if top.returncode or head.returncode:
-            return None
-        repository = Path(top.stdout.decode().strip())
-        captured_head = head.stdout.decode().strip()
+        repository = Path(git("rev-parse", "--show-toplevel").decode().strip())
+        captured_head = git("rev-parse", "HEAD").decode().strip()
         for path, content in originals.items():
             rel = path.relative_to(repository).as_posix()
-            indexed = git("ls-tree", captured_head, "--", rel)
-            fields = indexed.stdout.split(b"\t", 1)[0].split()
-            if indexed.returncode or len(fields) != 3 or fields[1] != b"blob":
+            fields = git("ls-tree", captured_head, "--", rel).split(b"\t", 1)[0].split()
+            if len(fields) != 3 or fields[1] != b"blob":
                 return None
-            blob = git("cat-file", "blob", fields[2].decode())
-            if blob.returncode or blob.stdout != content.data:
+            if git("cat-file", "blob", fields[2].decode()) != content.data:
                 return None
             if (fields[0] == b"100755") != (content.mode == 0o755):
                 return None
         return captured_head
-    except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired):
+    except (GitError, OSError, ValueError, UnicodeError):
         return None
 
 

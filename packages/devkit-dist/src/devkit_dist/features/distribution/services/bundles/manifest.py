@@ -12,9 +12,9 @@ from devkit_core.base.errors import UnsafePathError
 from devkit_core.core.paths import normalize_relpath
 from devkit_core.core.plugins import PluginPackage, check_plugin_modules
 
-from devkit_dist.features.distribution.models.content import normal_mode
+from devkit_dist.features.distribution.models.content import is_by_product, normal_mode
 from devkit_dist.features.distribution.models.errors import BundleError, SelectionError
-from devkit_dist.features.distribution.models.settings import AGENT_NAMES, SLUG
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES, PROTECTED_ROOTS, SLUG
 from devkit_dist.features.distribution.services.bundles.common import (
     ALL,
     SHARED_SKILL_AGENTS,
@@ -57,14 +57,8 @@ PLUGIN_KINDS = frozenset({"rule", "gate"})
 VARIANT_KINDS = frozenset({"skill", "subagent"})
 # The entry skills ``devkit sync`` generates next to synchronized playbooks and workflows.
 RESERVED_SKILL_IDS = frozenset({"devkit-playbook", "devkit-workflow"})
-# Workspace roots a seeded target may never enter: devkit's own state, Git, agent projections
-# and the root guidance file are owned by devkit, the host or the project in other ways.
-# Compared case-insensitively: on a case-insensitive file system ``.GIT`` is ``.git``.
-SEED_FORBIDDEN_ROOTS = frozenset({".devkit", ".git", ".agents", ".claude", ".codex"})
+# Besides ``PROTECTED_ROOTS``, the root guidance file a seeded target may never be: devkit owns its block.
 SEED_FORBIDDEN_FILES = frozenset({"agents.md"})
-# By-products of editing a source in place (Finder metadata, bytecode caches); never bundle content.
-IGNORED_NAMES = frozenset({".DS_Store", "__pycache__"})
-IGNORED_SUFFIXES = (".pyc",)
 
 
 @dataclass(frozen=True)
@@ -210,7 +204,7 @@ def seed_target(value: Any, context: str) -> str:
         raise BundleError(f"{context}: target: expected a relative POSIX path")
     rel = _authoring_path(value, f"{context}: unsafe target path: {value}")
     if (
-        rel.parts[0].casefold() in SEED_FORBIDDEN_ROOTS
+        rel.parts[0].casefold() in PROTECTED_ROOTS
         or value.casefold() in SEED_FORBIDDEN_FILES
         # A nested repository's ``.git`` (hooks, config) is as much Git's as the workspace's own.
         or any(part.casefold() == ".git" for part in rel.parts)
@@ -219,17 +213,12 @@ def seed_target(value: Any, context: str) -> str:
     return value
 
 
-def _ignored(path: Path, base: Path) -> bool:
-    parts = path.relative_to(base).parts
-    return any(part in IGNORED_NAMES for part in parts) or path.name.endswith(IGNORED_SUFFIXES)
-
-
 def source_files(root: Path, source: str) -> list[Path]:
-    """Every file of a source, sorted; editing by-products (``IGNORED_NAMES``, ``*.pyc``) are skipped."""
+    """Every file of a source, sorted; editing by-products (``is_by_product``) are skipped."""
     path = safe_source(root, source)
     files = []
     for entry in sorted(path.rglob("*")) if path.is_dir() else [path]:
-        if path.is_dir() and _ignored(entry, path):
+        if path.is_dir() and is_by_product(entry.relative_to(path)):
             continue
         if entry.is_symlink() or not (entry.is_dir() or entry.is_file()):
             raise BundleError(f"nonregular source: {entry.relative_to(root)}")

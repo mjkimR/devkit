@@ -18,7 +18,7 @@ from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import locate, read_worktree_config
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import GitError, run_git, run_git_text
+from devkit_core.core import GitError, dirty_paths, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.configuration import (
@@ -27,8 +27,9 @@ from devkit_dist.features.project.usecases.configuration import (
     resolve_execution_environment,
 )
 from devkit_dist.features.project.usecases.invocation import guard_execution
+from devkit_docs.base.layout import DEV_EFFORT, EFFORTS
 
-from devkit_spec.base.axes import DEFAULT_EFFORT, DEV_EFFORT, EFFORTS, PROPOSAL_WORKFLOW
+from devkit_spec.base.axes import DEFAULT_EFFORT, PROPOSAL_WORKFLOW
 from devkit_spec.base.errors import (
     ProposalAcceptanceUnrecordedError,
     ProposalAcceptCommitRefusedError,
@@ -44,7 +45,7 @@ from devkit_spec.base.errors import (
 from devkit_spec.base.units import proposal_unit
 from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.usecases.approvals import approval_policy
-from devkit_spec.features.proposals import accept_proposal
+from devkit_spec.features.proposals import AcceptProposalUseCase
 from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
@@ -264,7 +265,7 @@ class _Acceptance:
             raise ProposalInvalidError(
                 f"{self.unit}/proposal.md has no status line to change", target_files=[f"{self.unit}/proposal.md"]
             ) from exc
-        accepted = accept_proposal(self.source, self.slug, by=self.actor)
+        accepted = AcceptProposalUseCase().execute(self.source, self.slug, by=self.actor)
         self.completed.append("acceptance_record")
         if accepted.decision is None:
             raise ProposalApprovalStaleError("acceptance did not produce an authority gate record")
@@ -302,7 +303,7 @@ class _Acceptance:
             run_git_text(self.source, "rev-list", "--parents", "-n", "1", head).split() != [head, previous]
             or set(run_git_text(self.source, "diff", "--name-only", previous, head).splitlines()) != set(expected)
             or any(run_git(self.source, "show", f"{head}:{path}") != data for path, data in expected.items())
-            or run_git_text(self.source, "status", "--porcelain", "--untracked-files=normal")
+            or dirty_paths(self.source, untracked="normal", optional_locks=True)
         ):
             raise ProposalApprovalStaleError("committed acceptance differs from the exact service-created delta")
         return head

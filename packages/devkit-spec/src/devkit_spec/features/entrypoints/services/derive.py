@@ -18,13 +18,8 @@ from pathlib import Path
 
 from devkit_docs.base.errors import EntrypointsPathError
 from devkit_docs.features.documents import Document
-from devkit_docs.features.governance.services.entrypoint_paths import (
-    ROOT,
-    covers,
-    entrypoint_bearing,
-    exists,
-    normalize,
-)
+from devkit_docs.features.governance.services.entrypoint_paths import ROOT, entrypoint_bearing, exists
+from devkit_docs.utils.paths import covers, normalize
 
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
 from devkit_spec.features.entrypoints.repositories.bundle import Bundle

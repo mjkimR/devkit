@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit_core.core import GitError, run_git_text
+from devkit_core.core.git import git_config
 
 # Recorded on every branch ``start`` creates or attaches; only a marked branch is deleted without its worktree, so
 # ``finish`` never deletes an ordinary branch that happens to share the name.
@@ -27,9 +27,4 @@ def branch_marker(root: Path, branch: str, key: str = MARKER) -> str:
 
     Any Git failure other than an unset key (exit ``1``) raises ``GitError``.
     """
-    try:
-        return run_git_text(root, "config", "--local", "--get", marker_key(branch, key))
-    except GitError as exc:
-        if exc.returncode == 1:
-            return ""
-        raise
+    return git_config(root, marker_key(branch, key), local=True) or ""

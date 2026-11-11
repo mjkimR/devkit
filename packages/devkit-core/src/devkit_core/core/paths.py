@@ -13,12 +13,15 @@ root. ``normalize_relpath`` is the single validator for them:
   drive (``C:``) is rejected, so a recorded value never reads as an escape;
 - redundant separators and ``.`` segments are normalized away (``a//./b`` is
   ``a/b``); ``canonical=True`` rejects such values instead.
+
+``display_path`` is the one way a path is shown to a reader: relative to a root when it lies inside it.
 """
 
 from __future__ import annotations
 
 import re
 from pathlib import Path, PurePosixPath
+from typing import overload
 
 from devkit_core.base.errors import UnsafePathError
 
@@ -83,3 +86,23 @@ def resolve_within(root: Path, rel: str | PurePosixPath) -> Path:
     if not resolved.is_relative_to(base):
         raise UnsafePathError(f"path resolves outside {base}: {relative}")
     return resolved
+
+
+@overload
+def display_path(path: Path, root: Path | None) -> str: ...
+@overload
+def display_path(path: None, root: Path | None) -> None: ...
+@overload
+def display_path(path: Path | None, root: Path | None) -> str | None: ...
+def display_path(path: Path | None, root: Path | None) -> str | None:
+    """``path`` as a message shows it: relative to ``root`` in POSIX form when it lies inside it (``.`` for ``root``
+    itself), else ``path.as_posix()``; ``None`` for no path.
+
+    The comparison is lexical (``Path.is_relative_to``): neither path is resolved, so a caller that compares resolved
+    paths resolves both first. Without a ``root`` every path is shown whole.
+    """
+    if path is None:
+        return None
+    if root is not None and path.is_relative_to(root):
+        return path.relative_to(root).as_posix()
+    return path.as_posix()

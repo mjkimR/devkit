@@ -29,6 +29,7 @@ ANCHOR = click.option(
     help="Anchor file that identifies the unit, when its directory holds several (ANCHOR_AMBIGUOUS)",
 )
 NO_LINT = click.option("--no-lint", is_flag=True, help="Skip lint-class checks")
+GIVEN = click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
 
 
 # ``Context.meta`` key of the arguments the ``workflow`` group was invoked with (``_WorkflowGroup``).

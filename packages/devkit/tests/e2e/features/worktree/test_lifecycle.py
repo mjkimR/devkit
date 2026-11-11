@@ -231,14 +231,14 @@ def test_a_branch_created_while_start_runs_is_left_alone(repo: Path, monkeypatch
     git(repo, "checkout", "-q", "-b", "elsewhere")
     commit(repo, "theirs.txt")
     git(repo, "checkout", "-q", "main")
-    session = lifecycle._git_session
+    session = lifecycle.run_git
 
     def racing(cwd: Path, *args: str, **options: Any) -> bytes:
         if args[:2] == ("worktree", "add"):
             git(repo, "branch", "dev-demo", "elsewhere")  # another process takes the name after start checked it
         return session(cwd, *args, **options)
 
-    monkeypatch.setattr(lifecycle, "_git_session", racing)
+    monkeypatch.setattr(lifecycle, "run_git", racing)
     with pytest.raises(BranchExistsError, match="created while start ran"):
         start(locate(repo), "dev-demo")
     assert git(repo, "rev-parse", "dev-demo") == git(repo, "rev-parse", "elsewhere")
@@ -247,14 +247,14 @@ def test_a_branch_created_while_start_runs_is_left_alone(repo: Path, monkeypatch
 
 def test_a_path_created_while_start_runs_is_left_alone(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = repo.parent / "repo-wt-dev-demo"
-    session = lifecycle._git_session
+    session = lifecycle.run_git
 
     def racing(cwd: Path, *args: str, **options: Any) -> bytes:
         if args[:2] == ("worktree", "add"):
             write(path, "theirs.txt", "theirs\n")  # another process fills the path after start checked it
         return session(cwd, *args, **options)
 
-    monkeypatch.setattr(lifecycle, "_git_session", racing)
+    monkeypatch.setattr(lifecycle, "run_git", racing)
     with pytest.raises(ConflictError, match="created while start ran"):
         start(locate(repo), "dev-demo")
     assert (path / "theirs.txt").read_text() == "theirs\n"
@@ -273,14 +273,14 @@ def test_what_a_failed_worktree_add_cannot_remove_is_named_with_its_command(
     repo: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _hook(repo, "post-checkout", "exit 1\n")
-    session = lifecycle._git_session
+    session = lifecycle.run_git
 
     def no_removal(cwd: Path, *args: str, **options: Any) -> bytes:
         if args[:2] == ("worktree", "remove"):
             raise GitError("git worktree failed", returncode=128, stderr="fatal: cannot remove")
         return session(cwd, *args, **options)
 
-    monkeypatch.setattr(lifecycle, "_git_session", no_removal)
+    monkeypatch.setattr(lifecycle, "run_git", no_removal)
     with pytest.raises(AddFailedError) as raised:
         start(locate(repo), "dev-demo")
     path = repo.parent / "repo-wt-dev-demo"
@@ -297,17 +297,17 @@ def test_what_a_failed_worktree_add_cannot_remove_is_named_with_its_command(
 def test_a_timed_out_removal_names_the_half_removed_worktree(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     created = start(locate(repo), "dev-demo")
     git(repo, "merge", "-q", "--ff-only", "dev-demo")
-    session = lifecycle._git_session
+    session = lifecycle.run_git
 
     def timing_out(cwd: Path, *args: str, **options: Any) -> bytes:
         if args[:2] == ("worktree", "remove"):
-            assert options["timeout"] == lifecycle.CHECKOUT_TIMEOUT
+            assert options["timeout"] == lifecycle.CHECKOUT_TIMEOUT and options["new_session"]
             raise GitError("git worktree timed out after 1800.0s in somewhere") from subprocess.TimeoutExpired(
                 ["git"], 1800.0
             )
         return session(cwd, *args, **options)
 
-    monkeypatch.setattr(lifecycle, "_git_session", timing_out)
+    monkeypatch.setattr(lifecycle, "run_git", timing_out)
     with pytest.raises(RemoveFailedError, match="may be partly deleted") as raised:
         finish(locate(repo), "dev-demo")
     assert raised.value.fix == (

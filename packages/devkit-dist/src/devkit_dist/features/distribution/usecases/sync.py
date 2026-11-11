@@ -60,6 +60,7 @@ from devkit_dist.features.distribution.services.installation.inventory import (
 )
 from devkit_dist.features.distribution.services.installation.overrides import (
     Drift,
+    copy_overrides,
     drift_advisory,
     overridden_files,
     record_overridden,
@@ -438,7 +439,7 @@ def planned_guidance_block(
 ) -> str:
     """The guidance block a plain ``devkit sync`` would write now; raises what planning that sync raises."""
     selection = _resolve_selection(installed, config, previous, None, None, ())
-    overrides = {bundle: dict(records) for bundle, records in previous.overrides.items()} if previous else {}
+    overrides = copy_overrides(previous.overrides) if previous else {}
     return _render_block(selection, _plan_inventory(root, installed, selection, overrides))
 
 
@@ -452,8 +453,7 @@ def planned_subagent_changes(
     not change the answer, only its cost.
     """
     selection = _resolve_selection(installed, config, previous, None, None, ())
-    overrides = {bundle: dict(records) for bundle, records in previous.overrides.items()}
-    policy = _subagent_policy(root, installed, selection, effective=False)
+    inputs = _inventory_inputs(root, installed, selection)
     with_subagents = []
     for item in installed:
         if item.bundle.name not in selection.presets:
@@ -461,17 +461,10 @@ def planned_subagent_changes(
         subagents = tuple(asset for asset in item.bundle.assets if asset.kind == "subagent")
         if subagents:
             with_subagents.append(dataclasses.replace(item, bundle=dataclasses.replace(item.bundle, assets=subagents)))
-    inventory = desired_inventory(
-        with_subagents,
-        {item.bundle.name: list(selection.presets[item.bundle.name]) for item in with_subagents},
-        list(selection.agents),
-        root=root,
-        previous_overrides=overrides,
-        variables=read_config(root).variables,
-        subagents=policy,
-        language=resolve_language(root).resolved,
-        environment=read_effective_config(root).values["execution"]["environment"],
+    narrowed = dataclasses.replace(
+        selection, presets={item.bundle.name: selection.presets[item.bundle.name] for item in with_subagents}
     )
+    inventory = _desired(root, with_subagents, narrowed, copy_overrides(previous.overrides), inputs)
     prefixes = tuple(f"{directory}/" for directory in SUBAGENT_DIRS.values())
     names = {name for name in inventory.files if name.startswith(prefixes)}
     names.update(name for name in previous.file_records if name.startswith(prefixes))
@@ -614,7 +607,7 @@ def _carried_overrides(
     installed, or which its bundle no longer has, is kept while files remain
     under its own override path (``record_overridden``).
     """
-    overrides = {bundle: dict(records) for bundle, records in tracked.items()}
+    overrides = copy_overrides(tracked)
     if previous is None:
         return overrides
     bundles = {item.bundle.name: item.bundle for item in installed}
@@ -907,13 +900,19 @@ def _add_command(item: Unselected) -> str:
     return f"{devkit_command('add ' + item.bundle)}  (package {item.package}; presets {presets}; default {item.default_preset or '-'})"
 
 
+def _read_transient(root: Path, name: str) -> object:
+    """The JSON value of the transient record ``name`` (``SEEN_BUNDLES``, ``DEPLOYED``); ``None`` when it is missing
+    or unreadable. Each caller takes only the well-formed parts of the value."""
+    path = checked_path(root, name)
+    try:
+        return json.loads(path.read_text("utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 def _read_seen_bundles(root: Path) -> frozenset[str]:
     """The installed bundles this clone was already told about; a missing or unreadable record means none."""
-    path = checked_path(root, SEEN_BUNDLES)
-    try:
-        data = json.loads(path.read_text("utf-8"))
-    except (OSError, ValueError):
-        return frozenset()
+    data = _read_transient(root, SEEN_BUNDLES)
     names = data.get("bundles") if isinstance(data, dict) else None
     return frozenset(name for name in names if isinstance(name, str)) if isinstance(names, list) else frozenset()
 
@@ -931,11 +930,7 @@ def read_deployed(root: Path) -> dict[str, FileRecord]:
 
     Only paths the receipt may own are taken, so the record can never name a file outside devkit's destinations.
     """
-    path = checked_path(root, DEPLOYED)
-    try:
-        data = json.loads(path.read_text("utf-8"))
-    except (OSError, ValueError):
-        return {}
+    data = _read_transient(root, DEPLOYED)
     files = data.get("files") if isinstance(data, dict) else None
     if not isinstance(files, dict):
         return {}
@@ -951,11 +946,8 @@ def read_deployed(root: Path) -> dict[str, FileRecord]:
 
 def _deployed_personal(root: Path, deployed: Mapping[str, FileRecord], canonical: Mapping[str, FileRecord]) -> set[str]:
     """Personal provenance survives loss of the render ledger; unknown provenance fails closed."""
-    try:
-        data = json.loads(checked_path(root, DEPLOYED).read_bytes())
-        personal = data.get("personal") if isinstance(data, dict) else None
-    except (OSError, ValueError):
-        personal = None
+    data = _read_transient(root, DEPLOYED)
+    personal = data.get("personal") if isinstance(data, dict) else None
     if isinstance(personal, list) and all(isinstance(name, str) for name in personal):
         return set(personal) & deployed.keys()
     return {name for name in canonical if name in deployed and deployed[name] != canonical[name]}
@@ -1114,7 +1106,7 @@ def commit_locked(
     previous = read_receipt(root)
     selection = _resolve_selection(installed, config, previous, agents, presets, deselect)
     auto_selected = _new_auto_selected(installed, config, previous, selection, presets or {})
-    previous_overrides = {b: dict(r) for b, r in previous.overrides.items()} if previous else {}
+    previous_overrides = copy_overrides(previous.overrides) if previous else {}
     if rebaseline is not None:
         previous_overrides.get(rebaseline[0], {}).pop(rebaseline[1], None)
     selected_environment = environment or read_effective_config(root).values["execution"]["environment"]

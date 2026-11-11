@@ -20,7 +20,7 @@ created_at: 2026-10-13
 
 Capabilities and use cases MAY declare `entrypoints` in their frontmatter: the files and directories where their
 implementation starts. An entrypoint is an anchor for finding code from a document and documents from code. devkit-docs owns
-the path contract (`devkit_docs.features.governance.services.entrypoint_paths`), keeps the declarations alive
+the path contract (`devkit_docs.utils.paths` and `devkit_docs.features.governance.services.entrypoint_paths`), keeps the declarations alive
 (`RULE-code-entrypoints`) and finds documents by path (`devkit docs list --file`, `CAP-DOCS-document-lookup`)
 (`ADR-document-system`). devkit-spec proposes declarations from the spec bundles that already name both sides
 (`devkit spec entrypoints derive`); `devkit_spec.features.entrypoints` implements that derivation.
@@ -261,10 +261,10 @@ could not be indexed are `DOCS_DOCUMENT_INVALID` warnings under `notices`.
 
 ### 4.6 Library
 
-`devkit_spec.features.entrypoints`: `normalize`, `covers`, `overlaps`, `exists`, `entrypoint_bearing` (the path contract,
-re-exported from `devkit_docs.features.governance.services.entrypoint_paths`;
-it maps every `docs/packages/<name>/` through `devkit_docs.features.documents.services.namespaces.living_path`, registered or not, so it needs no
-configuration); `load_bundle`, `parse_boundaries` (inputs); `derive`, `aggregate`, `select`, `exclude`,
+The path contract lives in devkit-docs: `normalize`, `covers`, `overlaps` in `devkit_docs.utils.paths`, and `exists`,
+`entrypoint_bearing` in `devkit_docs.features.governance.services.entrypoint_paths` (which
+maps every `docs/packages/<name>/` through `devkit_docs.features.documents.services.namespaces.living_path`, registered or not, so it needs no
+configuration). `devkit_spec.features.entrypoints`: `load_bundle`, `parse_boundaries` (inputs); `derive`, `aggregate`, `select`, `exclude`,
 `classify_boundary`, `declared_entrypoints`, `fold_by_directory_selectors`, `adopt_nested_selectors`,
 `unmatched_selectors` (pairs); `feedback_file` (whether a path
 names a spec bundle's feedback file, `specs/**/feedback/<name>.md`: derivation skips it as `excluded-tree`, and only

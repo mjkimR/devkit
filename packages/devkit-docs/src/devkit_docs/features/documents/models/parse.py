@@ -11,6 +11,9 @@ a heading line ``# ... ID ...`` does not reference the document's own ID.
 (``ADR-document-id-aliases``): a list of full IDs with the document's own
 prefix, never its own ID, never repeated and never a legacy date- or
 number-based form. A malformed item is left out and recorded as an alias issue.
+
+``field_node`` finds the YAML nodes of one top-level frontmatter key, for a reader that needs where a field is
+written (``field_nodes`` all of them).
 """
 
 from __future__ import annotations
@@ -61,10 +64,10 @@ def parse_document(path: str, text: str) -> Document | None:
         return None
     document = Document(id=document_id, path=path, kind=kind, frontmatter=data)
     fields = [name for name in (*LIST_FIELDS, *SCALAR_FIELDS, *PROVENANCE_FIELDS) if name in data]
-    nodes = _field_nodes(block.header) if fields or ALIASES in data else {}
+    nodes = field_nodes(block.header) if fields or ALIASES in data else {}
     line_starts = _line_starts(text) if fields or ALIASES in data else []
     if ALIASES in data:
-        _aliases(document, data[ALIASES], nodes.get(ALIASES), line_starts, header_line)
+        _aliases(document, data[ALIASES], _value(nodes.get(ALIASES)), line_starts, header_line)
     for name in fields:
         if name in {"decomposed_from", "supersedes"} and not is_unit_anchor(document):
             continue
@@ -78,9 +81,11 @@ def parse_document(path: str, text: str) -> Document | None:
         if name == "milestone" and not is_unit_anchor(document):
             document.issues.append(Issue(header_line, "milestone is valid only on proposal/spec anchors"))
             continue
-        refs = _field_references(document, name, data[name], nodes.get(name), line_starts, header_line)
+        refs = _field_references(document, name, data[name], _value(nodes.get(name)), line_starts, header_line)
         (document.provenance if name in PROVENANCE_FIELDS else document.references).extend(refs)
-    document.references.extend(_body_references(document, text, block.end, block.body_line))
+    document.references.extend(
+        body_references(text, path=document.path, source_id=document.id, start=block.end, first_line=block.body_line)
+    )
     return document
 
 
@@ -94,11 +99,30 @@ def _line_starts(text: str) -> list[int]:
     return starts
 
 
-def _field_nodes(header: str) -> dict[str, yaml.Node]:
-    root = safe_compose(header, source="document frontmatter")
+type FieldNode = tuple[yaml.ScalarNode, yaml.Node]
+
+
+def field_nodes(header: str, *, source: str = "document frontmatter") -> dict[str, FieldNode]:
+    """The key and value nodes of each top-level scalar key of the frontmatter ``header``, the first occurrence of a
+    repeated key; empty when the header holds no mapping. Raises ``yaml.YAMLError`` when it does not compose."""
+    root = safe_compose(header, source=source)
     if not isinstance(root, yaml.MappingNode):
         return {}
-    return {key.value: value for key, value in root.value if isinstance(key, yaml.ScalarNode)}
+    found: dict[str, FieldNode] = {}
+    for key, value in root.value:
+        if isinstance(key, yaml.ScalarNode):
+            found.setdefault(key.value, (key, value))
+    return found
+
+
+def field_node(header: str, name: str, *, source: str = "document frontmatter") -> FieldNode | None:
+    """The key and value nodes of the top-level frontmatter key ``name`` (``field_nodes``); ``None`` when absent or
+    when the header holds no mapping. Raises ``yaml.YAMLError`` when the header does not compose."""
+    return field_nodes(header, source=source).get(name)
+
+
+def _value(found: FieldNode | None) -> yaml.Node | None:
+    return found[1] if found is not None else None
 
 
 def _field_references(
@@ -180,21 +204,29 @@ def _alias_problem(document_id: str, prefix: str, item: str, kept: list[str]) ->
     return None
 
 
-def _body_references(document: Document, text: str, start: int, first_line: int) -> list[Reference]:
+def body_references(
+    text: str, *, path: str, source_id: str | None = None, start: int = 0, first_line: int = 1
+) -> list[Reference]:
+    """The prose references of ``text[start:]`` (a document body, its first line numbered ``first_line``) at ``path``.
+
+    `` `ID` `` code spans and ``[ID]`` brackets in prose (``markdown.visible_lines``), in reading order, with offsets
+    into ``text``. ``source_id`` is the referring document's ID (``""`` in each reference without one, as for a README
+    or a material without frontmatter); only when it is given does a heading line ``# ... ID ...`` skip that ID.
+    """
     refs: list[Reference] = []
     for line in visible_lines(text, start=start, first_line=first_line):
-        heading = line.text.lstrip().startswith("# ")
+        heading = source_id is not None and line.text.lstrip().startswith("# ")
         found = [(match, False) for match in _CODE_SPAN_ID.finditer(line.text)]
         found += [(match, True) for match in _BRACKET_ID.finditer(line.text)]
         for match, bracket in sorted(found, key=lambda item: item[0].start()):
             target = match.group(1)
-            if heading and target == document.id:
+            if heading and target == source_id:
                 continue
             refs.append(
                 Reference(
                     target=target,
-                    source=document.id,
-                    path=document.path,
+                    source=source_id or "",
+                    path=path,
                     field=BODY,
                     line=line.number,
                     column=match.start(1) + 1,

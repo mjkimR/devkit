@@ -10,7 +10,7 @@ from pathlib import Path
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVERRIDES_PATH
 
 from devkit_agt.features.rules.models.errors import TargetError
-from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
+from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache, is_pinned
 
 
 def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequence[str | Path]) -> list[str]:
@@ -26,7 +26,6 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
     """
     files: list[str] = []
     seen: set[str] = set()
-    pinned = [workspace_root / directory for directory in (MANAGED_PATH, OVERRIDES_PATH)]
     for target in targets:
         path = Path(target)
         absolute = _on_disk(
@@ -40,9 +39,7 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
                 target_files=[str(target)],
                 fix=f"Drop the argument {target}: rules check only files inside {workspace_root}",
             )
-        if any(
-            absolute.is_relative_to(directory) or absolute.resolve().is_relative_to(directory) for directory in pinned
-        ):
+        if is_pinned(absolute, workspace_root) or is_pinned(absolute.resolve(), workspace_root):
             raise TargetError(
                 f"{target} is a receipt-pinned copy under {MANAGED_PATH}/ or {OVERRIDES_PATH}/, which rules never read",
                 target_files=[str(target)],

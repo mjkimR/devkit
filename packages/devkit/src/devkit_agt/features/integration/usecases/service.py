@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import sys
-import threading
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Protocol
 from uuid import uuid4
@@ -46,6 +44,7 @@ from devkit_agt.features.worktree import (
     fast_forward,
     finish,
     integration_lock,
+    invalid_policy_keys,
     is_ancestor,
     locate,
     merge_method,
@@ -53,6 +52,7 @@ from devkit_agt.features.worktree import (
     pull_request_policy_fix,
     read_worktree_config,
     validate_finish,
+    worktree_policy,
 )
 
 LOCK_WAIT = 20.0  # seconds the approving call waits for another devkit integration
@@ -94,14 +94,13 @@ class _Record:
     # Local builds settle conflicts confined to generated files (``ADR-generated-conflicts-in-prepared-merge``);
     # composed acceptance does not.
     seeds: bool = True
-    lock: threading.Lock = field(default_factory=threading.Lock)
 
 
 class IntegrationService:
     """Trusted application service. No method accepts a caller-supplied approval boolean or serialized authority."""
 
     def __init__(self, root: Path) -> None:
-        from devkit_agt.features.worktree.repositories.pull_request import GitHub
+        from devkit_agt.features.integration.repositories.github import GitHub
 
         self.root = root.resolve()
         self.github = GitHub(self.root)
@@ -120,20 +119,6 @@ class IntegrationService:
         settle_generated: bool = True,
     ) -> IntegrationResult:
         guard_execution()
-        if len(self._records) >= 128:
-            retired = next(
-                (
-                    key
-                    for key, record in self._records.items()
-                    if record.result.status in {"completed", "cancelled", "declined", "not_approved"}
-                ),
-                None,
-            )
-            if retired is None:
-                raise AuthorityError(
-                    "the process already retains 128 pending requests; inspect and finish them before preparing more"
-                )
-            self._records.pop(retired)
         approval_gate = lifecycle.approval_gate if lifecycle is not None else approval_gate
         base_config = read_project_config(self.root)
         approval_policy = providers.approval(base_config, approval_gate)
@@ -159,10 +144,7 @@ class IntegrationService:
         plan = plan_finish(
             position, branch, pull_request=config.pull_request, delete_branch=False, merge_method=method, advance=True
         )
-        if plan.worktree_identity is not None and (
-            Path(sys.executable).absolute().is_relative_to(Path(plan.path))
-            or Path(sys.prefix).resolve().is_relative_to(Path(plan.path))
-        ):
+        if plan.worktree_identity is not None and providers.runtime_in(plan.path):
             raise RuntimeLocationError("the active interpreter would be removed by approved worktree cleanup")
         # A moved target (the source does not contain it) is checked on the prospective merge the build would land.
         result_sha = None
@@ -190,15 +172,15 @@ class IntegrationService:
                 "the prospective result revokes automatic integration authority",
                 fix="Resolve prospective policy revocation before automatic integration; do not bypass it with another authority route",
             )
-        worktree_policy = prospective.get("worktree", {})
-        if not isinstance(worktree_policy, dict) or type(worktree_policy.get("delete_branch", True)) is not bool:
+        source_policy = worktree_policy(prospective)
+        if source_policy is None or "delete_branch" in invalid_policy_keys(source_policy):
             raise IntegrationConfigError("source worktree policy is invalid")
-        if worktree_policy.get("pull_request", "auto") == "required":
+        if source_policy["pull_request"] == "required":
             raise PullRequestPolicyError(
                 "the source policy requires PR integration; the local path is unavailable",
                 fix=pull_request_policy_fix(branch),
             )
-        plan = replace(plan, delete_branch=config.delete_branch and worktree_policy.get("delete_branch", True))
+        plan = replace(plan, delete_branch=config.delete_branch and source_policy["delete_branch"])
         context = IntegrationContext(plan)
         # The prospective context adds the unlanded merge; cleanup is planned from the approved context.
         checked = replace(context, result_sha=result_sha) if result_sha is not None else context
@@ -278,7 +260,7 @@ class IntegrationService:
             result.authority = "host-conversation"
         record = self._record(request.id)
         record.approved = True
-        return self._run(request.id, LOCK_WAIT)
+        return self._run(request.id)
 
     def _compose_execute(
         self, request: IntegrationRequest, lifecycle: AcceptanceLifecycle, ui_action: str
@@ -334,13 +316,12 @@ class IntegrationService:
             lifecycle.before_merge(fresh.request)
             fresh.ui_action = ui_action
             record = self._record(fresh.request.id)
-            with record.lock:
-                record.approved = True
-                fresh.authority = "policy" if ui_action == "policy" else "host-conversation"
-                try:
-                    return self._execute(record, False)
-                finally:
-                    record.approved = False
+            record.approved = True
+            fresh.authority = "policy" if ui_action == "policy" else "host-conversation"
+            try:
+                return self._execute(record, False)
+            finally:
+                record.approved = False
 
     def _observe(self, request: IntegrationRequest) -> dict:
         if request.route == "pull-request":
@@ -413,45 +394,35 @@ class IntegrationService:
             if getattr(exc, "code", "") == "WORKTREE_CONFLICT":
                 raise StaleRequestError(exc.message) from exc
             raise
-        extensions = providers.cleanup_extensions()
-        if {name: ident for name, (ident, _) in extensions.items()} != {
-            scope.extension: scope.identity for scope in request.cleanup
-        }:
-            raise StaleRequestError("post-finish extension installation changed")
-        for scope in request.cleanup:
-            if scope.extension not in (cleanup_done or set()):
-                extensions[scope.extension][1].integration_validate(context, scope.targets)
+        providers.revalidate_cleanup(
+            request, context, cleanup_done or set(), changed="post-finish extension installation changed"
+        )
 
-    def _run(self, request_id: str, wait: float) -> IntegrationResult:
+    def _run(self, request_id: str) -> IntegrationResult:
         guard_execution()
         record = self._record(request_id)
         if not record.approved:
             raise AuthorityError("this request has no execution authority")
-        if not record.lock.acquire(blocking=False):
-            raise AuthorityError("this request is already executing; inspect it after the current call finishes")
-        try:
-            if record.result.request.route == "pull-request":
-                from devkit_agt.features.integration.usecases.pull_request import execute
+        if record.result.request.route == "pull-request":
+            from devkit_agt.features.integration.usecases.pull_request import execute
 
-                return execute(self, record, wait)
-            plan = record.result.request.context.finish
-            try:
-                with integration_lock(Path(plan.common_dir), timeout=wait):
-                    return self._execute(record, True)
-            except LockHeldError as exc:
-                result = record.result
-                result.observed = self._observe(result.request)
-                exc.fix = (
-                    "Wait for the other devkit integration to finish, inspect Git state and rerun `uv run devkit integration integrate` after Host approval"
-                    if result.observed.get("target_sha") == plan.target_sha
-                    else "Inspect the moved target and source, verify the branch and obtain Host approval for a new `uv run devkit integration integrate` invocation"
-                )
-                result.errors[:] = [exc]
-                result.failing_operation = "lock"
-                result.status = "blocked"
-                return result
-        finally:
-            record.lock.release()
+            return execute(self, record)
+        plan = record.result.request.context.finish
+        try:
+            with integration_lock(Path(plan.common_dir), timeout=LOCK_WAIT):
+                return self._execute(record, True)
+        except LockHeldError as exc:
+            result = record.result
+            result.observed = self._observe(result.request)
+            exc.fix = (
+                "Wait for the other devkit integration to finish, inspect Git state and rerun `uv run devkit integration integrate` after Host approval"
+                if result.observed.get("target_sha") == plan.target_sha
+                else "Inspect the moved target and source, verify the branch and obtain Host approval for a new `uv run devkit integration integrate` invocation"
+            )
+            result.errors[:] = [exc]
+            result.failing_operation = "lock"
+            result.status = "blocked"
+            return result
 
     def _execute(self, record: _Record, approving: bool) -> IntegrationResult:
         result, request = record.result, record.result.request
@@ -517,10 +488,7 @@ class IntegrationService:
                     before_step=before_step,
                 )
                 result.finish.merged = result.steps["merge"] == "completed"
-                record.finalized = True
-                if plan.worktree_identity:
-                    result.steps["worktree_remove"] = "completed"
-                result.steps["branch_delete" if plan.delete_branch else "marker_clear"] = "completed"
+                self._finalized(record)
             operation = "post_finish"
             self._validate(
                 request, merged=True, removed=True, finalized=True, cleanup_done=cleanup_done, context=context
@@ -545,6 +513,17 @@ class IntegrationService:
             result.status = "partial" if has_effects(result.steps) else "blocked"
         result.observed = self._observe(request)
         return result
+
+    @staticmethod
+    def _finalized(record: _Record) -> None:
+        """Record a completed ``finish`` on both routes: the worktree removed when there was one, then the branch
+        deleted or its marker cleared."""
+        result = record.result
+        plan = result.request.context.finish
+        record.finalized = True
+        if plan.worktree_identity:
+            result.steps["worktree_remove"] = "completed"
+        result.steps["branch_delete" if plan.delete_branch else "marker_clear"] = "completed"
 
     @staticmethod
     def _run_cleanup(result: IntegrationResult, context: IntegrationContext) -> None:

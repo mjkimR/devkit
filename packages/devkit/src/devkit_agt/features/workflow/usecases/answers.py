@@ -27,6 +27,22 @@ from devkit_agt.features.workflow.repositories.unit.decisions import (
 from devkit_agt.features.workflow.usecases.workspace import UnitRef, Workspace
 
 
+def _check_action(action: str, values: Sequence[str]) -> None:
+    """Refuse an ``action`` outside ``ACTIONS`` and ``values`` on any action but accept (``DecisionInvalidError``)."""
+    if action not in ACTIONS:
+        raise DecisionInvalidError(
+            f"--action {action!r} is not one of {'|'.join(ACTIONS)}",
+            target_files=["--action"],
+            fix=f"Pass --action {' or '.join(ACTIONS)}",
+        )
+    if action != "accept" and values:
+        raise DecisionInvalidError(
+            "--value is only valid with --action accept",
+            target_files=["--value"],
+            fix="Drop --value, or use --action accept",
+        )
+
+
 def validate_answer(request: Request, action: str, values: Sequence[str]) -> Any:
     """Check that ``action`` and ``values`` fit the open ``request``; returns the record's ``value``.
 
@@ -34,19 +50,8 @@ def validate_answer(request: Request, action: str, values: Sequence[str]) -> Any
     approve request, a missing, unknown or ineligible option, several values,
     or a value without accept.
     """
-    if action not in ACTIONS:
-        raise DecisionInvalidError(
-            f"--action {action!r} is not one of {'|'.join(ACTIONS)}",
-            target_files=["--action"],
-            fix=f"Pass --action {' or '.join(ACTIONS)}",
-        )
+    _check_action(action, values)
     if action != "accept":
-        if values:
-            raise DecisionInvalidError(
-                "--value is only valid with --action accept",
-                target_files=["--value"],
-                fix="Drop --value, or use --action accept",
-            )
         return None
     if request.kind == "approve":
         if values:
@@ -88,7 +93,7 @@ class RecordAnswerUseCase(BaseUseCase):
     def execute(
         self,
         ws: Workspace,
-        unit: str | UnitRef,
+        unit: UnitRef,
         request_id: str,
         action: str,
         values: Sequence[str] = (),
@@ -106,8 +111,7 @@ class RecordAnswerUseCase(BaseUseCase):
         ``action`` outside ``ACTIONS`` raises ``DecisionInvalidError``
         (``DECISION_INVALID``) for every request.
         """
-        ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
-        listing = workflow_command(f"next --view requests --unit {ref.rel}")
+        listing = workflow_command(f"next --view requests --unit {unit.rel}")
         if not is_request_id(request_id):
             raise RequestUnknownError(
                 f"--request {request_id!r} is not a request id (an open request, or feedback:<target>)",
@@ -116,31 +120,21 @@ class RecordAnswerUseCase(BaseUseCase):
             )
         stage = ""
         if request_id.startswith(FEEDBACK_PREFIX):
-            if action not in ACTIONS:
+            _check_action(action, values)
+            if action == "accept" and (len(values) != 1 or not values[0].strip()):
                 raise DecisionInvalidError(
-                    f"--action {action!r} is not one of {'|'.join(ACTIONS)}",
-                    target_files=["--action"],
-                    fix=f"Pass --action {' or '.join(ACTIONS)}",
-                )
-            if action == "accept":
-                if len(values) != 1 or not values[0].strip():
-                    raise DecisionInvalidError(
-                        "feedback requires exactly one --value with the text",
-                        target_files=["--value"],
-                        fix="Pass the feedback text as one non-empty --value",
-                    )
-            elif values:
-                raise DecisionInvalidError(
-                    "--value is only valid with --action accept", target_files=["--value"], fix="Drop --value"
+                    "feedback requires exactly one --value with the text",
+                    target_files=["--value"],
+                    fix="Pass the feedback text as one non-empty --value",
                 )
             value: Any = values[0] if values else None
         else:
-            result = ws.evaluate_unit(ref, given=given, lint=lint)
+            result = ws.evaluate_unit(unit, given=given, lint=lint)
             open_requests = {r.id: r for r in result.requests}
             request = open_requests.get(request_id)
             if request is None:
                 raise RequestUnknownError(
-                    f"{request_id!r} is not an open request of {ref.rel}",
+                    f"{request_id!r} is not an open request of {unit.rel}",
                     *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
                     target_files=["--request"],
                     fix=listing,
@@ -152,15 +146,15 @@ class RecordAnswerUseCase(BaseUseCase):
                     f" answers as a YAML list on stdin, each with question ({question}), choice (an option id or"
                     " null) and decision (one sentence)",
                     target_files=["--request"],
-                    fix=workflow_command(f"envelope answer --unit {ref.rel} --answers-to {source} --answers-file -"),
+                    fix=workflow_command(f"envelope answer --unit {unit.rel} --answers-to {source} --answers-file -"),
                 )
             value = validate_answer(request, action, values)
             stage = request.target.stage or ""
-        decisions = load_decisions(ref.dir)
+        decisions = load_decisions(unit.dir)
         record = new_decision(
-            decisions, request_id, action, workflow=ref.doc.id, stage=stage, value=value, note=note, by=by
+            decisions, request_id, action, workflow=unit.doc.id, stage=stage, value=value, note=note, by=by
         )
-        return write_decision(ref.dir, record)
+        return write_decision(unit.dir, record)
 
 
 # Internal library callers share the same implementation as the transport entry point.
@@ -173,7 +167,7 @@ class ReturnToStageUseCase(BaseUseCase):
     def execute(
         self,
         ws: Workspace,
-        unit: str | UnitRef,
+        unit: UnitRef,
         stage: str,
         *,
         note: str = "",
@@ -186,22 +180,21 @@ class ReturnToStageUseCase(BaseUseCase):
         ``stage`` must not come after the current stage (any stage once the workflow is complete), evaluated with
         ``given`` as ``next --given`` does.
         """
-        ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
-        target = ref.doc.stage_index(stage)
+        target = unit.doc.stage_index(stage)
         if target < 0:
             raise ReturnInvalidError(
-                f"{stage!r} is not a stage of {ref.doc.id}",
+                f"{stage!r} is not a stage of {unit.doc.id}",
                 target_files=["--to"],
-                fix=f"Pass --to one of: {', '.join(s.id for s in ref.doc.stages)}",
+                fix=f"Pass --to one of: {', '.join(s.id for s in unit.doc.stages)}",
             )
-        result = ws.evaluate_unit(ref, given=given, lint=lint)
-        if result.stage is not None and target > ref.doc.stage_index(result.stage.id):
+        result = ws.evaluate_unit(unit, given=given, lint=lint)
+        if result.stage is not None and target > unit.doc.stage_index(result.stage.id):
             raise ReturnInvalidError(
                 f"stage {stage!r} comes after the current stage {result.stage.id!r}",
                 target_files=["--to"],
                 fix=f"Pass --to {result.stage.id} or an earlier stage",
             )
-        return _record_return(ref, stage, note=note, by=by)
+        return _record_return(unit, stage, note=note, by=by)
 
 
 def _record_return(unit: UnitRef, to: str, *, note: str = "", by: str = "") -> Decision:

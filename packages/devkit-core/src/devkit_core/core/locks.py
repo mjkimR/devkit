@@ -3,6 +3,11 @@
 Linux and macOS only (``fcntl.flock``; ``LockUnsupportedError`` elsewhere). The operating system releases
 a lock when its process dies, so none goes stale. Network file systems are not supported: ``flock`` is not
 guaranteed there.
+
+``file_lock`` opens the lock file and holds the lock for a block; ``flock_fd`` takes the lock on a descriptor the
+caller opened (a directory, a read-only file) with the same bounded wait. ``NO_LOCK_ERRNOS`` are the ``errno``
+values with which a file system refuses ``flock`` itself, which ``flock_fd`` maps through its ``unsupported``
+factory.
 """
 
 from __future__ import annotations
@@ -12,7 +17,7 @@ import errno
 import os
 import stat
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import ModuleType
 
@@ -21,6 +26,11 @@ from devkit_core.core.deadline import Deadline
 
 LOCK_FILE_MODE = 0o600
 POLL_INTERVAL = 0.01  # seconds between attempts while a bounded wait lasts
+# ``errno`` values with which a file system refuses ``flock`` itself (a network or FUSE file system, for example).
+NO_LOCK_ERRNOS = frozenset({errno.ENOTSUP, errno.EOPNOTSUPP, errno.ENOLCK, errno.EINVAL, errno.ENOSYS})
+
+# Builds the error for ``flock`` refused by the file system from the ``OSError`` it raised.
+UnsupportedFactory = Callable[[OSError], BaseException]
 
 
 def _fcntl() -> ModuleType:
@@ -47,9 +57,9 @@ def _open(path: Path) -> int:
     return fd
 
 
-def _bound(timeout: float | None, deadline: Deadline | None) -> Deadline | None:
+def _bound(timeout: float | None, deadline: Deadline | None, function: str = "file_lock") -> Deadline | None:
     if timeout is not None and deadline is not None:
-        raise ValueError("file_lock takes a timeout or a deadline, not both")
+        raise ValueError(f"{function} takes a timeout or a deadline, not both")
     return Deadline(timeout) if timeout is not None else deadline
 
 
@@ -78,13 +88,9 @@ def file_lock(
     """
     fcntl = _fcntl()
     limit = _bound(timeout, deadline)
-    operation = fcntl.LOCK_SH if shared else fcntl.LOCK_EX
     fd = _open(path)
     try:
-        if limit is None:
-            fcntl.flock(fd, operation)
-        else:
-            _poll(fcntl, fd, operation, limit, path, what or f"waiting for the lock on {path}")
+        _acquire(fcntl, fd, shared, limit, path, what or f"waiting for the lock on {path}", None)
         try:
             yield
         finally:
@@ -94,7 +100,55 @@ def file_lock(
         os.close(fd)
 
 
-def _poll(fcntl: ModuleType, fd: int, operation: int, limit: Deadline, path: Path, what: str) -> None:
+def flock_fd(
+    fd: int,
+    *,
+    target: Path | str,
+    shared: bool = False,
+    timeout: float | None = None,
+    deadline: Deadline | None = None,
+    what: str | None = None,
+    unsupported: UnsupportedFactory | None = None,
+) -> None:
+    """Take an exclusive (``shared=False``) or shared ``flock`` on the open descriptor ``fd``, as ``file_lock`` does.
+
+    The caller opened ``fd`` (and checked what it names) and releases the lock by closing it or with ``LOCK_UN``.
+    ``target`` names the locked path in the errors. The wait is bounded and fails exactly as ``file_lock``'s: by
+    ``timeout`` seconds or a shared ``deadline`` (both is ``ValueError``), polled every ``POLL_INTERVAL`` seconds and at
+    least once, raising ``deadline.exceeded(what)`` when the deadline has an error factory, else ``LockHeldError``;
+    ``what`` defaults to ``waiting for the lock on <target>``. Without either bound the call blocks.
+
+    ``flock`` refused by the file system (``NO_LOCK_ERRNOS``) raises ``unsupported(error)`` when the factory is given
+    (``LockUnsupportedError`` with the caller's fix, or a caller's own code), else the ``OSError`` itself, as
+    ``file_lock`` does; every other ``OSError`` propagates.
+    """
+    fcntl = _fcntl()
+    limit = _bound(timeout, deadline, "flock_fd")
+    _acquire(fcntl, fd, shared, limit, target, what or f"waiting for the lock on {target}", unsupported)
+
+
+def _acquire(
+    fcntl: ModuleType,
+    fd: int,
+    shared: bool,
+    limit: Deadline | None,
+    target: Path | str,
+    what: str,
+    unsupported: UnsupportedFactory | None,
+) -> None:
+    operation = fcntl.LOCK_SH if shared else fcntl.LOCK_EX
+    try:
+        if limit is None:
+            fcntl.flock(fd, operation)
+        else:
+            _poll(fcntl, fd, operation, limit, target, what)
+    except OSError as exc:
+        if unsupported is not None and exc.errno in NO_LOCK_ERRNOS:
+            raise unsupported(exc) from exc
+        raise
+
+
+def _poll(fcntl: ModuleType, fd: int, operation: int, limit: Deadline, target: Path | str, what: str) -> None:
     while True:
         try:
             fcntl.flock(fd, operation | fcntl.LOCK_NB)
@@ -105,9 +159,9 @@ def _poll(fcntl: ModuleType, fd: int, operation: int, limit: Deadline, path: Pat
                 if limit.error is not None:
                     raise limit.exceeded(what) from None
                 raise LockHeldError(
-                    f"another process holds the lock on {path}",
+                    f"another process holds the lock on {target}",
                     what=what,
                     seconds=limit.seconds,
-                    target_files=[str(path)],
+                    target_files=[str(target)],
                 ) from None
             time.sleep(min(POLL_INTERVAL, remaining))

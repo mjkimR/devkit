@@ -56,7 +56,7 @@ def test_host_approved_cli_integrates_and_cleans_without_network(repo, monkeypat
     assert result.compact_dict()["request"]["merge_method"] == "no-ff"
     assert "refs/heads/dev-demo" not in git(base, "show-ref")
     assert "merge" in called and not set(called) & {"fetch", "push", "ls-remote"}
-    assert result.to_dict()["network_operations"] == "excluded"
+    assert result.compact_dict()["request"]["network_operations"] == "excluded"
     assert result.compact_dict()["landed_sha"] == git(base, "rev-parse", "HEAD")
 
 
@@ -328,9 +328,8 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
     assert compact["request"]["cleanup"] == [
         {"extension": "scoped", "targets": [{"kind": "record", "identity": "task-1"}]}
     ]
-    detailed = result.to_dict()
-    assert detailed["request"]["cleanup"][0]["targets"][0]["revision"] == "internal-revision-1"
-    assert compact["request"]["digest"] == detailed["request"]["digest"]
+    assert result.request.cleanup[0].targets[0].revision == "internal-revision-1"
+    assert compact["request"]["digest"] == result.request.digest
 
 
 def test_cloud_execution_environment_blocks_the_cli_before_effects(repo):
@@ -450,6 +449,6 @@ def test_rerun_after_unknown_fast_forward_keeps_the_seeded_disclosure(repo, monk
     seeded = first.seeded
     assert first.steps["merge"] == "unknown" and seeded
     monkeypatch.setattr(service_module, "fast_forward", original)
-    rerun = service._run(first.request.id, 0)
+    rerun = service._run(first.request.id)
     assert rerun.steps["merge"] == "completed" and rerun.seeded == seeded
     assert [notice.code for notice in rerun.notices].count("INTEGRATION_GENERATED_SEEDED") == 1

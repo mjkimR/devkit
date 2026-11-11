@@ -16,7 +16,7 @@ from spec_support.scope import git, write
 
 import devkit_spec
 from devkit_spec.base.axes import size_blocker
-from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.proposals import CreateProposalUseCase
 
 DEFINITION = (
     Path(devkit_spec.__file__).parent / "bundles" / "spec" / "bundle" / "workflows" / "sdd-proposal.md"
@@ -38,7 +38,7 @@ def _repo(tmp_path: Path, policy: str = "ask") -> Path:
 
 def _draft(root: Path, size: str | None) -> Path:
     """A bound draft with ``size`` replaced (``None``: the line removed); returns proposal.md."""
-    proposal = root / create_proposal(root, "wide", today=TODAY).path
+    proposal = root / CreateProposalUseCase().execute(root, "wide", today=TODAY).path
     lines = proposal.read_text(encoding="utf-8").splitlines(keepends=True)
     kept = [line for line in lines if not line.startswith(SCAFFOLDED)]
     assert len(kept) == len(lines) - 1

@@ -59,8 +59,6 @@ class SecretLeakRule(BaseRule):
             line=line,
             message=message,
             remediation="Remove the secret from the change; use placeholders or external credentials",
-            severity=self.severity,
-            phase=self.phase,
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

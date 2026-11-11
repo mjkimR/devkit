@@ -11,10 +11,9 @@ affected, together with the ``RuleDefinitionError`` of every loaded rule whose
 
 from __future__ import annotations
 
-import inspect
 from collections.abc import Mapping, Sequence
 
-from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity
+from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity, rule_file
 from devkit_agt.features.rules.models.errors import PolicyError, RuleDefinitionError, RuleProblem
 from devkit_agt.features.rules.models.phases import validate_phase_overrides
 from devkit_agt.features.rules.models.settings import RawSettings, SettingsResolver, build_resolvers, validate_pattern
@@ -51,11 +50,8 @@ def validate_inputs(rules: Sequence[Rule]) -> list[RuleDefinitionError]:
         try:
             check_inputs(rule.id, getattr(rule, "inputs", None))
         except RuleDefinitionError as exc:
-            try:
-                source = [inspect.getfile(type(rule))]
-            except (TypeError, OSError):
-                source = []
-            errors.append(RuleDefinitionError(str(exc), rule_id=rule.id, target_files=source))
+            source = rule_file(rule)
+            errors.append(RuleDefinitionError(str(exc), rule_id=rule.id, target_files=[str(source)] if source else []))
     return errors
 
 

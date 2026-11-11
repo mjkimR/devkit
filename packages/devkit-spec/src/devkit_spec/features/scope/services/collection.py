@@ -10,9 +10,9 @@ from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
+from devkit_docs.utils.paths import covers
 
 from devkit_spec.base.errors import ScopeCollectionFailedError, ScopeCollectionPartialWarning, ScopeTimeoutError
-from devkit_spec.features.entrypoints import covers
 from devkit_spec.features.policy.services.config import read_spec_config
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import Record, ScopeSet, Source, now

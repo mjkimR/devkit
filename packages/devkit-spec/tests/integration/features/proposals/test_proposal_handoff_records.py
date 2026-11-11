@@ -22,7 +22,7 @@ from spec_support.proposals import (
 from spec_support.types import Write
 
 from devkit_spec.base.errors import ProposalAcceptanceUnrecordedError
-from devkit_spec.features.proposals import CarriedGate, create_proposal, handoff_proposal
+from devkit_spec.features.proposals import CarriedGate, CreateProposalUseCase, handoff_proposal
 from devkit_spec.features.proposals.usecases import handoff as handoff_module
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
@@ -43,7 +43,7 @@ def _proposal(root: Path, slug: str) -> Path:
         "sdd-spec-bugfix",
         GATED.format(id="sdd-spec-bugfix", middle=CHARACTERIZE).replace("human_gate: plan-intent", "human_gate: false"),
     )
-    created = create_proposal(root, slug, today=TODAY)
+    created = CreateProposalUseCase().execute(root, slug, today=TODAY)
     return root / created.path
 
 
@@ -192,7 +192,9 @@ def test_an_unbound_or_single_file_proposal_hands_off_on_its_status(workspace: P
         "sdd-spec-feature",
         GATED.format(id="sdd-spec-feature", middle="").replace("human_gate: plan-intent", "human_gate: false"),
     )
-    accept(workspace / create_proposal(workspace, "bare", today=TODAY).path)  # sdd-proposal unavailable: unbound
+    accept(
+        workspace / CreateProposalUseCase().execute(workspace, "bare", today=TODAY).path
+    )  # sdd-proposal unavailable: unbound
     single = workspace / "docs/proposals/PROP-solo.md"
     single.write_text("---\nid: PROP-solo\nstatus: accepted\n---\n\n# Solo\n", encoding="utf-8")
     assert handoff_proposal(workspace, "bare", today=TODAY).carried_gates == []
@@ -231,7 +233,7 @@ def test_a_cancel_after_the_users_accept_changes_nothing(workspace: Path) -> Non
 
 def test_records_nothing_for_an_unbound_spec(workspace: Path) -> None:
     write_workflow(workspace, "sdd-proposal", PROPOSAL_WORKFLOW)
-    accept(workspace / create_proposal(workspace, "loose", today=TODAY).path)
+    accept(workspace / CreateProposalUseCase().execute(workspace, "loose", today=TODAY).path)
     _answered(workspace, "loose")
     result = handoff_proposal(workspace, "loose", today=TODAY)
     assert result.workflow is None and result.carried_gates == []

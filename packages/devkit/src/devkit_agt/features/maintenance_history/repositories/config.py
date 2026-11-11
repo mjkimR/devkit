@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import re
-import subprocess
 from pathlib import Path
 
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git, run_git_text
 from devkit_dist.features.project.repositories.project import read_project_config
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
 
@@ -34,12 +35,12 @@ def destination(root: Path, repository: str | None, branch: str | None) -> tuple
     history = config.get("history", {})
     repo = repository or history.get("repository")
     if not repo:
-        result = subprocess.run(
-            ["git", "-C", str(root), "remote", "get-url", "origin"], capture_output=True, text=True, check=False
-        )
-        url = result.stdout.strip()
+        try:
+            url = run_git_text(root, "remote", "get-url", "origin").strip()
+        except GitError:
+            url = ""
         match = re.fullmatch(r"(?:git@github\.com:|https://github\.com/)([^/]+/[^/]+?)(?:\.git)?", url)
-        if result.returncode or not match:
+        if not match:
             raise InputError("Set maintenance.history.repository or pass --repository with owner/repo")
         repo = match[1]
     if not isinstance(repo, str) or re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo) is None:
@@ -47,7 +48,8 @@ def destination(root: Path, repository: str | None, branch: str | None) -> tuple
     selected = branch or history.get("branch", "maintenance-history")
     if not isinstance(selected, str) or not selected or selected.startswith("-"):
         raise InputError("Invalid history branch name")
-    check = subprocess.run(["git", "check-ref-format", "refs/heads/" + selected], capture_output=True, check=False)
-    if check.returncode:
-        raise InputError("Invalid history branch name")
+    try:
+        run_git(root, "check-ref-format", "refs/heads/" + selected)
+    except GitError as exc:
+        raise InputError("Invalid history branch name") from exc
     return repo, selected

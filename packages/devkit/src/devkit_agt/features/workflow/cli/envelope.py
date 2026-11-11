@@ -13,12 +13,13 @@ from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, exit_on
 
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit_agt.features.workflow.cli.render import render_hold
+from devkit_agt.features.workflow.models.envelope import ANSWER, RESOLUTION, WORKER, EnvelopeFlags
 from devkit_agt.features.workflow.models.errors import EnvelopeFlagError, workflow_command
 from devkit_agt.features.workflow.usecases.commit_envelope import CommitEnvelopeUseCase
 from devkit_agt.features.workflow.usecases.envelopes import CheckEnvelopesUseCase, WriteEnvelopeUseCase
 
 # Kinds whose fields need options of their own; ``envelope new`` refuses them.
-KIND_COMMANDS = ("worker", "answer", "resolution", "review", "reverify")
+KIND_COMMANDS = (WORKER, ANSWER, RESOLUTION, "review", "reverify")
 
 
 @cli.group(name="envelope")
@@ -103,51 +104,23 @@ def _write(
     workspace_root: str | None,
     unit: str,
     anchor: str | None,
-    stage: str,
-    summary: str | None,
-    assumptions: tuple[str, ...],
-    unverified: tuple[str, ...],
-    effort: str,
     output_format: str,
-    status: str | None = None,
-    checks: tuple[str, ...] = (),
-    base: str = "",
-    head: str = "",
     findings_file: str | None = None,
-    source: str | None = None,
-    resolve: tuple[str, ...] = (),
-    waive: tuple[str, ...] = (),
     scope_extensions_file: str | None = None,
     questions_file: str | None = None,
-    answers_to: str = "",
     answers_file: str | None = None,
-    settle: tuple[str, ...] = (),
-    problem: str = "",
-    attempts: tuple[str, ...] = (),
-    recovery: str = "",
-    resolves: str = "",
+    **options: Any,
 ) -> None:
-    """Translate CLI file/stdin options and render the envelope operation result."""
-    content = (
-        findings_file,
-        scope_extensions_file,
-        source,
-        resolve,
-        waive,
-        questions_file,
-        answers_to,
-        answers_file,
-        settle,
-        problem,
-        attempts,
-    )
-    authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
-        (*content, recovery, resolves, effort)
-    )
+    """Translate CLI file/stdin options and render the envelope operation result.
+
+    ``options`` are the command's remaining options, named as the ``EnvelopeFlags`` fields they set.
+    """
     stdin = [
         flag
         for flag, value in (
-            *_stdin_flags(findings_file, questions_file, answers_file),
+            ("--findings-file", findings_file),
+            ("--questions-file", questions_file),
+            ("--answers-file", answers_file),
             ("--scope-extensions-file", scope_extensions_file),
         )
         if value == "-"
@@ -158,34 +131,15 @@ def _write(
             target_files=stdin,
             fix=f"Pass {' and '.join(stdin[1:])} as a file",
         )
-    result = WriteEnvelopeUseCase().execute(
-        kind,
-        workspace=workspace(workspace_root),
-        authoring=authoring,
-        unit=unit,
-        anchor=anchor,
-        stage=stage,
-        status=status,
-        summary=summary,
-        assumptions=assumptions,
-        unverified=unverified,
-        checks=checks,
-        base=base,
-        head=head,
-        effort=effort,
+    flags = EnvelopeFlags(
         findings_yaml=_read_items_file("--findings-file", findings_file, "findings"),
-        source=source,
-        resolve=resolve,
-        waive=waive,
         scope_extensions_yaml=_read_items_file("--scope-extensions-file", scope_extensions_file, "scope extensions"),
         questions_yaml=_read_items_file("--questions-file", questions_file, "questions"),
-        answers_to=answers_to,
         answers_yaml=_read_items_file("--answers-file", answers_file, "answers"),
-        settle=settle,
-        problem=problem,
-        attempts=attempts,
-        recovery=recovery,
-        resolves=resolves,
+        **options,
+    )
+    result = WriteEnvelopeUseCase().execute(
+        kind, workspace=workspace(workspace_root), unit=unit, anchor=anchor, flags=flags
     )
     if is_json(output_format):
         echo_json(result)
@@ -194,14 +148,8 @@ def _write(
     click.echo(f"[ENVELOPE: {result['file']} kind={kind} seq={result['seq']:02d} status={result['status']}{tail}]")
 
 
-def _stdin_flags(
-    findings: str | None, questions: str | None, answers: str | None
-) -> tuple[tuple[str, str | None], ...]:
-    return (("--findings-file", findings), ("--questions-file", questions), ("--answers-file", answers))
-
-
 # Kinds that record decisions or runs rather than review findings: ``open_findings`` appears only when not zero.
-RECORD_KINDS = ("worker", "answer", "resolution")
+RECORD_KINDS = (WORKER, ANSWER, RESOLUTION)
 
 
 def _findings_field(kind: str, open_findings: int) -> str:

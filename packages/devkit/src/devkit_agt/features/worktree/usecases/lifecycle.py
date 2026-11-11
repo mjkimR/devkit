@@ -23,7 +23,7 @@ import shlex
 import signal
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -31,7 +31,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError, GitError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core.git import is_ancestor, run_git, run_git_text, worktree_records
+from devkit_core.core.git import git_config, is_ancestor, run_git, run_git_text, worktree_records
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import constraint_environment, guard_execution
@@ -69,8 +69,8 @@ from devkit_agt.features.worktree.models.errors import (
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeError,
-    from_base_error,
     pull_request_policy_fix,
+    refuse_linked,
 )
 from devkit_agt.features.worktree.models.lifecycle import (
     BranchStartResult,
@@ -81,8 +81,9 @@ from devkit_agt.features.worktree.models.lifecycle import (
     StatusResult,
     WorktreeStatus,
 )
+from devkit_agt.features.worktree.models.merging import merge_message
 from devkit_agt.features.worktree.repositories.markers import BASE_KEY, UNIT_KEY, branch_marker, marker_key
-from devkit_agt.features.worktree.services.merging import build_result, check_identity, merge_message
+from devkit_agt.features.worktree.services.merging import build_result, check_identity
 
 _log = get_logger(__name__)
 
@@ -192,7 +193,7 @@ def _entries(base: Path) -> list[_Entry]:
 
 def _created(base: Path, branch: str) -> bool:
     """Whether ``start`` created ``branch`` (it carries the marker in the common configuration)."""
-    return _query(base, "config", "--local", "--get", marker_key(branch)) is not None
+    return git_config(base, marker_key(branch), local=True) is not None
 
 
 def _unmark(base: Path, branch: str) -> None:
@@ -277,14 +278,12 @@ def start(
     behind (``WORKTREE_ADD_FAILED``).
     """
     check_branch(branch)
-    if position.linked:
-        raise from_base_error(
-            NestedError,
-            f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
-            position.base,
-            position.root,
-            f"to continue the current task instead, keep working in {position.root}",
-        )
+    refuse_linked(
+        position,
+        NestedError,
+        f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
+        f"to continue the current task instead, keep working in {position.root}",
+    )
     if revision is not None:
         revision = run_git_text(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
     path = path_for(position, branch)
@@ -441,14 +440,12 @@ class StartBranch(BaseUseCase):
         say where the task integrates).
         """
         check_branch(branch)
-        if position.linked:
-            raise from_base_error(
-                NestedError,
-                f"{position.root} is a linked worktree; activity branches are started in the base checkout",
-                position.base,
-                position.root,
-                f"to continue the current task instead, keep working in {position.root}",
-            )
+        refuse_linked(
+            position,
+            NestedError,
+            f"{position.root} is a linked worktree; activity branches are started in the base checkout",
+            f"to continue the current task instead, keep working in {position.root}",
+        )
         if position.branch is None:
             raise BaseDetachedError(
                 f"{position.root} is on a detached HEAD; the branch would record no branch to integrate into",
@@ -501,14 +498,12 @@ def attach(
     with its setup and sync. The marker and ``devkitUnit`` are recorded.
     """
     check_branch(branch)
-    if position.linked:
-        raise from_base_error(
-            NestedError,
-            f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
-            position.base,
-            position.root,
-            f"to continue the current task instead, keep working in {position.root}",
-        )
+    refuse_linked(
+        position,
+        NestedError,
+        f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
+        f"to continue the current task instead, keep working in {position.root}",
+    )
     base = position.base
     remotes = run_git_text(base, "remote").splitlines()
     remote = _source_remote(source, branch, remotes)
@@ -720,7 +715,7 @@ def _add(base: Path, path: Path, branch: str, *, existing: bool = False, revisio
         add = ("add", str(path), branch) if existing else ("add", "--no-track", "-b", branch, str(path))
         if revision is not None and not existing:
             add += (revision,)
-        _git_session(base, "worktree", *add, timeout=CHECKOUT_TIMEOUT)
+        run_git(base, "worktree", *add, timeout=CHECKOUT_TIMEOUT, new_session=True)
         step = f"git config {marker_key(branch)}"
         run_git(base, "config", "--local", marker_key(branch), str(path))
     except GitError as exc:
@@ -774,7 +769,16 @@ def _undo_add(
             registered = True
         if registered:
             try:
-                _git_session(base, "worktree", "remove", "--force", "--force", str(path), timeout=CHECKOUT_TIMEOUT)
+                run_git(
+                    base,
+                    "worktree",
+                    "remove",
+                    "--force",
+                    "--force",
+                    str(path),
+                    timeout=CHECKOUT_TIMEOUT,
+                    new_session=True,
+                )
             except GitError as exc:
                 _log.info("could not remove the partial worktree %s: %s", path, exc.message)
                 left.append(
@@ -899,33 +903,6 @@ def _session(
             _kill_group(process)
             raise
     return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
-
-
-def _git_session(cwd: Path, *args: str, timeout: float) -> bytes:
-    """``run_git`` (same environment, errors and output) for Git commands that run hooks and filters.
-
-    ``git worktree add`` runs the ``post-checkout`` hook and checkout filters (Git LFS); in a session of its own, a
-    timeout kills them with Git instead of leaving them writing into a path the cleanup removes. A timeout is a
-    ``GitError`` whose ``__cause__`` is ``subprocess.TimeoutExpired``, as from ``run_git``.
-    """
-    command = ("git", "-C", str(cwd), *args)
-    label = f"git {args[0]}"
-    env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}
-    try:
-        completed = _session(list(command), None, env, timeout)
-    except subprocess.TimeoutExpired as exc:
-        raise GitError(f"{label} timed out after {timeout}s in {cwd}", command=command) from exc
-    except OSError as exc:
-        raise GitError(f"git is not available: {exc}", command=command) from exc
-    if completed.returncode != 0:
-        stderr = completed.stderr.decode("utf-8", errors="replace").strip()
-        raise GitError(
-            f"{label} failed in {cwd}: {stderr or f'exit status {completed.returncode}'}",
-            command=command,
-            returncode=completed.returncode,
-            stderr=stderr,
-        )
-    return completed.stdout
 
 
 def _execute(argv: list[str], cwd: Path, label: str, timeout: float) -> subprocess.CompletedProcess[bytes] | str:
@@ -1081,13 +1058,11 @@ def finish(
     if network not in {"allow", "forbid"}:
         raise ArgumentError("network must be allow or forbid")
     check_branch(branch)
-    if position.linked:
-        raise from_base_error(
-            RunFromBaseError,
-            f"{position.root} is the worktree finish would remove",
-            position.base,
-            position.root,
-        )
+    refuse_linked(
+        position,
+        RunFromBaseError,
+        f"{position.root} is the worktree finish would remove",
+    )
     if merge and pull_request == "required":
         raise PullRequestPolicyError(
             '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally',
@@ -1198,7 +1173,8 @@ def finish(
             _push(position, result)
         else:
             result.push = "excluded"
-    try:
+    # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included.
+    with _carrying(result):
         if before_remove is not None:
             before_remove(result)
         if result.removed is False:
@@ -1220,13 +1196,19 @@ def finish(
             if before_step is not None:
                 before_step("marker_clear", result)
             _unmark(base, branch)  # the finish is complete; a rerun no longer resumes
+    return result
+
+
+@contextlib.contextmanager
+def _carrying(result: FinishResult) -> Iterator[None]:
+    """Attach the partial ``result`` to a refusal raised in the block, an advisory a ``before_remove`` raises
+    included, unless that caller's error defines a ``result`` of its own."""
+    try:
+        yield
     except AdvisoryError as error:
-        # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included
-        # (unless that caller's error defines a ``result`` of its own).
         if isinstance(error, WorktreeError) or not hasattr(error, "result"):
             vars(error)["result"] = result
         raise
-    return result
 
 
 def _gone(position: Position, branch: str) -> bool | None:
@@ -1254,13 +1236,11 @@ def discard(
     runs before the worktree is removed, as for ``finish``. Remote branches and pull requests are the caller's.
     """
     check_branch(branch)
-    if position.linked:
-        raise from_base_error(
-            RunFromBaseError,
-            f"{position.root} is the worktree discard would remove",
-            position.base,
-            position.root,
-        )
+    refuse_linked(
+        position,
+        RunFromBaseError,
+        f"{position.root} is the worktree discard would remove",
+    )
     base, ref = position.base, f"refs/heads/{branch}"
     entry = _find(position, branch)
     exists = _succeeds(base, "rev-parse", "--verify", "--quiet", ref)
@@ -1275,7 +1255,7 @@ def discard(
     else:
         result = FinishResult(branch, entry.path)
         _require_clean(entry.path)
-    try:
+    with _carrying(result):
         if before_remove is not None:
             before_remove(result)
         if result.removed is False:
@@ -1291,10 +1271,6 @@ def discard(
             result.branch_deleted = True
         _unmark(base, branch)
         result.discarded = True
-    except AdvisoryError as error:
-        if isinstance(error, WorktreeError) or not hasattr(error, "result"):
-            vars(error)["result"] = result
-        raise
     return result
 
 
@@ -1312,7 +1288,7 @@ def _require_clean(path: Path) -> None:
 
 def _remove(base: Path, path: Path) -> None:
     try:
-        _git_session(base, "worktree", "remove", str(path), timeout=CHECKOUT_TIMEOUT)
+        run_git(base, "worktree", "remove", str(path), timeout=CHECKOUT_TIMEOUT, new_session=True)
     except GitError as exc:
         if _timed_out(exc):  # the directory may be partly deleted while still registered
             raise RemoveFailedError(
@@ -1343,8 +1319,8 @@ def _check_deletable(base: Path, branch: str, into: str | None) -> None:
         return
     if is_ancestor(base, f"refs/heads/{branch}", upstream):
         return
-    remote = _config(base, f"branch.{branch}.remote")
-    merge_ref = _config(base, f"branch.{branch}.merge")
+    remote = git_config(base, f"branch.{branch}.remote") or ""
+    merge_ref = git_config(base, f"branch.{branch}.merge") or ""
     quoted = shlex.quote(str(base))
     if remote and remote != "." and merge_ref:
         fix = f"git -C {quoted} push {shlex.quote(remote)} refs/heads/{branch}:{merge_ref}"
@@ -1361,8 +1337,8 @@ def _upstream(position: Position) -> tuple[str, str] | None:
     """The base branch's configured remote and remote ref; ``None`` on a detached HEAD or without an upstream."""
     if position.branch is None:
         return None
-    remote = _config(position.base, f"branch.{position.branch}.remote")
-    merge_ref = _config(position.base, f"branch.{position.branch}.merge")
+    remote = git_config(position.base, f"branch.{position.branch}.remote") or ""
+    merge_ref = git_config(position.base, f"branch.{position.branch}.merge") or ""
     if not remote or remote == "." or not merge_ref:
         return None
     return remote, merge_ref
@@ -1437,10 +1413,6 @@ def _push(position: Position, result: FinishResult) -> None:
 
 def _short(ref: str) -> str:
     return ref.removeprefix("refs/heads/")
-
-
-def _config(base: Path, key: str) -> str:
-    return _query(base, "config", "--get", key) or ""
 
 
 class WorktreeStatusQuery(BaseUseCase):
