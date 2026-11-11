@@ -2,7 +2,7 @@
 id: PROP-small-helper-consolidations
 title: Consolidate the remaining duplicated runtime helpers
 summary: 'Consolidates three deferred duplicates: the UTF-8 output helper copied from devkit-cli into devkit-dist, the hand-rolled YAML quoting of subagent projections, and the four Git tracked/ignored probes.'
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/harness/
 priority: low                         # critical | high | medium | low
