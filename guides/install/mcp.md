@@ -45,7 +45,7 @@ user's conversational decision under `ask`, then invokes the corresponding CLI c
 and policy but does not authenticate the conversation. Workers return verified scope to the Host and never request
 business approval. Trust, tool and sandbox prompts may still appear.
 
-Cloud exposes only declared read-only tools and refuses interactive/preflight/resume execution even through stale
+Cloud exposes only declared read-only tools and refuses `bounded_write` execution even through stale
 registrations. Its transport connectivity is separately host-dependent. Missing runtime, disconnected server,
 or unsupported cloud transport requires intentional installation/connection or an independently
 authorized CLI/PR route. Missing UI never supplies authority; existing authorization applies only to its exact scope.
