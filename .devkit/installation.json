@@ -130,6 +130,14 @@
     },
     {
       "bundle": "devkit",
+      "id": "content-snapshot",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/devkit/instructions/content-snapshot.md"
+      ]
+    },
+    {
+      "bundle": "devkit",
       "id": "role-worker",
       "kind": "subagent",
       "paths": [
@@ -1818,15 +1826,19 @@
     },
     ".devkit/managed/devkit/bundle.toml": {
       "mode": 420,
-      "sha256": "3729c0d57431f7900c7f46b8c2e0bc4236b2dc7516a01779569e1935805fc80f"
+      "sha256": "93b3a62ace758ff773f3458d12b509813bcb77136bd1c055af6f54816423bf98"
     },
     ".devkit/managed/devkit/instructions/consumption.md": {
       "mode": 420,
       "sha256": "1cd8a83c410e353e32a90c9b01bb6153b8abc48452d8d68f9e8e8ab541479828"
     },
+    ".devkit/managed/devkit/instructions/content-snapshot.md": {
+      "mode": 420,
+      "sha256": "8e4dff665e502f144fe57cbd75d1a49e37ab1a5367fcc5b9741ad36a542ab94d"
+    },
     ".devkit/managed/devkit/instructions/in-repo-bundle.md": {
       "mode": 420,
-      "sha256": "742a6d2007907e4b8a5909a89e235348def232b6af78ebee4b73ef1f977a57c4"
+      "sha256": "1f913e10bdb3be077861c90ca58bd32e8bbebd9863e2f350732de3ae766e6666"
     },
     ".devkit/managed/devkit/instructions/resource-kinds.md": {
       "mode": 420,
@@ -2410,7 +2422,7 @@
     },
     ".devkit/managed/spec/workflows/sdd-spec-bugfix.md": {
       "mode": 420,
-      "sha256": "60075507a5361085f8655510d5754c3f670c3342d1cbb847a90a0285320f1b7e"
+      "sha256": "d86cc527bfb1dfdff654ef6324c8b46314467dfc3d924b4b02660f472f5e5597"
     },
     ".devkit/managed/spec/workflows/sdd-spec-feature.md": {
       "mode": 420,

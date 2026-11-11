@@ -24,7 +24,7 @@ from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from distsupport.guidance import assert_rule
 
-INSTRUCTIONS = ["consumption", "in-repo-bundle", "resource-kinds"]
+INSTRUCTIONS = ["consumption", "content-snapshot", "in-repo-bundle", "resource-kinds"]
 SUBAGENTS = ["role-worker"]
 CLAUDE_TOOLS = ["Read", "Grep", "Glob", "Bash", "Edit", "Write", "WebSearch", "WebFetch", "Agent"]
 ANTIGRAVITY_TOOLS = ["view_file", "grep_search", "replace_file_content", "run_command"]
