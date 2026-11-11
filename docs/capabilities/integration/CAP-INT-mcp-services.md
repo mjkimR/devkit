@@ -61,6 +61,7 @@ proof; `landing` records PR provenance comparisons, which are not content-check 
 adds internal policy and cleanup identity. Warnings/notices precede decisive errors on stderr.
 A refusal before effects exits `2`; an error after partial effects exits `1`; a warning-only partial cleanup exits
 `0` unless `--strict` raises it to `1`. `--strict` never lowers `2`.
+JSON also carries `authority`: `none` from `prepare`, else `policy` or `host-conversation` for the authority used.
 
 Local integration builds outside the target checkout, validates the permitted target advance and policy, then
 fast-forwards only while the target still equals the build target. It performs no fetch, push or remote deletion.

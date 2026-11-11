@@ -41,6 +41,7 @@ def test_integrate_cli_executes_after_host_conversation(repo):
     payload = json.loads(result.output)
     assert payload["status"] == "completed"
     assert payload["authority"] == "host-conversation"
+    assert "ui_action" not in payload
     assert payload["verification"] == "pending"
     assert payload["landed_sha"] == git(base, "rev-parse", "HEAD")
     assert not worktree.exists()
