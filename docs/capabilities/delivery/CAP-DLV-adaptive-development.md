@@ -3,7 +3,7 @@ id: CAP-DLV-adaptive-development
 aliases:
   - CAP-DLV-idea-incubation
 title: Adaptive Development
-summary: "An opt-in content bundle supports coordinator-led adaptive product iteration with active delegation, current-state project documents and isolated writers, plus user-selected imports of third-party agents or skills."
+summary: "An opt-in content bundle supports coordinator-led adaptive product iteration with active delegation, current-state project documents with a swarm-worker documenter overlay and isolated writers, plus user-selected imports of third-party agents or skills."
 area: delivery
 status: active
 usecases:
@@ -243,7 +243,7 @@ Archetypes declare emulated support on Codex and Claude Code, and unverified sup
 checks do not establish native invocation, path confinement, nested execution, performance or all-host support.
 Execution settings remain subordinate to effective host policy; no host/model/approval override is granted.
 
-Before delegation, resolve local architect, builder, qa-tester or reviewer overlays from the invoked skill's directory,
+Before delegation, resolve local architect, builder, documenter, qa-tester or reviewer overlays from the invoked skill's directory,
 not the cwd or reference directory. Verify existence and pass the absolute path. Compatible external callers can
 supply their own verified absolute role file without loading adaptive orchestration or another bundle's private assets.
 Use the registered-role mechanism when available; label generic role-file emulation or direct fallback explicitly.
@@ -320,7 +320,13 @@ retained behavior. Native capability/use-case/decision/milestone semantics apply
 them. The skill's `references/documents.md` holds the document linkage: retained behavior goes to a capability or use
 case, structure and boundaries to architecture, and a retained choice to a decision when its reason or reopening
 condition matters later. Document writing is delegated as its own assignment only after the code it describes is
-integrated, and a document describing unimplemented behavior is a defect.
+integrated, using `swarm-worker` with the skill-local `roles/documenter.md` overlay. Each assignment supplies
+exclusive document paths, the described source identity and governing documents, with one owner per document.
+The documenter compares that implementation with existing documents, updates warranted current-state documents,
+returns conflicts to the Host and runs document checks, reporting unavailable checks as unverified.
+Its return includes changed paths, source identity and retained-item document mappings for the Host; current-context
+writes and final integration remain with the Host. A document describing unimplemented behavior is a defect unless
+it is a shared interface marked agreed and awaiting implementation.
 
 `.devkit/adaptive-dev.md` remains mutable project-owned Markdown, not managed/transient state or a parsed lifecycle.
 Keep current goals, choices versus assumptions, source-specific checks, unresolved evidence and exact note links,
