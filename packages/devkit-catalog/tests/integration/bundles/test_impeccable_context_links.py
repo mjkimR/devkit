@@ -137,7 +137,7 @@ def test_newline_foreign_target_is_distinct_with_native_and_gnu_ls(tmp_path: Pat
     root, source = repository(tmp_path, "docs/source -> context")
     (source / "PRODUCT.md\n").write_text("foreign")
     (root / "PRODUCT.md").symlink_to("docs/source -> context/PRODUCT.md\n")
-    util_dirs = [None]
+    util_dirs: list[Path | None] = [None]
     if gnu_ls := shutil.which("gls"):
         utilities = tmp_path / "gnu-utils"
         utilities.mkdir()
