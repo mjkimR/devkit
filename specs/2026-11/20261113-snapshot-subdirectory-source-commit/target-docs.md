@@ -2,7 +2,7 @@
 id: PROP-snapshot-subdirectory-source-commit-target
 title: Snapshot source commit contract impact
 status: draft
-proposal: PROP-snapshot-subdirectory-source-commit
+proposal: SPEC-snapshot-subdirectory-source-commit
 created_at: 2026-11-13
 targets: []
 ---

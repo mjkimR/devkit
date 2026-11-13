@@ -72,7 +72,7 @@ def source_commit(root: Path, originals: Mapping[Path, Content]) -> str | None:
         captured_head = git("rev-parse", "HEAD").decode().strip()
         for path, content in originals.items():
             rel = path.relative_to(repository).as_posix()
-            fields = git("ls-tree", captured_head, "--", rel).split(b"\t", 1)[0].split()
+            fields = git("ls-tree", "--full-tree", captured_head, "--", rel).split(b"\t", 1)[0].split()
             if len(fields) != 3 or fields[1] != b"blob":
                 return None
             if git("cat-file", "blob", fields[2].decode()) != content.data:

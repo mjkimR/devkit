@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-13T06:10:06.214268Z'
+status: completed
+summary: Subdirectory snapshot commits now verified with one ls-tree flag; all three acceptance criteria and preserved root/race/refresh behavior pass with no canonical contract changes
+findings: []
+checks:
+  tests: PASS snapshot module 43; dist-only 1413; affected all tiers 3327 passed and 1 skipped, partial 188 paths
+  build: PASS isolated dist installation and complete snapshot packaging/validation tests through just test-dist
+  lint: PASS just lint-check, just check, cumulative rules22 with zero errors/warnings
+diff_scope:
+  base: 1265a601388515b271ae6ec3fd357c72ffa481a5
+  head: f3b1078b9e1cf6321783039263c08fc36e025dae

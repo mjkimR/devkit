@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-13T06:07:42.191437Z'
+status: completed
+summary: Repository-relative ls-tree fixes verified identity; byte/mode rejection and metadata-only reviewed refresh regressions pass
+findings: []
+assumptions:
+- Green ran on uncommitted one-flag source repair and corrected relative-path test cwd
+checks:
+  resolved: PASS complete snapshot integration module 43 passed, including the retained 4 subdirectory regressions
+  preserved: PASS root provider, captured-HEAD race and all neighboring snapshot behavior; dist-only 1413 passed
+diff_scope:
+  base: 1265a601388515b271ae6ec3fd357c72ffa481a5
+  head: ''
