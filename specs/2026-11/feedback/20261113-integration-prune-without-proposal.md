@@ -1,0 +1,46 @@
+---
+id: FB-integration-prune-without-proposal
+title: Integration plans a proposal prune for a spec-depth Unit that never had a proposal
+scope: repo
+kind: friction
+category: other
+target: devkit integration integrate
+origin: agent
+severity: noise
+recurring: false
+status: open
+created_at: 2026-11-13
+---
+
+# [FB-integration-prune-without-proposal] Integration plans a proposal prune for a spec-depth Unit that never had a proposal
+
+Category other: cleanup-plan noise in integration output.
+
+## 1. Friction / Question (friction, question)
+
+- **Context**: Local integration of a consumer `dev-<slug>` branch for a `spec`-depth Unit created with
+  `devkit spec new` (no proposal).
+- **Expectation**: The cleanup plan names only cleanup that applies.
+- **Actual**: `devkit integration integrate` planned and reported a proposal-prune step for
+  `docs/proposals/PROP-<slug>/`, which never existed. The worker paused to check whether a proposal was missing.
+- **Workaround (or Interpretation Chosen)**: Proceeded; the prune removed nothing.
+- **Suggestion**: Plan the `proposal-prune` target only when `docs/proposals/PROP-<slug>/` exists in the base, or
+  when the Unit records a handoff from a proposal.
+
+## Diagnostic Details
+
+- **Reproduction**: Integrate a `spec`-depth Unit branch with `devkit integration prepare` and `integrate --route
+  local`; exact output not retained.
+- **Expected / Actual**: Expected no prune target; actual a planned prune of a non-existent directory.
+- **Versions**: devkit `569379a06`: `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/cleanup.py`
+  derives `expected_prune` from the branch slug alone.
+- **Conditions**: consumer repository, `dev-integration` local route.
+- **Workarounds Attempted**: none needed.
+- **Related Assets**: `cleanup.py` (`_parse_targets`, `KIND_PROPOSAL`), `CAP-DLV-proposal-lifecycle`.
+
+## Evidence
+
+```text
+cleanup.py: slug = _prune_slug(slug_of(context.finish.branch))
+            expected_prune = (CleanupTarget(KIND_PROPOSAL, proposal_unit(slug), context.finish.source_sha),) if slug else ()
+```
