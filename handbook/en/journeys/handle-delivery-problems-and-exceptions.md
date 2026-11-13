@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
-  CAP-DLV-workflow-envelopes: fe938e32e96dce8b2ed0a5124e59556d9d4d0860
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
+  CAP-DLV-workflow-envelopes: e65db42fb9d524cefed5d9d492025ef46a73443e
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
 title: Handle delivery problems and exceptions
@@ -11,7 +11,7 @@ title: Handle delivery problems and exceptions
 # Handle delivery problems and exceptions
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -22,6 +22,7 @@ title: Handle delivery problems and exceptions
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -170,3 +171,7 @@ opened to get around the cap.
 Whatever happens, an unresolved problem keeps the base clean: the failed range, the open findings and the attempted
 remedies stay in Git, and nothing is deleted without your decision. Areas: [Delivery](../areas/delivery.md),
 [Worktree](../areas/worktree.md).
+
+## Working with this release
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

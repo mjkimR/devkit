@@ -3,13 +3,13 @@ sources:
   CAP-DLV-uiux-improvement: null
   UC-improve-an-interface-and-user-flow: null
 title: 인터페이스와 사용 흐름 개선하기
-translated_from: en/journeys/improve-an-interface-and-user-flow.md@190b59ca81643bba
+translated_from: en/journeys/improve-an-interface-and-user-flow.md@276f54504ad0e145
 ---
 
 # 인터페이스와 사용 흐름 개선하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,6 +20,7 @@ translated_from: en/journeys/improve-an-interface-and-user-flow.md@190b59ca81643
 - [아이디어 발전시키기](advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
 - [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
@@ -64,29 +65,24 @@ translated_from: en/journeys/improve-an-interface-and-user-flow.md@190b59ca81643
 - [용어집](../glossary.md)
 <!-- /handbook:generated -->
 
-선택형 `app-uiux-improve` 번들을 선택한 뒤 `/app-uiux-improve <목표>`를 명시적으로 호출하고
-인터페이스, 사용자 과업과 제약을 제공합니다. 개선 요청은 소비 프로젝트의 기존 절차에 따라 요청된 구현까지 진행할 수 있습니다.
-리뷰 전용 요청은 제품을 편집하지 않고 발견 사항을 반환합니다.
+인터페이스, 대표 작업과 제약을 제시하고 `/app-uiux-improve <goal>`을 명시적으로 호출합니다. 리뷰 전용 요청은 편집 없이 지적을 반환합니다. 구현 전 안내된 워크플로 외 절차 또는 소비자 워크플로를 선택합니다. 소비자 워크플로의 필수 단계와 리뷰는 유지되며 양쪽 경로 모두 제품 제약, 호스트 권한과 관련 검사를 따릅니다. 경로 선택만으로 별도 Git 권한이 생기지는 않습니다.
 
-1. 대표 과업 경로, 관련 산출물과 영향받는 인터페이스 상태를 확인합니다.
-2. 작은 요청은 직접 처리하고, 필요하면 designer, unconventional-designer, reference-researcher, critic 관점을 고릅니다.
-   지원되는 경우 새 독립 컨텍스트로 최초 검토를 하고 지원되지 않는 부분은 밝힙니다.
-3. 일관된 흐름과 시각적 방향, 중요한 상충 관계와 빠진 제품 결정을 종합합니다.
-4. 프로젝트의 전달·권한·승인 절차로 요청된 변경을 적용합니다.
-   현재 권한을 벗어난 범위 결정은 사용자 답변을 기다립니다.
-5. 바뀐 인터페이스와 대표 상호작용을 확인하고 범위 안의 결함을 고친 뒤 영향 검사를 반복합니다.
-6. 실제 변경, 수행한 검증과 중요한 한계를 보고합니다.
+1. 편집 전 실제 대상과 실행 가능한 로컬 브랜치를 확인합니다. 구조·흐름 변경은 관련 OOUX 문서를 읽습니다. 시각 감지기의 부정 결과만으로 UI가 없다고 판단하지 않습니다.
+2. 유용한 디자인 관점을 선택하고 방향을 종합합니다. 작업 초점은 순서를 정하며 명시적 제약이나 연기만 비목표가 됩니다.
+3. 승인된 목표를 구현하고 같은 대표 작업·데이터와 재실행 가능한 캡처 방식으로 브랜치를 검증합니다. 모의(mock) 검증과 누락된 실제 환경 검증을 구분합니다. 색상 변경은 주요 쌍과 상태의 유효 색상 대비율을 계산해 보고합니다.
+4. 수락한 변경, 검사, 한계, 오래된 문서의 해당 구절과 별도 후속 작업, 권한이 필요한 남은 Git 작업을 보고합니다.
 
-실행 화면을 볼 수 없으면 스크린샷·소스·텍스트 확인도 유용하지만 실제 상호작용 검증으로 보고하지 않습니다.
-도구나 승인이 없으면 유용한 부분 작업과 구체적인 차단 사유를 남깁니다.
-선택적 역할은 보존 파일·index·HEAD를 편집하지 않고 제안과 근거를 반환합니다.
-고정 팀·점수·토론 반복·지속 메모리·다른 진입점의 자동 호출은 요구하지 않습니다.
+## 선택적 Impeccable 세션
+
+사용자가 선택한 세션에 제한된 설명을 전달하고 조정자는 제품 편집을 멈춥니다. 질문 없는 개선은 네이티브 스킬 로드가 되는 새 하위 에이전트에서 실행할 수 있습니다. 대화 중계는 실제 네이티브 로드와 같은 하위 에이전트의 연속 실행이 확인되어야 하며 `shape`와 `critique`는 중첩 역할도 필요합니다. 첫 단계는 쓰기 없이 읽고 전체 질문 묶음을 준비합니다. 출처가 있는 추천 답변까지 모든 답변을 사용자가 확인한 뒤 같은 하위 에이전트가 씁니다. 기능 부족, 연속 실행 손실 또는 필수 자율성 검사 불가는 관련 작업을 멈추고 사용자 세션이나 승인된 인라인 경로로 이어가며 검사를 실행했다고 주장하지 않습니다.
+
+열거된 편집 중 승인 목표 안의 변경만 수락합니다. 다른 변경은 임의로 되돌리거나 삭제하지 않고 보고합니다. 로컬 전용 문맥은 절대 경로로 읽으며 복사·커밋·제거 권한을 추정하지 않습니다. `PRODUCT.md`와 `DESIGN.md` 편집은 명시적 파일·행위 권한이 필요합니다. 지원되는 상위 도구 도움말에 감사 저장 작업이 없으면 보고서로 지적을 반환하고 저장 불가를 알립니다.
+
+## 문맥 링크
+
+요청된 설정에서 `sh <installed-skill>/scripts/link-impeccable-context.sh`로 루트 문맥을 현재 워크트리의 `docs/materials/impeccable`에 연결합니다. 로컬 Git 제외 항목 `/PRODUCT.md`, `/DESIGN.md`, `/.impeccable`을 추가하기 전에 해당 줄을 보여 줍니다. `--check`는 쓰기 없이 차이를 확인합니다. 추적 중인 루트, 기존 항목과 교체된 항목을 보존하며 내용이 다르면 사용자 지시에 따라 병합합니다.
 
 ## 출처
 
 - [UC-improve-an-interface-and-user-flow](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md) (영어 원문)
 - [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md) (영어 원문)
-
-## 객체 정리와 선택적 Impeccable 작업
-
-진입점은 `app-uiux-improve` 번들의 `/app-uiux-improve`입니다. 구조·흐름 변경은 프로젝트의 OOUX 객체를 먼저 읽습니다. 사용자가 선택한 Impeccable 세션에는 제한된 작업 설명을 전달하고 조정자는 제품 편집을 멈춥니다. 세션이 열거한 제품 파일 변경만 수락하며 관련 없는 변경은 보고하고 자동으로 되돌리거나 삭제하지 않습니다. 소비자 소유 문맥 파일은 보존합니다. 오래된 OOUX 문서는 소비자 워크플로에서 갱신하도록 이름을 보고합니다.

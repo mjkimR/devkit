@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-GOV-evaluation-lifecycle: caf36057be3e5b74834b5a842eb9c35a17e5e22c
-  CAP-GOV-rule-authoring: 7e57e66ef161b56e775ffd7c1ede6a3a2b601257
-  CAP-GOV-rules-engine: 026e5296b64c9056723eb649a322007d74e4664d
+  CAP-GOV-evaluation-lifecycle: 01aacea928c70408c22fa701e04032304941ed4c
+  CAP-GOV-rule-authoring: 8bf2218706b9b54fd66709ab279ef1d6c4ba117b
+  CAP-GOV-rules-engine: 0be08e47c6be2cb1892d91c7bd7c15dbf3bec98d
   CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
   UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
@@ -13,7 +13,7 @@ title: Governance rules
 # Governance rules
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -24,6 +24,7 @@ title: Governance rules
 - [Advance an idea](../journeys/advance-an-idea.md)
 - [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
+- [Discover and refine an idea](../journeys/discover-and-refine-an-idea.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
 - [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
@@ -244,3 +245,7 @@ synchronization; integration performs no content-readiness or rule-import evalua
   the document and lifecycle rules in full.
 - [Rules reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/rules.md): commands,
   output, exit codes and the built-in rule catalog.
+
+## Working with this release
+
+Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

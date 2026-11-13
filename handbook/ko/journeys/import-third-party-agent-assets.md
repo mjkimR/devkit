@@ -1,12 +1,12 @@
 ---
 title: 선택한 외부 에이전트 자산 가져오기
-translated_from: en/journeys/import-third-party-agent-assets.md@3eb6a082b5f1c5f0
+translated_from: en/journeys/import-third-party-agent-assets.md@a5e0a31cf72f7092
 ---
 
 # 선택한 외부 에이전트 자산 가져오기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 `adaptive-dev:core` 또는 `adaptive-dev:import`를 선택하고 동기화한 뒤 `/adaptive-import <repository-url-or-local-path>`를 명시적으로 실행합니다.
@@ -23,3 +23,7 @@ translated_from: en/journeys/import-third-party-agent-assets.md@3eb6a082b5f1c5f0
 
 - [UC-import-third-party-agent-assets](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-import-third-party-agent-assets.md) (영문 원문)
 - [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영문 원문)
+
+## 이 릴리스의 작업 방식
+
+조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.

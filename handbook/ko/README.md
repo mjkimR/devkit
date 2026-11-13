@@ -14,13 +14,13 @@ sources:
   CAP-DLV-uiux-improvement: null
   CAP-HARN-command-design: null
 title: devkit 핸드북
-translated_from: en/README.md@b3306b4ddf4f5161
+translated_from: en/README.md@413c08e700b48ca8
 ---
 
 # devkit 핸드북
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 주도적으로 개발 작업을 수행하는 저장소를 위한 개발자 도구 모음입니다.
@@ -154,3 +154,7 @@ Living Spec 건강하게 유지하기:
 
 유지보수 이력은 플레이북의 자동 단계가 아닌 별도 요청하는 동반 작업입니다.
 통합은 확인된 Git 반영과 최종 대상 검사를 구분합니다. [통합](areas/integration.md)을 참고하십시오.
+
+## 이 릴리스의 작업 방식
+
+조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.

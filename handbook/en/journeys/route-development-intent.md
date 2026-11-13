@@ -2,12 +2,12 @@
 sources:
   ADR-decision-ledger: ad6ecb56b5655121cc19c4ec218962ad0b4fe21d
   CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
-  UC-advance-an-idea: 45c8acaee167f7472b70885cdcbac26fd133c39f
+  UC-advance-an-idea: ccd7fa7758787dfc9e96321082bc99904eaadb2f
   UC-plan-and-hand-off-a-proposal: d8fdc0f510ff75159907de246ba4fc72b7b3e551
   UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
 title: Route a development request
@@ -16,7 +16,7 @@ title: Route a development request
 # Route a development request
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -27,6 +27,7 @@ title: Route a development request
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -168,3 +169,7 @@ integration retain their independent approval policies.
 
 One workflow per task, named by its Unit or, for a session, by the conversation. Every recorded approval comes from
 your instruction, your explicit answer or `auto` policy; a refused `devkit spec new` leaves the workspace unchanged.
+
+## Working with this release
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

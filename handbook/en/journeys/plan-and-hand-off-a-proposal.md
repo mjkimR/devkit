@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
   CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
   UC-plan-and-hand-off-a-proposal: d8fdc0f510ff75159907de246ba4fc72b7b3e551
@@ -10,7 +10,7 @@ title: Plan and hand off a proposal
 # Plan and hand off a proposal
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,6 +21,7 @@ title: Plan and hand off a proposal
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -207,3 +208,7 @@ A post-commit dirty or changed-history result likewise needs in-place inspection
 In local orchestration, git-operator reports `checks.worker_input` with the observed `head` and `dirty_paths`.
 The Host compares these with Git before starting a worker on that clean head or its own later link-fix descendant.
 The handoff's rewritten references are reread and repaired in a later commit, preserving the transaction SHA.
+
+## Working with this release
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

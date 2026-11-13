@@ -1,7 +1,7 @@
 ---
 sources:
-  CAP-DLV-deep-research: 9884a72877319901f9240bc506f168401fbac1c2
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
   UC-research-an-idea-and-shape-a-roadmap: 3744a97ed5ecfa404e7127489576ca54dc43223c
 title: Research an idea and shape a roadmap
 ---
@@ -9,7 +9,7 @@ title: Research an idea and shape a roadmap
 # Research an idea and shape a roadmap
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,6 +20,7 @@ title: Research an idea and shape a roadmap
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)

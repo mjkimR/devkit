@@ -29,13 +29,13 @@ sources:
   UC-review-and-refactor-accumulated-slop: null
   UC-route-development-intent: null
 title: 전달
-translated_from: en/areas/delivery.md@c0c1ecbeb0654de4
+translated_from: en/areas/delivery.md@adc2c0d861343836
 ---
 
 # 전달
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -46,6 +46,7 @@ translated_from: en/areas/delivery.md@c0c1ecbeb0654de4
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](../journeys/discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
 - [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
@@ -216,7 +217,7 @@ Host가 소스 런타임으로 내용을 검사한 뒤 명시적 브랜치 통�
   구현·커밋·게시 권한을 주지 않습니다.
 - `design-explore`는 구조·모델·워크플로의 해결 기제를 탐색하고 저장 위치 요청이 없으면 대화로 방향을 제시합니다.
   구현 권한을 주지 않습니다.
-- `app-uiux-improve`는 인터페이스·사용 흐름을 개선하며 요청한 구현을 소비 프로젝트의 절차로 진행합니다.
+- `app-uiux-improve`는 인터페이스·사용 흐름을 개선하며 요청한 구현을 작업에 대해 승인된 경로로 진행합니다.
   리뷰 전용 요청에는 편집 없이 발견 사항을 반환합니다.
 
 고정된 역할 구성이나 점수 없이 필요한 스킬 내부 관점을 선택합니다.
@@ -276,3 +277,11 @@ review-refactor와 성능 작업은 이전·이후 동작을 비교하고 계약
 제안 실행 인터페이스는 `CAP-DLV-proposal-lifecycle`, 작업자 권한과 반환 검증은 `CAP-DLV-delivery-roles`가 소유합니다. 로컬 Host의 통합 Planning 수락은 `devkit spec proposal accept-plan <slug> --by user --mode accept_only`를 사용합니다. 일반 `accept`에는 `--mode`와 `--effort`가 없습니다.
 
 [테스트 관리 평가](../journeys/assess-test-management.md)는 선택한 스위트를 상담하고 결정된 변경을 기본 워크플로로 보냅니다.
+
+## 이 릴리스의 작업 방식
+
+조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.
+
+UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.
+
+보호된 통합은 고정된 소스나 대상에서 도달하는 커밋 이력에 제안 경로가 있을 때만 제안 정리를 포함합니다. 승인된 정리 대상은 병합과 재시도 사이에 유지되며, 커밋되지 않은 디렉터리만으로는 정리 대상이 되지 않습니다.

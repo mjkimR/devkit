@@ -10,13 +10,13 @@ sources:
   UC-route-development-intent: null
   UC-run-parallel-work-safely: null
 title: 워크트리
-translated_from: en/areas/worktree.md@4558db948dd1e53b
+translated_from: en/areas/worktree.md@da25ddc81cf43ca2
 ---
 
 # 워크트리
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -27,6 +27,7 @@ translated_from: en/areas/worktree.md@4558db948dd1e53b
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](../journeys/discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
 - [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
@@ -205,3 +206,7 @@ Host가 반영된 런타임을 동기화하고 최종 대상을 검사하며 성
 - [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/worktree.md) (영어 원문):
   명령과 오류 코드.
 - 관련 문서: [통합](integration.md), [협업](collaboration.md).
+
+## 이 릴리스의 작업 방식
+
+규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

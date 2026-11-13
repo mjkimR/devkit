@@ -5,13 +5,13 @@ sources:
   ARCH-05-1-containers: 18d1d7d1b87b44da717edc0327e61a934b6017ca
   CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
   CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
-  CAP-DLV-deep-research: 9884a72877319901f9240bc506f168401fbac1c2
+  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
+  CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
   CAP-DLV-design-exploration: 2955370f17cfb55a293ea67eb545e7c5df5f4ffb
   CAP-DLV-maintenance-history: b1e327e613097e1cc9b843934824a35b5f174e6c
   CAP-DLV-release-handbook: 9d4b4799c61ab2d689d741f3df61323b9cd6689a
   CAP-DLV-sdd-baseline-adoption: acd7cadb9c726ae861f26364cd831d3d1afa1c4c
-  CAP-DLV-uiux-improvement: 7c2ea122d1db7d44dbb2ba890bd576beba070943
+  CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
   CAP-HARN-command-design: 55dfa957b84301d7a9897676145bec7e2486e71f
 title: devkit handbook
 ---
@@ -19,7 +19,7 @@ title: devkit handbook
 # devkit handbook
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 devkit is a developer toolkit for repositories where AI coding agents (Codex, Claude Code, Antigravity) do much of
@@ -177,3 +177,7 @@ Selecting them starts no activity and changes no approach. Their walkthroughs ar
 
 Maintenance history is a separately requested companion, not an automatic step in those playbooks.
 Integration separates confirmed Git landing from final target checks; see [Integration](areas/integration.md).
+
+## Working with this release
+
+The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.

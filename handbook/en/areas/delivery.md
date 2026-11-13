@@ -1,28 +1,28 @@
 ---
 sources:
-  CAP-DLV-adaptive-assignments: 7801618ce66b8e3fe7fd270e4b5ed92cc53b02ba
-  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
+  CAP-DLV-adaptive-assignments: ab0842accf482f5e3a29279e38a0c3ee5742468c
+  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
   CAP-DLV-cli-and-output: ba4e0c78e640e191d0dde25f9250f7be07897238
-  CAP-DLV-deep-research: 9884a72877319901f9240bc506f168401fbac1c2
-  CAP-DLV-delivery-roles: 11bce5c7073eb5a0b2cb9123c63dcc3ce3b7aee2
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
+  CAP-DLV-delivery-roles: 453267daa70bf834a0b01d11f4c05f2c79a2d98e
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
   CAP-DLV-design-exploration: 2955370f17cfb55a293ea67eb545e7c5df5f4ffb
   CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
   CAP-DLV-human-interaction: 7926c28e1951896774e56bd201fbd5e3a474a673
   CAP-DLV-maintenance-history: b1e327e613097e1cc9b843934824a35b5f174e6c
   CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
-  CAP-DLV-proposal-lifecycle: 0352b04ef864b814689c218b94713674381b6fc8
+  CAP-DLV-proposal-lifecycle: a1e42c3299fd86d2a978a15015a3e5fa92363f8e
   CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
   CAP-DLV-release-handbook: 9d4b4799c61ab2d689d741f3df61323b9cd6689a
   CAP-DLV-review-refactor: 80b523a1ee09e2cff326ff4114c3c83c5461a666
   CAP-DLV-sdd-baseline-adoption: acd7cadb9c726ae861f26364cd831d3d1afa1c4c
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
   CAP-DLV-test-management: 016f55406ad61d18873316b926cae25ce9e3150a
-  CAP-DLV-uiux-improvement: 7c2ea122d1db7d44dbb2ba890bd576beba070943
+  CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
   CAP-DLV-weekly-report: ad32dcc4519c5757150443dcb6079f919578d2a4
   CAP-DLV-workflow-definitions: 05a3ee4acd583eac3d3828c9259c4f2aabe554cd
-  CAP-DLV-workflow-envelopes: fe938e32e96dce8b2ed0a5124e59556d9d4d0860
+  CAP-DLV-workflow-envelopes: e65db42fb9d524cefed5d9d492025ef46a73443e
   CAP-DLV-workflow-orchestration: 5ad464a0ca56f3ad3beb141cf126ca309b9dffca
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   UC-drive-development-to-integration: 2893591134de64be66238b4102062f02e0e370c8
@@ -38,7 +38,7 @@ title: Delivery
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -49,6 +49,7 @@ title: Delivery
 - [Advance an idea](../journeys/advance-an-idea.md)
 - [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
+- [Discover and refine an idea](../journeys/discover-and-refine-an-idea.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
 - [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
@@ -218,8 +219,8 @@ Unit or integration-provider edit is needed. See [Advance an idea](../journeys/a
   It grants no implementation, commit or publication authority.
 - `design-explore` explores mechanisms for architecture, models or workflows and returns directions in conversation
   unless you request a destination. It grants no implementation authority.
-- `app-uiux-improve` improves an interface or user flow and carries requested implementation through the consumer's
-  workflow. A review-only request returns findings without edits.
+- `app-uiux-improve` improves an interface or user flow and carries requested implementation through the task-approved
+  route. A review-only request returns findings without edits.
 
 These entries use optional skill-local perspectives without a fixed cast or scoring requirement.
 Their selection starts no work and changes no approach. Each runs only when you explicitly invoke it.
@@ -278,3 +279,11 @@ It is never a reconciliation target; `docs/` prevails when the two disagree.
 Proposal execution interfaces live in `CAP-DLV-proposal-lifecycle`; worker authority and return validation live in `CAP-DLV-delivery-roles`. On a local Host, composed Planning acceptance uses `devkit spec proposal accept-plan <slug> --by user --mode accept_only`. Plain `accept` has no `--mode` or `--effort`.
 
 [Test management](../journeys/assess-test-management.md) consults on a selected suite before decided changes enter the native workflow.
+
+## Working with this release
+
+The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.
+
+Guarded integration includes proposal pruning only when the proposal path occurs in committed history reachable from its pinned source or target. The approved cleanup tuple stays unchanged across landing and retries; an uncommitted directory alone does not make pruning applicable.

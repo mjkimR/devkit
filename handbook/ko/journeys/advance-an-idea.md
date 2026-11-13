@@ -5,13 +5,13 @@ sources:
   CAP-HARN-agent-guidance: null
   UC-advance-an-idea: null
 title: 아이디어 발전시키기
-translated_from: en/journeys/advance-an-idea.md@3158951e4942aa42
+translated_from: en/journeys/advance-an-idea.md@dd153c3e017d9ac9
 ---
 
 # 아이디어 발전시키기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,6 +21,7 @@ translated_from: en/journeys/advance-an-idea.md@3158951e4942aa42
 - [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
 - [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
 - [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
@@ -131,3 +132,7 @@ SDD의 제안 숙성과는 별개이며, 그쪽은 [제안 계획 후 넘기기]
 adaptive 번들은 `devkit-adaptive`가 제공하며 `devkit-docs`에 의존하고 `devkit-spec` 없이 동작합니다. Swarm planner·worker·verifier 계약으로 제한된 위임을 지원합니다. `devkit adaptive assignment new`로 할당을 기록하고 반환을 보고한 뒤 실제 diff와 선언된 검사 결과를 검증하고 수락합니다. 원장은 추가 권한을 부여하거나 검사를 실행하지 않습니다.
 
 외부 전문 자산은 [선택한 외부 에이전트 자산 가져오기](import-third-party-agent-assets.md)를 사용합니다.
+
+## 이 릴리스의 작업 방식
+
+조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.

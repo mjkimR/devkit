@@ -1,7 +1,7 @@
 ---
 sources:
-  CAP-GOV-evaluation-lifecycle: caf36057be3e5b74834b5a842eb9c35a17e5e22c
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-GOV-evaluation-lifecycle: 01aacea928c70408c22fa701e04032304941ed4c
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
 title: Resolve stale activity branches
@@ -10,7 +10,7 @@ title: Resolve stale activity branches
 # Resolve stale activity branches
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,6 +21,7 @@ title: Resolve stale activity branches
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -153,3 +154,7 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/
 
 Each branch you decided on is either resumed in its worktree with its unit intact, or gone together with its pull
 request, remote copies and worktree. A branch you keep stays as it was. A refused discard deletes nothing.
+
+## Working with this release
+
+Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

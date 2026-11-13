@@ -10,7 +10,7 @@ translated_from: en/areas/compact.md@273e11250f73b0ce
 # 컴팩트 명령 출력
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,6 +21,7 @@ translated_from: en/areas/compact.md@273e11250f73b0ce
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](../journeys/discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
 - [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)

@@ -6,7 +6,7 @@ translated_from: en/journeys/read-decision-supersession.md@eb1026cb39a885b2
 # 결정 대체 관계 읽기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 Read 또는 렌더링된 Files에서 ADR을 열면 머리말 아래에 Supersedes와 Superseded by가 표시됩니다. 전체 대체는 이전 결정의 상태와 상호 메타데이터를 따르며 나머지는 부분 대체와 작성된 조항 범위를 보여줍니다.

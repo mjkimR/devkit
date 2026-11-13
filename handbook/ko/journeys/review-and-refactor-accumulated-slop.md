@@ -9,13 +9,13 @@ sources:
   CAP-DLV-review-refactor: null
   UC-review-and-refactor-accumulated-slop: null
 title: 누적된 군더더기 검토와 리팩터링
-translated_from: en/journeys/review-and-refactor-accumulated-slop.md@59825f66d0e6fb0e
+translated_from: en/journeys/review-and-refactor-accumulated-slop.md@b6b89427bc3e8b32
 ---
 
 # 누적된 군더더기 검토와 리팩터링
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -26,6 +26,7 @@ translated_from: en/journeys/review-and-refactor-accumulated-slop.md@59825f66d0e
 - [아이디어 발전시키기](advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
 - [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
@@ -134,3 +135,9 @@ translated_from: en/journeys/review-and-refactor-accumulated-slop.md@59825f66d0e
 요청된 이력은 근거를 동결하고 별도 게시 권한을 사용합니다.
 이후 통합 변경은 게시된 보고서를 고치지 않고 추가 기록으로 남깁니다.
 [유지보수 실행 기록하기](record-a-maintenance-run.md)를 참고하십시오.
+
+## 이 릴리스의 작업 방식
+
+자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.
+
+UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

@@ -6,13 +6,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-handle-delivery-problems-and-exceptions: null
 title: 전달 문제와 예외 처리하기
-translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@18726220169378d3
+translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@16e9e9d0da41569b
 ---
 
 # 전달 문제와 예외 처리하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -23,6 +23,7 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@18726220
 - [아이디어 발전시키기](advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
 - [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
@@ -173,3 +174,7 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
 어떠한 예외 상황에서도, 미해결된 문제는 기본 브랜치로 절대 병합되지 않으므로 기본 브랜치의 무결성이 완벽히 보호됩니다. 실패한 코드 범위,
 미해결 지적 사항, 시도했던 복구 내역은 작업 브랜치 Git 이력에 온전히 보존되며, 사용자의 명시적 결정 없이는 아무것도 삭제되지 않습니다.
 관련 영역: [전달](../areas/delivery.md), [워크트리](../areas/worktree.md).
+
+## 이 릴리스의 작업 방식
+
+UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

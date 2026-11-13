@@ -1,17 +1,17 @@
 ---
 sources:
   CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DLV-adaptive-assignments: 7801618ce66b8e3fe7fd270e4b5ed92cc53b02ba
-  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
-  UC-advance-an-idea: 45c8acaee167f7472b70885cdcbac26fd133c39f
+  CAP-DLV-adaptive-assignments: ab0842accf482f5e3a29279e38a0c3ee5742468c
+  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  UC-advance-an-idea: ccd7fa7758787dfc9e96321082bc99904eaadb2f
 title: Advance an idea
 ---
 
 # Advance an idea
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,6 +21,7 @@ title: Advance an idea
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -161,3 +162,7 @@ unrelated edits and existing SDD history stay as they were. Area: [Delivery](../
 The adaptive bundle now comes from `devkit-adaptive`, which requires `devkit-docs` and works without `devkit-spec`. Swarm planner, worker and verifier contracts support bounded delegated work. Record assignments with `devkit adaptive assignment new`, report returns and verify the actual diff and declared check outcomes before accepting them. The ledger grants no additional authority and runs no checks.
 
 For selected external specialist assets, use [Import selected third-party agent assets](import-third-party-agent-assets.md).
+
+## Working with this release
+
+The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.

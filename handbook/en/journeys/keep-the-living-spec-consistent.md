@@ -2,7 +2,7 @@
 sources:
   CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
   CAP-DOCS-namespaces: f6a06f2fb6a7564ed6ede84c6375c1e401dedb91
-  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
+  CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
   CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
   CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
@@ -12,7 +12,7 @@ title: Keep the Living Spec consistent
 # Keep the Living Spec consistent
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -23,6 +23,7 @@ title: Keep the Living Spec consistent
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -177,3 +178,7 @@ Registered namespaces can keep steering glossaries, synonym files, UX object reg
 `RULE-decision-supersession` checks reciprocal whole/partial ADR replacement metadata; review decides whether its
 scope is accurate. Alias fixes also cover visible steering references, glossary Owner cells and configured quick references.
 Entrypoint derivation excludes receipt-owned generated outputs while scope observation retains their write paths.
+
+## Working with this release
+
+Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

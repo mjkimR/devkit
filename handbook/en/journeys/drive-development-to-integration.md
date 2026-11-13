@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
-  CAP-DLV-workflow-envelopes: fe938e32e96dce8b2ed0a5124e59556d9d4d0860
+  CAP-DLV-workflow-envelopes: e65db42fb9d524cefed5d9d492025ef46a73443e
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
@@ -13,7 +13,7 @@ title: Drive development to integration
 # Drive development to integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -24,6 +24,7 @@ title: Drive development to integration
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
@@ -155,3 +156,7 @@ Full route and recovery details are in [Integration](../areas/integration.md).
 - [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md)
 - [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
 - [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md)
+
+## Working with this release
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

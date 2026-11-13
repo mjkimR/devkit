@@ -6,26 +6,26 @@ sources:
   ARCH-08-cross-cutting: 3bf334671a435d6d6956b2a8be623aafadd34924
   CAP-ADV-agent-advisory-protocol: 573633a0ccdb58ba524583f27087f88f050d80a2
   CAP-COLL-work-scope-registry: a2dea3a64550dfad9c3225650fbf433174d56773
-  CAP-DIST-agent-projections: 1c43d7e197a7f986584a8bfb12922bcdd2ca877b
-  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DIST-agent-projections: 55e51a4d47e28808486ffa1c12c4fa3fe563f7b5
+  CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
   CAP-DIST-manifest-spec: c36062832b0a088f0cdfba7bea04c6eceb3ae0d4
   CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DIST-workspace-ownership: 99e6662d7edc19d07fe05b94b42c892eece6ad57
-  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
-  CAP-DLV-deep-research: 9884a72877319901f9240bc506f168401fbac1c2
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DIST-workspace-ownership: 7801db0b2bf793890a591d71ed1e46ec39ba6739
+  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
+  CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
   CAP-DLV-design-exploration: 2955370f17cfb55a293ea67eb545e7c5df5f4ffb
   CAP-DLV-human-interaction: 7926c28e1951896774e56bd201fbd5e3a474a673
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
   CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
-  CAP-DLV-uiux-improvement: 7c2ea122d1db7d44dbb2ba890bd576beba070943
-  CAP-DLV-workflow-envelopes: fe938e32e96dce8b2ed0a5124e59556d9d4d0860
+  CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
+  CAP-DLV-workflow-envelopes: e65db42fb9d524cefed5d9d492025ef46a73443e
   CAP-DLV-workflow-orchestration: 5ad464a0ca56f3ad3beb141cf126ca309b9dffca
   CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
-  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
-  CAP-GOV-rules-engine: 026e5296b64c9056723eb649a322007d74e4664d
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
+  CAP-GOV-rules-engine: 0be08e47c6be2cb1892d91c7bd7c15dbf3bec98d
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
 title: Concepts
@@ -34,7 +34,7 @@ title: Concepts
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -44,6 +44,7 @@ title: Concepts
 - [Advance an idea](journeys/advance-an-idea.md)
 - [Assess a selected test suite](journeys/assess-test-management.md)
 - [Design necessary command entry points](journeys/design-command-entrypoints.md)
+- [Discover and refine an idea](journeys/discover-and-refine-an-idea.md)
 - [Drive development to integration](journeys/drive-development-to-integration.md)
 - [Execute an isolated command](journeys/execute-an-isolated-command.md)
 - [Explore a design problem](journeys/explore-a-design-problem.md)
@@ -358,7 +359,17 @@ Research material is cited by its `MAT-<slug>` ID instead of copied into current
 `deep-research`, `design-explore` and `app-uiux-improve` are opt-in user-only entries. Their skill-local roles are loaded
 only for an assignment; selecting a bundle grants no implementation or publication authority.
 Research keeps one indexed material; exploration returns directions in conversation unless a destination is requested;
-UI/UX improvement implements requested changes through the consumer workflow and reports actual usage checks.
+UI/UX improvement follows the task-approved route and reports branch-specific checks.
 
-`proposal-handoff` is the fourth approval boundary: it decides whether accepted Planning starts Development,
+The `proposal-handoff` approval boundary decides whether accepted Planning starts Development,
 including worktree/setup effects. It is separate from accepting the direction and landing Development.
+
+## Working with this release
+
+The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.
+
+Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.
+
+Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

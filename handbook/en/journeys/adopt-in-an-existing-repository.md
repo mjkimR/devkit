@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
   CAP-HARN-command-mount: 9963e0253b7b23f53d30d2185998241d83cecd95
   UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
   UC-adopt-sdd-from-adaptive-development: 1eb8461c21c7c3e6fa131c4efb88d7f7e07095f6
@@ -11,7 +11,7 @@ title: Adopt devkit in an existing repository
 # Adopt devkit in an existing repository
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,6 +21,7 @@ title: Adopt devkit in an existing repository
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)

@@ -2,17 +2,17 @@
 sources:
   ARCH-08-1-agent-output: 4921a21fa00c4cd4413b7a01236cc833944a458a
   CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
   CAP-DLV-sdd-baseline-adoption: acd7cadb9c726ae861f26364cd831d3d1afa1c4c
   CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
-  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
   CAP-HARN-command-design: 55dfa957b84301d7a9897676145bec7e2486e71f
   CAP-HARN-command-mount: 9963e0253b7b23f53d30d2185998241d83cecd95
   CAP-HARN-isolated-execution: 7b36ba1e9522527ede0d5a91189ee2ec1efcf6ff
   UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
   UC-adopt-sdd-from-adaptive-development: 1eb8461c21c7c3e6fa131c4efb88d7f7e07095f6
-  UC-advance-an-idea: 45c8acaee167f7472b70885cdcbac26fd133c39f
+  UC-advance-an-idea: ccd7fa7758787dfc9e96321082bc99904eaadb2f
   UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
   UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
@@ -22,7 +22,7 @@ title: Harness
 # Harness
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -33,6 +33,7 @@ title: Harness
 - [Advance an idea](../journeys/advance-an-idea.md)
 - [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
+- [Discover and refine an idea](../journeys/discover-and-refine-an-idea.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
 - [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
@@ -246,3 +247,9 @@ See [Design necessary command entry points](../journeys/design-command-entrypoin
 ## Commands at a fixed commit
 
 [Isolated execution](../journeys/execute-an-isolated-command.md) uses `devkit exec` to prepare a detached checkout and retain command evidence outside it. Launch success is pending; collect the result before claiming verification. Cancellation, observation and cleanup have separate outcomes.
+
+## Working with this release
+
+The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

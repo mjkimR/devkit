@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
+  CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
   CAP-GEN-tracked-artifacts: ff8539b14d3af5890ba656e23b0e43c1d0d05fc8
 title: Generated Files
 ---
@@ -9,7 +9,7 @@ title: Generated Files
 # Generated Files
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own receipt
@@ -110,3 +110,7 @@ and `CAP-DIST-sync-and-transactions`.
 stages nothing. Unmerged index paths refuse with `GENERATED_UNMERGED`; resolve those conflicts first.
 When integration kept declared seed sides for known generated conflicts, synchronize the landed runtime first,
 regenerate and commit the named outputs, then run the final target checks.
+
+## Working with this release
+
+Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

@@ -8,7 +8,7 @@ title: Assess a selected test suite
 # Assess a selected test suite
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Use the explicitly invoked `maintenance/test-management` playbook to decide whether a selected suite needs a different arrangement. Select `maintenance:testing` or `maintenance:all` and sync first.

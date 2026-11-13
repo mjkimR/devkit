@@ -6,7 +6,7 @@ translated_from: en/journeys/execute-an-isolated-command.md@97c03ee086ef45a1
 # 격리된 명령 실행하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 고정된 로컬 커밋에서 기본 명령을 실행하면서 독립 작업을 계속하려면 `devkit exec`를 사용합니다. 임시 데이터·격리 서비스·임시 포트를 준비합니다. 체크아웃 격리는 OS 샌드박스가 아닙니다.

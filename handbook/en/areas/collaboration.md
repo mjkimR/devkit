@@ -14,7 +14,7 @@ title: Collaboration
 # Collaboration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -25,6 +25,7 @@ title: Collaboration
 - [Advance an idea](../journeys/advance-an-idea.md)
 - [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
+- [Discover and refine an idea](../journeys/discover-and-refine-an-idea.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
 - [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)

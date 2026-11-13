@@ -29,13 +29,13 @@ sources:
   CAP-INT-mcp-services: null
   CAP-WT-task-worktrees: null
 title: 개념
-translated_from: en/concepts.md@9730a88bac55073c
+translated_from: en/concepts.md@8bd46b71ca6371c1
 ---
 
 # 개념
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -45,6 +45,7 @@ translated_from: en/concepts.md@9730a88bac55073c
 - [아이디어 발전시키기](journeys/advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](journeys/design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](journeys/discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](journeys/drive-development-to-integration.md)
 - [격리된 명령 실행하기](journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](journeys/explore-a-design-problem.md)
@@ -340,7 +341,17 @@ Host가 반영된 런타임을 동기화하고 오래된 추적 생성물을 재
 `deep-research`, `design-explore`, `app-uiux-improve`는 선택형 사용자 전용 진입점입니다.
 스킬 내부 역할은 맡긴 작업에 필요한 경우에만 읽습니다. 번들 선택이 구현·게시 권한을 주지는 않습니다.
 조사는 하나의 색인된 자료를 남기고, 탐색은 저장 위치 요청이 없으면 대화에서 방향을 제시합니다.
-UI/UX 개선은 소비 프로젝트의 절차로 요청된 변경을 구현하고 실제 사용 검증을 보고합니다.
+UI/UX 개선은 작업에 대해 승인된 경로로 요청된 변경을 구현하고 변경 브랜치의 검증 결과를 보고합니다.
 
-네 번째 승인 경계인 `proposal-handoff`는 수락한 Planning에서 Development를 시작할지 결정하며
+`proposal-handoff` 승인 경계는 수락한 Planning에서 Development를 시작할지 결정하며
 워크트리·설치 효과를 포함합니다. 방향 수락이나 Development 반영과는 별개입니다.
+
+## 이 릴리스의 작업 방식
+
+조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.
+
+자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.
+
+규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.
+
+UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

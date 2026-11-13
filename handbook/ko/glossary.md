@@ -4,7 +4,7 @@ generated: true
 # 용어집
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -46,6 +46,7 @@ devkit 문서가 쓰는 용어이며 Living Spec 용어집에서 생성됩니다
 | **Development approach** | 개발 방식 | Shared project choice of `sdd` or `adaptive-dev`, independent of installed packages and selected assets; excludes clone-local execution environment and publication authority. | `CAP-DIST-sync-and-transactions` |
 | **Adaptive development** | 적응형 개발 | The development approach (`adaptive-dev`) that iterates a product through clarification, research, implementation and usage verification without per-change SDD records, and may remain a project's approach; SDD adoption is the explicit `sdd-baseline` procedure. Excludes SDD Units, envelopes and immutable experiment history. | `CAP-DLV-adaptive-development` |
 | **Adaptive-dev current context** | 적응형 개발 현재 컨텍스트 | Mutable current product facts used to resume adaptive development: goal, retained choices versus assumptions, run/check evidence, uncertainty and next useful action; excludes SDD Units/envelopes, transcripts and immutable experiment history. | `CAP-DLV-adaptive-development` |
+| **Idea discovery** | 아이디어 발굴 | An explicitly invoked conversation (`/discovery`) that refines a half-formed idea through minimum interviewing, bounded exploration and pressure-testing into concrete proposals and a next decision; excludes automatic delivery, mandatory research reports and implementation. | `CAP-DLV-idea-discovery` |
 | **Deep research** | 심층 조사 | An explicitly invoked, approach-neutral team investigation (`/deep-research`) retained as one indexed material under `docs/materials/` and cited by its `MAT-<slug>` ID; excludes product iteration, approach policy, delivery records and committing the result. | `CAP-DLV-deep-research` |
 | **Work scope observation** | 작업 범위 관찰 | Invocation-local evidence from one snapshot, pinned branch tree or accessible worktree, with task attribution, provenance and missing layers; excludes a persistent registry revision or write authority. | `CAP-COLL-work-scope-registry` |
 | **Workflow** | 워크플로 | A multi-stage delivery procedure declared as data (`kind = "workflow"`): ordered stages with entry/exit checks, approval gates, and returns. | `CAP-DLV-workflow-orchestration` |

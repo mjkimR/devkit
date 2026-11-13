@@ -5,13 +5,13 @@ sources:
   CAP-SRCH-document-search: null
   UC-find-the-right-documents: null
 title: 검색
-translated_from: en/areas/search.md@4da1699e3a1980aa
+translated_from: en/areas/search.md@2f84987bd75ae684
 ---
 
 # 검색
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 검색(search) 기능은 `devkit playbook search` 및 `devkit docs search` 명령을 지원하는 랭킹 엔진입니다. 문서를
@@ -79,3 +79,7 @@ extra 의존성은 별도의 독립적인 요구사항으로 추가하지 말고
 `docs/packages/<name>/steering/glossary.yaml`을 네임스페이스 이름순으로 확장합니다.
 선택하지 않았거나 미등록인 파일은 확장·오류에 영향을 주지 않습니다.
 정규 ID·별칭·경로·파일명과 일치하는 질의는 순위 계산과 무관하게 해당 문서를 맨 앞에 고정합니다.
+
+## 이 릴리스의 작업 방식
+
+자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.

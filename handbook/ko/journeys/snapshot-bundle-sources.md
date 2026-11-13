@@ -1,12 +1,12 @@
 ---
 title: 번들 소스를 로컬로 도입하고 갱신하기
-translated_from: en/journeys/snapshot-bundle-sources.md@ecca4d7d9a74c1ff
+translated_from: en/journeys/snapshot-bundle-sources.md@a0c55cf8754bbd55
 ---
 
 # 번들 소스를 로컬로 도입하고 갱신하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 번들 소스 스냅샷(Bundle source snapshot)은 지원되는 콘텐츠 제공자 전체를 별도 로컬 패키지로 보존합니다. 원래 번들 버전·자원 바이트·실행 모드·라이선스를 경로 없는 출처 정보와 함께 유지합니다. 런타임·명령 제공자나 지원하지 않는 동적 의존 범위는 쓰기 전에 거부합니다.
@@ -30,3 +30,7 @@ uv run devkit bundle refresh tools/local-content --source SOURCE --expect CURREN
 - [CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영문 원문)
 - [CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md) (영문 원문)
 - [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영문 원문)
+
+## 이 릴리스의 작업 방식
+
+자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.

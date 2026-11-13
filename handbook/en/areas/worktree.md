@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
+  CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
@@ -15,7 +15,7 @@ title: Worktree
 # Worktree
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -26,6 +26,7 @@ title: Worktree
 - [Advance an idea](../journeys/advance-an-idea.md)
 - [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
+- [Discover and refine an idea](../journeys/discover-and-refine-an-idea.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
 - [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
@@ -201,3 +202,7 @@ and checks the final target; a successful Git finish alone proves no content che
 - [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/worktree.md):
   commands and error codes.
 - Related: [Integration](integration.md), [Collaboration](collaboration.md).
+
+## Working with this release
+
+Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

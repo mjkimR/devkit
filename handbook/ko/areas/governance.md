@@ -8,13 +8,13 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-resolve-stale-activity-branches: null
 title: 거버넌스 규칙
-translated_from: en/areas/governance.md@075bcf61135c1350
+translated_from: en/areas/governance.md@e943383ac3040484
 ---
 
 # 거버넌스 규칙
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -25,6 +25,7 @@ translated_from: en/areas/governance.md@075bcf61135c1350
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](../journeys/discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
 - [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
@@ -254,3 +255,7 @@ docs는 상호 ADR 대체 기록을 확인하는 `RULE-decision-supersession`을
 생략된 생명주기 검사는 깨끗한 검사 대신 `SDD_LIFECYCLE_INACTIVE`를 보고합니다.
 브랜치는 자신의 런타임으로 통합 전에 검사하고 최종 대상은 반영된 런타임을 동기화한 뒤 검사합니다.
 통합 자체는 콘텐츠 준비 상태나 규칙 임포트를 평가하지 않습니다.
+
+## 이 릴리스의 작업 방식
+
+규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

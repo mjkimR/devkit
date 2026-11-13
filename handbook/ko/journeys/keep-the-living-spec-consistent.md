@@ -6,13 +6,13 @@ sources:
   CAP-TRACE-code-entrypoints: null
   UC-keep-the-living-spec-consistent: null
 title: Living Spec 일관성 유지하기
-translated_from: en/journeys/keep-the-living-spec-consistent.md@9e984de0464dee84
+translated_from: en/journeys/keep-the-living-spec-consistent.md@01dac2cb246f357c
 ---
 
 # Living Spec 일관성 유지하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -23,6 +23,7 @@ translated_from: en/journeys/keep-the-living-spec-consistent.md@9e984de0464dee84
 - [아이디어 발전시키기](advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
 - [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
@@ -179,3 +180,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 `RULE-decision-supersession`은 전체·부분 ADR 대체 메타데이터의 상호 참조를 검사하고 의미적 범위는 리뷰로 판단합니다.
 별칭 수리는 보이는 스티어링 참조, 용어집 Owner 셀과 설정된 빠른 참조도 다룹니다.
 진입점 도출은 설치 기록 소유 생성 출력을 제외하지만 범위 관찰에는 그 쓰기 경로가 남습니다.
+
+## 이 릴리스의 작업 방식
+
+규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

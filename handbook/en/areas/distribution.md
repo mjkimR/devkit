@@ -1,13 +1,13 @@
 ---
 sources:
   ADR-package-ownership-and-release-version: 5167ed25a252806c3536afe4edc770d19ad2ff8d
-  CAP-DIST-agent-projections: 1c43d7e197a7f986584a8bfb12922bcdd2ca877b
+  CAP-DIST-agent-projections: 55e51a4d47e28808486ffa1c12c4fa3fe563f7b5
   CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
-  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
   CAP-DIST-in-repo-bundles: 7d71d79b481fbdf7cbc1c86d61fea924dfc924d6
   CAP-DIST-manifest-spec: c36062832b0a088f0cdfba7bea04c6eceb3ae0d4
   CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DIST-workspace-ownership: 99e6662d7edc19d07fe05b94b42c892eece6ad57
+  CAP-DIST-workspace-ownership: 7801db0b2bf793890a591d71ed1e46ec39ba6739
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
   UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
 title: Distribution
@@ -16,7 +16,7 @@ title: Distribution
 # Distribution
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -27,6 +27,7 @@ title: Distribution
 - [Advance an idea](../journeys/advance-an-idea.md)
 - [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
+- [Discover and refine an idea](../journeys/discover-and-refine-an-idea.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
 - [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
@@ -303,3 +304,7 @@ A release inventory records each package's actual version and original wheel URL
 [Bundle source snapshots](../journeys/snapshot-bundle-sources.md) preserve complete supported content providers in committed local packages with explicit reviewed refresh. Project overrides hold consumer adaptations.
 
 `devkit sync --check` is the readiness check against desired state. `devkit status` diagnoses installed state against the receipt and cannot replace it.
+
+## Working with this release
+
+Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.

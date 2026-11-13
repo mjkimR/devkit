@@ -11,13 +11,13 @@ sources:
   UC-reconcile-living-spec-drift: null
   UC-route-development-intent: null
 title: 배포
-translated_from: en/areas/distribution.md@3d203b2745f8acd6
+translated_from: en/areas/distribution.md@0d1eeae1ff4582fc
 ---
 
 # 배포
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -28,6 +28,7 @@ translated_from: en/areas/distribution.md@3d203b2745f8acd6
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
 - [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [아이디어 발굴하고 구체화하기](../journeys/discover-and-refine-an-idea.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
 - [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
@@ -310,3 +311,7 @@ sync는 무시 규칙이 없는 미추적 프로젝션에 `PROJECTION_NOT_IGNORE
 [번들 소스 스냅샷](../journeys/snapshot-bundle-sources.md)은 지원되는 콘텐츠 제공자 전체를 커밋된 로컬 패키지에 보존하고 명시적으로 검토한 갱신을 적용합니다. 소비자 수정은 프로젝트 오버라이드로 관리합니다.
 
 `devkit sync --check`가 원하는 상태에 대한 준비 상태 검사입니다. `devkit status`는 설치 기록에 대한 설치 상태를 진단하며 이를 대체하지 않습니다.
+
+## 이 릴리스의 작업 방식
+
+자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.

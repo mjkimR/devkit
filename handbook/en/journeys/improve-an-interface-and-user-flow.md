@@ -1,14 +1,14 @@
 ---
 sources:
-  CAP-DLV-uiux-improvement: 7c2ea122d1db7d44dbb2ba890bd576beba070943
-  UC-improve-an-interface-and-user-flow: d890a54fdf4c3bf947315a371672d9dac286cbb3
+  CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
+  UC-improve-an-interface-and-user-flow: 148f4ac0d519887b7fc43f8a49390f6f26052459
 title: Improve an interface and user flow
 ---
 
 # Improve an interface and user flow
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -19,6 +19,7 @@ title: Improve an interface and user flow
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -63,29 +64,24 @@ title: Improve an interface and user flow
 - [Glossary](../glossary.md)
 <!-- /handbook:generated -->
 
-With the opt-in `app-uiux-improve` bundle selected, explicitly invoke `/app-uiux-improve <goal>` and supply the interface,
-user task and constraints. An improvement request can carry requested implementation through the consumer's
-existing workflow. A review-only request returns findings without product edits.
+Explicitly invoke `/app-uiux-improve <goal>` with the interface, representative task and constraints. Review-only work returns findings without edits. Before implementation, choose the announced outside-workflow procedure or the consumer workflow; the latter keeps its required steps and reviews. Product constraints, host permissions and applicable checks remain effective on either route. Route choice supplies no separate Git authority.
 
-1. Inspect the representative task path, relevant artifacts and affected interface states.
-2. Keep small requests inline or select useful designer, unconventional-designer, reference-researcher or critic
-   perspectives. Fresh independent first passes are used where supported; missing support is disclosed.
-3. Synthesize a coherent flow and visual direction, with consequential tradeoffs and missing product decisions.
-4. Apply requested changes under the project's delivery, permission and approval rules.
-   A scope decision outside current authority waits for your answer.
-5. Check the changed interface and representative interactions, repair defects within scope and repeat affected checks.
-6. Report what changed, actual verification and material limits.
+1. Inspect the actual target and executable local branch before edits. Read relevant OOUX documents for structure or flow changes. A negative visual detector result does not prove the interface is absent.
+2. Choose useful design perspectives and synthesize a direction. A focus orders work; only explicit constraints or deferrals become non-goals.
+3. Apply the approved goal and verify the branch with the same representative task/data and a repeatable capture method. Label mock coverage and missing live coverage. Color changes include computed effective-color contrast ratios for key pairs and states.
+4. Report accepted changes, checks, limits, stale document statements and their separate follow-up, plus any remaining Git effects needing authority.
 
-Screenshot, source and text inspection are useful evidence when a running interface is unavailable;
-they are not actual interaction verification. Missing tools or approvals leave useful partial work with a concrete blocker.
-The optional roles return suggestions and evidence without editing retained files, index or HEAD.
-No fixed team, scoring, debate rounds, persistent memory or companion invocation is required.
+## Optional Impeccable session
+
+A user-selected session receives a bounded brief while the coordinator pauses product edits. Answer-free refinement can use a fresh child with native skill loading. Interactive relay requires observed native loading and continuation in the same child; `shape` and `critique` also need their nested roles. The first phase reads and prepares the complete question packet without writes. Every answer, including source-cited suggestions, waits for your confirmation before the same child writes. Missing capabilities, lost continuation or an unavailable required autonomy probe stop dependent work and use the user-operated session or an authorized inline route without claiming the probe ran.
+
+Accept only listed edits within the approved goal. Report other changes without unsolicited reversion or deletion. Read local-only context by absolute paths without inferring permission to copy, commit or remove it. `PRODUCT.md` and `DESIGN.md` edits need explicit file/action permission. If supported upstream help has no audit persistence operation, return findings in the report and disclose the unavailable persistence.
+
+## Context links
+
+On requested setup, `sh <installed-skill>/scripts/link-impeccable-context.sh` links root context to `docs/materials/impeccable` in the current worktree. Show `/PRODUCT.md`, `/DESIGN.md` and `/.impeccable` before adding these local Git excludes. `--check` inspects drift without writes. Preserve tracked roots and occupied or replaced entries; merge differing content only on your direction.
 
 ## Sources
 
 - [UC-improve-an-interface-and-user-flow](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md)
 - [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md)
-
-## Object framing and optional Impeccable work
-
-The entry is `/app-uiux-improve` from `app-uiux-improve`. For structure or flow changes, read the project's OOUX objects first. A user-selected Impeccable session receives one bounded brief while the coordinator pauses its product edits. Accept only its listed product-file changes; report unrelated changes without reverting or deleting them automatically. Consumer-owned context files stay in place. Stale OOUX documents are named for the consumer workflow to update.

@@ -1,8 +1,8 @@
 ---
 sources:
   CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
-  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
-  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
+  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
   CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
   CAP-DLV-maintenance-history: b1e327e613097e1cc9b843934824a35b5f174e6c
   CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
@@ -14,7 +14,7 @@ title: Review and refactor accumulated slop
 # Review and refactor accumulated slop
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -25,6 +25,7 @@ title: Review and refactor accumulated slop
 - [Advance an idea](advance-an-idea.md)
 - [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Discover and refine an idea](discover-and-refine-an-idea.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
@@ -201,3 +202,9 @@ Only an explicit companion-history request starts capture; command installation 
 start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
 later integration changes append amendments rather than rewrite the published report.
 See [Record a maintenance run](record-a-maintenance-run.md).
+
+## Working with this release
+
+Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.
+
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

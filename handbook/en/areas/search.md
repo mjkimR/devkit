@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
   CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
   CAP-SRCH-document-search: 83f6f8ad76a2f12f0c4e5f0a4c719bfb7134dff9
   UC-find-the-right-documents: 63fc40bfa2e3a24b2410dec381a6abec5837ba3d
@@ -10,7 +10,7 @@ title: Search
 # Search
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 The search area is the ranking engine behind `devkit playbook search` and `devkit docs search`. It knows documents
@@ -81,3 +81,7 @@ Document search expands the global `docs/steering/glossary.yaml`, then the selec
 `docs/packages/<name>/steering/glossary.yaml` in namespace-name order.
 Unselected or unregistered files do not affect expansion or errors. A query equal to a canonical ID, alias,
 path or file name still pins the matching document first, independently of ranking.
+
+## Working with this release
+
+Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.

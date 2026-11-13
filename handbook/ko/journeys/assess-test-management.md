@@ -6,7 +6,7 @@ translated_from: en/journeys/assess-test-management.md@37e80d8c601014fe
 # 선택한 테스트 스위트 평가하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 `maintenance/test-management` 플레이북을 명시적으로 실행해 선택한 테스트 스위트(test suite)의 구성을 평가합니다. 먼저 `maintenance:testing` 또는 `maintenance:all`을 선택하고 동기화합니다.
