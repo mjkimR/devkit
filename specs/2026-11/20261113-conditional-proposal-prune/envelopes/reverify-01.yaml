@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:34:45.329944Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified P2 fix: --full-history retains merged add/delete provenance; 17 cleanup regressions pass, lint and types pass. Same scope; no repeat independent review required at medium.'
+findings:
+- issue: Default Git path-history simplification can omit an applicable proposal-prune target.
+  evidence: 'cleanup.py:143; ignored review-01/test_merged_proposal_history.py failed 1 test: simplified_history empty, full_history_present true, integration_plan returned no proposal target.'
+  failure_condition: A side branch creates and deletes proposal files, then a no-ff merge is reachable from both pins; default TREESAME simplification hides that history despite remaining empty directories.
+  suggested_action: Add --full-history and retain a merged add-delete provenance regression covering cleanup and revalidation.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS cleanup17 including merged-before-both-pins prune/revalidation
+  lint: PASS ruff311
+  types: PASS pyright0
+diff_scope:
+  base: 8006563f2af4397048a9bd6871bc9a19bd8b3379
+  head: bf60ed7771f99b736e7fed3e7e23a6891545e086
