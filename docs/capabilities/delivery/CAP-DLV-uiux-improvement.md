@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-uiux-improvement
 title: Software interface UI/UX improvement
-summary: "An opt-in UI/UX skill improves software interfaces through user-approved routes and capability-gated Impeccable relay. It verifies changed branch builds and handles detector, autonomy-probe and persistence limits while preserving consumer authority and reporting actual coverage."
+summary: "An opt-in UI/UX skill improves interfaces through approved routes and capability-gated Impeccable relay. Its POSIX helper links tracked context per worktree and checks drift while preserving consumer content and setup authority."
 area: delivery
 status: active
 created_at: 2026-11-05
@@ -9,6 +9,7 @@ usecases:
   - UC-improve-an-interface-and-user-flow
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/scripts/link-impeccable-context.sh
 ---
 
 # [CAP-DLV-uiux-improvement] Software interface UI/UX improvement
@@ -45,7 +46,7 @@ Alternatives, research and criticism are optional means, not a required final re
 
 ## 3. Business Rules and Policies
 
-1. **Opt-in distribution**: WHERE app-uiux-improve:core is selected, sync MUST deploy one skill and four local role
+1. **Opt-in distribution**: WHERE app-uiux-improve:core is selected, sync MUST deploy one skill including its context-link script and four local role
    files without registered specialist subagents; the bundle's human usage guide (`bundle/README.md`) is not
    deployed. Test: `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`.
 2. **Explicit invocation**: The bundle MUST declare `invocation = "user"` and an explicit-only entry guard.
@@ -160,10 +161,13 @@ Alternatives, research and criticism are optional means, not a required final re
 19. **User-requested setup and cleanup**: WHERE the user requests it, the coordinator MAY install Impeccable through an
     upstream route that needs no prompt answers (otherwise it hands the user the exact command), add upstream's
     recommended ignore entries confined to `.impeccable/` paths after showing the exact lines, remove Impeccable
-    runtime or session output the user names, or add to `PRODUCT.md` a reference section naming the consumer's OOUX
+    runtime or session output the user names, run the context-link helper to create absent root context links and
+    add only `/PRODUCT.md`, `/DESIGN.md`, `/.impeccable` to the resolved local Git exclude file after showing these
+    exact lines, or add to `PRODUCT.md` a reference section naming the consumer's OOUX
     documents without copying them; it MUST NOT take any of these actions on its own initiative. `PRODUCT.md` and
     `DESIGN.md` MUST change, by the coordinator or a permitted session, only on the user's explicit direction. The
-    action follows rule 3 (`ADR-impeccable-session-authority`).
+    coordinator MAY run read-only helper checks while gathering context. The action follows rule 3
+    (`ADR-impeccable-session-authority`, `ADR-impeccable-context-links`).
     Review: `test_project_files_setup_and_cleanup_follow_the_users_request`.
 20. **Task route choice**: WHEN implementation or requested setup/cleanup enters the skill, the coordinator MUST
     announce the outside-workflow procedure and obtain explicit task approval or follow the consumer workflow the
@@ -197,6 +201,20 @@ Alternatives, research and criticism are optional means, not a required final re
     with persistence marked unavailable, without invented/retried commands, guessed replacements, unrequested
     files or installation changes. Test: `test_impeccable_limits_require_evidence_and_authorized_continuation`.
 
+27. **Context-link helper**: WHEN the optional helper runs, it MUST implement the fixed-entry, source preflight,
+    classification, stable-code/action and exit contracts in section 4.1. Tests:
+    `packages/devkit-catalog/tests/integration/bundles/test_impeccable_context_links.py`.
+28. **Read-only context inspection**: WHERE `--check` is given, the helper MUST leave filesystem, index and HEAD
+    unchanged, creating no temporary file or lock. Test: `test_links_are_relative_idempotent_and_checked_without_writes`.
+29. **Bounded context setup**: WHEN link mode runs with quiescent managed root entries and source, the helper MUST
+    preserve occupied root entries, source bytes and unrelated exclude bytes while creating only absent relative
+    links and missing exact exclude lines. Noncooperating concurrent writers are unsupported; the coordinator
+    stops its own writers before requested setup. Tests: `test_check_reports_every_unresolved_state_and_preserves_root`,
+    `test_excludes_preserve_unterminated_bytes_deduplicate_and_respect_lock`.
+30. **Source retention ownership**: WHEN `.impeccable` is linked, the coordinator MUST leave source-side runtime
+    ignore policy and content changes with the consumer; root-link exclusion grants no additional content authority.
+    Test: `test_context_link_setup_and_check_keep_consumer_authority`.
+
 Instruction review verifies stated behavior, not model obedience, aesthetic quality or superiority over one agent.
 Selection changes neither the development approach nor the consumer's execution authority. The distribution-owned
 root bundle inventory can name the selection; the bundle supplies no design guidance fragment or constitution.
@@ -204,7 +222,7 @@ root bundle inventory can name the selection; the bundle supplies no design guid
 ## 4. Interfaces and Data Contracts
 
 Select `uv run devkit add app-uiux-improve` or app-uiux-improve:core, then explicitly invoke `/app-uiux-improve <goal>`.
-Registration is `app-uiux-improve = "devkit_catalog.app_uiux_improve"`. No new command, code or runtime is added.
+Registration is `app-uiux-improve = "devkit_catalog.app_uiux_improve"`. The helper is skill content; no devkit command or Python runtime feature is added.
 The bundle needs no devkit-spec or devkit-docs installation; consuming projects retain their own workflow requirements.
 
 The entry routes optional reads to `references/design-guidance.md` (object framing, its conditional sources, design
@@ -222,3 +240,43 @@ rules 3, 16, 17 and 19–22.
 Without a requested destination, the result stays in conversation. Product artifacts follow consumer ownership;
 no retained document kind, mandatory design brief or persistent memory is introduced. The bundle's human usage guide
 is `bundle/README.md` beside `bundle.toml`, linked from the catalog README and from no agent-read file.
+
+### 4.1 Context-link helper
+
+`sh <installed-skill>/scripts/link-impeccable-context.sh [--check] [--] [<source-dir>]` uses POSIX sh/utilities and
+Git. Default source is `docs/materials/impeccable`; relative arguments resolve from the physical current worktree
+root. A source must be an existing physical in-worktree directory below the root and outside Git metadata, with no
+control characters. Present `PRODUCT.md`/`DESIGN.md` entries must be regular unlinked readable files; present
+`.impeccable` must be an unlinked readable/searchable directory. Missing entries are optional. Invalid preflight
+and `core.symlinks=false` return exit 2 before mutation. Each link target is the normalized relative source plus its
+fixed entry name. Equivalent absolute or differently spelled existing targets are wrong targets.
+
+Classification order is tracked root, absent source, absent root, root nonlink, dangling link, literal target.
+A tracked root stays tracked. Replaced regular files compare with `cmp`; matching directories compare with Git's
+read-only no-index diff, disabling external diff/textconv and mode differences. Comparison diagnostics/unsupported
+exits are inspection failure. Literal target capture preserves newline bytes and never prints raw target data.
+
+| Stable code | Meaning | Action |
+| --- | --- | --- |
+| `LINK_CREATED`, `LINK_OK`, `LINK_ABSENT` | Created, correct, or source/root both absent | `NONE` |
+| `LINK_MISSING` | Source present, root absent | `RUN_LINK` |
+| `LINK_STALE`, `LINK_DANGLING`, `LINK_WRONG_TARGET` | Source absent with root link, missing target, or different literal target | `INSPECT_LINK` |
+| `LINK_OCCUPIED` | Source absent with root nonlink | `INSPECT_ROOT` |
+| `LINK_REPLACED` | Source present with root file/directory; `content=equal|differs|type_mismatch` | `MERGE_INTO_SOURCE` |
+| `LINK_TRACKED` | Root entry is tracked by Git | `UNTRACK_MANUALLY` |
+| `EXCLUDE_ADDED`, `EXCLUDE_OK`, `EXCLUDE_MISSING` | Exact exclude appended, present, or missing in check mode | `NONE`, `NONE`, `RUN_LINK` |
+| `LINK_ARGUMENT_INVALID`, `LINK_NOT_WORKTREE`, `LINK_SYMLINKS_DISABLED`, `LINK_SOURCE_INVALID` | Invalid input or unsupported checkout/source | `FIX_INPUT`, `USE_WORKTREE`, `ENABLE_SYMLINKS`, `FIX_SOURCE` |
+| `LINK_INSPECTION_FAILED`, `LINK_IO_FAILED`, `LINK_EXCLUDE_BUSY` | Inspection, I/O or held helper lock | `INSPECT_FILES`, `CHECK_PERMISSIONS`, `RETRY_AFTER_UNLOCK` |
+
+Stdout emits fixed-entry `[CONTEXT_LINK: ... code=... action=...]`, `[CONTEXT_EXCLUDE: ... code=... action=...]`
+records and one terminal `[CONTEXT_LINK_RESULT: mode=link|check code=... exit=... action=...]`.
+Clean result is `LINK_CLEAN`/`NONE` exit 0; unresolved states are `LINK_PROBLEMS`/`INSPECT_REPORTED` exit 1;
+inability to run uses the specific failure code/action and exit 2. Stderr carries bounded failure details. There is
+no JSON mode. Successful link-mode repairs do not count as problems. Other occupied entries do not stop eligible
+links; I/O failure stops with already reported partial effects retained, without rollback or automatic repair.
+
+Excludes are resolved with `git rev-parse --git-path info/exclude`, shared by linked worktrees. Missing exact
+`/PRODUCT.md`, `/DESIGN.md`, `/.impeccable` lines are appended without duplicates, adding a separator newline when
+needed and retaining existing bytes. Updates hold an adjacent `info/exclude.impeccable-context.lock` directory
+created exclusively; an existing lock refuses before exclude writes, and only the creator releases its lock.
+The helper never stages/untracks, edits root `.gitignore`, creates context content or installs source-side ignores.

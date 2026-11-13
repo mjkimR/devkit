@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T06:30:01.563472Z'
+status: completed
+summary: Shipped bounded POSIX context linking/checking, byte-preserving projection and consumer-authority guidance; code findings resolved and eight-target independent reconciliation passed. Source verified; Host integration remains.
+findings: []
+assumptions:
+- POSIX link mode requires quiescent managed root entries/source; noncooperating concurrent writers unsupported
+unverified_areas:
+- BusyBox, Windows and live editor/Impeccable execution unavailable
+checks:
+  tests: PASS just test-affected --base 4131e8950bec81152a9d4eb62a200ef64d4995fa --tier all:227 at82926d70; helper21 including review regressions
+  build: PASS sh/dash syntax and projected script bytes; no Python runtime build added
+  lint: PASS full just lint-check and just check on source7b550e494; rules CI22 and diff --check pass at82926d70
+diff_scope:
+  base: 1d075fc805413c1657fbb69b08638d0ede5078ed
+  head: 82926d70afb580dcd0061b3cfb2fd91869fffa49

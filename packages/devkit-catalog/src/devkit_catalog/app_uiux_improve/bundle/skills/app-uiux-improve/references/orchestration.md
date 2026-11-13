@@ -139,21 +139,19 @@ Write a self-contained brief with these fields:
 
 ### Project files and user requests
 
-- `PRODUCT.md`, `DESIGN.md` and shared `.impeccable/` files (`config.json`, `design.json`, `surfaces/`, critique
-  snapshots) are consumer-owned project context. Report the ones a session created or changed and point to upstream's
-  "Project files and git" guidance for what to commit or ignore.
-- `PRODUCT.md` can hold a short OOUX reference section that names the glossary, object register and UX document
-  directory by path and says to read them before structural work. Copy none of their content into it.
+- `PRODUCT.md`, `DESIGN.md` and shared `.impeccable/` files are consumer-owned project context.
+  Report changed files and point to upstream's "Project files and git" guidance for retention.
+- An OOUX reference section in `PRODUCT.md` names the glossary, object register and UX directory by path;
+  copy none of their content. Say to read them before structural work.
 - On the user's request, and not on your own initiative, you may:
-  - install Impeccable through a route in "Select and set up";
-  - add upstream's recommended ignore entries, confined to `.impeccable/` paths (prefixed in the root `.gitignore` or
-    in `.impeccable/.gitignore`), after showing the user the exact lines;
-  - remove Impeccable runtime or session output the user names, such as screenshots or `review/`;
-  - add the OOUX reference section to `PRODUCT.md`.
-- Leave `PRODUCT.md` and `DESIGN.md` out of any cleanup the user does not name them in. Change them, or let a session
-  change them, only on the user's explicit direction.
-- Carry every user-requested change through the selected route and the host's approvals like any product change;
-  reuse the task's route choice and exact Git authority, or obtain the missing authority before acting.
+  - install Impeccable through "Select and set up";
+  - add upstream's recommended ignore entries confined to `.impeccable/` paths, after showing the user the exact lines;
+  - remove Impeccable runtime or session output the user names;
+  - add the OOUX reference section to `PRODUCT.md`;
+  - link tracked context through this skill's helper, under its requested-setup and retention rules.
+- Leave `PRODUCT.md` and `DESIGN.md` out of any cleanup unless named; change them only on the user's explicit direction.
+- Carry every user-requested change through the selected route and host's approvals;
+  reuse exact Git authority or obtain it before acting.
 
 Example brief:
 

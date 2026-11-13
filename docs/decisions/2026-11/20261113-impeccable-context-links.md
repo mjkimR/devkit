@@ -1,16 +1,16 @@
 ---
-id: PADR-impeccable-context-links
+id: ADR-impeccable-context-links
 title: User-requested links to tracked Impeccable context
 summary: "For tracked Impeccable context across worktrees, we ship a user-requested POSIX link helper with read-only inspection, to reuse one source without overwrites, accepting per-worktree setup and source-side ignore management."
-proposal: PROP-uiux-improve-impeccable-context-links
+proposal: SPEC-uiux-improve-impeccable-context-links
 supersedes: [ADR-impeccable-session-authority]
-status: draft
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-impeccable-context-links] User-requested links to tracked Impeccable context
+# [ADR-impeccable-context-links] User-requested links to tracked Impeccable context
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-13
 
 ## 1. Context & Problem Statement
@@ -42,14 +42,14 @@ introducing a Python feature, installer or upstream runtime.
 
 - On the user's request, the coordinator can run the bundled script to create absent relative root links for
   `PRODUCT.md`, `DESIGN.md` and `.impeccable`, and append only missing `/PRODUCT.md`, `/DESIGN.md`, `/.impeccable`
-  lines to the resolved Git exclude file after showing the exact lines. → `CAP-DLV-uiux-improvement` rule 19 (proposed amendment, MAY).
+  lines to the resolved Git exclude file after showing the exact lines. → `CAP-DLV-uiux-improvement` rule 19 (MAY).
 - The coordinator can run the script's read-only check while gathering context. Every mutating setup operation
-  still follows the user's selected task route and host permissions. → `CAP-DLV-uiux-improvement` rule 19 (proposed amendment, MAY).
+  still follows the user's selected task route and host permissions. → `CAP-DLV-uiux-improvement` rule 19 (MAY).
 - The helper preserves existing root entries and source bytes, emits stable codes/actions and uses exits 0, 1 and 2
   for clean, problems and unable to run. Mutating setup requires quiescent root entries and source; it makes no
-  guarantee about noncooperating concurrent writers. → `CAP-DLV-uiux-improvement` context-link helper rule (planned, MUST).
+  guarantee about noncooperating concurrent writers. → `CAP-DLV-uiux-improvement` rules 27–29 (MUST).
 - Source-side ignores remain consumer-owned; linking `.impeccable` does not authorize installing ignore rules or
-  writing context content. → `CAP-DLV-uiux-improvement` rules 18–19 (rule 19 proposed amendment, MUST).
+  writing context content. → `CAP-DLV-uiux-improvement` rules 18–19 (MUST).
 - A POSIX script is shipped content inside the skill, with no devkit Python feature, new asset kind or runtime
   dependency. The restriction on adding Impeccable runtime/installer/vendor content stays in force.
 

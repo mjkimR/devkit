@@ -1,93 +1,86 @@
 ---
-id: PROP-uiux-improve-impeccable-context-links
+id: SPEC-uiux-improve-impeccable-context-links
 title: Link tracked Impeccable context through a bundled POSIX script
-summary: The app-uiux-improve bundle ships a POSIX sh script that links a project's tracked Impeccable context (PRODUCT.md, DESIGN.md, .impeccable/) into the repository root as git-excluded relative symlinks and checks them, so the context survives worktrees and clones without a second copy.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-13
-target_area: capabilities/delivery/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/delivery/
-    - usecases/delivery/
-    - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
-    - packages/devkit-catalog/tests/
-  excludes:
-    - packages/devkit-dist/
-    - packages/devkit-catalog/src/devkit_catalog/design_explore/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: "Link tracked Impeccable context into each checkout through optional relative root symlinks, and inspect missing or replaced links without changing consumer content."
+status: completed
+created: 2026-11-13
+related_capabilities: [CAP-DLV-uiux-improvement]
+related_usecases: [UC-improve-an-interface-and-user-flow]
+workflow: sdd-spec-feature
 ---
 
-# [PROP-uiux-improve-impeccable-context-links] Link tracked Impeccable context through a bundled POSIX script
+# [SPEC-uiux-improve-impeccable-context-links] Tracked Impeccable context links
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
 
-Impeccable reads `PRODUCT.md`, `DESIGN.md` and an optional `.impeccable/` directory from the project root.
-`CAP-DLV-uiux-improvement` and `references/orchestration.md` ("Project files and user requests") treat these files as
-consumer-owned and point to upstream's "Project files and git" guidance. The bundle says nothing about where a
-consumer keeps them when it does not want them tracked at the root.
+Local-only root context disappears in another worktree or clone. A tracked source directory and excluded relative
+root links preserve one content copy. A read-only check exposes replacement by atomic-save editors.
+`ADR-impeccable-context-links` authorizes the bounded helper and requested setup. Planning evidence is retained at
+`docs/materials/2026-11/20261113-uiux-improve-impeccable-context-links/link-evidence.md`.
 
-Observed problem (`MAT-uiux-improve-pilot`, finding A5): the consumer kept `PRODUCT.md` and `DESIGN.md` local-only
-through `.git/info/exclude`. An SDD worktree did not contain them, so the pilot fell back to an in-place branch and
-passed main-checkout absolute paths read-only. `SPEC-uiux-improve-bundle-hygiene` AC-06 made that fallback the
-instruction. Untracked root files are also lost on a fresh clone.
+## 2. User Stories
 
-Consumer pilot on 2026-11-13 (a SvelteKit/FastAPI consumer repository, commits `dc7ffb4` and `644e821`, merged to
-its `main` as `e1a50a8`):
+- **US-1**: As a consumer, I want each worktree to read its own tracked context without copying or overwriting files.
+- **US-2**: As a coordinator, I want to inspect link drift and report manual recovery within consumer authority.
 
-- The tracked source moved to `docs/materials/impeccable/` (`PRODUCT.md` plus a `README.md`; `DESIGN.md` is
-  deliberately absent because a steering document owns the visual style).
-- devkit docs rules treat `docs/materials/` as free-form, so a non-devkit-format file passes lint there.
-- On that `main`, the root `PRODUCT.md` is a relative symlink to `docs/materials/impeccable/PRODUCT.md`, made by hand with
-  `ln -s docs/materials/impeccable/PRODUCT.md PRODUCT.md`.
-- `/PRODUCT.md` and `/DESIGN.md` stay in `.git/info/exclude`. That file lives in the Git common directory, so every
-  linked worktree shares the entries, while each worktree still needs its own link.
-- The pilot README names "a link script in devkit's `app-uiux-improve` bundle" as the intended replacement for the
-  manual step.
+## 3. Non-Goals
 
-Two failure modes remain manual: forgetting the link in a new worktree or clone, and a tool that saves through
-temp-file-and-rename. The second replaces the symlink with a regular file, so later edits fork the content silently
-while the tracked source looks unchanged. Whether Impeccable or a common editor saves this way is not verified.
+**Scope Excluded**: devkit CLI/configuration/runtime additions, context content creation/editing, automatic repair,
+root .gitignore changes, staging/untracking, source-side ignore installation, Windows support beyond clear refusal,
+and changes to Impeccable run/question/load routing. No new feature edge, package or test tier is introduced.
 
-Hypothesis: a POSIX `sh` script shipped inside the skill directory removes the manual step and detects the fork. It
-needs no devkit runtime, so the bundle stays content-only and independently installable. A devkit CLI command is out
-of scope by intent: `devkit-catalog` declares no runtime dependencies and `app-uiux-improve` has no Python feature.
+## 4. Acceptance Criteria & Behavioral Contracts
 
-### Related specs and boundary
+### [AC-01] Idempotent links
 
-- `SPEC-uiux-improve-ooux-impeccable` (completed) owns context-file ownership and the user-requested setup list. That
-  list allows ignore entries confined to `.impeccable/` paths after showing the exact lines. This proposal adds one
-  user-requested action: link the tracked source and add root `.git/info/exclude` entries. It keeps the ownership
-  rule and the explicit-direction rule for `PRODUCT.md` and `DESIGN.md` content.
-- `SPEC-uiux-improve-bundle-hygiene` (completed) AC-06 passes local-only context as absolute read-only paths. That
-  stays the fallback for an unlinked project; a linked worktree makes the root files readable in place.
-- `SPEC-uiux-improve-run-model`, `SPEC-uiux-improve-impeccable-routing` and `SPEC-uiux-upstream-fallbacks` (all
-  completed) govern route choice, question and load routing and upstream limits. They exclude context-file changes,
-  and this proposal leaves them unchanged.
-- None of these specs defines where tracked Impeccable context lives or how it reaches the root.
+- **Given** present optional source entries in an ordinary repository.
+- **When** link mode runs twice.
+- **Then** relative links resolve to the source and the second run changes no link or exclude bytes.
 
-## 2. Planning Decisions
+### [AC-02] Preserve occupied entries
 
-Planning applies `medium` effort; Development remains `medium`. Evidence is in `materials/link-evidence.md`.
-No product screen changes are proposed, so there is no Screens draft or UX review.
+- **Given** an occupied root file, directory, foreign/dangling link or tracked root entry.
+- **When** either mode runs under the quiescence precondition.
+- **Then** each occupied entry is preserved with a stable state, while eligible other entries progress in link mode.
 
-| Question | Decision | Rejected alternative and consequence |
-| --- | --- | --- |
-| Q1: authority | `PADR-impeccable-context-links` narrowly extends requested setup to links and exact root excludes; read-only `--check` is inspection the coordinator may run while gathering context. | Treating link creation as an automatic preflight would exceed consumer authority. No Python/runtime package is added. |
-| Q2: source | One optional argument, relative to the current worktree root; default `docs/materials/impeccable`. | No Git/devkit configuration key: another state source is unnecessary. A project with another layout passes the argument. |
-| Q3: projection | The script stays inside the existing skill asset; document `sh <deployed-skill>/scripts/link-impeccable-context.sh`. | No new asset kind or distribution change; `sh` avoids a dependency on executable-bit preservation. Existing subtree loading includes non-Markdown files. |
-| Q4: inspection | Use POSIX `test -L`, then capture `LC_ALL=C QUOTING_STYLE=literal ls -dn ./<fixed-entry>` with an appended non-newline sentinel, remove the sentinel and exactly one output record newline, then remove the exact ` ./<fixed-entry> -> ` prefix and compare the complete target string. | No `readlink`, `realpath`, `test -ef`, field splitting or generic filename parser. GNU's quoting override is harmless to other implementations; clear color-forcing variables. macOS and `dash` probes pass with spaces and ` -> ` in the source path. GNU utility target-capture probes also pass; BusyBox remains Development coverage. |
-| Q5: directory | Link `.impeccable` as one directory when present. Source-side upstream retention/ignore rules remain the consumer's responsibility; root-link exclusion does not ignore files reachable through the tracked source path. | Linking selected children would split shared/runtime layout and require upstream-specific inventory maintenance. The helper neither creates source content nor installs source-side ignores. |
+### [AC-03] Per-worktree source and common excludes
 
-These are proposed technical choices within the feature request, pending Host/user plan acceptance.
-The PADR supersedes only the existing setup list's restriction on root link/exclude actions; content ownership,
-explicit request, task route, host permissions and no implicit Git authority remain unchanged.
+- **Given** a linked worktree with the source tracked on its branch.
+- **When** the helper runs from a subdirectory.
+- **Then** root links point into that worktree and the resolved common exclude file receives the exact patterns.
 
-## 3. Proposed Design & Impact
+### [AC-04] Read-only classification
+
+- **Given** each root/source state, including equal/different atomic-save replacement, directory replacement and a resolving foreign link ending in newline bytes.
+- **When** check mode runs.
+- **Then** codes/actions and exit precedence match the interface, the filesystem/index/HEAD stay unchanged, and the newline target is LINK_WRONG_TARGET.
+
+### [AC-05] Bounded source and invocation
+
+- **Given** spaces, arrows, leading-dash source after --, lexical parent paths, source symlink escapes, wrong input types, missing repository or disabled symlinks.
+- **When** preflight runs.
+- **Then** supported physical in-worktree paths are normalized, and invalid sources/invocations return exit 2 before any mutation.
+
+### [AC-06] Exclude preservation and partial I/O failure
+
+- **Given** exact/unrelated excludes, an unterminated last line, an existing helper lock or injected I/O failure.
+- **When** link mode runs with quiescent managed entries/source.
+- **Then** existing bytes and occupied directory contents survive, exact patterns are deduplicated, busy lock refuses exclude writes, and I/O failure returns exit 2 with retained partial effects.
+
+### [AC-07] Content-only projection
+
+- **Given** the selected bundle projects to supported hosts.
+- **When** sync deploys the skill.
+- **Then** the script bytes are identical in managed/shared/Claude directories and executable through sh without a new asset kind/runtime dependency.
+
+### [AC-08] Consumer authority and recovery
+
+- **Given** the guide, orchestration and capability contracts.
+- **When** their behavior is reviewed and exercised.
+- **Then** mutating setup requires a user request and shows exact excludes, check remains read-only inspection, source ignores remain consumer-owned, recovery preserves both versions, and the local-only absolute-path fallback remains available.
+
+## 5. Interface and Design Constraints
+
 
 ### 3.1 Interface and preflight
 
@@ -160,8 +153,8 @@ absent, root nonlink, dangling root link, wrong target, correct link. Source pre
 | `LINK_ARGUMENT_INVALID`, `LINK_NOT_WORKTREE`, `LINK_SYMLINKS_DISABLED`, `LINK_SOURCE_INVALID`, `LINK_INSPECTION_FAILED`, `LINK_IO_FAILED`, `LINK_EXCLUDE_BUSY` | Invalid invocation, unsupported checkout, source/preflight, inspection, I/O or lock failure | `FIX_INPUT`, `USE_WORKTREE`, `ENABLE_SYMLINKS`, `FIX_SOURCE`, `INSPECT_FILES`, `CHECK_PERMISSIONS`, `RETRY_AFTER_UNLOCK` respectively |
 
 For `LINK_REPLACED`, report `content=equal|differs|type_mismatch`; compare regular file bytes with `cmp -s` and
-matching directory contents with Git's read-only `diff --no-index --quiet --no-ext-diff --no-textconv`, with file
-mode differences disabled. Capture diagnostic output: only empty-output exits 0/1 mean equal/different; any
+matching directory contents with Git's read-only `diff --no-index --exit-code --no-ext-diff --no-textconv`, with file
+mode differences disabled. Discard diff stdout and capture stderr only; only diagnostic-free exits 0/1 mean equal/different; any
 diagnostic or other exit is inspection failure, so unreadable nested content is not silently called different. A comparison failure returns `LINK_INSPECTION_FAILED` exit 2, not an equality claim.
 Never execute a configured external diff or textconv. No modification is proposed by check output.
 
@@ -221,14 +214,3 @@ implementation. The choice preserves the requested dependency boundary and repor
 Size `M`: the script and its tests/guide/contracts remain one feature spec. No concrete deferred implementation is
 created by these exclusions. Source-side retention setup is existing consumer responsibility rather than a follow-up
 feature. The unseen consumer pilot and live upstream/editor save behavior remain unverified observations.
-
-## 4. Lifecycle & Retirement Criteria
-<!--
-- Preliminary decisions: devkit spec proposal padr uiux-improve-impeccable-context-links "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept uiux-improve-impeccable-context-links --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff uiux-improve-impeccable-context-links.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->

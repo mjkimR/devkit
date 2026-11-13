@@ -3,9 +3,11 @@ id: PROP-uiux-improve-impeccable-context-links-target
 title: Target contracts for tracked Impeccable context links
 summary: "The capability, use case, decision and bundle text changes for the optional POSIX context-link helper, including requested mutations and read-only checks."
 status: draft
-proposal: PROP-uiux-improve-impeccable-context-links
+proposal: SPEC-uiux-improve-impeccable-context-links
 created_at: 2026-11-13
 targets:
+  - file: packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md
+  - file: packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/references/context-links.md
   - file: docs/decisions/2026-11/20261113-impeccable-context-links.md
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
   - file: docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md
@@ -22,7 +24,7 @@ targets:
   and exact root excludes. A helper contract covers fixed entries, preflight, no overwrites, checks, codes and exits.
 - `UC-improve-an-interface-and-user-flow` adds a step-3 setup extension for an optional requested link operation and
   a read-only context check; Given/When/Then examples cover linked worktrees and replacement recovery.
-- `PADR-impeccable-context-links` promotes at handoff. Its partial-supersession pointer is added to
+- `ADR-impeccable-context-links` was promoted at handoff. Its partial-supersession pointer is added to
   `ADR-impeccable-session-authority`; its remaining clauses stay unchanged.
 - Architecture is unchanged: this is content under an existing skill, with no Python feature or dependency edge.
 

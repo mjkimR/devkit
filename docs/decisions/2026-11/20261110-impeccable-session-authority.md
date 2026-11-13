@@ -10,6 +10,8 @@ created_at: 2026-11-10
 
 # [ADR-impeccable-session-authority] Bounded Impeccable sessions under coordinator acceptance
 
+Superseded in part by `ADR-impeccable-context-links`: Decision Outcome setup clause limiting user-requested ignore additions to `.impeccable/` paths and its setup-action list, which now also permits requested root context links and exact root-link excludes through the bundled helper. Consumer content ownership, explicit request, task route, host permissions and no implicit Git authority remain in force.
+
 Superseded in part by `ADR-impeccable-question-relay`: Decision Outcome clause restricting fresh children to answer-free refinement and routing every interactive command to a user-operated session.
 
 Superseded in part by `ADR-uiux-task-approved-run`: Decision Outcome clauses requiring unconditional consumer-workflow pre-implementation steps, continuation for accepted implementation and user-requested setup or cleanup, and stale-document updates through the consumer workflow's own step. Implementation and requested actions now follow the user's per-task route choice; stale documents are reported for the consumer's documentation process where present or a separate documentation task otherwise. Host approvals, no implicit Git authority, report-only document ownership, brief, question/load routing and acceptance boundaries remain in force.

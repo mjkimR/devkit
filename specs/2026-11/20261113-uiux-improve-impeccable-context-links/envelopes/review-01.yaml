@@ -1,0 +1,28 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T06:21:27.217713Z'
+status: completed
+summary: Mandatory medium code review found two in-scope error classification defects; both will be fixed and regression-tested.
+findings:
+- issue: Directory comparison can conceal unreadable nested content.
+  evidence: 'scripts/link-impeccable-context.sh lines145-148 and review-01 probe: early differing aaa plus unreadable zzz produced differs/exit1 because Git --quiet stopped early.'
+  failure_condition: A replacement directory contains an early difference and later unreadable nested content.
+  suggested_action: Full comparison without quiet, discard diff stdout, capture stderr and add regression.
+  resolution: open
+  severity: P2
+- issue: Lock creation I/O failure is incorrectly reported as an existing lock.
+  evidence: 'scripts/link-impeccable-context.sh line100 and review-01 probe: failing mkdir with absent lock emitted LINK_EXCLUDE_BUSY instead of LINK_IO_FAILED.'
+  failure_condition: Lock creation fails because of I/O or permissions while no lock entry exists.
+  suggested_action: Inspect actual lock existence after mkdir refusal and add absent-lock I/O regression.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex read-only role boundary is emulated through absolute paths and before/after HEAD/tree comparisons, not native enforcement
+checks:
+  role_scope: 'PASS HEAD and independent index tree unchanged: 7622895ec99e78045942650e462f81d153e2dba6'
+  tests: SKIP reviewer supplied results; caller affected225 and lint passed at aaa728838, types all passed at a40081a5d
+diff_scope:
+  base: 1d075fc805413c1657fbb69b08638d0ede5078ed
+  head: a40081a5dc47051705db4648edd5825ab6f51266

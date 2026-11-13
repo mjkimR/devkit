@@ -1,0 +1,23 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T06:23:19.302752Z'
+status: completed
+review: review-01.yaml
+summary: Implementer fixed both initial medium review findings and verified real unreadable-content and absent-lock I/O regressions; helper21 pass.
+findings:
+- issue: Directory comparison can conceal unreadable nested content.
+  evidence: 'scripts/link-impeccable-context.sh lines145-148 and review-01 probe: early differing aaa plus unreadable zzz produced differs/exit1 because Git --quiet stopped early.'
+  failure_condition: A replacement directory contains an early difference and later unreadable nested content.
+  suggested_action: Full comparison without quiet, discard diff stdout, capture stderr and add regression.
+  resolution: resolved
+  severity: P2
+- issue: Lock creation I/O failure is incorrectly reported as an existing lock.
+  evidence: 'scripts/link-impeccable-context.sh line100 and review-01 probe: failing mkdir with absent lock emitted LINK_EXCLUDE_BUSY instead of LINK_IO_FAILED.'
+  failure_condition: Lock creation fails because of I/O or permissions while no lock entry exists.
+  suggested_action: Inspect actual lock existence after mkdir refusal and add absent-lock I/O regression.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS 21 helper integration regressions, including both reviewer failure conditions

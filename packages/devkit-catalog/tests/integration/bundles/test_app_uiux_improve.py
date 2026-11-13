@@ -34,7 +34,9 @@ def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: P
     assert {p.relative_to(managed).as_posix() for p in managed.rglob("*") if p.is_file()} == {
         "bundle.toml",
         "skills/app-uiux-improve/SKILL.md",
+        "skills/app-uiux-improve/scripts/link-impeccable-context.sh",
         "skills/app-uiux-improve/references/orchestration.md",
+        "skills/app-uiux-improve/references/context-links.md",
         "skills/app-uiux-improve/references/design-guidance.md",
         "skills/app-uiux-improve/references/impeccable-limits.md",
         *(f"skills/app-uiux-improve/roles/{role}.md" for role in ROLES),
@@ -45,6 +47,10 @@ def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: P
     for projected in (shared, claude):
         assert (projected / "references/impeccable-limits.md").read_bytes() == (
             SKILL / "references/impeccable-limits.md"
+        ).read_bytes()
+    for projected in (managed / "skills/app-uiux-improve", shared, claude):
+        assert (projected / "scripts/link-impeccable-context.sh").read_bytes() == (
+            SKILL / "scripts/link-impeccable-context.sh"
         ).read_bytes()
     assert yaml.safe_load((shared / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
     assert yaml.safe_load((claude / "SKILL.md").read_text().split("---", 2)[1])["disable-model-invocation"] is True
@@ -438,3 +444,21 @@ def test_impeccable_limits_require_evidence_and_authorized_continuation() -> Non
     assert_rule(guide, "hasvisualimplementation=false", "advisory")
     assert_rule(guide, "autonomy_directive_check", "does not satisfy")
     assert_rule(guide, "audit-storage write", "session report", "local mitigations", "not upstream runtime fixes")
+
+
+def test_context_link_setup_and_check_keep_consumer_authority() -> None:
+    entry = (SKILL / "SKILL.md").read_text()
+    assert_rule(entry, "read `references/context-links.md`", "before requested", "when inspecting")
+    context_links = (SKILL / "references/context-links.md").read_text()
+    assert_rule(context_links, "mutating link setup", "only on the user's request", "selected task route")
+    assert_rule(context_links, "read-only inspection", "needs no setup request")
+    assert_rule(context_links, "default source", "docs/materials/impeccable", "neither creates content nor")
+    assert_rule(context_links, "stop other writers", "noncooperating concurrent writers")
+    assert_rule(context_links, "preserve both versions", "never overwrite or repair automatically")
+    for line in ("/PRODUCT.md", "/DESIGN.md", "/.impeccable"):
+        assert line in context_links
+    guide = (BUNDLE / "README.md").read_text()
+    assert_rule(guide, "per worktree and clone", "share Git's exclude file", "relative links")
+    assert_rule(guide, "check mode changes no files", "locks or temporary files")
+    assert_rule(guide, "mutating setup requires quiescent entries", "noncooperating concurrent writers")
+    assert_rule(guide, "preserve both versions", "only on your request")
