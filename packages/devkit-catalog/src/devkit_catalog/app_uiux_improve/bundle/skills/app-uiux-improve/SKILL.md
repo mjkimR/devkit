@@ -60,7 +60,9 @@ request. A review-only request ends with findings and no product edits.
 7. Apply requested changes through the selected route.
    - Inline: implement the changes yourself.
    - Impeccable: write the brief, route the command and make no product edits until the session returns; then accept
-     its changes against the recorded base as `references/orchestration.md` directs.
+     its changes against the recorded base as `references/orchestration.md` directs. For interactive work, relay
+     every user-confirmed answer through the same child only after native loading, continuation and required nested
+     capabilities are observed; otherwise use the user-operated session.
    - Keep product constraints and host permissions on both routes. If a host denies an operation, stop it without
      another access route. If an approval or tool is missing, preserve useful work and name that blocker.
    - Before a new surface or behavior beyond the approved goal, or a change to a user constraint, obtain a new user

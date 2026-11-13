@@ -3,7 +3,7 @@ id: PROP-uiux-improve-impeccable-routing-target
 title: Target Living Spec for capability-gated Impeccable question relay
 summary: "Maps prospective capability, use-case and partial-ADR updates to the existing bundle guidance and integration test, preserving explicit user answers and host-capability fallback."
 status: draft
-proposal: PROP-uiux-improve-impeccable-routing
+proposal: SPEC-uiux-improve-impeccable-routing
 created_at: 2026-11-13
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -13,8 +13,8 @@ targets:
 
 # [PROP-uiux-improve-impeccable-routing-target] Target Living Spec for capability-gated Impeccable question relay
 
-These prospective changes restate `PADR-impeccable-question-relay` after implementation. Current contracts remain
-in force during Planning. This mapping extracts the decisions and cases in `PROP-uiux-improve-impeccable-routing`;
+These prospective changes restate `ADR-impeccable-question-relay` after implementation. Current contracts remain
+in force during Planning. This mapping extracts the decisions and cases in `SPEC-uiux-improve-impeccable-routing`;
 it adds no scope or decision. Native Impeccable live checks remain unverified and best-effort under the user's
 explicit personal-project direction.
 
@@ -42,7 +42,7 @@ writes. Existing return acceptance, stale-document reporting and user-requested 
 
 ## 3. Decision: partial supersession
 
-Promote `PADR-impeccable-question-relay` to ADR-impeccable-question-relay under the existing `docs/decisions/`
+Promote `ADR-impeccable-question-relay` to ADR-impeccable-question-relay under the existing `docs/decisions/`
 parent; use the handoff-returned path rather than inventing a dated filename. Add only this exact pointer to
 `ADR-impeccable-session-authority`, which stays accepted:
 

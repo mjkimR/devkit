@@ -1,16 +1,16 @@
 ---
-id: PADR-impeccable-question-relay
+id: ADR-impeccable-question-relay
 title: Capability-gated Impeccable question relay
 summary: "For interactive Impeccable work, we relay questions through a verified resumable child with every answer user-confirmed, to keep one request context, accepting user-session fallback where host capabilities are unverified."
-proposal: PROP-uiux-improve-impeccable-routing
+proposal: SPEC-uiux-improve-impeccable-routing
 supersedes: [ADR-impeccable-session-authority]
-status: draft
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-impeccable-question-relay] Capability-gated Impeccable question relay
+# [ADR-impeccable-question-relay] Capability-gated Impeccable question relay
 
-- **Status**: Draft; direction ready for plan acceptance.
+- **Status**: Accepted
 - **Date**: 2026-11-13
 
 ## 1. Context & Problem Statement
@@ -38,9 +38,9 @@ those capabilities. `MAT-impeccable-routing-planning` separates documentation, a
 
 ## 4. Decision Outcome
 
-Selected direction: capability-gated relay. The user sets empirical validation to best-effort for this personal
-project. The two requested native plugin-load checks remain unverified and do not hold Planning; this draft
-certifies no live-supported host.
+Selected option: capability-gated relay, because complete user confirmation preserves answer ownership while
+capability checks retain a supported fallback. Empirical validation is best effort for this personal project.
+Native plugin-load checks remain unverified; this decision certifies no live-supported host.
 
 - After the user selects Impeccable, relay is available only when native loading and same-child continuation are
   observed for the actual host and project; otherwise the command remains user-operated.
@@ -58,8 +58,8 @@ certifies no live-supported host.
 
 Supersedes in part `ADR-impeccable-session-authority`: Decision Outcome clause restricting fresh children to answer-free refinement and routing every interactive command to a user-operated session.
 
-Its native skill-loading requirement and all other in-force clauses remain. Consumer workflow authority is owned
-separately by `SPEC-uiux-improve-run-model`; this decision neither chooses nor changes that proposal's outcome.
+Its native skill-loading requirement and all other in-force clauses remain. `ADR-uiux-task-approved-run` governs
+the selected task route; this decision changes no implementation or Git authority.
 
 ## 5. Consequences
 

@@ -26,7 +26,8 @@ It does not:
    - `npx impeccable install` at the project root (asks for project or global scope and offers a design hook).
    - Claude Code: `/plugin marketplace add pbakaus/impeccable`, then install Impeccable from `/plugin`.
    - Manual copy of upstream `skills/impeccable` into your agent's skill directory (no Node required, no hook).
-3. Run Impeccable's `init` in a session you operate. It asks you about the product and writes `PRODUCT.md`.
+3. Run Impeccable's `init` through the question relay below when supported, or in a session you operate.
+   Confirm every answer and explicitly permit its `PRODUCT.md` creation; choosing the track alone grants no file permission.
 4. Add an OOUX reference section to `PRODUCT.md`, in that `init` session or by asking the coordinator. The section
    names your glossary, object register and UX document directory by path and says to read them before structural
    work; it copies none of their content, so it cannot drift:
@@ -81,8 +82,15 @@ through your selected route, then briefs a fresh child to run `polish` and `audi
 
 | Commands | Route | What you do |
 | --- | --- | --- |
-| `polish`, `audit` and narrow refinement commands (`distill`, `typeset`, `layout`) | A fresh child agent the coordinator starts with the brief | Nothing, unless the child returns a blocker |
-| New work, `init`, `shape`, `critique`, or any command the child could not run | Your own Impeccable session, started from the brief the coordinator hands you | Run the commands, answer Impeccable's questions, then tell the coordinator the session finished and what it reported |
+| `polish`, `audit` and narrow refinement commands (`distill`, `typeset`, `layout`) | A fresh child that loads the skill through the host mechanism | Nothing unless a question or blocker returns |
+| New work, `init`, `shape`, `critique` | Question relay when native loading, same-child continuation and required nested roles are observed for this host/project | Confirm every answer in the complete packet, including source-cited pre-fills, before the same child writes; one explicit confirmation of the whole visible packet is enough |
+| Any command whose required capability is unavailable or unverified | Your own Impeccable session from the supplied brief | Run the command and answer its questions, then report what finished |
+
+The relay's first phase only inspects and drafts questions. Omitted answers or confirmation of gaps alone does not
+approve the pre-fills. Additional questions and relevant source changes return for confirmation; lost continuation
+uses your session. Confirming answers does not grant missing `PRODUCT.md` or `DESIGN.md` file/action permission.
+A partial run is reported against the base without blind replay or unsolicited reversion. Native plugin loading and
+interactive behavior on Claude Code and Codex remain unverified; the instructions require actual per-run observations.
 
 The coordinator never uses Impeccable's `live` mode, because it runs agents with the sandbox and approvals turned
 off.
@@ -127,8 +135,8 @@ name them, and they change only on your explicit direction.
 
 | Symptom | What to do |
 | --- | --- |
-| Impeccable asks a question in a child session | The child stops and returns the question as a blocker. Run the command in your own Impeccable session and answer it there. |
-| The child cannot load Impeccable | Your agent host does not give child agents the skill. The coordinator moves the command to your session. |
+| Impeccable asks another question in a child session | Dependent writes stop; confirm the complete returned question round through the same child, or use your own session when relay capabilities are missing. |
+| The child cannot load Impeccable | Check the observed current-project plugin enablement and native skill availability. Use your session if loading fails; do not load plugin-cache files or change enablement without a setup request. |
 | A change appears outside the edit list | The coordinator reports the file and does not deliver it. Keep, move or revert it yourself, or ask the coordinator to include it in a new brief. |
 | HEAD moved or attribution is unverifiable | A commit or checkout happened during the session. Review the reported changes yourself before accepting them. |
 | Impeccable is not installed | Install it through a route in section 2, ask the coordinator to, or continue on the inline track. |
