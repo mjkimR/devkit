@@ -80,6 +80,16 @@ def test_installed_deep_research_without_spec(tmp_path: Path) -> None:
     assert not (consumer / ".devkit/adaptive-dev.md").exists()
     assert not (consumer / ".devkit/managed/spec").exists()
     assert not (consumer / ".devkit/managed/adaptive-dev").exists()
+    discovery = consumer / ".agents/skills/discovery"
+    assert (discovery / "SKILL.md").is_file()
+    assert (
+        yaml.safe_load((discovery / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
+    )
+    for role in ("idea-explorer", "evidence-researcher", "idea-challenger"):
+        assert (discovery / f"roles/{role}.md").is_file()
+        assert not (consumer / f".codex/agents/{role}.toml").exists()
+    for reference in ("orchestration", "retention"):
+        assert (discovery / f"references/{reference}.md").is_file()
     research = consumer / ".agents/skills/deep-research"
     assert (research / "SKILL.md").is_file()
     cloud = research / "references/cloud-handoff.md"
@@ -120,10 +130,12 @@ def test_installed_deep_research_without_spec(tmp_path: Path) -> None:
     cli("rules", "check")
     cli("remove", "deep-research")
     assert not research.exists()
+    assert not discovery.exists()
     assert not (consumer / ".codex/agents/research-investigator.toml").exists()
     assert material.read_bytes() == expected
     cli("add", "deep-research")
     assert material.read_bytes() == expected
     assert (research / "SKILL.md").is_file()
     assert cloud.is_file()
+    assert (discovery / "SKILL.md").is_file()
     cli("sync", "--check")

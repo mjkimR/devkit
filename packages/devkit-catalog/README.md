@@ -6,7 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
+| `deep-research` | `core` | Explicit discovery for half-formed ideas and bounded research with retained evidence, under either development approach |
 | `app-uiux-improve` | `core` | User-invoked UI/UX improvement for software interfaces: proportionate object framing, optional local perspectives or a user-selected Impeccable session, and implementation through the consumer workflow |
 | `design-explore` | `core` | User-invoked general solution design with optional local premise exploration, mechanisms and tradeoffs; conversation-first result |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
@@ -34,6 +34,22 @@ indexed material under `docs/materials/`, which proposals, specs, decisions and 
 Git policy. It creates no work unit, approval or envelope.
 
 See `CAP-DLV-deep-research`.
+
+## Idea discovery
+
+`uv run devkit add deep-research` also deploys the explicitly invoked `/discovery <idea or request>` entry.
+It recovers the desired change, audience/use scene, consequential constraints and intended session result from
+context, asking only for missing owner decisions that change first proposals or avoid wasted exploration.
+Once exploration is useful, it develops concrete proposals with optional local explorer, researcher and challenger
+assignments. Criticism follows candidate development; inspectable facts stay with the agent and preferences stay
+with the owner. No fixed team or option quota applies.
+
+Remaining uncertainty selects a focused question, bounded research, an illustrative example or proposed experiment,
+reframing/hold/rejection, or a concise brief. An experiment needs its own write/execution authority. Each further
+round names what finding changes the recommendation. Results stay in conversation unless retention is requested;
+clarified, validation-needed, held and rejected ideas are all valid outcomes. This entry can revisit the problem
+and goal; general solution exploration starts from a supplied design problem. Selection starts no work, and
+exploration starts no delivery Unit or implementation. See `CAP-DLV-idea-discovery`.
 
 ## UI/UX improvement
 

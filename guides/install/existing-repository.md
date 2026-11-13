@@ -235,7 +235,7 @@ Follow [Cloud setup](../INSTALL_GUIDE.md#cloud-setup) for cloud execution.
 For an approved adaptive development installation, follow
 [the adaptive development setup](../INSTALL_GUIDE.md#adaptive-development).
 
-Select the research bundle with `uv run devkit add deep-research` only when the user asks for that entry.
+Select discovery and research with `uv run devkit add deep-research` only when the user asks for those explicit entries.
 
 ## Private content without recurring origin access
 

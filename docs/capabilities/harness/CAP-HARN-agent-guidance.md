@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Agent guidance routes task instructions through SDD and coordinator-led adaptive development with active delegation, and covers deep research, milestones and local-orchestrated verification."
+summary: "Agent guidance routes task instructions through SDD and coordinator-led adaptive development with active delegation, and covers idea discovery, deep research, milestones and local-orchestrated verification."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -472,6 +472,9 @@ to the project's adaptive-development guidance and independent checks without im
 immutable iteration history. Existing explicitly bound SDD artifacts keep their checks. Installing or selecting spec
 assets never switches the approach. The `adaptive-dev` bundle's entry, roles and context are separately delivered; this policy supplies no
 product discovery coordinator.
+
+An explicit `/discovery` invocation is not development intake: the spec router runs no playbook discovery,
+classification or Unit creation. It follows `CAP-DLV-idea-discovery`; later implementation starts as ordinary intake.
 
 An explicit `/deep-research` invocation is not development intake: the spec router runs no playbook discovery,
 classifies it into no depth and creates no Unit for it, and work the research later informs starts as ordinary

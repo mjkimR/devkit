@@ -9,5 +9,11 @@ kind = "skill"
 source = "skills/deep-research"
 invocation = "user"
 
+[[assets]]
+id = "discovery"
+kind = "skill"
+source = "skills/discovery"
+invocation = "user"
+
 [presets.core]
-assets = ["deep-research"]
+assets = ["deep-research", "discovery"]

@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-deep-research
 title: Deep Research
-summary: "An explicitly invoked research skill retains sourced artifacts in one material using optional local roles, user-mediated cloud request/intake, selective verification and durable partial resume without execution or delivery authority."
+summary: "An explicitly invoked research skill beside optional idea discovery retains sourced artifacts in one material using optional local roles, user-mediated cloud request/intake, selective verification and durable partial resume without execution or delivery authority."
 area: delivery
 status: active
 created_at: 2026-10-30
@@ -20,6 +20,9 @@ research team, and four optional skill-local research role instructions. The inv
 directions with sourced evidence and retains the result as one indexed material under `docs/materials/` that
 proposals, specs, decisions and adaptive current context cite by its `MAT-<slug>` ID. The entry works under either
 development approach and neither reads nor changes it.
+
+The same core preset also supplies the separately invoked discovery entry (`CAP-DLV-idea-discovery`). Its minimum
+interview, conversation default and uncertainty routing do not change this research entry's retained-material contract.
 
 `ADR-adaptive-development-and-research` owns the bundle split and role ownership, and the retained material and its
 citation. `ADR-skill-local-research-roles` owns skill-local role distribution.
