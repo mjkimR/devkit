@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-rule-authoring
 title: "Rule Authoring"
-summary: "Protocols, workspace cache API, rule configuration, and custom rule development."
+summary: "Rule protocols, exact change-span evidence, nonblocking considerations, workspace cache API, configuration and custom rule development."
 area: governance
 status: active
 entrypoints:
@@ -141,6 +141,39 @@ loading error. A rule that satisfies the protocol without subclassing `BaseRule`
 validation with the same code and its rule ID before any rule runs. A declaration that omits a file the rule reads
 hides its findings from targeted runs on that file, so the rule's tests check it is complete (section 6).
 `devkit rules explain` prints the declaration.
+
+### Optional `change_scope` and NOTICE
+
+`BaseRule.change_scope` defaults to `False` and is optional on protocol-only rules. A change-scoped rule remains a
+linter rule without promotion; the evaluator excludes it from hygiene. Severity is independent, so the same source
+evidence can support a warning rule. `Severity.NOTICE` preserves `Severity.INFO` as a distinct value.
+
+1. **Exact construct evidence**: WHEN a change-scoped rule emits a finding, it MUST attach a `ChangeSpan` for a
+   selected `FileChange` in `ctx.changes`, naming the path, side (`before` or `after`), start/end and content digest.
+   The engine validates bounds, exact identity and intersection with that side's changed range. Missing/stale/
+   nonintersecting evidence is a rule-execution error. Test: rules change-notice unit/integration tests.
+2. **Semantic relevance**: WHEN choosing a span, a rule SHOULD select the affected function, handler or other
+   construct and test that unrelated changes do not trigger it. Structural overlap does not prove useful judgment.
+   A representative broad-exception fixture exercises this contract; no production reminder catalog is shipped.
+3. **Consideration metadata**: WHEN effective severity is NOTICE, the rule MUST return a concrete consideration
+   without `remediation`, `fixable` or `fixed`. It requires no acknowledgement or waiver. The evaluator does not run
+   its fixer. Test: rules change-notice unit tests.
+
+`FileChange` is immutable and carries path/status/mode/base, before/after content identities and text, immutable
+`ChangeHunk` ranges and `available`. Skip unavailable entries. `ctx.before_text(path)` returns captured before text;
+models never run Git or read disk. `change.span(side, start, end)` creates the evidence, and
+`change.affects(span)` checks whether the source pair affects it. These types are exported from the public rules API.
+
+```python
+span = change.span("after", handler.lineno, handler.end_lineno + 1)
+if change.affects(span):
+    findings.append(Violation(self.id, path, handler.lineno,
+                              "Consider whether this fallback hides failure", change_span=span))
+```
+
+A deletion-only finding uses the old logical path, before-side text and old line. An author may report a construct's
+header outside added lines when its evidence covers the relevant change. `ADR-change-scoped-rule-notices` records
+why severity and change targeting are separate.
 
 ### Guide Format
 

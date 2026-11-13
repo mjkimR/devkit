@@ -75,6 +75,11 @@ report.ok, report.problems, report.exit_code         # exit_code: the highest ex
 - Unfixed error-severity violations refuse the commit with `GATE_RULES_FAILED` (`INPUT_ERROR`, exit `1`: correct the staged change and commit again): per violation a `[DETAIL]` `<RULE-id> <file>:<line>: <message>` and, when the rule gives one, `  fix: <remediation>`, the first 20 listed and the rest counted. `[TARGET]` lists their `<file>:<line>`. Warning-severity violations pass with one `GATE_RULES_WARNINGS` warning listing them the same way; `--strict` (`DEVKIT_STRICT=1`) never counts it, since a rule's severity, not the output option, decides whether a violation refuses a commit (`ARCH-08-1-agent-output`).
 - A run that could not complete (rules that cannot load, an invalid `[rules]` policy, a rule that raised) did not judge the commit: it is `RULES_RUN_FAILED` (exit `2`) with each problem as a detail, `AUTO` with their fix when every problem is `AUTO` with the same one (managed rule files missing in a fresh worktree or clone: `devkit sync`), else `MAINTENANCE`. An invalid `[rules]` table is `RULES_CONFIG_INVALID`.
 - While the rules run, the hook's `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` are removed from the process environment and the index is passed as `DEVKIT_GIT_INDEX_FILE`, as `verify-commands` does for its commands; the environment is restored afterwards.
+- **Rule considerations**: WHEN the staged run returns NOTICE findings, the gate MUST pass them as one
+  `GATE_RULES_NOTICES` NOTICE advisory with rule IDs, locations and considerations, independently of
+  `GATE_RULES_WARNINGS`; they never refuse the commit, including under strict mode. Tests:
+  `packages/devkit/tests/integration/features/rules/engine/test_change_notices.py` and
+  `packages/devkit/tests/e2e/features/gate/test_notice_cli.py`.
 - Tune the rules, not the gate: severities, phases (a rule parked in `hygiene` is not evaluated at commit time), settings and `exclude` in `[rules]`. A repository that keeps rules out of its commits sets `enabled = false` in `[gates.settings.rules-check]`, or a clone does so in `devkit.config`.
 
 `verify-commands` runs the repository's own checks (formatter, linter, type checker, fast tests) as the final verification before a commit:

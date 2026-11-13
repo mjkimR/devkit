@@ -3,11 +3,14 @@ from __future__ import annotations
 import inspect
 import os
 import unicodedata
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
+from devkit_agt.features.rules.models.changes import ChangeSpan, FileChange
 from devkit_agt.features.rules.models.errors import TargetError
 from devkit_agt.features.rules.models.settings import RawSettings, SettingsResolver, match_path
 from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
@@ -25,6 +28,7 @@ class Severity(StrEnum):
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
+    NOTICE = "notice"
 
 
 @dataclass(slots=True)
@@ -39,6 +43,7 @@ class Violation:
     fixed: bool = False
     severity: Severity = Severity.ERROR
     phase: Phase = Phase.LINTER
+    change_span: ChangeSpan | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -52,6 +57,7 @@ class Violation:
             "fixed": self.fixed,
             "severity": self.severity.value,
             "phase": self.phase.value,
+            **({"change_span": self.change_span.to_dict()} if self.change_span is not None else {}),
         }
 
 
@@ -121,9 +127,15 @@ class RuleContext:
         settings_resolvers: dict[str, SettingsResolver] | None = None,
         exclude: tuple[str, ...] = (),
         snapshot: Snapshot | None = None,
+        changes: Mapping[str, FileChange] | None = None,
+        change_base: str = "",
+        change_available: bool = False,
     ) -> None:
         self.workspace_root = workspace_root.resolve()
         self.snapshot = snapshot
+        self.changes = MappingProxyType(dict(changes or {}))
+        self.change_base = change_base
+        self.change_available = change_available
         if cache is None:
             cache = WorkspaceCache(self.workspace_root)
         elif cache.workspace_root != self.workspace_root:
@@ -150,6 +162,7 @@ class RuleContext:
             if not self._excluded(relative):
                 normalized.append(relative)
         self.targets = tuple(named)
+        self.change_targets = self.targets
         self.changed_files = normalized
         # Membership is compared in NFC: Git reports names in NFC while a file system (macOS) may list them in NFD.
         self._targeted = frozenset(unicodedata.normalize("NFC", name) for name in normalized)
@@ -158,6 +171,10 @@ class RuleContext:
             # (Git-ignored, dependency and cache directories); a snapshot's changed files are not such
             # exceptions, so a scan of the snapshot lists what a whole-workspace scan would.
             self.cache.add_explicit(normalized)
+
+    def before_text(self, path: str) -> str:
+        """Exact before-side text of a captured path; never read disk."""
+        return self.changes[path].before
 
     def _relative(self, path: str | Path) -> str | None:
         """Workspace-relative POSIX form of ``path``, or ``None`` when it lies outside the workspace.

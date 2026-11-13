@@ -73,6 +73,11 @@ and models, and feature dependencies remain explicit. `compact` and `worktree` a
 The shared CLI conventions (`-w/--workspace-root`, `--format`, exit codes) and the documentation index are in
 `ARCH-01-introduction-and-goals`.
 
+Rules support nonblocking `Severity.NOTICE` considerations independently of `INFO` and warnings. Change-scoped
+rules consume exact before/after evidence and stay out of hygiene. `devkit rules context FILE [--session TOKEN]`
+returns bounded changed-file hunks and applicable considerations; native file reads do not invoke it.
+See `CAP-GOV-rules-engine` and `CAP-GOV-rule-authoring` for the public evidence and suppression contracts.
+
 ## Tests
 
 `tests/unit/` checks isolated parsing, models and policies; `tests/integration/` exercises real files, Git,

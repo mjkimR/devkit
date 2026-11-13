@@ -26,7 +26,7 @@ def test_cli_rules_check_clean(tmp_path: Path) -> None:
     result = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path)])
     assert result.exit_code == 0
     assert result.output == (
-        f"[SUMMARY: errors=0 warnings=0 infos=0 fixed=0 rules={len(BUILTIN_LINTER_RULES)}]\n"
+        f"[SUMMARY: errors=0 warnings=0 infos=0 notices=0 fixed=0 rules={len(BUILTIN_LINTER_RULES)}]\n"
         "[OK: no error-severity violation remains]\n"
     )
 
@@ -39,7 +39,7 @@ def test_cli_rules_check_reports_a_run_without_active_rules(tmp_path: Path) -> N
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 0, result.output
     assert result.stdout == (
-        "[SUMMARY: errors=0 warnings=0 infos=0 fixed=0 rules=0]\n[OK: no error-severity violation remains]\n"
+        "[SUMMARY: errors=0 warnings=0 infos=0 notices=0 fixed=0 rules=0]\n[OK: no error-severity violation remains]\n"
     )
     assert "[NOTICE] (RULES_NONE_ACTIVE)" in result.stderr
     as_json = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
@@ -56,7 +56,9 @@ def test_cli_rules_check_json_output(tmp_path: Path) -> None:
     assert result.exit_code == 1  # Fails due to violation
 
     data = json.loads(result.stdout)
-    assert set(data) == {"violations", "errors", "notices"} and data["errors"] == [] and data["notices"] == []
+    assert (
+        set(data) == {"violations", "errors", "notices", "summary"} and data["errors"] == [] and data["notices"] == []
+    )
     assert len(data["violations"]) >= 1
     assert data["violations"][0]["rule_id"] == "RULE-markdown-link"
     # The guide the [VIOLATION: ...] line cites travels in JSON too.
@@ -398,11 +400,11 @@ def test_cli_check_output_is_unchanged_when_a_rule_is_skipped(tmp_path: Path) ->
     args = ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "docs/a.md"]
     text = runner.invoke(cli, args)
     assert text.exit_code == 0 and text.output == (
-        f"[SUMMARY: errors=0 warnings=0 infos=0 fixed=0 rules={len(BUILTIN_LINTER_RULES) + 1}]\n"
+        f"[SUMMARY: errors=0 warnings=0 infos=0 notices=0 fixed=0 rules={len(BUILTIN_LINTER_RULES) + 1}]\n"
         "[OK: no error-severity violation remains]\n"
     )
     as_json = runner.invoke(cli, [*args, "--format", "json"])
-    assert as_json.exit_code == 0 and set(json.loads(as_json.stdout)) == {"violations", "errors", "notices"}
+    assert as_json.exit_code == 0 and set(json.loads(as_json.stdout)) == {"violations", "errors", "notices", "summary"}
     python = runner.invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "rules"])
     assert python.exit_code == 1 and "[VIOLATION: RULE-declared" in python.output
 
@@ -508,7 +510,19 @@ def test_cli_staged_gate_with_nothing_staged(tmp_path: Path) -> None:
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged"])
     assert result.exit_code == 0 and "[OK: no changed files in the snapshot; nothing to check]" in result.output
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
-    assert result.exit_code == 0 and json.loads(result.stdout) == {"violations": [], "errors": [], "notices": []}
+    assert result.exit_code == 0 and json.loads(result.stdout) == {
+        "violations": [],
+        "errors": [],
+        "notices": [],
+        "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "infos": 0,
+            "notices": 0,
+            "fixed": 0,
+            "rules": 0,
+        },
+    }
 
 
 def test_cli_ci_gate_uses_base_ref(tmp_path: Path) -> None:
@@ -659,7 +673,19 @@ def test_cli_target_directory_without_files_checks_nothing(tmp_path: Path) -> No
     _two_broken_docs(tmp_path)
     (tmp_path / "empty").mkdir()
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "empty"])
-    assert result.exit_code == 0 and json.loads(result.stdout) == {"violations": [], "errors": [], "notices": []}
+    assert result.exit_code == 0 and json.loads(result.stdout) == {
+        "violations": [],
+        "errors": [],
+        "notices": [],
+        "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "infos": 0,
+            "notices": 0,
+            "fixed": 0,
+            "rules": len(BUILTIN_LINTER_RULES),
+        },
+    }
 
 
 def test_cli_exclude_patterns_drop_files_from_targets_and_scans(tmp_path: Path) -> None:
@@ -674,7 +700,19 @@ def test_cli_exclude_patterns_drop_files_from_targets_and_scans(tmp_path: Path) 
     assert [v["file"] for v in json.loads(directory.stdout)["violations"]] == ["docs/a.md"]
 
     explicit = runner.invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs/research/b.md"])
-    assert explicit.exit_code == 0 and json.loads(explicit.stdout) == {"violations": [], "errors": [], "notices": []}
+    assert explicit.exit_code == 0 and json.loads(explicit.stdout) == {
+        "violations": [],
+        "errors": [],
+        "notices": [],
+        "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "infos": 0,
+            "notices": 0,
+            "fixed": 0,
+            "rules": len(BUILTIN_LINTER_RULES),
+        },
+    }
 
 
 def test_cli_excluded_files_remain_link_repair_candidates(tmp_path: Path) -> None:
@@ -706,7 +744,7 @@ def test_cli_summary_only_is_an_unknown_option(tmp_path: Path) -> None:
     assert (tmp_path / "docs/a.md").read_text(encoding="utf-8") == "[broken](missing.md)\n"
     result = runner.invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 1 and result.output.count("[VIOLATION: RULE-markdown-link") == 3
-    assert "[SUMMARY: errors=3 warnings=0 infos=0 fixed=0 rules=" in result.output
+    assert "[SUMMARY: errors=3 warnings=0 infos=0 notices=0 fixed=0 rules=" in result.output
     assert "[RULE_COUNTS:" not in result.output
 
 
@@ -801,7 +839,7 @@ def test_cli_info_findings_are_counted(tmp_path: Path) -> None:
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 0
     assert "[VIOLATION: RULE-markdown-link severity=info" in result.output
-    assert "[SUMMARY: errors=0 warnings=0 infos=1 fixed=0 rules=" in result.output
+    assert "[SUMMARY: errors=0 warnings=0 infos=1 notices=0 fixed=0 rules=" in result.output
 
 
 def test_cli_errors_without_findings_print_no_empty_summary(tmp_path: Path) -> None:

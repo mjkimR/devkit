@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-evaluation-lifecycle
 title: "Rule Evaluation Lifecycle"
-summary: "Single-pass repairs, target scoping, execution phases, Git snapshot evaluation and typed rule settings, including raw-byte file budgets and opt-in consolidated-record budgets."
+summary: "Single-pass repairs, exact change-scoped evidence, target scoping, phases, Git snapshots and typed rule settings with byte-budget policies."
 area: governance
 status: active
 entrypoints:
@@ -43,7 +43,7 @@ Command synopsis, output and exit codes: [Rules Reference, CLI usage](../../deve
 
 - **Phases**:
   - `linter`: relative Markdown links, the safety checks on explicit targets, and every rule declared in this phase. The Git snapshot gates evaluate this phase: `check --staged` (at commit time, the built-in `rules-check` gate of `CAP-GATE-commit-gates`) and `check --ci`.
-  - `hygiene`: the `linter` rules plus file length warnings, every rule declared in this phase, and every rule parked there by a project phase override.
+  - `hygiene`: the non-change-scoped `linter` rules plus file length warnings, every rule declared in this phase, and every rule parked there by a project phase override.
 - **Hygiene extensions**: a whole-workspace `check --phase hygiene` (no targets, no snapshot) also calls every `devkit.hygiene` entry point of the installed packages, in sorted name order, as `extension(workspace_root)`, after the rules ran, and reports what they return on stderr with the run's notices: a string is a `HYGIENE_NOTICE`, an advisory keeps its code (an `ERROR` lowered to `WARNING`). They check repository state that is not a file rule, such as the stale `plan-*`/`dev-*` branches `devkit_agt.features.worktree` reports as `WORKTREE_STALE_BRANCH` warnings (`CAP-WT-task-worktrees`). An extension never fails the run: an exception or a malformed return value is a `HYGIENE_EXTENSION_FAILED` warning, and warnings change the exit code only under `--strict`. The `linter` phase, explicit targets, the Git snapshot gates (commit gate, CI) and `fix` never call them.
 - **Targets**: workspace-relative or absolute paths inside the workspace. A file named on the command line is checked as is, by every rule the run evaluates (also those that scan the workspace with `find_files`), even when Git ignores it (for example a workflow unit under `.devkit/transient/`) or it sits in a dependency or cache directory (`.venv/`, `node_modules/`). A directory expands recursively to its regular files with the same discovery as a whole-workspace scan: dependency and cache directories (`.git`, `.venv`, `node_modules`, ...), `.devkit/managed/` and `.devkit/overrides/`, and symlinks resolving outside the workspace are skipped, and inside a Git work tree only files Git does not ignore are listed (tracked plus untracked; names are compared in Unicode NFC, so a file whose on-disk name is decomposed, as macOS may store it, still matches Git's precomposed name). No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace, including a file or directory symlink that resolves outside it, and a file or directory inside `.devkit/managed/` or `.devkit/overrides/` (receipt-pinned copies rules never read), fails with `RULES_TARGET_INVALID` before any rule runs. Link repair still indexes every Markdown file in the workspace when checking selected files.
 - **Target scoping**: a run with explicit targets in the working tree (`devkit rules check FILES`, `devkit rules fix FILES`, the workflow engine's `lint-clean`, a library call of `evaluate_rules` whose context names targets) or a Git snapshot run (`check --staged`, `check --ci`) skips each active rule that declares `inputs` (`CAP-GOV-rule-authoring`) when no candidate path matches one of its patterns. For working-tree runs, candidate paths are the targets as named and expanded from directories, before `[rules] exclude` removes any (Exclusions, below), because a rule that reads the whole workspace does not honor them. For Git snapshot runs, candidate paths are the targets plus `snapshot.deleted` (including typechanges and old paths of renames), while `RuleContext.targets` holds only present files. A candidate that is `.devkit/config.toml` or `.devkit/installation.json` keeps every rule for the run, since `[rules]` policy and rule definitions can change any rule's findings. Undeclared rules always run; whole-workspace runs without targets or snapshot changes evaluate every active rule. A skipped rule reports nothing, so a documentation-only run no longer reports what such a rule finds in files outside the targets, pre-existing or introduced by uncommitted work; full-workspace CI runs (`just rules-check` in `.github/workflows/ci.yml`) and full runs still do. The skipped rule IDs are returned on `EvaluationResult.skipped` and `ProjectRun.skipped` and logged at `INFO` (`-v`); stdout and the JSON result do not change.
@@ -115,7 +115,7 @@ The `[rules]` table of `.devkit/config.toml` is the only place a project changes
 RULE-file-length = "error"
 ```
 
-The value is `error`, `warning` or `info`. Violations report the effective severity, and `error` violations fail the command. An entry for an unknown rule, or one equal to the declared severity, is a policy error.
+The value is `error`, `warning`, `info` or `notice`. Violations report the effective severity, and `error` violations fail the command. An entry for an unknown rule, or one equal to the declared severity, is a policy error.
 
 ### Typed Settings (`[rules.settings.<RULE-id>]`)
 
@@ -198,3 +198,32 @@ The workspace root must be the Git work tree top level; a subdirectory is refuse
 - Snapshot gates run the `linter` phase only and refuse file arguments, `--phase hygiene` and `fix`; `--staged` and `--ci` are mutually exclusive and `--base` applies to `--ci` only.
 
 The built-in safety rules `RULE-secret-leak` and `RULE-clean-artifacts` ([catalog](../../development/reference/rules.md#built-in-rules)) inspect explicit targets only, so they matter chiefly in these gates: a whole-workspace `check` reports nothing for them, because a working tree scan would flag ignored local files.
+
+
+## Change-scoped evaluation
+
+1. **Independent selection**: WHERE a rule declares `change_scope=True`, the evaluator MUST select it only for
+   linter evaluation and omit it from hygiene. A non-boolean declaration is `RULES_DEFINITION_INVALID`; a hygiene
+   phase, promotion or hygiene override is `RULES_POLICY_INVALID`. Severity remains independently selectable.
+   Test: rules change-notice unit tests.
+2. **Exact source pair**: WHEN change-scoped evaluation runs, the engine MUST capture immutable source evidence per
+   pass. Working-tree runs compare the original HEAD tree (empty when unborn) with cached working bytes; staged
+   runs compare the captured before/index tree, including alternate indexes; CI compares its selected merge base
+   with captured HEAD. Snapshot sides never read unstaged product, config or custom-rule bytes.
+   Test: rules change-notice Git integration tests.
+3. **Deletion and mode evidence**: WHEN text changes, the engine MUST expose old/new one-based half-open ranges,
+   preserving zero-length insertion/deletion anchors. Renames are delete/add, deleted paths retain before text and
+   mode-only changes have no textual range. Source exclusions apply before findings. External diff and textconv
+   helpers are disabled. Test: rules change-notice Git integration tests.
+4. **Unavailable evidence**: IF exact working text is unavailable (Git failure, binary/undecodable data or a capture
+   mismatch), THEN affected change-scoped evaluation MUST omit that evidence with `RULE_CHANGE_EVIDENCE_UNAVAILABLE`
+   as a NOTICE advisory, without historical whole-file fallback. Independent rules run normally; snapshot capture
+   and materialization failures retain existing execution errors. Test: rules change-notice integration tests.
+5. **Fresh autofix pass**: WHEN successful fixes return changed paths, the engine MUST refresh after-content and
+   ranges against the original before tree before the single recheck. IF a fixer fails with unknown writes, THEN
+   it MUST invalidate cached bytes and recapture all working changes. Each pass receives fresh immutable evidence;
+   an initial nonrepairable notice does not survive a removed trigger. Test: autofix change-notice integration tests.
+
+Normal rules retain present-file targets and existing snapshot discovery. Change-scoped rules enumerate
+`RuleContext.changes`, including selected deletions. Direct library contexts without supplied/captured exact
+changes report an explicit omission. `ADR-change-scoped-rule-notices` records the added contract.

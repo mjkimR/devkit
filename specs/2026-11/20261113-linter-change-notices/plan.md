@@ -42,3 +42,7 @@ Working evidence failures omit affected change-scoped evaluations with RULE_CHAN
 AC-01/02/05/09/10: immutable model unit tests plus real Git integration for working, staged, CI, deletion, partial/alternate staging, race and autofix refresh. AC-03/04/06/08: policy/evaluator/CLI/gate/workflow compatibility tests. AC-07: explicit context integration with excerpt boundaries, token expiry/cap/corruption/lock/concurrency and unchanged/no-match files.
 
 Run focused new tests, just lint-check, just check, just test-affected --base fe54e1f8603e437869917792313ee899e138f1bb --tier all (full fallback retained), CI rules, sync and envelope checks. No performance or model-obedience claim; live host use is best effort.
+
+### Compatibility fact correction
+
+Host decision: preserve actual warning/INFO rule-finding behavior under strict CLI mode (exit 0 without independent errors). `docs/development/reference/rules.md` distinguishes these stdout findings from advisory warnings. The carried draft's warning-promotion phrase was inaccurate; no warning semantics change is authorized. AC-03 and AC-08 preserve the observed contract.

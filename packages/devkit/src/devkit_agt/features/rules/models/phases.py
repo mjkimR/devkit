@@ -19,7 +19,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
-from devkit_agt.features.rules.models.contracts import Phase, Rule, Violation
+from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity, Violation
 from devkit_agt.features.rules.models.errors import PolicyError, PromotionReadyNotice
 
 
@@ -117,7 +117,7 @@ def remaining_by_rule(violations: Sequence[Violation]) -> dict[str, int]:
     """Count unfixed violations per rule ID."""
     counts: dict[str, int] = {}
     for v in violations:
-        if v.fixed:
+        if v.fixed or v.severity is Severity.NOTICE:
             continue
         counts[v.rule_id] = counts.get(v.rule_id, 0) + 1
     return counts

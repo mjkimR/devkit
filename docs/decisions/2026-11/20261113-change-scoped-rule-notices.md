@@ -47,7 +47,6 @@ Choose option 3 for compatibility and relevant-change targeting.
 5. Gate notice delivery uses NOTICE-level advisories and preserves warning/error behavior.
    → `CAP-GATE-commit-gates` rule-check findings (MUST).
 
-These traces name the intended restating sections after Development, not existing implemented behavior.
 No existing accepted ADR is replaced; the current host observer remains unchanged.
 
 ## 5. Consequences
@@ -67,4 +66,4 @@ coverage becomes a requirement, revisit the host-specific scope in a later direc
 
 AC-N1 to AC-N10 of `SPEC-linter-change-notices` map to rule/evaluator, snapshot, CLI, gate, workflow and memo tests in
 `packages/devkit/tests/`. Document rules validate structure; Development code review checks semantic-span relevance.
-Planning has not run the future implementation tests.
+Tests include exact-source Git integration, transient memo failure/concurrency and installed CLI/commit-gate checks. Model receipt and comparative quality remain review-only, best-effort observations.
