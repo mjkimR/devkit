@@ -35,9 +35,9 @@ refer to it. This proposal takes the findings that are instruction gaps inside t
 one needs clearer wording, a missing step or a test, and none changes who holds authority. It needs no ADR.
 
 Split from ~~`PROP-uiux-improve-pilot-fit`~~ (drafted in `6902170e9`, deleted in this split) with
-`PROP-uiux-improve-impeccable-routing` (question and load routing) and `PROP-uiux-improve-run-model` (the run model).
+`PROP-uiux-improve-impeccable-routing` (question and load routing) and `SPEC-uiux-improve-run-model` (the run model).
 All three touch the bundle's `SKILL.md` and `CAP-DLV-uiux-improvement`. The user set the delivery order:
-`PROP-uiux-improve-run-model` first, then `PROP-uiux-improve-impeccable-routing`, then this proposal, which
+`SPEC-uiux-improve-run-model` first, then `PROP-uiux-improve-impeccable-routing`, then this proposal, which
 `depends_on` the routing proposal and builds on both.
 
 Hypothesis: with these gaps closed, a coordinator verifies the branch it changed, keeps a task focus from turning into
@@ -92,7 +92,7 @@ package dependency or distribution change is required.
 
 - Keep `planning_effort: low` because direction is settled; retain `dev_effort: medium` for instruction review and
   bundle checks. No scout or challenger pass is required at this Planning effort.
-- Preserve delivery order: `PROP-uiux-improve-run-model`, then `PROP-uiux-improve-impeccable-routing`, then this
+- Preserve delivery order: `SPEC-uiux-improve-run-model`, then `PROP-uiux-improve-impeccable-routing`, then this
   proposal. Rebase is not worker work: the Host refreshes this Planning branch or the Development input when those
   predecessors land. Recheck the affected rule numbers and wording then; no sibling decision is treated as settled
   by this plan.

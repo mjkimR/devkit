@@ -1,7 +1,7 @@
 ---
 id: UC-improve-an-interface-and-user-flow
 title: Improve an interface and user flow
-summary: "An AI coding agent uses an explicitly invoked UI/UX skill to improve a software interface task, framing affected objects, optionally delegating to a user-selected Impeccable session, and reports actual verification and limits."
+summary: "An AI coding agent uses an explicitly invoked UI/UX skill to improve a software interface task, framing affected objects, optionally delegating to a user-selected Impeccable session, and implements through a task-approved route with actual verification and limits."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional design and research subagents, Optional Impeccable session]
@@ -23,20 +23,24 @@ entrypoints:
 
 ## 2. Main Success Scenario
 
-1. The agent recovers the target, intended outcome, relevant artifacts and constraints (`CAP-DLV-uiux-improvement`).
+1. The agent recovers the target, intended outcome, relevant artifacts, constraints and the user's task route choice (`CAP-DLV-uiux-improvement`).
 2. The agent inspects the representative task path and affected interface states (`CAP-DLV-uiux-improvement`).
 3. The agent frames the affected objects when the request changes structure or flow, from the project's OOUX
    documents when present, then develops useful design perspectives for the requested improvement
    (`CAP-DLV-uiux-improvement`).
 4. The agent synthesizes a coherent direction and its relevant tradeoffs (`CAP-DLV-uiux-improvement`).
-5. The agent applies requested changes through the consumer's existing delivery workflow (`CAP-DLV-uiux-improvement`).
+5. The agent applies requested changes through the route the user authorized for the task (`CAP-DLV-uiux-improvement`).
 6. The agent checks the changed interface and representative interactions (`CAP-DLV-uiux-improvement`).
-7. The agent reports the actual improvement, verification and material limits (`CAP-DLV-uiux-improvement`).
+7. The agent reports the actual improvement, selected route, verification, documentation follow-up and remaining authority (`CAP-DLV-uiux-improvement`).
 
 ## 3. Extensions
 
 - **1a.** A decision-changing artifact or constraint is missing: the agent reuses known context and asks only for
   that missing input; dependent work waits and resumes at step 1.
+- **1b.** No exact prior route approval or answer channel exists: read-only inspection is retained and dependent
+  product edits and write-capable delegation wait; resumes at step 1 when the user chooses a route.
+- **1c.** The user chooses the consumer workflow: the agent follows its pre-implementation, required review and
+  delivery steps; resumes at step 2. An exact prior route instruction is reused without another identical prompt.
 - **2a.** The running interface cannot be inspected: the agent uses available screenshot, code or text evidence and
   names its coverage; continues at step 3 without claiming actual interaction verification.
 - **3a.** A small request needs no team or research: the agent works inline; resumes at step 4.
@@ -52,7 +56,7 @@ entrypoints:
 - **5a.** Review-only request: the agent returns findings without product edits; the use case ends with the requested review.
 - **5b.** A workflow approval or tool is missing: the agent preserves useful partial work and names the blocker;
   the use case ends pending that requirement.
-- **5c.** Impeccable is selected: the agent completes the consumer workflow's pre-implementation steps, writes the
+- **5c.** Impeccable is selected: the agent completes pre-implementation steps required by the selected route, writes the
   brief and delegates one session, before or after its own inline changes (a fresh child for refinement commands, a
   session the user operates for interactive commands or when the child cannot load Impeccable or meets an upstream
   question), pausing its own product edits while the session runs; after the return it accepts listed product-file
@@ -62,16 +66,24 @@ entrypoints:
   context files, or attribution is unverifiable: the agent reports each class, reverts and deletes nothing on its own
   initiative, and continues with the accepted changes; resumes at step 6.
 - **6c.** The accepted change made an OOUX document (glossary, object register or UX document) stale: the agent names
-  it and edits none in the skill run; the consumer workflow's own step updates it; resumes at step 7.
+  it, its affected statement and the concrete follow-up through the documentation process where present or a
+  separate documentation task otherwise. The run edits none and creates no follow-up record without a separate
+  request; resumes at step 7.
 - **7a.** The user asks for cleanup or ignore entries: the agent removes only the Impeccable output the user names or
   adds upstream's ignore entries confined to `.impeccable/` after showing them, leaves `PRODUCT.md` and `DESIGN.md`
-  unless named, and continues the consumer workflow; the use case ends with the requested change reported.
+  unless named, and continues through the selected route and host approvals; the use case ends with the requested
+  change reported.
+
+- **7b.** Git effects lack current task authority: the agent presents the verified result and asks once for the
+  named remaining effects before acting; existing exact authority is reused and route choice grants none. The use
+  case remains pending those effects.
 
 ## 4. Postconditions
 
 - **Success guarantee**: requested changes and actual verification are reported; narrower review requests return
   findings with no product edits, and the result respects the requested destination and project ownership.
-  Consumer-owned files, including Impeccable's project files and the OOUX documents, remain in place unless the user
+  The chosen workflow retains its required steps and reviews; the outside route retains checks without creating
+  workflow-specific records. Consumer-owned files, including Impeccable's project files and the OOUX documents, remain in place unless the user
   directed otherwise.
 - **Minimal guarantee**: unavailable work and checks remain explicit; no native isolation, workflow approval,
   publication or real-user quality result is invented, and no change outside a session's edit list is delivered as
@@ -81,13 +93,13 @@ entrypoints:
 
 Rules: explicit invocation, consumer authority, goal-driven improvement, narrower request, optional perspectives,
 role packet, independent context, host limits, verification, qualified completion, user-selected delegation, session
-brief and routing, coordinator acceptance, consumer context files and user-requested setup and cleanup.
+brief and routing, coordinator acceptance, consumer context files and user-requested setup and cleanup, task route choice, scope growth and Git effects.
 
 ### Scenario 1: Carry a flow and visual improvement through delivery
 
 - **Covers**: main success scenario, 6a
 - **Given**: a supplied interface, user goal and authorized improvement scope.
-- **When**: the agent applies the selected direction through the project workflow.
+- **When**: the agent applies the selected direction through the selected route.
 - **Then**: the changed interface and representative task checks are reported, with relevant defects fixed and rechecked.
 
 ### Scenario 2: Ask only for a consequential missing input
@@ -131,7 +143,7 @@ brief and routing, coordinator acceptance, consumer context files and user-reque
 - **Given**: the user selected Impeccable, the project keeps a glossary and UX documents, and the session also changed
   one file outside its edit list.
 - **When**: the session returns and the agent compares the working directory with the recorded base.
-- **Then**: the listed product-file changes are verified and continued through the workflow; the outside file is
+- **Then**: the listed product-file changes are verified and continued through the selected route; the outside file is
   reported, neither reverted nor delivered; each stale OOUX document is named and left unedited.
 
 ### Scenario 8: Offer installation when Impeccable is unavailable
@@ -148,4 +160,43 @@ brief and routing, coordinator acceptance, consumer context files and user-reque
 - **Given**: a session left screenshots and a `review/` directory under `.impeccable/`.
 - **When**: the user asks to remove the screenshots.
 - **Then**: the agent removes only the screenshots, leaves `review/`, `PRODUCT.md` and `DESIGN.md` in place and
-  reports the change through the consumer workflow.
+  reports the change through the selected route.
+
+### Scenario 10: Approve the outside-workflow route
+
+- **Covers**: main success scenario, 1c
+- **Given**: a bounded implementation goal.
+- **When**: the agent announces the outside-workflow procedure and the user explicitly approves it for this task.
+- **Then**: the improvement loop, applicable project checks and before/after verification proceed without workflow
+  records, while product constraints, host permissions and separate Git authority remain effective.
+
+### Scenario 11: Wait for route choice and reuse exact approval
+
+- **Covers**: 1b, 1c
+- **Given**: no route approval and no answer or approval channel.
+- **When**: product edits would begin.
+- **Then**: dependent writes wait while useful inspection is preserved; an exact instruction already selecting a
+  route instead avoids another identical prompt.
+
+### Scenario 12: Preserve the selected workflow's reviews
+
+- **Covers**: 1c
+- **Given**: the user selects a workflow that requires independent review.
+- **When**: implementation is checked.
+- **Then**: that review stays required; optional bundle reviews waive no selected-workflow requirement.
+
+### Scenario 13: Bound scope growth and Git authority
+
+- **Covers**: 4a, 7b
+- **Given**: an approved goal with no remaining Git-effects authority.
+- **When**: proposed work exceeds the goal or changes a user constraint, or delivery needs a commit or integration.
+- **Then**: dependent scope changes wait for a decision and named Git effects wait for their own authority;
+  an in-goal file addition alone does not trigger scope approval and current exact authority is reused.
+
+### Scenario 14: Report stale documents without an existing process
+
+- **Covers**: 6c
+- **Given**: a change makes a consumer UX statement stale and no documentation process exists.
+- **When**: the coordinator reports the result.
+- **Then**: it names the document, affected statement and separate documentation task, edits none and creates no
+  follow-up record without a separate request.

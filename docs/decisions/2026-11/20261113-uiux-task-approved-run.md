@@ -1,14 +1,14 @@
 ---
-id: PADR-uiux-task-approved-run
+id: ADR-uiux-task-approved-run
 title: Offer task-approved UI/UX runs outside the consumer workflow
-summary: "For UI/UX improvement requests, we offer a task-approved run outside the consumer workflow, to reduce process overhead while retaining permissions and checks, accepting that independent reviews remain optional."
-proposal: PROP-uiux-improve-run-model
+summary: "For UI/UX improvement requests, we offer a task-approved run outside the consumer workflow, to reduce process overhead while retaining permissions and checks, accepting optional reviews on the outside route."
+proposal: SPEC-uiux-improve-run-model
 supersedes: [ADR-uiux-improvement-workflow-boundary, ADR-impeccable-session-authority]
-status: draft
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-uiux-task-approved-run] Offer task-approved UI/UX runs outside the consumer workflow
+# [ADR-uiux-task-approved-run] Offer task-approved UI/UX runs outside the consumer workflow
 
 ## 1. Context & Problem Statement
 
@@ -52,7 +52,8 @@ workflow departure on its own.
 - Route choice grants no commit, integration or publication authority. The coordinator reuses current task authority
   or asks once for the named remaining effects before acting. → `CAP-DLV-uiux-improvement` rule 22 (MUST).
 - Stale consumer OOUX and UX documents remain unedited in the run and are reported with the affected statement and a
-  concrete separate follow-up through the consumer's documentation process where one exists.
+  concrete separate follow-up through the consumer's documentation process where one exists or a separate task
+  otherwise; no follow-up record is created without a separate request.
   → `CAP-DLV-uiux-improvement` rule 17 (MUST).
 - The selected route determines whether consumer pre-implementation workflow steps apply; the Impeccable brief,
   permission boundaries, question/load routing and coordinator acceptance remain intact.

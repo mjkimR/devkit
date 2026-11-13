@@ -50,6 +50,15 @@ def test_installed_app_uiux_improve_without_delivery_packages(tmp_path: Path) ->
     cli("add", "app-uiux-improve")
     assert json.loads(cli("config", "show"))["configuration"]["development"]["approach"] == before
     assert yaml.safe_load((skill / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
+    # The isolated wheel ships the task route without requiring a delivery package or record.
+    entry = (skill / "SKILL.md").read_text()
+    for statement in (
+        "runs outside the",
+        "explicit approval for this task",
+        "Silence selects no route",
+        "route approval alone grants none",
+    ):
+        assert statement in entry
     for role in ROLES:
         assert (skill / f"roles/{role}.md").is_file()
         assert not (consumer / f".codex/agents/{role}.toml").exists()

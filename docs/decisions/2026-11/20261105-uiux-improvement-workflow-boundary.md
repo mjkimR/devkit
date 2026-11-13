@@ -9,6 +9,8 @@ created_at: 2026-11-05
 
 # [ADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
 
+Superseded in part by `ADR-uiux-task-approved-run`: Decision Outcome clause 2 unconditional continuation through the consumer development workflow. Selection-neutral workflow policy, no implicit Git authority and clauses 1, 3 and 4 remain in force.
+
 Superseded in part by `ADR-impeccable-session-authority`: Decision Outcome clause 2 coordinator-only implementation continuation, which now admits one user-selected, brief-bounded Impeccable session under coordinator acceptance. Its authority limitations, clauses 1 and 3, and clause 4 for local roles remain in force.
 
 ## 1. Context & Problem Statement

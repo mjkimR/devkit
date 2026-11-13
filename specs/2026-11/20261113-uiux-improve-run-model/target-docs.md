@@ -3,7 +3,7 @@ id: PROP-uiux-improve-run-model-target
 title: Target contracts for task-approved UI/UX runs
 summary: "Prospective capability, use-case and decision updates for explicit per-task UI/UX route approval, bounded Git effects, scope growth and report-only documentation follow-up."
 status: draft
-proposal: PROP-uiux-improve-run-model
+proposal: SPEC-uiux-improve-run-model
 created_at: 2026-11-13
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -79,7 +79,7 @@ The existing review-only scenario still returns findings without product edits.
 
 ## 3. Decisions and implementation mirrors
 
-Promote `PADR-uiux-task-approved-run`. Keep both predecessor ADRs accepted and add exact partial-supersession
+Promote `ADR-uiux-task-approved-run`. Keep both predecessor ADRs accepted and add exact partial-supersession
 pointers repeating the source PADR's scope. Existing OOUX and context-file ownership, Impeccable selection, edit-list
 acceptance, native host restrictions and no implicit Git authority remain in force.
 

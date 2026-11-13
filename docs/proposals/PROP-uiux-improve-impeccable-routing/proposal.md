@@ -9,7 +9,7 @@ priority: medium                      # critical | high | medium | low
 size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
-depends_on: [PROP-uiux-improve-run-model]
+depends_on: [SPEC-uiux-improve-run-model]
 boundaries:
   owns:
     - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -34,8 +34,8 @@ workflow: sdd-proposal
 behalf", and let a fresh child run only refinement commands loaded through the host's skill mechanism, returning a
 load failure as a blocker. Findings A1 and A2 in `MAT-uiux-improve-pilot` test both clauses. Split from
 ~~`PROP-uiux-improve-pilot-fit`~~ (drafted in `6902170e9`, deleted in this split) with
-`PROP-uiux-improve-bundle-hygiene` and `PROP-uiux-improve-run-model`. The user set the delivery order: after
-`PROP-uiux-improve-run-model` (`depends_on`) and before `PROP-uiux-improve-bundle-hygiene`, which depends on this one.
+`PROP-uiux-improve-bundle-hygiene` and `SPEC-uiux-improve-run-model`. The user set the delivery order: after
+`SPEC-uiux-improve-run-model` (`depends_on`) and before `PROP-uiux-improve-bundle-hygiene`, which depends on this one.
 
 - A1, question round. The pilot split `init` in a child. Phase 1 scanned and drafted the question round without
   writes. The coordinator pre-filled answers from the consumer's OOUX documents and asked the user only the gaps.
@@ -68,7 +68,7 @@ with cache loading. `MAT-impeccable-routing-planning` records the evidence, inbo
   continuation probe passed, but it tested no plugin loading or interactive Impeccable command.
 - **Q3 — Supersession**: replace only the interactive-command routing restriction in `ADR-impeccable-session-authority`.
   Its host-only load mechanism, user ownership of answers, context-file direction, edit boundary and coordinator
-  acceptance remain. `PROP-uiux-improve-run-model` separately owns consumer workflow authority; Development reads
+  acceptance remain. `SPEC-uiux-improve-run-model` separately owns consumer workflow authority; Development reads
   its landed result rather than assuming its draft was accepted.
 
 **Evidence decision (`by: user`)**: empirical validation is best-effort for this personal project and does not
@@ -153,7 +153,7 @@ instruction/contract change; Planning stays high because the direction revises a
 
 ## 4. Lifecycle & Retirement Criteria
 
-- On Acceptance: the Host uses the composed `devkit spec proposal accept-plan` command after review is ready. Development follows `PROP-uiux-improve-run-model` and precedes
+- On Acceptance: the Host uses the composed `devkit spec proposal accept-plan` command after review is ready. Development follows `SPEC-uiux-improve-run-model` and precedes
   `PROP-uiux-improve-bundle-hygiene`. Handoff promotes the PADR and preserves the source material and unmet checks.
 - On Rejection: keep `status: rejected` only after the Host carries the user's decision. Later retirement follows
   the repository procedure and preserves useful evidence.
