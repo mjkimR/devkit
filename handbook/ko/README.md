@@ -14,13 +14,13 @@ sources:
   CAP-DLV-uiux-improvement: null
   CAP-HARN-command-design: null
 title: devkit 핸드북
-translated_from: en/README.md@413c08e700b48ca8
+translated_from: en/README.md@eb1d6a73e67f1211
 ---
 
 # devkit 핸드북
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 주도적으로 개발 작업을 수행하는 저장소를 위한 개발자 도구 모음입니다.
@@ -30,14 +30,14 @@ devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 주도적�
 
 ## devkit이 제공하는 것
 
-devkit은 단일 CLI 명령인 `devkit`으로 제공되며, 릴리즈 인벤토리가 실제 버전을 선택하는 Python 휠 패키지로 배포됩니다
+devkit은 단일 CLI 명령인 `devkit`으로 제공되며, 릴리스 인벤토리가 실제 버전을 선택하는 Python 휠 패키지로 배포됩니다
 ([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-05-1-containers.md) (영어 원문)):
 
 - **배포**(`devkit-dist`): 에이전트 자산을 번들 단위로 패키징하고, 프로젝트에서 선택한 번들을 `devkit sync`로 배포합니다. 스킬과 서브에이전트를 각 에이전트의 네이티브 디렉터리에 프로젝션하며, 필요한 시점에 지침 컨텍스트를 로드합니다. 공유 에이전트 자산만 필요한 저장소라면 이 패키지만 단독으로 설치하면 됩니다.
 - **하네스**(`devkit-agt`): 저장소 거버넌스 규칙(`devkit rules`), 데이터 기반 전달 워크플로(`devkit workflow`), 커밋 게이트(`devkit gate`), 작업 워크트리(`devkit worktree`), 추적 관리되는 기계 생성 파일, 사람의 승인을 거치는 통합(`devkit integration`), 출력이 제한된 컴팩트 명령 실행(`devkit run`)을 제공합니다.
-- **문서**(`devkit-docs`): Living Spec의 문서 모델, 문서 간 ID 해석·목록·검색·참조 추적을 담당하는 `devkit docs` 명령, 문서 규칙, 그리고 공통 형식과 작성 지침을 담은 자동 선택 `docs` 번들을 제공합니다. 특정 전달 절차에 대해서는 알지 못합니다.
+- **문서**(`devkit-docs`): Living Spec의 문서 모델, 문서 간 ID 해석·목록·검색·참조 추적을 담당하는 `devkit docs` 명령, 문서 규칙, 그리고 공통 형식과 작성 지침을 담은 자동 선택 `docs` 번들을 제공합니다. 특정 전달 절차와 무관하게 동작합니다.
 - **스펙 주도 전달**(`devkit-spec`): 제안 및 스펙 번들(`devkit spec`), 전달 정책, 워커 결과 점검, 스킬·워크플로·역할 계약을 담은 `spec` 번들, 그리고 문서의 일관성을 지키는 수명 주기 규칙을 제공합니다. `devkit-docs`를 기반으로 동작합니다.
-- **다른 저장소용 라이브러리**: `devkit-advisory`(Python 표준 라이브러리만 사용하는 독립적인 `devkit.advisory` 에이전트 어드바이저리 프로토콜)와 `devkit-cli`(click 기반 CLI 도구를 위한 에이전트 우선 출력 계약)를 제공합니다.
+- **다른 저장소용 라이브러리**: `devkit-advisory`(Python 표준 라이브러리만 사용하는 독립적인 `devkit.advisory` 어드바이저리 프로토콜)와 `devkit-cli`(click 기반 CLI 도구를 위한 에이전트 우선 출력 계약)를 제공합니다.
 - **선택 구성 요소**: `devkit-mcp`(선택적 MCP 런타임), `devkit-viewer`(로컬 읽기 전용 저장소 뷰어), `devkit-catalog`(`maintenance`, `response-style` 같은 옵트인 번들 카탈로그), 그리고 고밀도(dense) 및 하이브리드 문서 검색을 위한 `search` extra를 지원합니다.
 
 이러한 구성 요소들이 추구하는 설계 목표인 결정적 결과, 트랜잭션 방식의 동기화, 엄격한 계층 분리, POSIX 전용 동작 원칙은
@@ -50,7 +50,7 @@ devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합�
 ([`ARCH-03-context`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-03-context.md) (영어 원문)):
 
 - **사용자**는 `.devkit/config.toml`에서 프로젝트 정책을 구성하고, 에이전트의 제안을 검토 및 확정하며, 최종 통합 승인처럼 devkit이 사람의 몫으로 남겨둔 중요 결정을 내립니다.
-- **에이전트**는 `devkit` 명령을 실행하고, stdout의 한 줄짜리 `[KIND: ...]` 결과 센티널과 stderr의 에이전트 어드바이저리를 읽으며, 프로젝트의 개발 방식이 정한 지침에 따라 작업을 진행합니다. SDD에서는 워크플로 엔진이 안내하는 단계를 따릅니다.
+- **에이전트**는 `devkit` 명령을 실행하고, stdout의 한 줄짜리 `[KIND: ...]` 결과 센티널과 stderr의 어드바이저리를 읽으며, 프로젝트의 개발 방식이 정한 지침에 따라 작업을 진행합니다. SDD에서는 워크플로 엔진이 안내하는 단계를 따릅니다.
 - **Git과 로컬 워크스페이스**는 영속적으로 보존되어야 하는 모든 데이터를 관리합니다. 배포된 자산과 설치 기록(receipt), Living Spec, 작업 유닛(Unit), 엔벨로프(envelope), 훅, 작업 워크트리가 여기에 보관됩니다. devkit은 자체 백그라운드 데몬을 실행하지 않으며, LLM API를 직접 호출하지도 않습니다.
 
 ### 두 가지 개발 방식
@@ -78,7 +78,7 @@ devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합�
 3. 출발점을 고르십시오.
    - 이미 코드와 문서가 있는 저장소: [기존 저장소에 devkit 도입하기](journeys/adopt-in-an-existing-repository.md)
    - 스펙을 쓰기 전에 먼저 탐색해 보고 싶은 새 아이디어: [아이디어 발전시키기](journeys/advance-an-idea.md), 그리고 원한다면 이후에 [적응형 개발에서 SDD 도입하기](journeys/adopt-sdd-from-adaptive-development.md)
-   - 그 밖의 경우: 아래 SDD 여정, 먼저 [개발 요청 라우팅하기](journeys/route-development-intent.md)부터
+   - 그 밖의 경우: [개발 요청 라우팅하기](journeys/route-development-intent.md)를 시작으로 아래의 SDD 여정을 따릅니다.
 
 <a id="journeys"></a>
 
@@ -86,10 +86,13 @@ devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합�
 
 방향 잡기:
 - [기존 저장소에 devkit 도입하기](journeys/adopt-in-an-existing-repository.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](journeys/snapshot-bundle-sources.md)
 - [알맞은 문서 찾기](journeys/find-the-right-documents.md)
 
 아이디어 탐색:
+- [아이디어 발굴하고 구체화하기](journeys/discover-and-refine-an-idea.md)
 - [아이디어 발전시키기](journeys/advance-an-idea.md)
+- [선택한 외부 에이전트 자산 가져오기](journeys/import-third-party-agent-assets.md)
 - [적응형 개발에서 SDD 도입하기](journeys/adopt-sdd-from-adaptive-development.md)
 
 작업 전달:
@@ -98,11 +101,14 @@ devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합�
 - [개발부터 통합까지 진행하기](journeys/drive-development-to-integration.md)
 - [전달 문제와 예외 처리하기](journeys/handle-delivery-problems-and-exceptions.md)
 - [병렬 작업 안전하게 실행하기](journeys/run-parallel-work-safely.md)
+- [격리된 명령 실행하기](journeys/execute-an-isolated-command.md)
 - [오래된 활동 브랜치 정리하기](journeys/resolve-stale-activity-branches.md)
 
 Living Spec 건강하게 유지하기:
 - [Living Spec 일관성 유지하기](journeys/keep-the-living-spec-consistent.md)
 - [Living Spec 드리프트 조정하기](journeys/reconcile-living-spec-drift.md)
+- [결정 대체 관계 읽기](journeys/read-decision-supersession.md)
+- [선택한 테스트 스위트 평가하기](journeys/assess-test-management.md)
 - [누적된 군더더기 검토와 리팩터링](journeys/review-and-refactor-accumulated-slop.md)
 - [선택한 느린 작업 빠르게 하기](journeys/speed-up-selected-slow-operations.md)
 
@@ -142,8 +148,8 @@ Living Spec 건강하게 유지하기:
 
 ## 조사·설계와 유지보수 이력
 
-카탈로그는 출처 기반 조사, 일반 해결책 탐색과 UI/UX 개선을 위한 사용자 전용 진입점도 제공합니다.
-번들 선택으로 작업을 시작하거나 개발 방식을 바꾸지 않습니다. 다음 흐름에서 설명합니다.
+카탈로그는 근거 기반 조사, 일반 해결책 탐색과 UI/UX 개선을 위한 사용자 전용 진입점도 제공합니다.
+이 진입점들을 선택해도 작업을 시작하거나 개발 방식을 바꾸지 않습니다. 관련 안내는 다음 여정에서 확인할 수 있습니다.
 
 - [아이디어 조사와 로드맵 구체화하기](journeys/research-an-idea-and-shape-a-roadmap.md)
 - [설계 문제 탐색하기](journeys/explore-a-design-problem.md)
@@ -153,8 +159,3 @@ Living Spec 건강하게 유지하기:
 - [최신 유지보수 실행 찾기](journeys/find-the-latest-maintenance-run.md)
 
 유지보수 이력은 플레이북의 자동 단계가 아닌 별도 요청하는 동반 작업입니다.
-통합은 확인된 Git 반영과 최종 대상 검사를 구분합니다. [통합](areas/integration.md)을 참고하십시오.
-
-## 이 릴리스의 작업 방식
-
-조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.

@@ -4,7 +4,7 @@ generated: true
 # Changes
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->

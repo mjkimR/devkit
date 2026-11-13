@@ -13,7 +13,7 @@ title: Governance rules
 # Governance rules
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -93,8 +93,11 @@ and the lifecycle rules of the `spec` bundle below.
 
 Each finding is one `[VIOLATION: <RULE-id> severity= file= line= status= message= remediation= guide=]` line;
 `status=fixable` means `devkit rules fix` repairs it, and `guide=` points at the deployed guide that `explain`
-prints. Error-severity violations fail the command; `--format json` gives one object instead, and `--summary-only`
-keeps only per-rule counts. The `[SUMMARY]` line counts the rules active in the run (`rules=N`); a run with none
+prints. Error-severity violations fail the command; rule findings at `notice` severity are nonblocking considerations,
+including under `--strict` and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD
+change evidence and applicable change-scoped notices (native file reads do not call it automatically, and missing
+evidence is disclosed rather than replaced with whole-file history). `--format json` gives one object instead, and
+`--summary-only` keeps only per-rule counts. The `[SUMMARY]` line counts the rules active in the run (`rules=N`); a run with none
 active passes with `rules=0` and a `RULES_NONE_ACTIVE` notice, so it is never mistaken for a clean check. A rule
 that deliberately does not apply prints a `[RULE_OMITTED: <id> code= reason=]` line (`omissions` in JSON) instead of
 counting as a pass.
@@ -174,9 +177,15 @@ spec-driven lifecycle. All are errors except `RULE-spec-progress`, `RULE-proposa
 | `RULE-reconcile-contract` | `spec` | `reconcile.md` is well formed and its modified targets changed | by hand |
 | `RULE-proposal-boundaries` | `spec` | a proposal's owned paths exist | by hand |
 
+Steering checks apply per root or registered namespace directory, including optional glossaries and UX object registers,
+and reference fixes also canonicalize uniquely resolved aliases in steering prose, glossary Owner cells and configured
+quick references. `RULE-decision-supersession` checks reciprocal whole and partial ADR replacement records (semantic
+scope still needs review).
+
 When a project's development approach is adaptive development (`[development] approach` in `.devkit/config.toml`), the document
-rules judge as before, but the lifecycle rules apply only to documents still bound to a spec-driven workflow; with
-nothing to check they report an `SDD_LIFECYCLE_INACTIVE` omission instead of a pass.
+rules judge as before, unbound documents acquire no SDD lifecycle duty, and the lifecycle rules apply only to retained
+workflow-bound Units (even if an anchor or binding is deleted); with nothing to check they report an
+`SDD_LIFECYCLE_INACTIVE` omission instead of a pass.
 
 Completed spec bundles are history: they are checked only when you name them and never rewritten by a fix. Free-form
 `materials/` directories are exempt. For the day-to-day loop with these rules, follow
@@ -222,17 +231,6 @@ The `spec-rule` skill walks an agent through the whole procedure.
 Rules that pull per-file Python facts reuse them across runs from a local memo under `.devkit/transient/`; this is
 derived state, so a missing or corrupt memo only costs time, never changes findings.
 
-## Retained ownership and document checks
-
-Docs ships ten rules, including `RULE-decision-supersession` for reciprocal ADR replacement records.
-Steering checks apply per root or registered namespace directory, including optional glossaries and UX registers.
-Reference fixes also canonicalize uniquely resolved aliases in steering prose, glossary Owner cells and configured quick references.
-
-During adaptive development, unbound documents acquire no SDD lifecycle duty. Retained workflow-bound Units keep
-theirs even when an anchor or binding is deleted; a skipped lifecycle check reports `SDD_LIFECYCLE_INACTIVE`, not a clean check.
-Branch content is checked with its runtime before integration. Final target checks run after landed-runtime
-synchronization; integration performs no content-readiness or rule-import evaluation.
-
 ## Sources
 
 - [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rules-engine.md):
@@ -245,7 +243,3 @@ synchronization; integration performs no content-readiness or rule-import evalua
   the document and lifecycle rules in full.
 - [Rules reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/rules.md): commands,
   output, exit codes and the built-in rule catalog.
-
-## Working with this release
-
-Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

@@ -11,7 +11,7 @@ title: Viewer
 # Viewer
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -99,8 +99,7 @@ The page has a repository picker, a label for the checked-out branch and these t
   (remembered in the browser), with its tag and a note when the checkout's `VERSION` has moved past it; otherwise a
   short absence note. The **Living Spec book** control computes the book of `docs/`, grouped into the chapters
   Overview, Architecture, Capabilities, Use Cases, UX, Steering, Decisions and Development, with links between
-  documents by ID, only when you ask for it (`ADR-release-handbook`,
-  `ADR-release-handbook`).
+  documents by ID, only when you ask for it (`ADR-release-handbook`).
 - **Proposals** and **Specs**: `docs/proposals/PROP-*/proposal.md` and the bundles under `specs/`, with their files,
   filters and task progress.
 - **Roadmap**: the milestones under global and registered namespace roadmap roots, ordered active then planned, with readiness from `depends_on`.
@@ -117,6 +116,13 @@ frontmatter is listed as unreadable while the rest still show.
 
 Results are cached for 30 seconds per repository and branch. Use the dashboard's Refresh button to reload at once,
 or reload the browser page. There is no file watching.
+
+### Namespace roadmaps
+
+The roadmap and dashboard include milestones from global `docs/roadmap/` and each registered namespace's
+`docs/packages/<name>/roadmap/`, including their flat `_archive/` directories when history is selected.
+Dashboard sections read candidate headers once, load only their first page of bodies and retain expanded pages
+in the 30-second cache. A failed next page preserves prior cards and offers Retry; Refresh invalidates that source's cache.
 
 ## Proposals still under Planning
 
@@ -160,19 +166,10 @@ The frontend under `packages/devkit-viewer/frontend/` is one Svelte source with 
 - the component library `devkit-viewer`, packed as a tarball that autohub vendors. A host supplies its own
   `RepositoryDataSource` and keeps authentication on its side. Nothing is published to a registry.
 
-## Namespace roadmaps
-
-The roadmap and dashboard include milestones from global `docs/roadmap/` and each registered namespace's
-`docs/packages/<name>/roadmap/`, including their flat `_archive/` directories when history is selected.
-Dashboard sections read candidate headers once, load only their first page of bodies and retain expanded pages
-in the 30-second cache. A failed next page preserves prior cards and offers Retry; Refresh invalidates that source's cache.
-
 ## Sources
 
 - [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md):
   serving, endpoints, Planning sources, page behaviour, roadmap, library and the review page.
 - [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/viewer.md).
 - [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md),
-  [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md),
-  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md),
   [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md).

@@ -13,7 +13,7 @@ title: Drive development to integration
 # Drive development to integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -88,9 +88,14 @@ Screen drafts precede code, with an optional UX review; reconciliation retains t
 
 Medium effort requires an initial independent code-reviewer. The implementer fixes findings and checks the fixes;
 expanded scope or uncertain correctness can need another review. High uses bounded rounds; low allows self-review.
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record
+rather than another independent review round.
+
 The implementer updates the Living Spec and resolves `reconcile.md`, with reconcile-check evidence at every effort.
 An independent reconcile reviewer is required at high; medium can self-check only when all affected contracts
-and diff agreement are clear and there is no cross-component interpretation.
+and diff agreement are clear and there is no cross-component interpretation. A closing reconcile check covers the
+whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason; required
+contract mismatches cannot be waived.
 
 Sweep feedback when the stage is enabled and write the final change report. Questions, problems, unresolved
 reconciliation and incomplete checks remain visible. The Host checks the committed source with its own runtime;
@@ -156,7 +161,3 @@ Full route and recovery details are in [Integration](../areas/integration.md).
 - [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md)
 - [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
 - [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md)
-
-## Working with this release
-
-Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

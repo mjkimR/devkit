@@ -8,13 +8,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-drive-development-to-integration: null
 title: 개발에서 통합까지 진행하기
-translated_from: en/journeys/drive-development-to-integration.md@ffb9c92879d9d8db
+translated_from: en/journeys/drive-development-to-integration.md@6ffdcf2f1d8a4dd7
 ---
 
 # 개발에서 통합까지 진행하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -85,12 +85,15 @@ uv run devkit workflow next --unit specs/<YYYY-MM>/<YYYYMMDD>-<slug>
 bugfix는 특성화, 재현(Red), 수정(Green) 근거를 남깁니다.
 화면 초안은 코드보다 먼저 작성하며 선택적으로 UX 리뷰를 받고, 조정에서 `docs/ux/`에 유지합니다.
 
-## 2. 리뷰, 조정과 보고
+## 2. 리뷰, 조정, 보고
 
 medium은 최초 독립 code-reviewer 검토가 필요합니다. 구현자가 발견 사항을 고치고 수정 결과를 검증합니다.
 범위가 늘거나 정확성이 불확실하면 재검토할 수 있습니다. high는 제한된 반복, low는 자체 리뷰를 사용합니다.
+UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아니라 종결 기록입니다.
+
 구현자는 Living Spec을 갱신하고 `reconcile.md`를 해결하며 모든 강도에서 reconcile-check 근거를 기록합니다.
 high는 독립 조정 리뷰가 필요합니다. medium은 영향 계약과 diff의 일치가 명확하고 구성 요소 간 해석이 없을 때만 자체 검증할 수 있습니다.
+최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.
 
 활성화된 피드백 단계를 수행하고 최종 변경 보고서를 작성합니다.
 질문·문제·미해결 조정·미완료 검사는 명시적으로 남습니다.
@@ -105,14 +108,14 @@ uv run devkit integration prepare dev-<slug> --route local
 ```
 
 요청은 소스·대상 SHA, 정책, Git 식별 정보와 정확한 정리 효과를 고정합니다.
-`dev-integration=ask`에서는 Host가 검증 보고와 효과를 제시하고 대화에서 결정을 받습니다.
+`dev-integration=ask`에서는 Host가 검증 보고와 효과를 제시하고 대화에서 사용자 결정을 받습니다.
 공유 베이스의 `auto`에서는 검증된 로컬 통합이 정책으로 위임됩니다.
 
 ```bash
 uv run devkit integration integrate dev-<slug> --route local --expected-digest <digest>
 ```
 
-digest가 바뀌면 새 준비와 권한 확인이 필요합니다. 로컬 `no-ff` 통합은 충돌 없는 이동한 대상을 직접 병합합니다.
+digest가 바뀌면 새 준비와 권한 확인이 필요합니다. 로컬 `no-ff` 통합은 충돌이 없다면 앞서 이동한 대상 브랜치도 자체적으로 병합할 수 있습니다.
 `ff-only`와 PR 경로는 소스가 대상을 포함해야 합니다.
 콘텐츠 충돌은 소스 준비와 영향 검사로 돌아갑니다.
 
@@ -130,19 +133,19 @@ digest가 바뀌면 새 준비와 권한 확인이 필요합니다. 로컬 `no-f
 
 ## 변형
 
-- **Session:** 유닛·엔벨로프·조정 기록 없이 대화나 PR 본문에 변경·강도·리뷰·검사를 보고합니다.
-  통합은 claims나 작업 식별 인자 없이 명시적 소스 브랜치만 받습니다.
-- **Local-orchestrated:** Host가 워커의 커밋된 턴과 누적 규칙을 검사하고, 정확히 승인된 수명 주기 작업에 git-operator를 재사용할 수 있습니다.
+- **세션(Session):** 유닛·엔벨로프·조정 기록 없이 대화나 PR 본문에 변경·강도·리뷰·검사를 보고합니다.
+  통합은 클레임(claims)이나 작업 식별 인자 없이 명시적 소스 브랜치만 받습니다.
+- **로컬 오케스트레이션(Local-orchestrated):** Host가 워커의 커밋된 턴과 누적 규칙을 검사하고, 정확히 승인된 수명 주기 작업에 git-operator를 재사용할 수 있습니다.
   결정·의미적 충돌 처리·결과 수용은 Host에 남습니다.
 - **PR 필수:** `--route pull-request`를 사용하며 플랫폼 필수 검사·리뷰와 소스 고정을 유지합니다.
   검사 대기 중인 미병합 PR은 새 준비와 권한 확인 후 병합합니다.
-- **생성물 충돌 seed:** `INTEGRATION_GENERATED_SEEDED`가 seed·재생성 대상을 알려 줍니다.
+- **생성물 충돌 기준 파일(seed):** `INTEGRATION_GENERATED_SEEDED`가 기준 파일(seed)·재생성 대상을 알려 줍니다.
   Host가 동기화 후 재생성하며 통합 자체는 생성기를 실행하지 않습니다.
 
 ## 부분 효과 복구
 
 불명확한 작업을 반복하기 전에 Git·워크트리·PR 상태를 확인합니다.
-확인된 병합 뒤 정리만 남으면 이미 병합된 상태를 확인하는 finish나 정확한 확장 명령을 사용합니다.
+확인된 병합 뒤 정리만 남으면 보호 장치가 적용된 기병합 완료(already-merged finish) 명령이나 정확한 확장 명령을 사용합니다.
 정상 통합에는 이미 정리가 포함됩니다.
 `INTEGRATION_TARGET_MOVED`는 새 준비가 필요하고 `INTEGRATION_REQUEST_STALE`은 제시한 범위가 바뀌었다는 뜻입니다.
 미응답 질문·미해결 문제는 [문제와 예외 처리](handle-delivery-problems-and-exceptions.md)를 따릅니다.
@@ -157,7 +160,3 @@ digest가 바뀌면 새 준비와 권한 확인이 필요합니다. 로컬 `no-f
 - [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문)
 - [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)
 - [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md) (영어 원문)
-
-## 이 릴리스의 작업 방식
-
-UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

@@ -9,7 +9,7 @@ translated_from: en/journeys/record-a-maintenance-run.md@6fc3381b7fda3bfe
 # 유지보수 실행 기록하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -78,21 +78,21 @@ uv run devkit maintenance history start --playbook <playbook> --scope <scope> --
 uv run devkit maintenance history finish --run <run-dir> --outcome completed
 ```
 
-start는 HEAD, 수정 경로, 검사한 콘텐츠 트리와 수정 diff digest를 기록하면서 실제 index·ref와 실행 디렉터리 밖의 파일을 보존합니다.
+start는 HEAD, 변경(dirty) 경로, 검사한 콘텐츠 트리와 변경 diff 다이제스트를 기록하면서 실제 index·ref와 실행 디렉터리 밖의 작업 파일을 보존합니다.
 보고서를 작성·검증하고 `finish --file <path>`로 추가 근거를 등록한 뒤 검사한 바이트를 동결합니다.
 인식된 비밀 정보는 `HISTORY_SECRET_FOUND`로 완료를 거부합니다.
 검사한 콘텐츠가 바뀌면 `HISTORY_RUN_DRIFTED`가 근거 재검증을 요구합니다.
 
 ## 별도로 게시하기
 
-자격 증명 없는 저장소와 전용 이력 브랜치를 선택하고 승인합니다.
+자격 증명이 포함되지 않은 저장소와 전용 이력 브랜치를 선택하고 승인합니다.
 대상 설정은 입력만 제공하며 `init`, `publish`, `update`는 각각 명시적 `--authority`가 필요합니다.
 `uv run devkit maintenance history publish --run <run-dir> --authority <authority>`로 기록과 보고서를 게시합니다.
 동결한 추가 근거는 반복 가능한 `--file`로 선택합니다.
 
-게시 과정은 선택 파일·정규 기록·연도별 인덱스 항목을 강제하지 않는 ref 갱신으로 한 번에 공개합니다.
+게시 과정은 선택 파일·정규 기록·연도별 인덱스 항목을 비강제 ref 갱신으로 원자적으로 공개합니다.
 브랜치가 없으면 별도로 승인된 초기화가 필요하고 외부 브랜치 루트는 거부합니다.
-응답이 유실되면 원래 바이트로 같은 작업에서 상태를 확인합니다. 원격 기록이 일치하면 재전송 없이 원래 게시를 확인합니다.
+응답이 유실되면 원래 바이트로 같은 작업에서 상태를 확인합니다. 원격 기록이 일치하면 재전송 없이 원래 게시로 확정합니다.
 동결한 근거가 바뀌면 새 실행이 필요합니다.
 
 실행 결과(completed, failed, interrupted)와 게시 상태(pending, published, failed, unknown)는 별개입니다.

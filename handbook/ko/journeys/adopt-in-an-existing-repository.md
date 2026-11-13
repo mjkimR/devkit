@@ -4,6 +4,7 @@ sources:
   CAP-HARN-agent-guidance: null
   CAP-HARN-command-mount: null
   UC-adopt-in-an-existing-repository: null
+  UC-adopt-sdd-from-adaptive-development: null
 title: 기존 저장소에 devkit 도입하기
 translated_from: en/journeys/adopt-in-an-existing-repository.md@abe32f468ef7849e
 ---
@@ -11,7 +12,7 @@ translated_from: en/journeys/adopt-in-an-existing-repository.md@abe32f468ef7849e
 # 기존 저장소에 devkit 도입하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -76,7 +77,7 @@ translated_from: en/journeys/adopt-in-an-existing-repository.md@abe32f468ef7849e
 [`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/harness/UC-adopt-in-an-existing-repository.md) (영어 원문)입니다.
 번들, 동기화(sync), Living Spec 같은 핵심 개념은 [개념](../concepts.md)을 참고하십시오.
 
-이 경로는 레거시 규칙 위반을 격리해 두고 점진적으로 이관하는 방법입니다. 아이디어를 적응형 개발해 왔고 그렇게 유지해 온 제품에서
+이 경로는 레거시 규칙 위반을 격리해 두고 점진적으로 이관하는 방법입니다. 적응형 개발 방식으로 아이디어를 발전시켜 왔고 그렇게 유지해 온 제품에서
 스펙 주도 전달을 도입하려 한다면, 적응형 개발 베이스라인을 요청하십시오. 이 경우
 [`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md) (영어 원문)을
 따르며, SDD를 활성화하기 전에 제품을 검증하고 레거시 문서는 이동하지 않습니다.

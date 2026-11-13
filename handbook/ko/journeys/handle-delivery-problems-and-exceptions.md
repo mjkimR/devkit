@@ -6,13 +6,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-handle-delivery-problems-and-exceptions: null
 title: 전달 문제와 예외 처리하기
-translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@16e9e9d0da41569b
+translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@18726220169378d3
 ---
 
 # 전달 문제와 예외 처리하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -95,7 +95,8 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@16e9e9d0
 실행자는 발생 원인, 시도했던 해결 방안, 권장 복구 계획을 명시하여 해당 실행에 대한 `worker` 엔벨로프를 작성합니다.
 
 ```bash
-uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <effort>   --problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"
+uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <effort> \
+  --problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"
 ```
 
 미완료된 작업 상태와 작성한 엔벨로프를 함께 작업 브랜치에 커밋하고, 기본 브랜치로 통합하지 않은 채 해당 실행 턴을 안전하게 종료합니다
@@ -140,7 +141,7 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
   보류도 지속됩니다. 에이전트는 다른 복구 방안을 시도하거나 차단 요인을 사용자에게 보고합니다.
 - **복구를 위해 목표나 범위의 재합의가 필요한 경우:** 시스템 목표, 구현 범위, 또는 계약 자체를 수정해야 하거나 기존 방향의
   실현이 불가능하다고 판단되면, 사용자가 후속 조치를 결정합니다. 새로운 초안 제안으로의 깊이 상향(depth escalation), 기존 제안의
-  대체(supersede), 또는 작업 포기(abandon) 중 하나를 선택합니다. 이러한 종료 결정은 Backlog 작업으로 기본 브랜치에 커밋됩니다.
+  대체(supersede), 또는 작업 포기(abandon) 중 하나를 선택합니다. 이러한 종료 결정은 백로그(Backlog) 작업으로 기본 브랜치에 커밋됩니다.
   이후 에이전트는 열려 있는 풀 리퀘스트와 원격 브랜치를 정리하고, 미병합 브랜치를 안전하게 폐기합니다.
 
   ```bash
@@ -153,7 +154,7 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
   [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
 - **엔벨로프 기록 자체를 작성할 수 없는 환경적 장애:** 호스트 환경 권한 등으로 인해 엔벨로프 작성이나 비상 커밋이 거부되는 경우,
   워커는 원인, 시도한 명령어 내역, 실제 마지막 커밋, 변경된 경로, 누락된 기록 항목을 정직하게 담아 `failed` 상태로 반환하며
-  결과를 꾸며내지 않습니다. 메인 에이전트는 이 반환을 보류 상태로 취급하고 자체적으로 복구 절차를 직접 수행합니다.
+  결과를 꾸며내지 않습니다. 에이전트는 이 반환을 보류 상태로 취급하고 자체적으로 복구 절차를 직접 수행합니다.
 
 ## 예외(Exception) 단계 진입
 
@@ -171,10 +172,6 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
 | `HANDOFF_HELD` | 현재 보류 상태인 유닛은 다른 에이전트나 단계로 핸드오프할 수 없습니다. | 먼저 보류 원인을 해결하십시오. |
 | `WORKTREE_DIRTY` | 작업 워크트리에 커밋되지 않았거나 추적되지 않는(untracked) 변경 파일이 남아 있습니다. | 변경 사항을 커밋하거나 외부로 백업한 후 다시 discard 명령을 실행하십시오. |
 
-어떠한 예외 상황에서도, 미해결된 문제는 기본 브랜치로 절대 병합되지 않으므로 기본 브랜치의 무결성이 완벽히 보호됩니다. 실패한 코드 범위,
-미해결 지적 사항, 시도했던 복구 내역은 작업 브랜치 Git 이력에 온전히 보존되며, 사용자의 명시적 결정 없이는 아무것도 삭제되지 않습니다.
+어떠한 예외 상황에서도 미해결 문제는 기본 브랜치로 병합되지 않으므로 기본 브랜치가 깨끗한 상태로 유지됩니다. 실패한 코드 범위,
+미해결 지적 사항, 시도했던 복구 내역은 Git 이력에 그대로 남으며, 사용자의 명시적 결정 없이는 아무것도 삭제되지 않습니다.
 관련 영역: [전달](../areas/delivery.md), [워크트리](../areas/worktree.md).
-
-## 이 릴리스의 작업 방식
-
-UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

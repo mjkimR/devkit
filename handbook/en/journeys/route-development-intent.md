@@ -16,7 +16,7 @@ title: Route a development request
 # Route a development request
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -169,7 +169,3 @@ integration retain their independent approval policies.
 
 One workflow per task, named by its Unit or, for a session, by the conversation. Every recorded approval comes from
 your instruction, your explicit answer or `auto` policy; a refused `devkit spec new` leaves the workspace unchanged.
-
-## Working with this release
-
-Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

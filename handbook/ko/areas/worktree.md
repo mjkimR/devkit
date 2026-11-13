@@ -10,13 +10,13 @@ sources:
   UC-route-development-intent: null
   UC-run-parallel-work-safely: null
 title: 워크트리
-translated_from: en/areas/worktree.md@da25ddc81cf43ca2
+translated_from: en/areas/worktree.md@a7f9a2bdbcb10369
 ---
 
 # 워크트리
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -76,7 +76,7 @@ translated_from: en/areas/worktree.md@da25ddc81cf43ca2
 작업 마무리 절차를 단 하나의 결정적인(deterministic) 명령으로 처리합니다(`CAP-WT-task-worktrees`). 모든 단계는
 무리하게 강제 실행하지 않고 안전하게 실패(refuse)하도록 설계되어 있으며, 동일한 명령을 다시 실행하면 중단된 지점부터
 이어서 진행됩니다. 어떤 작업에 워크트리를 생성할지는 이 모듈이 아니라 상위 방법론 계층(devkit-spec 및 해당 Git 정책)에서
-결정합니다. 활동(activity), 유닛(unit), 통합(integration)의 기본 개념은 [개념](../concepts.md)을 참고하세요.
+결정합니다. 활동(activity), 유닛(unit), 통합(integration)의 기본 개념은 [개념](../concepts.md)을 참고하십시오.
 
 ## 명칭 및 경로 규칙
 
@@ -103,12 +103,15 @@ devkit은 로컬이나 연결 가능한 원격 저장소에 이미 존재하는 
 기준으로 새 워크트리를 생성합니다.
 새로 생성된 체크아웃에는 베이스의 gitignore 대상 파일들이 누락되어 있으므로, `start` 명령은 다음 설정 작업도 함께 수행합니다.
 
-1. 베이스 체크아웃에 `.devkit/config.local.toml` 파일이 있으면 이를 스냅샷으로 복사합니다(이후 양쪽에서 수정하더라도 상호 전파되지 않습니다).
+1. 초기 설정(setup) 전에 베이스 체크아웃에 존재하는 `.devkit/config.local.toml` 파일을 독립적인 로컬 스냅샷으로 복사합니다
+   (워크트리를 재사용하면 기존 파일이나 파일이 없는 상태까지 그대로 유지하며, 이후 양쪽의 편집·삭제도 서로 전파되지
+   않습니다. 직접 실행한 `git worktree add`와 독립 clone은 이 복사를 수행하지 않습니다).
 2. 새로 생성된 워크트리 내에서 `[worktree] setup` 설정(예: `uv sync`)을 실행합니다.
 3. `devkit sync --locked`를 실행하여 규칙 검사, 커밋 게이트, `get-context`, 플레이북 실행에 필요한 관리 번들 사본들을
    복원하고, 이어서 선택형 MCP 등록을 위한 `devkit sync --registrations-only`를 실행합니다(`CAP-MCP-runtime-registration`).
 
-setup이나 sync 과정에서 오류가 발생하더라도 워크트리는 그대로 유지되며, 해결 방법이 포함된 경고(`WORKTREE_SETUP_FAILED`,
+워크트리 추가·삭제는 독립 프로세스 세션에서 실행되어 중단 시 자식 프로세스도 함께 멈출 수 있습니다. setup이나 sync
+과정에서 오류가 발생하더라도 워크트리는 그대로 유지되며, 해결 방법이 포함된 경고(`WORKTREE_SETUP_FAILED`,
 `WORKTREE_SYNC_FAILED`)가 출력됩니다. 명령 실행이 끝나면 `[NEXT_CMD: cd <path>]` 안내가 출력됩니다. 커밋 게이트(commit gate)는
 작업 워크트리 자체의 `.venv` 환경을 최우선으로 사용하여 실행됩니다(`CAP-GATE-commit-gates`).
 
@@ -126,7 +129,7 @@ setup이나 sync 과정에서 오류가 발생하더라도 워크트리는 그�
 워크플로에서 이러한 시작 방식들을 선택하는 기준은 [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 (`UC-route-development-intent`) 여정에 기술되어 있습니다. 분리된 워크트리에서 실행되는 병렬 작업들은 오케스트레이션하는
 Host가 비교하고 관찰할 수 있습니다. 자세한 내용은 [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
-(`UC-run-parallel-work-safely`) 및 [협업](collaboration.md)을 참고하세요.
+(`UC-run-parallel-work-safely`) 및 [협업](collaboration.md)을 참고하십시오.
 
 ## 작업 완료 및 정리
 
@@ -140,16 +143,18 @@ uv run devkit worktree finish dev-login
 
 `finish`는 이미 병합된 브랜치를 확인한 뒤 깨끗한 소유 워크트리를 제거하고, 설정에 따라 로컬 브랜치를 삭제하고, 완료 후 확장을 실행합니다. 변경 파일이 있는 워크트리는 보존합니다. 병합·fetch·push를 수행하지 않으며 `--merge`는 `WORKTREE_MERGE_RETIRED`로 거부합니다. 통합은 `devkit integration`을 사용합니다.
 
-작업을 통합하지 않고 폐기하려는 경우(작업 포기, 대체, 태스크 분할 상향 등) `devkit worktree finish dev-login --discard`
+작업을 통합하지 않고 폐기하려는 경우(작업 포기, 대체, 계획 깊이 상향 등) `devkit worktree finish dev-login --discard`
 명령을 사용합니다. 깨끗한 상태의 워크트리를 제거하고 `git branch -D`로 브랜치를 강제 삭제합니다. 단, 원격 브랜치와 풀 리퀘스트는
 직접 닫아야 합니다.
 
 병합 단계 이후에 작업이 거부된 경우, 이미 완료된 단계들이 성공 줄 `[WORKTREE_FINISHED: ...]`가 아닌
-`[WORKTREE_FINISH_PARTIAL: ...]` 줄로 출력됩니다. 오류 원인을 해결한 뒤 동일한 명령을 다시 실행하세요.
-진행이 차단되거나 중단된 작업의 복구 절차는 [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+`[WORKTREE_FINISH_PARTIAL: ...]` 줄로 출력됩니다. 오류 원인을 해결한 뒤 동일한 명령을 다시 실행하십시오. 통합은
+확인된 반영과 최종 내용 검증을 별도로 보고하며, Git finish가 성공했다는 사실만으로 내용 검증이 완료된 것은 아닙니다.
+자세한 내용은 [통합](integration.md)을 참고하십시오. 진행이 차단되거나 중단된 작업의 복구 절차는
+[전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
 (`UC-handle-delivery-problems-and-exceptions`)를, 최종 반영까지의 전체 흐름은
 [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
-(`UC-drive-development-to-integration`)를 참고하세요.
+(`UC-drive-development-to-integration`)를 참고하십시오.
 
 ## 활성 작업 현황 확인
 
@@ -189,16 +194,6 @@ stale_after = "14d"     # "<N>d" 또는 "<N>w"
 완료 후 정리)입니다. 확장 로직이 비정상 동작하는 경우, 검사 및 가드 단계에서는 안전을 위해 작업을 즉시 차단(fail closed)하며,
 완료 후 단계에서는 경고만 출력합니다.
 
-## 로컬 설정과 반영 후 검사
-
-새 워크트리는 설치 전에 베이스에 존재하는 `.devkit/config.local.toml`을 독립적인 로컬 스냅샷으로 복사합니다.
-워크트리를 재사용하면 기존 파일이나 파일 부재를 유지하고 이후 편집·삭제도 서로 전파하지 않습니다.
-직접 실행한 `git worktree add`와 독립 clone은 이 복사를 수행하지 않습니다.
-워크트리 추가·삭제는 독립 프로세스 세션에서 실행해 중단 시 자식 프로세스도 멈출 수 있게 합니다.
-
-통합은 확인된 반영과 최종 검증을 별도로 보고합니다.
-Host가 반영된 런타임을 동기화하고 최종 대상을 검사하며 성공한 Git finish만으로 콘텐츠 검사가 증명되지는 않습니다.
-
 ## 출처
 
 - [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문):
@@ -206,7 +201,3 @@ Host가 반영된 런타임을 동기화하고 최종 대상을 검사하며 성
 - [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/worktree.md) (영어 원문):
   명령과 오류 코드.
 - 관련 문서: [통합](integration.md), [협업](collaboration.md).
-
-## 이 릴리스의 작업 방식
-
-규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

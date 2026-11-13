@@ -5,13 +5,13 @@ sources:
   CAP-DLV-maintenance-history: null
   UC-reconcile-living-spec-drift: null
 title: Living Spec 드리프트 조정하기
-translated_from: en/journeys/reconcile-living-spec-drift.md@33a4e1575ad43368
+translated_from: en/journeys/reconcile-living-spec-drift.md@7b0f0b713b762c8c
 ---
 
 # Living Spec 드리프트 조정하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -76,8 +76,8 @@ translated_from: en/journeys/reconcile-living-spec-drift.md@33a4e1575ad43368
 
 ## 시작하기 전에
 
-- 선택형 `maintenance` 카탈로그 번들을 추가(`uv run devkit add maintenance`, 또는 이 플레이북과 review-refactor만 쓰려면 `maintenance:upkeep`)하고 동기화했습니다.
-- 검토 대상의 대략적인 범위를 파악해 둡니다. 특정 계약 ID 목록이나 검토할 영역, 그리고 에이전트가 탐색할 수 있는 구현 코드 및 가이드의 루트 경로를 지정해야 합니다.
+- 선택형 `maintenance` 카탈로그 번들을 선택(`uv run devkit add maintenance`, 또는 이 플레이북과 review-refactor만 쓰려면 `maintenance:upkeep`)하고 동기화한 상태여야 합니다.
+- 검토 대상의 대략적인 범위를 미리 파악해 두어야 합니다. 특정 계약 ID 목록이나 검토할 영역, 그리고 에이전트가 탐색할 수 있는 구현 코드 및 가이드의 루트 경로를 지정해야 합니다.
 
 ## 단계별 진행
 
@@ -106,16 +106,4 @@ translated_from: en/journeys/reconcile-living-spec-drift.md@33a4e1575ad43368
 
 ## 최종 결과
 
-언제든 감사(audit) 가능한 보고서를 확보할 수 있습니다. 모든 발견 사항에는 명확한 증거와 사용자의 결정이 기록되고, 적용된 수정 내역에는 검증 결과가 뒷받침되며, 확인된 공백 역시 투명하게 명시됩니다. 보고서 자체만으로는 어떠한 변경도 임의로 승인하지 않으며, 단순 테스트 통과를 의미론적 일관성으로 포장하지 않고, 단일 배치의 결과를 저장소 전체가 일치한다는 근거로 제시하지도 않습니다.
-
-## 선택적 이력은 별개입니다
-
-기본 로컬 보고서와 완료 절차는 유지보수 이력 없이 동작합니다.
-명시적인 동반 이력 요청이 있어야 수집하며 명령 설치나 이 플레이북 호출만으로 이력을 시작하거나 반복 제안하지 않습니다.
-요청된 이력은 근거를 동결하고 별도 게시 권한을 사용합니다.
-이후 통합 변경은 게시된 보고서를 고치지 않고 추가 기록으로 남깁니다.
-[유지보수 실행 기록하기](record-a-maintenance-run.md)를 참고하십시오.
-
-## 이 릴리스의 작업 방식
-
-자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.
+언제든 감사(audit) 가능한 보고서를 확보할 수 있습니다. 모든 발견 사항에는 명확한 증거와 사용자의 결정이 기록되고, 적용된 수정 내역에는 검증 결과가 뒷받침되며, 확인된 공백 역시 투명하게 명시됩니다. 보고서 자체만으로는 어떠한 변경도 임의로 승인하지 않으며, 단순 테스트 통과를 의미론적 일관성으로 포장하지 않고, 단일 배치의 결과를 저장소 전체가 일치한다는 근거로 제시하지도 않습니다. 선택적 유지보수 이력은 별개이며 명시적인 동반 이력 요청이 있을 때만 시작됩니다([유지보수 실행 기록하기](record-a-maintenance-run.md) 참고).

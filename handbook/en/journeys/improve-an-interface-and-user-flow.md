@@ -8,7 +8,7 @@ title: Improve an interface and user flow
 # Improve an interface and user flow
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -73,9 +73,9 @@ Explicitly invoke `/app-uiux-improve <goal>` with the interface, representative 
 
 ## Optional Impeccable session
 
-A user-selected session receives a bounded brief while the coordinator pauses product edits. Answer-free refinement can use a fresh child with native skill loading. Interactive relay requires observed native loading and continuation in the same child; `shape` and `critique` also need their nested roles. The first phase reads and prepares the complete question packet without writes. Every answer, including source-cited suggestions, waits for your confirmation before the same child writes. Missing capabilities, lost continuation or an unavailable required autonomy probe stop dependent work and use the user-operated session or an authorized inline route without claiming the probe ran.
+When you select an Impeccable session, it receives a bounded brief while the coordinator pauses product edits. Refinement that needs no Q&A can run in a fresh child agent that loads the skill natively. Interactive relay requires observed native skill loading and continuation in the same child agent; `shape` and `critique` also require their nested roles. The first phase reads the target and prepares the full question packet without editing files. All answers—including suggestions backed by repository sources—wait for your confirmation before that same child agent makes edits. If required capabilities are missing, continuation in the same child is lost, or a required autonomy probe is unavailable, stop dependent work and switch to a user-operated session or an authorized inline route without claiming the probe ran.
 
-Accept only listed edits within the approved goal. Report other changes without unsolicited reversion or deletion. Read local-only context by absolute paths without inferring permission to copy, commit or remove it. `PRODUCT.md` and `DESIGN.md` edits need explicit file/action permission. If supported upstream help has no audit persistence operation, return findings in the report and disclose the unavailable persistence.
+Accept only listed edits that stay within the approved goal, and report any other changes instead of reverting or deleting them unasked. Read local-only context by absolute path without assuming permission to copy, commit or remove it. Editing `PRODUCT.md` or `DESIGN.md` requires explicit permission for the file and action. If the supported upstream Impeccable capability provides no audit persistence operation, return the findings in the report and disclose that persistence is unavailable.
 
 ## Context links
 

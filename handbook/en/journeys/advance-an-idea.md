@@ -11,7 +11,7 @@ title: Advance an idea
 # Advance an idea
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -114,16 +114,24 @@ This is unrelated to proposal Planning in SDD, which is
    ran on which source. A skipped, unavailable or inconclusive check stays unverified.
 7. **Leave context.** It updates `.devkit/adaptive-dev.md` and reports the outcome, limitations and next action.
 
-## Optional support roles
+## Support roles and bounded delegation
 
-The agent may delegate a separable question; no iteration needs every role. Each gets one goal, explicit boundaries,
-the source identity and the expected output, and the agent checks the actual return (and diff) before using it.
+The coordinator may delegate useful separable research, implementation and verification while retaining integration and
+final validation; no iteration needs every role. Each gets one goal, explicit boundaries, the source identity and the
+expected output, and the coordinator checks the actual return (and diff) before accepting it. Child scope and commit
+authority stay within the parent assignment with no fixed nesting-depth rule, and concurrent writers use separate
+worktrees or run serially.
 
 | Role | Returns | Boundary |
 | --- | --- | --- |
 | `product-clarifier` | Candidate users and problems, alternatives, missing questions; never an invented decision | Read-only |
 | `product-researcher` | Evidence for one decision, or a bounded experiment with its paths, commands and limits | Read-only by default; writes only an assigned prototype; no commits |
 | `usage-reviewer` | Expected versus observed usage of a representative flow, with failure conditions | Read-only product source; assigned test data only; no commits |
+
+Swarm `planner`, `worker` and `verifier` contracts also support bounded delegated assignments: record assignments with
+`devkit adaptive assignment new`, report returns, and verify the actual diff and declared check outcomes before accepting
+them (the ledger grants no additional authority and runs no checks). For selected external specialist assets, see
+[Import selected third-party agent assets](import-third-party-agent-assets.md).
 
 ## The current-context file
 
@@ -156,13 +164,3 @@ edit it. A later session rechecks what it relies on instead of trusting a stale 
 An observed outcome for the action, the current facts and instructions needed to resume it, and explicit limitations
 and next step. No approach switch, invented product decision or skipped-as-passed check is ever claimed, and
 unrelated edits and existing SDD history stay as they were. Area: [Delivery](../areas/delivery.md).
-
-## Delegating a bounded assignment
-
-The adaptive bundle now comes from `devkit-adaptive`, which requires `devkit-docs` and works without `devkit-spec`. Swarm planner, worker and verifier contracts support bounded delegated work. Record assignments with `devkit adaptive assignment new`, report returns and verify the actual diff and declared check outcomes before accepting them. The ledger grants no additional authority and runs no checks.
-
-For selected external specialist assets, use [Import selected third-party agent assets](import-third-party-agent-assets.md).
-
-## Working with this release
-
-The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.

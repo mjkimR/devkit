@@ -14,7 +14,7 @@ title: Collaboration
 # Collaboration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -104,11 +104,16 @@ devkit spec scope collect [--base <ref>] [--fetch <remote>]
   visible; for frequent multi-PC work, push declarations and changes through pull requests.
 - **Gaps stay visible.** A missing base, an ambiguous task identity, an unreadable or changing source, or an exhausted
   time budget (`--timeout`, `--source-timeout`) leaves the usable evidence in place and reports
-  `SPEC_SCOPE_COLLECTION_PARTIAL` with the missing coverage; uncomputed pairs never count as zero overlap. Only when
-  no inventory source can be read at all does it fail with `SPEC_SCOPE_COLLECTION_FAILED`.
+  `SPEC_SCOPE_COLLECTION_PARTIAL` with the missing coverage (including lifecycle-normal absent blueprints or reconcile
+  files); uncomputed pairs never count as zero overlap. Only when no inventory source can be read at all does it fail
+  with `SPEC_SCOPE_COLLECTION_FAILED`.
 
 The output lists the candidates (`[SCOPE_CANDIDATE: ...]`), each observation and pairwise `[PAIR: ...]` and
-`[EVIDENCE: ...]` lines, ending with a summary that says whether coverage and comparisons are complete.
+`[EVIDENCE: ...]` lines, ending with a summary that reports pair counts, `summary.current_overlapping`, and whether
+coverage and comparisons are complete. Each evidence entry is labelled `horizon=current|future`: observed Planning writes
+and other observations are `current`, while Planning's declared document, code or candidate scope is `future`. All
+overlaps stay listed and horizon grants no write authority; `current` overlaps serialize running activities, whereas
+`future`-only overlaps order handoff and integration while Planning proceeds independently.
 
 ### The shared registry
 
@@ -177,7 +182,9 @@ What to expect:
 
 The same put, get and list operations are offered as the local MCP tools `shared_put`, `shared_get` and `shared_list`
 when the optional MCP runtime is installed (see [MCP](mcp.md) and `CAP-MCP-runtime-registration`); sweeping stays a
-CLI operation.
+CLI operation. Local-orchestrated callers verify connected project tools before dependent shared operations; a missing
+connection needs repair rather than an automatic CLI fallback, though an explicitly authorized CLI choice remains
+possible.
 
 ### Plug in a remote adapter
 
@@ -186,19 +193,6 @@ CLI operation.
 `SHARED_ADAPTER_UNAVAILABLE`, without falling back to local. Adapter authors run the reusable `assert_conformance`
 helper; authentication, namespace provisioning and cross-host consistency remain theirs. No remote backend ships in
 this release.
-
-## Current and future overlap
-
-`scope collect` labels each evidence entry `horizon=current|future` and reports pair counts plus
-`summary.current_overlapping`. Observed Planning writes are current; its declared document/code/candidate scope is future.
-Other observations are current. All overlaps stay listed, and horizon grants no write authority.
-Current overlaps serialize running activities; future-only overlaps order handoff and integration while Planning can proceed independently.
-Missing inputs, including lifecycle-normal absent blueprints or reconcile files, remain explicit coverage gaps.
-
-Scope records live in the Git common directory; shared reports live under the retained main checkout's
-`.devkit/.shared/artifacts`. The common Git identity lets linked worktrees find the same store.
-Local-orchestrated callers verify connected project tools before dependent shared operations; a missing connection
-needs repair rather than an automatic CLI fallback. An explicitly authorized CLI choice remains possible.
 
 ## Sources
 

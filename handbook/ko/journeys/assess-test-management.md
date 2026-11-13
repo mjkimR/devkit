@@ -1,4 +1,7 @@
 ---
+sources:
+  CAP-DLV-test-management: null
+  UC-assess-test-management: null
 title: 선택한 테스트 스위트 평가하기
 translated_from: en/journeys/assess-test-management.md@37e80d8c601014fe
 ---
@@ -6,7 +9,7 @@ translated_from: en/journeys/assess-test-management.md@37e80d8c601014fe
 # 선택한 테스트 스위트 평가하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 `maintenance/test-management` 플레이북을 명시적으로 실행해 선택한 테스트 스위트(test suite)의 구성을 평가합니다. 먼저 `maintenance:testing` 또는 `maintenance:all`을 선택하고 동기화합니다.
@@ -17,9 +20,9 @@ translated_from: en/journeys/assess-test-management.md@37e80d8c601014fe
 4. 구체적인 권고와 변경 후보를 한 번에 검토하고 결정합니다. 현 구성을 유지하는 권고도 가능합니다.
 5. 결정된 변경은 저장소 워크플로로 진행하고 남은 검사와 결과 수집 작업을 보고합니다.
 
-실행 요청은 평가 권한입니다. 설정 편집 권한을 포함하지 않습니다. 실행 시작, 조상 커밋의 결과, 정리 성공은 필수 테스트 통과 증거가 아닙니다. 대기 중인 증거에는 정확한 리비전·명령·다음 수집 작업을 남깁니다.
+실행 요청은 평가 권한만 부여하며, 설정 편집 권한은 포함하지 않습니다. 실행 시작, 이전 커밋의 실행 결과, 정리 성공은 필수 테스트 통과 증거가 아닙니다. 대기 중인 증거에는 정확한 리비전·명령·다음 수집 작업을 남깁니다.
 
 ## 출처
 
-- [UC-assess-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-assess-test-management.md) (영문 원문)
-- [CAP-DLV-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-test-management.md) (영문 원문)
+- [UC-assess-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-assess-test-management.md) (영어 원문)
+- [CAP-DLV-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-test-management.md) (영어 원문)

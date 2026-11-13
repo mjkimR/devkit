@@ -1,8 +1,10 @@
 ---
 sources:
+  CAP-DLV-adaptive-assignments: null
   CAP-DLV-adaptive-development: null
   CAP-DLV-cli-and-output: null
   CAP-DLV-deep-research: null
+  CAP-DLV-delivery-roles: null
   CAP-DLV-delivery-workflows: null
   CAP-DLV-design-exploration: null
   CAP-DLV-drift-reconciliation: null
@@ -10,11 +12,13 @@ sources:
   CAP-DLV-maintenance-history: null
   CAP-DLV-performance-pass: null
   CAP-DLV-project-policy: null
+  CAP-DLV-proposal-lifecycle: null
   CAP-DLV-proposal-planning: null
   CAP-DLV-release-handbook: null
   CAP-DLV-review-refactor: null
   CAP-DLV-sdd-baseline-adoption: null
   CAP-DLV-spec-bundles: null
+  CAP-DLV-test-management: null
   CAP-DLV-uiux-improvement: null
   CAP-DLV-weekly-report: null
   CAP-DLV-workflow-definitions: null
@@ -29,13 +33,13 @@ sources:
   UC-review-and-refactor-accumulated-slop: null
   UC-route-development-intent: null
 title: 전달
-translated_from: en/areas/delivery.md@adc2c0d861343836
+translated_from: en/areas/delivery.md@5c059b36142e000d
 ---
 
 # 전달
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -99,7 +103,7 @@ translated_from: en/areas/delivery.md@adc2c0d861343836
 ## SDD: 작업 분류하기
 
 SDD는 작업을 `task-kind`(feature, bugfix, overall-refactor), `planning-depth`(session, spec, proposal),
-`activity-effort`(low, medium, high)로 분류합니다. 깊이는 구현 전에 무엇을 정해야 하는지를 나타냅니다.
+작업 노력 수준(`activity-effort`: low, medium, high)으로 분류합니다. 깊이는 구현 전에 무엇을 정해야 하는지를 나타냅니다.
 
 - **Session:** 방향이나 계약에 미해결 질문이 없습니다. 유닛(Unit), 엔벨로프, 조정 문서를 만들지 않습니다.
 - **Spec:** 방향은 분명하고 코드 전에 계약을 작성합니다.
@@ -108,7 +112,7 @@ SDD는 작업을 `task-kind`(feature, bugfix, overall-refactor), `planning-depth
 bugfix는 합의된 계약을 어기는 결함을 재현하고 Red와 Green 근거를 남깁니다.
 overall-refactor는 새 동작 없는 프로젝트 전반의 구조 변경이며 유닛을 만들지 않습니다. 국소 리팩터링은 feature 경로입니다.
 medium은 최초 독립 코드 리뷰를, high는 횟수가 제한된 리뷰 반복을 요구합니다. low는 자체 리뷰가 가능합니다.
-강도가 필수 검사나 승인을 없애지는 않습니다.
+작업 노력 수준이 낮다고 해서 필수 검사나 승인을 생략하지는 않습니다.
 
 `/spec`은 새 요청을 받을 때 작업과 범위가 맞는 플레이북을 한 번 검색합니다.
 일치하는 후보는 편집 전에 제안하고 사용자가 확인해야 실행합니다. 같은 작업의 후속 응답과 명시된 진입점은 검색을 생략합니다.
@@ -130,8 +134,10 @@ Planning은 `plan-<slug>`에서 제안서, 예비 결정(PADR), 근거와 `targe
 uv run devkit spec proposal accept-plan <slug> --by user --mode accept_only
 ```
 
+일반 `devkit spec proposal accept`에는 `--mode`와 `--effort` 플래그가 없습니다.
+
 `accept_and_handoff`에는 handoff 권한과 `--effort`도 필요합니다. Planning 반영 후 검증 대기·handoff 미시작 상태로 반환합니다.
-Host가 반영된 런타임을 동기화하고 검사한 뒤, 동일하게 승인된 범위와 강도로 새 프로세스에서 handoff를 실행합니다.
+Host가 반영된 런타임을 동기화하고 검사한 뒤, 동일하게 승인된 범위와 작업 노력 수준으로 새 프로세스에서 handoff를 실행합니다.
 이동한 베이스와 충돌이 없으면 Planning에 먼저 병합할 필요가 없습니다. 제안 범위가 바뀌었다면 재검토합니다.
 
 ```bash
@@ -154,11 +160,16 @@ uv run devkit spec proposal handoff <slug> --effort medium
 feature 경로는 명세, 구현·검증, 리뷰, Living Spec 반영, 피드백과 최종 보고를 거쳐 통합합니다.
 bugfix 경로는 특성화와 Red·Green 근거를 추가합니다.
 화면은 코드 전에 제안이나 스펙에 초안을 작성하고 선택적으로 `ux-reviewer`의 검토를 받습니다.
+초안에서 이미 고친 항목을 포함한 UX 리뷰 지적은 `build-verify`에서 닫습니다. 이는 별도의 독립 리뷰 회차가 아니라 종결 기록입니다.
 유지할 화면과 사용 사례 참조는 조정 단계에서 `docs/ux/`로 반영합니다.
 
-`reconcile.md`는 변경을 `docs/`의 지속되는 계약과 연결합니다. 모든 강도에서 조정 검증을 기록합니다.
+`reconcile.md`는 변경을 `docs/`의 지속되는 계약과 연결합니다. 모든 작업 노력 수준에서 조정 검증을 기록합니다.
 medium에서 독립 조정 리뷰를 자체 검사로 대신하려면 영향 계약과 diff의 일치가 분명하고 구성 요소 간 해석이 남지 않아야 합니다.
-high는 독립 검증이 필요합니다.
+high는 독립 검증이 필요합니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며, 각 지적을 해결됨 또는 사유가 있는
+면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.
+
+테스트 스위트 구성을 평가할 때는 [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)에 따라
+선택한 스위트를 점검하고, 확정된 변경만 기본 워크플로로 보냅니다.
 
 ## 결정과 기록
 
@@ -173,24 +184,29 @@ high는 독립 검증이 필요합니다.
 합의 안의 구현 선택은 실행자가 정합니다. 목표·범위·제약 변경에는 사용자 결정이 필요합니다.
 
 유닛 엔벨로프(envelope)는 기존 기록을 덮어쓰지 않고 리뷰, 재검증, 피드백, 최종 보고, 질문과 문제를 기록합니다.
-미응답 질문이나 미해결 문제는 워크플로를 보류합니다. 실제로 문제를 해결한 사람이 resolution을 기록합니다.
-완전히 작성된 엔벨로프 하나만 미커밋이면 `uv run devkit workflow envelope commit --unit <dir>
---file envelopes/<name>.yaml`로 일반 훅을 유지하며 커밋할 수 있습니다. 소스 변경과 다중 기록은 일반 결합 커밋을 씁니다.
+미응답 질문이나 미해결 문제는 워크플로를 보류합니다. 실제로 문제를 해결한 행위자가 resolution을 기록합니다.
+완전히 작성된 엔벨로프 하나만 미커밋이면
+`uv run devkit workflow envelope commit --unit <dir> --file envelopes/<name>.yaml`로 일반 훅을 유지하며 커밋할 수 있습니다.
+소스 변경과 다중 기록은 일반 결합 커밋을 씁니다.
 세션 작업은 대화나 PR 본문에 보고하고 이런 기록을 만들지 않습니다.
 
 ## 오케스트레이션과 통합
 
 direct에서는 Host가 작업합니다. local-orchestrated는 각 워크트리의 일회성 Planning·Development 워커를 사용합니다.
+조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로
+제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.
 읽기 전용 지원 역할은 근거를 반환하고 워커는 자신의 작업 브랜치에만 커밋합니다.
 재사용하는 `git-operator`는 현재 승인된 정확한 수명 주기 작업을 실행합니다.
 일정, 의미적 선택과 결과 수용은 Host가 맡습니다. scout의 기본 모델 수준은 compact,
-git-operator는 lean이며 지원되는 호스트에서 medium 추론 강도를 씁니다. 이 자원 수준은 전달 강도나 권한을 바꾸지 않습니다.
+git-operator는 lean이며 지원되는 호스트에서 medium 추론 수준을 씁니다. 이 자원 수준은 전달 작업 노력 수준이나 권한을 바꾸지 않습니다.
 
 범위 관찰은 현재 쓰기와 미래 Planning 범위를 구분합니다. 현재 겹침은 실행 중 작업을 직렬화하고,
 미래 범위만 겹치면 Planning을 직렬화하지 않고 handoff·통합 순서를 정합니다. 부분 관찰로 독립성을 증명할 수는 없습니다.
 `uv run devkit spec worker inspect`가 반환된 턴과 누적 규칙을 의도한 베이스와 대조합니다.
 
 Host가 소스 런타임으로 내용을 검사한 뒤 명시적 브랜치 통합을 준비·실행합니다.
+보호된 통합은 고정된 소스나 대상에서 도달 가능한 커밋 이력에 제안 경로가 있을 때만 제안 정리를 포함합니다.
+승인된 정리 대상은 병합과 재시도 사이에 유지되며, 커밋되지 않은 디렉터리만으로는 정리 대상이 되지 않습니다.
 반영 후 의존성과 자산을 동기화하고 오래된 추적 생성물을 재생성한 뒤 새 프로세스에서 최종 검사합니다.
 확인된 Git 병합도 검사가 통과하기 전까지 `verification=pending`입니다.
 [통합](integration.md)과 [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)를 참고하십시오.
@@ -199,11 +215,17 @@ Host가 소스 런타임으로 내용을 검사한 뒤 명시적 브랜치 통�
 
 ## 적응형 개발
 
-`devkit-adaptive`를 설치하고 `uv run devkit add adaptive-dev`를 선택합니다.
+`devkit-adaptive`(devkit-docs 필요)를 설치하고 `uv run devkit add adaptive-dev`를 선택합니다.
 `/adaptive-dev`는 변경별 SDD 기록 없이 유용한 질문, 한정된 실험, 대표 흐름 구현과 실제 사용 검사를 진행합니다.
 제품 작업 전에 공유 방식이 `adaptive-dev`인지 확인합니다. 선택적 역할은 product-clarifier, product-researcher, usage-reviewer입니다.
 조정자가 `.devkit/adaptive-dev.md`에 목표, 선택과 가정, 검사, 미확인 사항과 다음 행동을 유지합니다.
 제품은 이 방식을 계속 사용할 수 있습니다.
+
+적응형 개발에서 작업을 위임할 때는 `devkit adaptive assignment new`로 위임 전에 목표·리터럴 쓰기 경로·커밋 권한·선언된 검사·기준
+문서를 기록하며, `return`·`verify`·`close`는 공통 Git 원장에 증거를 남깁니다. 검증은 저장소 사실과 보고된 결과를 확인할 뿐
+에이전트를 시작하거나 테스트를 실행하지 않으며, `list`는 관찰 사실을 보고하고 에이전트 생존 여부를 판단하지 않습니다.
+외부 스킬이나 역할 계약을 프로젝트 소유 오버레이로 변환할 때는
+[선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)를 참고하십시오.
 
 이전 incubation 방식·번들·진입점은 허용되지 않으며 이전 컨텍스트 파일을 대신 읽지도 않습니다.
 사용자가 요청하면 `spec/sdd-baseline`이 유지할 제품을 코드·현재 문서·실제 근거에 연결합니다.
@@ -269,19 +291,3 @@ review-refactor와 성능 작업은 이전·이후 동작을 비교하고 계약
 - [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md) (영어 원문)
 - [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md) (영어 원문)
 - [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-maintenance-history.md) (영어 원문)
-
-## 할당 증거와 수명주기 소유권
-
-`devkit-adaptive`가 adaptive 번들과 할당 명령을 소유합니다. `devkit adaptive assignment new`로 위임 전에 목표·리터럴 쓰기 경로·커밋 권한·선언된 검사·기준 문서를 기록합니다. `return`·`verify`·`close`는 공통 Git 원장에 증거를 남깁니다. 검증은 저장소 사실과 보고된 결과를 확인하며 에이전트를 시작하거나 테스트를 실행하지 않습니다. `list`는 관찰 사실을 보고하며 에이전트 생존을 주장하지 않습니다.
-
-제안 실행 인터페이스는 `CAP-DLV-proposal-lifecycle`, 작업자 권한과 반환 검증은 `CAP-DLV-delivery-roles`가 소유합니다. 로컬 Host의 통합 Planning 수락은 `devkit spec proposal accept-plan <slug> --by user --mode accept_only`를 사용합니다. 일반 `accept`에는 `--mode`와 `--effort`가 없습니다.
-
-[테스트 관리 평가](../journeys/assess-test-management.md)는 선택한 스위트를 상담하고 결정된 변경을 기본 워크플로로 보냅니다.
-
-## 이 릴리스의 작업 방식
-
-조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.
-
-UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.
-
-보호된 통합은 고정된 소스나 대상에서 도달하는 커밋 이력에 제안 경로가 있을 때만 제안 정리를 포함합니다. 승인된 정리 대상은 병합과 재시도 사이에 유지되며, 커밋되지 않은 디렉터리만으로는 정리 대상이 되지 않습니다.

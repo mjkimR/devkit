@@ -8,7 +8,7 @@ title: Explore a design problem
 # Explore a design problem
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -83,11 +83,11 @@ Roles leave product source, retained files, settings, index and HEAD unchanged.
 Invocation authorizes no implementation, settings change, commit, approval or publication.
 A refused destination stays blocked while the useful conversation result remains available.
 
+## Test a consequential objection
+
+The coordinator may send the actual candidate and objection back to its explorer for one response. It judges support per objection and retains disagreement or uncertainty; agreement and role labels prove nothing. A missing author response is disclosed. Another pass needs a concrete decision-changing question and finite bound, with no automatic critic reply or implementation.
+
 ## Sources
 
 - [UC-explore-a-design-problem](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-explore-a-design-problem.md)
 - [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md)
-
-## Test a consequential objection
-
-The coordinator may send the actual candidate and objection back to its explorer for one response. It judges support per objection and retains disagreement or uncertainty; agreement and role labels prove nothing. A missing author response is disclosed. Another pass needs a concrete decision-changing question and finite bound, with no automatic critic reply or implementation.

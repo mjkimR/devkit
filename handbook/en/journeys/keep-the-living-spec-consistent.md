@@ -12,7 +12,7 @@ title: Keep the Living Spec consistent
 # Keep the Living Spec consistent
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -97,7 +97,10 @@ Source: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/
 
    Each violation names its rule (for example `RULE-traceability-link`), whether it is `fixable` or `open`, and what
    to do about it. A violation is reported only in the files the run targets, and completed spec bundles are treated
-   as history: they are checked only when you name them.
+   as history: they are checked only when you name them. Findings at `notice` severity are nonblocking considerations.
+   To inspect bounded working-versus-HEAD change evidence and applicable change-scoped notices for a file, run
+   `uv run devkit rules context FILE` (native file reads do not call it automatically; missing evidence is disclosed
+   rather than replaced with whole-file history).
 
 2. **Apply the deterministic fixes.**
 
@@ -106,13 +109,15 @@ Source: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/
    uv run devkit rules fix
    ```
 
-   A fix rewrites only targeted current files and only the bytes it owns, in the file's own style. It never moves or
-   renames a file, never guesses a missing ID and never rewrites a completed bundle.
+   A fix rewrites only targeted current files and only the bytes it owns, in the file's own style; alias fixes also
+   cover visible steering references, glossary Owner cells and configured quick references. It never moves or renames
+   a file, never guesses a missing ID and never rewrites a completed bundle.
 
 3. **Recheck.** `devkit rules check` again should report nothing.
 
 4. **Commit.** The built-in `rules-check` gate evaluates the exact staged tree (what `devkit rules check --staged`
-   does) and accepts the commit. Unstaged edits cannot change its verdict.
+   does) and accepts the commit. Unstaged edits cannot change its verdict; `notice`-severity findings remain nonblocking
+   even under strict mode and commit gates.
 
 5. **Open a pull request.** CI runs `devkit rules check --ci --base <ref>`, judging the whole branch against its merge
    base the same way.
@@ -131,6 +136,7 @@ The ones you meet most often:
 | `RULE-document-reference` | an ID does not resolve, or a reference uses bracket form or an alias | partly fixable |
 | `RULE-id-convention` | a file's path, `id`, `area` or heading token disagree | fixable once the path is right |
 | `RULE-traceability-link` | a use case lists a capability that does not list it back | appends the reverse ID |
+| `RULE-decision-supersession` | reciprocal whole/partial ADR replacement metadata disagrees (review decides whether its scope is accurate) | by hand |
 | `RULE-spec-lifecycle` | `spec.md`, `tasks.md` and `reconcile.md` disagree on status | sets `status: completed` |
 | `RULE-reconcile-contract` | a `resolved` record claims a `modified` target the diff did not change | by hand |
 | `RULE-code-entrypoints` | an `entrypoints` path no longer exists | by hand |
@@ -170,15 +176,3 @@ How documents get their IDs and how references resolve is the document model,
 
 The targeted files and the committed tree pass every document and lifecycle rule, links and statuses are written in the files' own
 style, and completed bundles are untouched. A refused commit creates no commit, so nothing half-checked lands.
-
-## Namespace registers and replacement records
-
-Registered namespaces can keep steering glossaries, synonym files, UX object registers and roadmap milestones under
-`docs/packages/<name>/`. The root and selected namespace registers are read together.
-`RULE-decision-supersession` checks reciprocal whole/partial ADR replacement metadata; review decides whether its
-scope is accurate. Alias fixes also cover visible steering references, glossary Owner cells and configured quick references.
-Entrypoint derivation excludes receipt-owned generated outputs while scope observation retains their write paths.
-
-## Working with this release
-
-Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

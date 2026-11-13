@@ -15,7 +15,7 @@ title: Worktree
 # Worktree
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -99,14 +99,16 @@ nesting inside a linked worktree (`WORKTREE_NESTED`, whose fix is the same comma
 checkout), then creates the worktree from the base HEAD. A fresh checkout lacks the base's ignored files, so `start`
 also:
 
-1. copies the base checkout's `.devkit/config.local.toml`, if any, as a snapshot (later edits on either side do not
-   propagate);
+1. copies the base checkout's present `.devkit/config.local.toml` into an independent local snapshot before setup
+   (reusing a worktree preserves its existing file or absence, and later edits or deletions do not propagate; direct
+   `git worktree add` and independent clones do not perform this copy);
 2. runs `[worktree] setup` (for example `uv sync`) in the worktree;
 3. runs `devkit sync --locked` to restore the managed bundle copies that rules, gates, `get-context` and playbooks
    need, then `devkit sync --registrations-only` for the optional MCP entry (`CAP-MCP-runtime-registration`).
 
-A failing setup or sync is a warning (`WORKTREE_SETUP_FAILED`, `WORKTREE_SYNC_FAILED`) with its fix, and the worktree
-stays. The command ends with `[NEXT_CMD: cd <path>]`. Commit gates run with the worktree's own `.venv` first
+Worktree add and remove operations run in their own process sessions so interruption can stop descendants. A failing
+setup or sync is a warning (`WORKTREE_SETUP_FAILED`, `WORKTREE_SYNC_FAILED`) with its fix, and the worktree stays.
+The command ends with `[NEXT_CMD: cd <path>]`. Commit gates run with the worktree's own `.venv` first
 (`CAP-GATE-commit-gates`).
 
 Two variants:
@@ -142,8 +144,9 @@ To drop a task without integrating it (an abandon, a supersede, a depth escalati
 remote branches and pull requests stay yours to close.
 
 A refusal after the merge step prints what was already done as a `[WORKTREE_FINISH_PARTIAL: ...]` line, never the
-success line `[WORKTREE_FINISHED: ...]`. Fix the cause and rerun the same command. Recovery for
-blocked or interrupted delivery is covered in
+success line `[WORKTREE_FINISHED: ...]`. Fix the cause and rerun the same command. Integration reports confirmed
+landing separately from final content verification, and a successful Git finish alone proves no content check; see
+[Integration](integration.md). Recovery for blocked or interrupted delivery is covered in
 [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
 (`UC-handle-delivery-problems-and-exceptions`); the full flow to landing is
 [Drive development to integration](../journeys/drive-development-to-integration.md)
@@ -185,16 +188,6 @@ Packages hook into the lifecycle through entry points: `devkit.attach_check` (ve
 `devkit.finish_guard` (refuse to integrate) and `devkit.post_finish` (clean up after a successful finish). An extension
 that misbehaves fails closed for checks and guards, and only warns after a finish.
 
-## Local configuration and landed checks
-
-A newly created worktree copies the base's present `.devkit/config.local.toml` into an independent local snapshot
-before setup. Reusing a worktree preserves its existing file, including absence; later edits or deletion do not propagate.
-Direct `git worktree add` and independent clones do not perform this copy.
-Worktree add/remove run in their own process sessions so interruption can stop descendants.
-
-Integration reports confirmed landing separately from final verification. The Host synchronizes the landed runtime
-and checks the final target; a successful Git finish alone proves no content check.
-
 ## Sources
 
 - [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md):
@@ -202,7 +195,3 @@ and checks the final target; a successful Git finish alone proves no content che
 - [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/worktree.md):
   commands and error codes.
 - Related: [Integration](integration.md), [Collaboration](collaboration.md).
-
-## Working with this release
-
-Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

@@ -1,23 +1,29 @@
 ---
 sources:
   ARCH-08-1-agent-output: null
+  CAP-DIST-sync-and-transactions: null
+  CAP-DLV-adaptive-development: null
   CAP-DLV-delivery-workflows: null
+  CAP-DLV-sdd-baseline-adoption: null
   CAP-GOV-spec-rules: null
   CAP-HARN-agent-guidance: null
   CAP-HARN-command-design: null
   CAP-HARN-command-mount: null
+  CAP-HARN-isolated-execution: null
   UC-adopt-in-an-existing-repository: null
+  UC-adopt-sdd-from-adaptive-development: null
+  UC-advance-an-idea: null
   UC-handle-delivery-problems-and-exceptions: null
   UC-resolve-stale-activity-branches: null
   UC-route-development-intent: null
 title: 하네스
-translated_from: en/areas/harness.md@f1a1dcb2bc442843
+translated_from: en/areas/harness.md@9bc63affb8a02216
 ---
 
 # 하네스
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -103,7 +109,7 @@ approach)을 확인하게 합니다. SDD라면 이어서 `uv run devkit get-cont
 `adaptive-dev`입니다. 번들을 설치하거나 선택해도 이 값은 바뀌지 않습니다. 적응형 개발에서는 `spec` 지침이 물러납니다. 일반
 작업은 프로젝트의 적응형 개발 지침과 독립적인 검사를 따르며, 암묵적인 유닛, 엔벨로프, 작업 분류를 만들지 않습니다. 이미 SDD
 워크플로에 묶인 문서는 기존 검사를 그대로 유지합니다. 그 지침과 `/adaptive-dev` 진입점은 `devkit-adaptive`의 선택형 `adaptive-dev`
-번들이 제공합니다. [아이디어 발전시키기](../journeys/advance-an-idea.md)를 참고하십시오. 적응형 개발으로 키운 결과물을
+번들이 제공합니다. [아이디어 발전시키기](../journeys/advance-an-idea.md)를 참고하십시오. 적응형 개발로 키운 결과물을
 SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)에서
 설명합니다.
 
@@ -115,7 +121,7 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발�
 2. 사용자가 `/spec <intent>` 형태로 의도를 전달합니다. 새 작업을 접수할 때 `spec` 스킬은 먼저 `devkit playbook search`를
    실행하며, 요청한 작업과 정확히 일치하는 플레이북이 있는 경우에만 이를 추천합니다. 사용자가 승인하기 전까지는 아무것도 임의로
    실행되지 않습니다.
-3. 스킬이 `devkit spec policy`를 조회한 후 작업 분류를 알리고 미정인 범위를 확인합니다. 여기에는
+3. 스킬이 `devkit spec policy`를 조회한 후 작업 분류를 제안하여 사용자 확인을 받습니다. 여기에는
    `task-kind`(feature, bugfix, overall-refactor), `planning-depth`(`session`, `spec`, `proposal` 중 작업 규모가 아니라 구현 전
    선결 결정 사항의 범위에 따라 결정됨), 그리고 각 활동별 실행 모드와 `activity-effort`가 포함됩니다.
 4. 제안된 분류에 매칭되는 워크플로(workflow) `sdd-<planning-depth>[-<task-kind>]`를 진행합니다(`CAP-DLV-delivery-workflows`).
@@ -135,7 +141,7 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발�
 | `spec` | 모든 개발 의도 라우팅: 작업 분류, Backlog 등록, 인라인 Planning, 워크플로 진행 |
 | `spec-next` | 현재 상황 파악: 진행 중인 작업 또는 다음에 착수할 대기 초안 확인 |
 | `spec-specify`, `spec-plan`, `spec-tasks` | `spec.md`, `plan.md`, `tasks.md` 문서 작성 |
-| `spec-review` | 작업 완료 선언 전 코드 diff, 수락 기준 및 검증 결과 검증 |
+| `spec-review` | 작업 완료 선언 전 diff, 수락 기준, 검사 결과 검증 |
 | `spec-ux-review` | 코드 작성 전에 초안 화면을 유스케이스에 비추어 검토(`ux-reviewer`가 실행) |
 | `spec-sync` | 구현 변경 사항을 Living Spec에 반영하고 `reconcile.md` 완료 처리 |
 | `spec-integrate` | 베이스 브랜치를 병합하고 재검증을 거쳐 사용자 승인 후 최종 통합 |
@@ -148,8 +154,10 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발�
 각 스킬은 현재 수행 단계에 필요한 지침과 참고 자료만을 선별 로드하며, 각 참고 자료에는 참조해야 하는 적절한 시점이
 명시되어 있습니다. 작업 위임을 위해 10가지 역할 계약이 배포됩니다. 검사용 `challenger`, `scout`, `code-reviewer`,
 `reconcile-reviewer`, `ux-reviewer`, Backlog용 `triage`, `decomposer`(열린 피드백 묶기, 초안 분할), 그리고
-`planning-worker`, `development-worker`, `git-operator`입니다. 각 역할은 스스로 `devkit get-context spec`을 실행합니다. 역할이 어떤 모델로
-실행될지는 하네스가 아니라 배포 쪽 설정입니다([배포](distribution.md)).
+`planning-worker`, `development-worker`, `git-operator`(현재 Host가 승인한 정확한 수명 주기 작업을 반복 수행하는 재사용 가능한
+실행자로, 결정·일정·결과 수용은 Host가 맡음)입니다. 각 역할은 스스로 `devkit get-context spec`을 실행합니다. `git-operator`는
+`lean` 자원 수준을, `scout`은 `compact`를 사용하며, 나머지 역할은 별도 설정이 없으면 기본값을 상속합니다. 자원 수준이
+`activity-effort`나 쓰기 권한을 바꾸지는 않으며, 역할이 어떤 모델로 실행될지는 하네스가 아니라 배포 쪽 설정입니다([배포](distribution.md)).
 
 ## 규칙 준수 문서 작성법
 
@@ -165,14 +173,17 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발�
 | `capability-writing`, `usecase-writing`, `ux-writing`, `architecture-writing`, `decision-writing` | 각 세부 문서 종류별 작성 시 |
 
 번들에 포함된 거버넌스 규칙들은 이 지침에서 설명하는 규약을 자동으로 검증합니다. 자세한 내용은
-[거버넌스 규칙](governance.md)의 문서 규칙과 생명주기 규칙 목록을 참고하십시오.
+[거버넌스 규칙](governance.md)의 문서 규칙과 생명주기 규칙 목록을 참고하십시오. 필요한 `justfile`, CLI, MCP 진입점을
+설계할 때는 선택형 카탈로그 지침인 `command-design`이 대상 작업과 호출자를 식별하고, 적절한 기존 경로를 재사용하며, 문서화된
+실행 컨텍스트에서 추가 항목을 검증합니다. 자세한 내용은 [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)를
+참고하십시오.
 
 ## 기존 문서가 존재하는 저장소에 도입하기
 
 devkit은 이미 존재하는 `docs/` 트리에 임의로 템플릿을 덮어쓰지 않습니다. `brownfield-adoption` 플레이북을 실행하면
 안전하게 devkit을 설치하고 기준선을 설정한 뒤, 기존 레거시 Markdown 문서를 `docs/materials/_legacy/` 아래로 격리하고
 사용자가 결정한 보류 사항들을 기록합니다. 자세한 내용은
-[기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)를 참고하십시오. 적응형 개발으로 성장한
+[기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)를 참고하십시오. 적응형 개발로 성장한
 프로젝트는 대신 `sdd-baseline`을 사용합니다. 번들에는 `feedback-hygiene`(열린 피드백 일괄 분류)과 `adr-compaction`(결정 변경
 없이 관련 ADR 통합 정리) 플레이북이 추가로 제공됩니다.
 
@@ -213,9 +224,11 @@ devkit 자체 버전을 출력).
 `ARCH-08-1-agent-output` 규약에 따라 한 줄 센티널 또는 단일 JSON 객체를 출력하고, `SPEC_` 또는 `DOCS_` 접두사가 붙은 에이전트
 어드바이저리를 발생시킵니다([어드바이저리](advisory.md)). 목록 조회는 `--limit`과 `--offset`으로 페이징되며, 추가 항목이
 남아 있는 경우 다음 페이지 조회를 위한 `[NEXT_CMD: ...]` 명령어가 함께 안내됩니다. 종료 코드는 알림(notice) 유무와 관계없이
-정상 성공 시 `0`, `--strict` 모드에서 경고 발생 시 `1`, 실행 불가 또는 요청 거부 시 `2`를 반환합니다.
+정상 성공 시 `0`, `--strict` 모드에서 경고 발생 시 `1`, 실행 불가 또는 요청 거부 시 `2`를 반환합니다. 분리된 체크아웃의
+고정 커밋에서 검증이나 빌드 명령을 실행하고 명령 증거를 그 바깥에 보존하려면 `devkit exec`를 사용하십시오. 자세한 내용은
+[격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)를 참고하십시오.
 
-## 관련 자료
+## 출처
 
 - [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문):
   번들의 프리셋, 헌장, 스킬, 역할 계약, 플레이북, 템플릿 및 정책 규약.
@@ -228,23 +241,3 @@ devkit 자체 버전을 출력).
 - [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)
   및 [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문):
   적응형 개발 방식과 SDD로의 전환.
-
-## 수명 주기 실행자와 명령 설계
-
-열 개 SDD 역할에는 현재 Host가 승인한 정확한 수명 주기 작업을 반복 수행하는 git-operator가 포함됩니다.
-결정·일정·결과 수용은 Host가 맡습니다. Git Operator는 lean, scout는 compact를 쓰고 나머지는 별도 설정이 없으면 상속합니다.
-자원 수준이 activity-effort나 쓰기 권한을 바꾸지 않습니다.
-
-`command-design`은 필요한 justfile·CLI·MCP 진입점을 위한 선택형 카탈로그 지침입니다.
-동작·호출자를 확인하고 적절한 기존 경로를 재사용하며 문서에 적힌 실행 컨텍스트에서 추가를 검증합니다.
-[필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)를 참고하십시오.
-
-## 고정 커밋에서 명령 실행
-
-[격리 실행](../journeys/execute-an-isolated-command.md)은 `devkit exec`로 분리 체크아웃을 준비하고 그 밖에 명령 증거를 보존합니다. 시작 성공은 대기 상태이며 결과를 수집하기 전에는 검증 통과로 보고하지 않습니다. 취소·관찰·정리는 각각의 결과를 갖습니다.
-
-## 이 릴리스의 작업 방식
-
-조정자는 분리할 수 있는 조사·구현·검증을 위임하고 통합과 최종 검증을 맡습니다. 하위 작업의 범위와 커밋 권한은 부모 작업 안으로 제한하며 고정된 중첩 깊이 제한은 없습니다. 동시 작성자는 별도 워크트리를 사용하거나 순서대로 작업합니다.
-
-UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

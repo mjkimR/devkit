@@ -5,13 +5,13 @@ sources:
   CAP-SRCH-document-search: null
   UC-find-the-right-documents: null
 title: 검색
-translated_from: en/areas/search.md@2f84987bd75ae684
+translated_from: en/areas/search.md@4da1699e3a1980aa
 ---
 
 # 검색
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 검색(search) 기능은 `devkit playbook search` 및 `devkit docs search` 명령을 지원하는 랭킹 엔진입니다. 문서를
@@ -29,7 +29,7 @@ translated_from: en/areas/search.md@2f84987bd75ae684
 
 Living Spec 문서를 종합적으로 탐색하는 전체 과정은 여정
 [알맞은 문서 찾기](../journeys/find-the-right-documents.md)(`UC-find-the-right-documents`)에서 다룹니다. 플레이북
-탐색 방법은 [배포](distribution.md)를, 문서 검색 명령은 [문서](documents.md)를 참고하세요.
+탐색 방법은 [배포](distribution.md)를, 문서 검색 명령은 [문서](documents.md)를 참고하십시오.
 
 ## 검색 모드 선택
 
@@ -58,7 +58,7 @@ extra 의존성은 별도의 독립적인 요구사항으로 추가하지 말고
 
 ## 검색 품질을 높이는 문서 작성법
 
-- 임베딩 모델은 영어 전용이며 메타데이터만 읽습니다. 따라서 모든 문서에 영문 메타데이터를 작성하세요. 플레이북은 `name`과
+- 임베딩 모델은 영어 전용이며 메타데이터만 읽습니다. 따라서 모든 문서에 영문 메타데이터를 작성하십시오. 플레이북은 `name`과
   `description`, Living Spec 문서는 `summary`에 해당합니다. 본문은 어떤 언어로 작성해도 어휘 검색 점수에는 정상적으로 반영됩니다.
 - 토크나이저는 대소문자를 일원화(casefold)하고 라틴 악센트를 제거하며, `_`, `-` 등 문자가 아닌 모든 기호를 기준으로 단어를
   분리합니다(예: `RULE-file_length`는 `rule`, `file`, `length`로 분리). 별도의 어간 추출이나 불용어 목록은 적용되지 않습니다.
@@ -75,11 +75,7 @@ extra 의존성은 별도의 독립적인 요구사항으로 추가하지 말고
 
 ## 네임스페이스 동의어
 
-문서 검색은 전역 `docs/steering/glossary.yaml` 다음 선택된 등록 네임스페이스의
-`docs/packages/<name>/steering/glossary.yaml`을 네임스페이스 이름순으로 확장합니다.
-선택하지 않았거나 미등록인 파일은 확장·오류에 영향을 주지 않습니다.
+문서 검색은 전역 `docs/steering/glossary.yaml` 다음으로 선택된 등록 네임스페이스의
+`docs/packages/<name>/steering/glossary.yaml`을 네임스페이스 이름순으로 읽어 용어를 확장합니다.
+선택하지 않았거나 등록되지 않은 파일은 확장이나 오류에 영향을 주지 않습니다.
 정규 ID·별칭·경로·파일명과 일치하는 질의는 순위 계산과 무관하게 해당 문서를 맨 앞에 고정합니다.
-
-## 이 릴리스의 작업 방식
-
-자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.

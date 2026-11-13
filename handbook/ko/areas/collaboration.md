@@ -9,13 +9,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 협업
-translated_from: en/areas/collaboration.md@127d9a15c34a1539
+translated_from: en/areas/collaboration.md@d638e0313e79c825
 ---
 
 # 협업
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -101,14 +101,17 @@ devkit spec scope collect [--base <ref>] [--fetch <remote>]
 - **통합 수집.** 생성 스냅샷·활동 ref·접근 가능한 워크트리를 한 번에 읽습니다. 활동 소스가 없는 초안은 제외합니다.
 - **네트워크는 선택 사항.** `--fetch`가 없으면 원격 ref는 마지막으로 fetch한 상태 그대로입니다. `--fetch <remote>`(반복 가능,
   설정된 원격만)는 해당 원격 추적 브랜치만 갱신합니다. 다른 컴퓨터에서 push하지 않은 작업은 절대 보이지 않으므로, 여러 PC에서
-  자주 작업한다면 선언과 변경을 풀 리퀘스트로 push하세요.
+  자주 작업한다면 선언과 변경을 풀 리퀘스트로 push하십시오.
 - **빈틈은 드러납니다.** 베이스를 알 수 없거나, 작업 식별이 모호하거나, 소스를 읽을 수 없거나 바뀌고 있거나, 시간 예산
-  (`--timeout`, `--source-timeout`)이 소진되면, 사용 가능한 증거는 그대로 두고 누락된 범위와 함께
+  (`--timeout`, `--source-timeout`)이 소진되면, 사용 가능한 증거는 그대로 두고 누락된 범위(수명 주기상 아직 없는 청사진·조정 파일 포함)와 함께
   `SPEC_SCOPE_COLLECTION_PARTIAL`을 보고합니다. 계산되지 않은 쌍을 겹침 0으로 세지 않습니다. 어떤 인벤토리 소스도 읽을 수 없을
   때만 `SPEC_SCOPE_COLLECTION_FAILED`로 실패합니다.
 
-출력은 후보(`[SCOPE_CANDIDATE: ...]`), 각 관찰, 그리고 `compare`와 같은 `[PAIR: ...]`·`[EVIDENCE: ...]` 줄을 나열하고,
-범위와 비교가 완전한지 알려 주는 요약으로 끝납니다.
+출력은 후보(`[SCOPE_CANDIDATE: ...]`), 각 관찰, 그리고 쌍별(pairwise) `[PAIR: ...]`·`[EVIDENCE: ...]` 줄을 나열하고,
+쌍별 개수, `summary.current_overlapping`, 그리고 범위와 비교가 완전한지 알려 주는 요약으로 끝납니다. 각 근거 항목에는
+`horizon=current|future`가 표시됩니다. Planning에서 실제 관찰된 쓰기와 그 밖의 관찰은 현재(`current`), Planning에서 선언한
+문서·코드·후보 범위는 미래(`future`)입니다. 모든 겹침은 목록에 유지되며 `horizon`이 쓰기 권한을 부여하지는 않습니다. 현재(`current`)
+겹침은 실행 중인 활동을 직렬화하며, 미래(`future`)만 겹치는 경우에는 Planning을 병행하면서 handoff와 통합 순서를 정합니다.
 
 ### 공유 레지스트리
 
@@ -177,6 +180,8 @@ devkit shared list --kind proposal-review --slug example --format json
 
 선택형 MCP 런타임이 설치되어 있다면 동일한 put, get, list 작업을 로컬 MCP 도구인 `shared_put`, `shared_get`, `shared_list`로도
 수행할 수 있습니다([MCP](mcp.md) 및 `CAP-MCP-runtime-registration` 참고). 대량 정리(sweep)는 CLI 명령어로만 실행됩니다.
+로컬 오케스트레이션 호출자는 종속된 공유 작업을 수행하기 전에 연결된 프로젝트 도구를 먼저 확인합니다. 연결이 누락된 경우
+자동 CLI 폴백 대신 연결 복구가 필요하며, 명시적으로 승인된 CLI 선택은 여전히 가능합니다.
 
 ### 원격 어댑터 연결하기
 
@@ -184,19 +189,6 @@ devkit shared list --kind proposal-review --slug example --format json
 커스텀 어댑터를 선택할 수 있습니다. 알 수 없거나 형식이 잘못된 어댑터가 지정되면 로컬 어댑터로 자동 폴백하지 않고 `SHARED_ADAPTER_UNAVAILABLE`
 오류와 함께 즉시 실패합니다. 어댑터 개발자는 재사용 가능한 `assert_conformance` 헬퍼로 적합성을 검증할 수 있으며, 사용자 인증,
 네임스페이스 프로비저닝, 분산 호스트 간의 정합성 보장은 어댑터 개발자의 책임입니다. 현재 릴리스에는 기본 원격 백엔드가 포함되어 있지 않습니다.
-
-## 현재 겹침과 미래 겹침
-
-`scope collect`는 각 근거를 `horizon=current|future`로 표시하고 쌍별 개수와 `summary.current_overlapping`을 보고합니다.
-Planning에서 실제 관찰한 쓰기는 current, 선언한 문서·코드·후보 범위는 future이며 그 밖의 관찰은 current입니다.
-모든 겹침은 목록에 남고 horizon이 쓰기 권한을 주지는 않습니다.
-현재 겹침은 실행 중 활동을 직렬화합니다. 미래만 겹치면 Planning은 병행할 수 있고 handoff·통합 순서를 정합니다.
-생명주기상 아직 없는 청사진·조정 파일을 포함해 빠진 입력은 관찰 공백으로 남습니다.
-
-범위 기록은 Git 공통 디렉터리, 공유 보고서는 유지되는 주 체크아웃의 `.devkit/.shared/artifacts`에 있습니다.
-공통 Git 식별 정보로 연결된 워크트리가 같은 저장소를 찾습니다.
-로컬 오케스트레이션에서는 연결된 프로젝트 도구를 먼저 확인합니다. 연결이 없으면 자동 CLI 대체 없이 복구가 필요합니다.
-명시적으로 승인된 CLI 선택은 가능합니다.
 
 ## 출처
 

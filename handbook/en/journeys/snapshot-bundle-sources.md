@@ -11,7 +11,7 @@ title: Adopt and refresh bundle sources locally
 # Adopt and refresh bundle sources locally
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 A bundle source snapshot preserves a complete supported content provider in a distinct local package. It keeps original bundle versions, resource bytes, modes and license files with path-free provenance. Runtime/command providers and unsupported dynamic closure are refused before writes.
@@ -35,7 +35,3 @@ Commit sources, provenance and deliberate bootstrap changes. Keep consumer adapt
 - [CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md)
 - [CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md)
 - [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)
-
-## Working with this release
-
-Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.

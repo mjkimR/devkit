@@ -10,7 +10,7 @@ translated_from: en/journeys/inspect-weekly-repository-progress.md@ed2be2e71610c
 # 주간 저장소 진행 상황 점검하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -85,14 +85,14 @@ translated_from: en/journeys/inspect-weekly-repository-progress.md@ed2be2e71610c
 
 ## 1. 플레이북 실행 호출
 
-`devkit-playbook` 스킬을 통해 에이전트에게 주간 보고서 작성을 요청하거나, `spec` 스킬이 제안하는 옵션을 승인하십시오.
+`devkit-playbook` 스킬을 통해 에이전트에게 주간 보고서 작성을 요청하거나, `spec` 스킬이 제안하는 옵션을 승인합니다.
 에이전트는 다음 명령어로 플레이북 명세를 가져옵니다.
 
 ```bash
 uv run devkit playbook get maintenance/weekly-report
 ```
 
-점검할 범위를 지정하십시오. 필요에 따라 기준 시간대(timezone), 정확한 점검 기간, 보고서를 저장할 파일 경로, 비교 대상으로 삼을
+점검할 범위를 지정합니다. 필요에 따라 기준 시간대(timezone), 정확한 점검 기간, 보고서를 저장할 파일 경로, 비교 대상으로 삼을
 이전 보고서 경로를 함께 전달할 수 있습니다.
 
 ## 2. 점검 대상 메타데이터 확정
@@ -123,8 +123,8 @@ uv run devkit playbook get maintenance/weekly-report
 ## 6. 파일 작성 직전 재확인
 
 보고서 파일을 디스크에 작성하기 직전, 에이전트는 점검 대상 리비전, 통합 ref, 작업 트리의 관련 미커밋 변경 사항을 다시 한번 점검합니다.
-그 사이 변경된 내용이 감지되면 데이터를 재수집하거나 미검증 항목으로 명시하며, 확인되지 않은 변경 사항을 기 검증된 성과와 묵인하고
-혼합하지 않습니다.
+그 사이 변경된 내용이 감지되면 데이터를 재수집하거나 미검증 항목으로 명시하며, 확인되지 않은 변경 사항을 기 검증된 성과와 구분 없이
+임의로 섞지 않습니다.
 
 ## 7. 보고서 수령
 

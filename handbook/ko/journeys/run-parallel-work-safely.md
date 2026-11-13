@@ -6,13 +6,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 병렬 작업 안전하게 실행하기
-translated_from: en/journeys/run-parallel-work-safely.md@a6203433bc403e5a
+translated_from: en/journeys/run-parallel-work-safely.md@43ab7928cceec9e6
 ---
 
 # 병렬 작업 안전하게 실행하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -86,7 +86,7 @@ translated_from: en/journeys/run-parallel-work-safely.md@a6203433bc403e5a
 1. **Git 정책 확인.** 어떤 작업 활동이 독립된 작업 워크트리를 할당받는지 Git 정책을 확인합니다.
 
    ```sh
-   uv run devkit spec policy     # look at [GIT_POLICY: worktree=...]
+   uv run devkit spec policy     # [GIT_POLICY: worktree=...] 확인
    ```
 
    자세한 내용은 [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)를 참고하십시오.
@@ -106,11 +106,8 @@ translated_from: en/journeys/run-parallel-work-safely.md@a6203433bc403e5a
    uv run devkit spec scope collect --fetch origin
    ```
 
-   한 번의 수집은 생성 스냅샷·활동 ref·접근 가능한 워크트리의 선언과 변경을 함께 읽습니다. 활동 소스가 없는 초안은 제외합니다. `--fetch`는 설정된 원격 저장소를 먼저 갱신하며, 이 옵션이 없으면 원격 브랜치는 마지막 fetch 시점의 상태입니다. 출력에는 각
-   `[SCOPE_CANDIDATE: ...]`와 `[SCOPE_OBSERVATION: ...]`, `[PAIR: ...]`와 `[EVIDENCE: ...]` 줄, 그리고
-   `[SUMMARY: ... coverage=complete|partial ...]`가 표시됩니다. 수집은 기록, 토큰을 전혀 바꾸지 않습니다.
-6. **통합 순서 결정.** 범위 중첩, 각 관찰의 출처, 누락된 커버리지를 바탕으로 무엇을 계속 병렬로 진행할지 정합니다. 범위가 겹치는
-   작업들은 순차적으로 통합하십시오.
+   한 번의 수집은 생성 스냅샷·활동 ref·접근 가능한 워크트리의 선언과 변경을 함께 읽으며, 실제 관찰한 현재 쓰기와 Planning 제안이 선언한 미래 범위(`horizon`: `current` vs `future`)를 구분합니다. 활동 소스가 없는 초안은 제외합니다. `--fetch`는 설정된 원격 저장소를 먼저 갱신하며, 이 옵션이 없으면 원격 브랜치는 마지막 fetch 시점의 상태입니다. 출력에는 각 `[SCOPE_CANDIDATE: ...]`와 `[SCOPE_OBSERVATION: ...]`, `[PAIR: ...]`(`current`/`future` 개수 포함)와 `[EVIDENCE: ...]` 줄, 그리고 `current_overlapping`을 보고하는 `[SUMMARY: ... coverage=complete|partial ...]`가 표시됩니다. 수집은 기록이나 토큰을 전혀 바꾸지 않습니다.
+6. **작업 및 통합 순서 결정.** 범위 중첩, 중첩 시점(`horizon`: `current` vs `future`), 각 관찰의 출처, 누락된 커버리지를 바탕으로 무엇을 계속 병렬로 진행할지 판단합니다. 현재 겹치는 작업은 순차적으로 실행합니다(`current_overlapping`). 미래 범위만 겹치는 작업은 Planning을 병렬로 유지하되 핸드오프와 통합 순서를 차례대로 정할 수 있습니다.
 7. **작업 완료.** 통합 과정에서 워크트리가 제거되고, 완료 후속 정리 단계에서 해당 워크트리의 범위 기록이 삭제됩니다. 다른 작업의
    기록은 그대로 유지됩니다.
 
@@ -119,8 +116,8 @@ translated_from: en/journeys/run-parallel-work-safely.md@a6203433bc403e5a
 실제 코드 경로로 변환할 수 없는 입력 항목은 사유와 함께 미해결(unresolved) 상태로 집계됩니다(예: `entrypoints` 정보가 누락된 capability 대상의 경우 `reason=no-entrypoints`, 계획 단계에만 존재하는 문서, 면제된 대상, 실제 존재하지 않는 파일 등). unresolved 상태가 결코 "충돌이나 중첩이 없음"을 의미하지는 않습니다. 대상 capability 규격에 `entrypoints`를 충실히 기재해 둘수록 범위 대조 결과가 훨씬 정밀해집니다.
 
 `coverage=partial`과 `SPEC_SCOPE_COLLECTION_PARTIAL` 경고는 일부 소스, 기준(base), 식별 정보 또는 비교를 예산(budget) 안에서
-관찰하지 못했다는 뜻입니다. 수집된 증거는 그대로 사용할 수 있으며, 경고에는 누락된 소스마다 그 사유가 나옵니다. 계산되지 않은 쌍은
-결코 중첩 0으로 계산되지 않습니다.
+관찰하지 못했다는 뜻입니다. 수집된 증거는 그대로 사용할 수 있으며, 경고에는 누락된 소스마다 그 사유가 나옵니다. 알 수 없는 입력이나
+접근할 수 없는 소스로는 독립성을 판단할 수 없으며, 계산되지 않은 쌍은 결코 중첩 0으로 계산되지 않습니다.
 
 ## 문제가 생겼을 때
 
@@ -132,15 +129,8 @@ translated_from: en/journeys/run-parallel-work-safely.md@a6203433bc403e5a
   잘못되었습니다. 인자를 바로잡으십시오.
 - **다른 머신의 작업이 보이지 않는 경우:** 어떤 관찰도 다른 PC의 푸시되지 않았거나 커밋되지 않은 변경을 읽지 못합니다. 여러 PC에서
   자주 작업한다면 선언과 변경 사항을 푸시하고, 가능하면 풀 리퀘스트를 사용하여 수집으로 볼 수 있게 하십시오.
-- **워크트리가 삭제된 후에도 레지스트리 기록이 남아 있는 경우:** 워크트리 정리 단계가 실패했거나 `finish` 절차 없이 워크트리가 강제 삭제된 경우입니다. 기본 체크아웃에서 `uv run devkit spec scope sweep --apply`를 실행하십시오. 리비전 변동이 없는 유효하지 않은 기록은 안전하게 정리되며(`[SWEEP: <task> verdict=removed reason=worktree-missing ...]`), 리비전이 변경된 기록은 보존된 채 `SPEC_SCOPE_STALE_REVISION`으로 보고됩니다.
+- **워크트리가 삭제된 후에도 레지스트리 기록이 남아 있는 경우:** 워크트리 정리 단계가 실패했거나 `finish` 절차 없이 워크트리가 강제 삭제된 경우입니다. 리비전 변동이 없는 유효하지 않은 기록은 정리되고(`[SWEEP: <task> verdict=removed reason=worktree-missing ...]`) 리비전이 변경된 기록은 보존된 채 `SPEC_SCOPE_STALE_REVISION`으로 보고되므로, 기본 체크아웃에서 `uv run devkit spec scope sweep --apply`를 실행하십시오.
 
 ## 최종 결과
 
 각 작업 쌍이 공유하는 문서와 코드 경로, 각 관찰의 출처, 그리고 누락된 커버리지가 얼마나 되는지 명확히 파악할 수 있습니다. 어떤 작업도 차단되거나 추가 기록 부담을 지지 않으며, 완료된 작업은 잔여 기록을 남기지 않습니다. 범위 중첩 증거는 선언된 명세와 Git의 관찰 결과를 종합한 분석일 뿐, 실제 Git 병합 충돌이나 완벽한 독립성을 단정하는 것은 아닙니다.
-
-## 일정 전에 겹침의 시점 읽기
-
-`scope collect`는 실제 관찰한 현재 쓰기와 Planning 제안이 선언한 미래 범위를 구분합니다.
-현재 범위가 겹치면 직렬화합니다. 미래만 겹치면 Planning은 병행하고 handoff·통합 순서를 정할 수 있습니다.
-`horizon`, 쌍별 `current`·`future` 개수, `current_overlapping`을 부분 관찰 근거와 함께 읽습니다.
-알 수 없는 입력이나 접근할 수 없는 소스로 독립성을 판단하지 않습니다.

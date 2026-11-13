@@ -11,7 +11,7 @@ title: Handle delivery problems and exceptions
 # Handle delivery problems and exceptions
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -171,7 +171,3 @@ opened to get around the cap.
 Whatever happens, an unresolved problem keeps the base clean: the failed range, the open findings and the attempted
 remedies stay in Git, and nothing is deleted without your decision. Areas: [Delivery](../areas/delivery.md),
 [Worktree](../areas/worktree.md).
-
-## Working with this release
-
-Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

@@ -10,7 +10,7 @@ title: Reconcile Living Spec drift
 # Reconcile Living Spec drift
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -133,16 +133,5 @@ The report is ordinary Markdown under the owning unit's `materials/`, or the rep
 
 A report you can audit: every finding with evidence and your decision, applied corrections with their verification,
 and explicit gaps. The report authorizes nothing by itself, a passing check is never presented as semantic
-consistency, and a batch is never presented as the whole repository.
-
-## Optional history stays separate
-
-The default local report and completion procedure work without maintenance history.
-Only an explicit companion-history request starts capture; command installation and this playbook's invocation
-start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
-later integration changes append amendments rather than rewrite the published report.
-See [Record a maintenance run](record-a-maintenance-run.md).
-
-## Working with this release
-
-Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.
+consistency, and a batch is never presented as the whole repository. Optional maintenance history stays separate and
+runs only on an explicit companion-history request (see [Record a maintenance run](record-a-maintenance-run.md)).

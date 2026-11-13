@@ -5,13 +5,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-resolve-stale-activity-branches: null
 title: 오래된 활동 브랜치 정리하기
-translated_from: en/journeys/resolve-stale-activity-branches.md@ee1c767a2e4593aa
+translated_from: en/journeys/resolve-stale-activity-branches.md@f8ea6f0e62893897
 ---
 
 # 오래된 활동 브랜치 정리하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -88,7 +88,7 @@ translated_from: en/journeys/resolve-stale-activity-branches.md@ee1c767a2e4593aa
 
    ```sh
    uv run devkit worktree status --stale
-   uv run devkit rules check -p hygiene     # same warnings, via the worktree-stale extension
+   uv run devkit rules check -p hygiene     # worktree-stale 확장을 통해 동일한 경고 출력
    ```
 
    `feedback-hygiene` 플레이북을 통해서도 실행할 수 있습니다. 위생 확장 검사는 `hygiene` 페이즈에 속합니다
@@ -122,23 +122,19 @@ translated_from: en/journeys/resolve-stale-activity-branches.md@ee1c767a2e4593aa
 
 ## 문제가 생겼을 때
 
-- **커밋 게이트나 CI 실행 중에 경고가 나타나지 않는 경우:** 이는 의도된 동작입니다. 커밋 게이트, CI, 대상을 직접 지정한 규칙 실행은 `linter` 페이즈만 사용하므로 브랜치 유휴 상태를 검사하지 않습니다. 워크스페이스 전체에 대해 위생 검사를 실행하십시오.
-- **`WORKTREE_CONFIG_INVALID` 오류가 발생하는 경우:** `stale_after` 설정값이 `<N>d` 또는 `<N>w` 형식이 아닙니다(예: `"2 weeks"`). 보고서 생성이 거부되며, 위생 검사 실행 시 전체 프로세스를 실패시키지는 않고 해당 확장이 `HYGIENE_EXTENSION_FAILED`로 표시됩니다. 설정값을 올바른 형식으로 수정하십시오.
-- **`WORKTREE_STALE_SKIPPED` 알림 및 `checked=no`가 나타나는 경우:** `gh` CLI가 설치되어 있지 않거나 인증이 만료되어 브랜치 상태를 검사하지 못했습니다. 로그인 후 다시 실행하십시오. 이는 치명적인 실패가 아닙니다.
+- **커밋 게이트나 CI 실행 중에 경고가 나타나지 않는 경우:** 이는 의도된 동작입니다. 커밋 게이트, CI, 대상을 직접 지정한 규칙 실행은 `linter` 페이즈만 사용하므로 브랜치 유휴 상태를 검사하지 않습니다. 워크스페이스 전체에 대해 위생 검사를 실행해야 합니다.
+- **`WORKTREE_CONFIG_INVALID` 오류가 발생하는 경우:** `stale_after` 설정값이 `<N>d` 또는 `<N>w` 형식이 아닙니다(예: `"2 weeks"`). 보고서 생성이 거부되며, 위생 검사 실행 시 전체 프로세스를 실패시키지는 않고 해당 확장이 `HYGIENE_EXTENSION_FAILED`로 표시됩니다. 설정값을 올바른 형식으로 수정해야 합니다.
+- **`WORKTREE_STALE_SKIPPED` 알림 및 `checked=no`가 나타나는 경우:** `gh` CLI가 설치되어 있지 않거나 인증이 만료되어 브랜치 상태를 검사하지 못했습니다. 이는 치명적인 실패가 아니므로 로그인한 뒤 다시 실행해야 합니다.
 - **`pr=unknown`이 나타나는 경우:** `gh pr list` 실행에 실패하여 PR 상태를 제외하고 최종 커밋 시점만을 기준으로 브랜치를 판정했습니다.
   GitHub 원격 저장소가 있는 저장소에서는 `WORKTREE_STALE_PR_UNKNOWN` 알림도 표시되며, GitHub 원격이 없어 조회가 매번 실패하는
   저장소에서는 로그에만 남깁니다.
-- **기본 브랜치에 머지된 승인 제안이 걸려 있는 브랜치인 경우:** 이 브랜치를 폐기하는 것은 작업 종료(close) 절차에 해당합니다. 대체(supersede)할지 폐기(abandon)할지 사용자가 결정하면, 에이전트가 종료 작업(폐기의 경우 기각 ADR 작성 및 승인 제안 삭제)을 Backlog 작업으로서 기본 브랜치에 먼저 커밋한 후 브랜치를 폐기합니다
+- **기본 브랜치에 아직 남아 있는 수락된 제안이 있는 브랜치인 경우:** 이 브랜치를 폐기하는 것은 작업 종료(close) 절차에 해당합니다. 대체(supersede)할지 중단(abandon)할지 사용자가 결정하면, 에이전트가 종료 작업(중단의 경우 반려된 ADR 작성 및 수락된 제안 삭제)을 Backlog 작업으로서 기본 브랜치에 먼저 커밋한 후 브랜치를 폐기합니다
   ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
 - **원격 저장소에만 존재하는 브랜치인 경우:** `[FIX]` 지시문에 로컬 폐기 명령 없이 `git -C <base> push origin --delete dev-<slug>` 명령만 제시됩니다. 원격 브랜치가 삭제되면 모든 정리가 완료됩니다.
-- **`WORKTREE_DIRTY` 오류가 발생하는 경우:** 해당 작업 워크트리에 커밋되지 않았거나 추적되지 않는 변경 사항이 남아 있습니다. devkit은 어떤 변경도 하기 전에 이를 확인하며, 워크트리를 강제로 삭제하지 않습니다. 변경 사항을 어떻게 처리할지 결정한 뒤 다시 실행하십시오.
-- **`WORKTREE_BASE_ON_BRANCH` 오류가 발생하는 경우:** 해당 브랜치가 `--no-worktree` 옵션으로 시작되었으며, 기본 체크아웃이 여전히 그 브랜치에 머물러 있습니다. 안내되는 `[FIX]` 지시문에 따라 기본 체크아웃을 원래 시작 브랜치로 전환한 후 다시 실행하십시오.
+- **`WORKTREE_DIRTY` 오류가 발생하는 경우:** 해당 작업 워크트리에 커밋되지 않았거나 추적되지 않는 변경 사항이 남아 있습니다. devkit은 어떤 변경도 하기 전에 이를 확인하며, 워크트리를 강제로 삭제하지 않습니다. 변경 사항을 어떻게 처리할지 결정한 뒤 다시 실행해야 합니다.
+- **`WORKTREE_BASE_ON_BRANCH` 오류가 발생하는 경우:** 해당 브랜치가 `--no-worktree` 옵션으로 시작되었으며, 기본 체크아웃이 여전히 그 브랜치에 머물러 있습니다. 안내되는 `[FIX]` 지시문에 따라 기본 체크아웃을 원래 시작 브랜치로 전환한 후 다시 실행해야 합니다.
 - **`WORKTREE_LOCKED` 오류가 발생하는 경우:** 워크트리가 잠겨 있는 상태입니다. 안내되는 `[FIX]`는 `git worktree unlock <path>`이며, 사용자가 명시적으로 동의한 경우에만 실행합니다.
 
 ## 최종 결과
 
 정리하기로 결정한 브랜치는 관련 작업 단위(유닛)를 안전하게 유지한 채 작업 워크트리에서 재개되거나, 연결된 PR, 원격 브랜치, 워크트리와 함께 완전히 정리됩니다. 유지를 선택한 브랜치는 변경 없이 그대로 남습니다. 정리가 거부된 경우에는 어떠한 파일이나 브랜치도 삭제되지 않습니다.
-
-## 이 릴리스의 작업 방식
-
-규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

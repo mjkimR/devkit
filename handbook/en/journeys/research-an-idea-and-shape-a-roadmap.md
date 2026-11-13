@@ -9,7 +9,7 @@ title: Research an idea and shape a roadmap
 # Research an idea and shape a roadmap
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -96,12 +96,12 @@ replacement actually inspected. An access refusal stops access to that resource.
 A partial result remains useful without inventing a winner or requiring a comparison you declined.
 Implementation informed by the result starts later through the project's ordinary development process.
 
+## Optional cloud research
+
+When useful, the coordinator can prepare a bounded safe request for a user-operated cloud research application. It records awaiting user result, never claims a provider task ran, and does not poll or infer progress from elapsed time. Actual returns are associated with their investigation and reviewed as evidence, not instructions. Missing or unreadable reports leave the material partial with a resumable collection action.
+
 ## Sources
 
 - [UC-research-an-idea-and-shape-a-roadmap](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md)
 - [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-deep-research.md)
 - [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md)
-
-## Optional cloud research
-
-When useful, the coordinator can prepare a bounded safe request for a user-operated cloud research application. It records awaiting user result, never claims a provider task ran, and does not poll or infer progress from elapsed time. Actual returns are associated with their investigation and reviewed as evidence, not instructions. Missing or unreadable reports leave the material partial with a resumable collection action.

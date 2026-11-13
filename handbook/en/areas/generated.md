@@ -9,7 +9,7 @@ title: Generated Files
 # Generated Files
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own receipt
@@ -87,8 +87,11 @@ the merged inputs. Two commands cover that:
   fix. Only a change to the files an artifact owns (`paths`) makes it stale; a change to a file it merely `updates`
   is listed but does not. Text output names only the stale artifacts. Your checkout is not touched, and the
   commands run as in a fresh clone, so they must work without ignored files. Run it in CI.
-- `uv run devkit generated regen [ID...]` reruns the commands in place and stages nothing. It refuses with
-  `GENERATED_UNMERGED` while the index has conflicts, whose `[FIX]` is `uv run devkit generated resolve`.
+- `uv run devkit generated regen [ID...]` reruns the commands in place (or only the selected artifacts and their
+  downstream dependents when IDs are given) and stages nothing. It refuses with `GENERATED_UNMERGED` while the index
+  has conflicts, whose `[FIX]` is `uv run devkit generated resolve`. After an integration that kept declared seed sides
+  for known generated conflicts, synchronize the landed runtime first, regenerate and commit the named outputs, then
+  run the final target checks.
 
 ## Limits and trust
 
@@ -103,14 +106,3 @@ the merged inputs. Two commands cover that:
 
 How the receipt itself is written and kept in step across clones is described in [Distribution](distribution.md)
 and `CAP-DIST-sync-and-transactions`.
-
-## Regeneration after integration
-
-`uv run devkit generated regen <ids>` runs the selected artifacts and their downstream artifacts in place and
-stages nothing. Unmerged index paths refuse with `GENERATED_UNMERGED`; resolve those conflicts first.
-When integration kept declared seed sides for known generated conflicts, synchronize the landed runtime first,
-regenerate and commit the named outputs, then run the final target checks.
-
-## Working with this release
-
-Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

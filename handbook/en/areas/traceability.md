@@ -11,7 +11,7 @@ title: Traceability
 # Traceability
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Traceability links Living Spec documents to code. A capability or use case can declare `entrypoints`: the files
@@ -107,7 +107,7 @@ How to use it well:
 Use `--all` with `--min-count` to backfill older documents: a pair produced by several specs is a stronger
 candidate. Error codes and the full option list are in the contract.
 
-## Keep generated paths out of derived entrypoints
+### Keep generated paths out of derived entrypoints
 
 Derivation skips `.devkit/managed/`, `.devkit/installation.json` and receipt-owned outputs, even when a task boundary
 names them. Fully managed directories are excluded; mixed directories, ignored authored code and project-owned seeded

@@ -11,7 +11,7 @@ translated_from: en/areas/cli.md@153477c549b54a7b
 # 에이전트 우선 CLI 도구 키트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -105,7 +105,7 @@ def scan(output_format: str) -> None:
         echo_notices(notices)
 ```
 
-나머지 입출력 제어는 경계(boundary)가 자동으로 처리합니다.
+나머지 입출력 제어는 경계(`Boundary`)가 자동으로 처리합니다.
 
 - 명령어가 발생시킨(raise) `ERROR` 어드바이저리는 1회 서식화되어 출력되며 적절한 종료 코드를 설정합니다. JSON 모드에서는
   stdout에 `{"error": {...}}` 형태로 출력되고 stderr에는 아무것도 출력되지 않습니다.
@@ -114,7 +114,7 @@ def scan(output_format: str) -> None:
 - CLI 플래그가 환경 변수 설정보다 항상 우선합니다. 환경 변수 값은 정확히 `1`일 때만 활성화된 것으로 간주하며, `-q`와 `-v`를
   동시에 지정하면 `ARGUMENT_INVALID` 오류가 발생합니다.
 - 인자의 의미론적 유효성 검사(semantic check) 실패 시에는 `devkit.advisory.ArgumentError`를 발생시킵니다.
-- 항상 JSON만 출력하는 명령어는 `FORMAT_OPTION` 대신 `@boundary(json_only=True)`를 사용합니다. 이때 바운더리는 `--format json`을
+- 항상 JSON만 출력하는 명령어는 `FORMAT_OPTION` 대신 `@boundary(json_only=True)`를 사용합니다. 이때 경계는 `--format json`을
   아무 동작도 하지 않는 옵션으로 받아 주므로, 에이전트는 모든 명령어에 이 옵션을 붙일 수 있습니다.
 
 `echo_json`은 압축된 JSON(들여쓰기 없음, 구분자 뒤 공백 없음)을 출력합니다. 모든 바이트가 에이전트의 컨텍스트로 들어가기
@@ -137,9 +137,9 @@ def scan(output_format: str) -> None:
 | --- | --- |
 | `RULE-cli-tool-layout` | 모듈을 평면적인 패키지 구조가 아니라 기능별 레이아웃(`features/<feature>/cli`, `usecases`, `services`, `repositories`, `models` 등)에 배치하도록 강제합니다 |
 | `RULE-cli-tool-layers` | CLI 모듈만 `click`이나 `devkit_cli`를 임포트할 수 있고, 기능 계층은 동급 이하의 레이어만 임포트하며, 루트 `cli`는 지연 임포트(lazy)를 유지하도록 합니다 |
-| `RULE-cli-tool-command-boundary` | 모든 click 명령어에 boundary 데코레이터를 적용하도록 합니다 |
+| `RULE-cli-tool-command-boundary` | 모든 click 명령어에 경계(`boundary`) 데코레이터를 적용하도록 합니다 |
 | `RULE-cli-tool-library-output` | CLI 모듈 외에서는 `print`나 `click.echo`, `sys.stdout.write`를 통한 직접 출력을 금지합니다 |
-| `RULE-cli-tool-heavy-imports` | CLI 모듈이 초기 임포트 시점에 무거운 모듈을 로드하지 않도록 제한합니다 |
+| `RULE-cli-tool-heavy-imports` | CLI 모듈이 임포트 시점에 무거운 모듈을 로드하지 않도록 제한합니다 |
 
 각 규칙은 `include`와 `exclude` 경로 패턴을 인자로 받으며, 세부 설정 옵션은 규칙별 가이드에 문서화되어 있습니다
 (`devkit rules explain RULE-cli-tool-layers`). 다른 거버넌스 규칙과 마찬가지로 `.devkit/config.toml`의 `[rules]` 테이블에서
@@ -154,7 +154,7 @@ def scan(output_format: str) -> None:
 ## 출처
 
 - [CAP-CLI-agent-cli-toolkit](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md) (영어 원문):
-  boundary 데코레이터, 헬퍼 유틸리티, 테스트 도구 및 `cli-tool` 거버넌스 규칙 규격.
+  경계(`Boundary`), 헬퍼 유틸리티, 테스트 도구 및 `cli-tool` 거버넌스 규칙 규격.
 - [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-1-agent-output.md) (영어 원문):
   툴킷이 구현하는 에이전트 우선 출력 계약.
 - [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):

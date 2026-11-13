@@ -3,13 +3,13 @@ sources:
   CAP-GATE-commit-gates: null
   UC-keep-the-living-spec-consistent: null
 title: 커밋 게이트
-translated_from: en/areas/gate.md@663ddf31700dedc0
+translated_from: en/areas/gate.md@93200807f6a65fcd
 ---
 
 # 커밋 게이트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -140,7 +140,8 @@ commands = ["just lint-check", "just check"]
 - `BLOCKED`(종료 코드 `1`): 커밋하는 쪽이 우회해서는 안 되는 정책에 따라 게이트가 거부했습니다. 상황을 보고하십시오. 정책
   자체를 수정할지 여부는 사용자가 결정해야 합니다. `--strict`(`DEVKIT_STRICT=1`)에서는 게이트 경고를 보고한 단계도 이 종류의
   `GATE_STRICT_WARNINGS` 블록으로 끝납니다. 다만 경고 심각도의 규칙 위반(`GATE_RULES_WARNINGS`)은 세지 않습니다. 커밋 거부
-  여부는 규칙의 심각도가 정하기 때문입니다.
+  여부는 규칙의 심각도가 정하기 때문입니다. 마찬가지로 `notice` 심각도의 규칙은 참고용 어드바이저리로만 동작하며 `--strict`에서도
+  커밋을 차단하지 않습니다([거버넌스 규칙](governance.md) 참고).
 - `AUTO`(종료 코드 `2`): 게이트가 정상 판정을 내릴 수 없는 상태이며, 단일 조치로 자동 해결할 수 있습니다. 주로 새 워크트리나
   클론에서 관리 대상 규칙 파일이 누락되어 발생하며, `devkit sync`를 실행하면 해결됩니다(`RULES_RUN_FAILED`, `GATE_VERIFY_NOT_RUN`).
 - 환경 설정 오류(종료 코드 `2`): 게이트 설정 자체가 잘못된 상태이며, 오류 메시지의 `[FIX]` 항목에 복구 방법이 안내됩니다. 예를 들어
@@ -193,14 +194,10 @@ assets = ["staged-file-limit"]
 한 단계 안에서 여러 게이트가 실행될 때는 `order` 순으로 정렬되고, 동일한 경우 `id` 순으로 실행됩니다. 메시지 변환 게이트는
 `100` 미만, 일반 검증 게이트는 `100`, 최종 메시지를 검사하는 `message-nonempty`는 `900`의 우선순위를 갖습니다.
 
-## 관련 자료
+## 출처
 
 - [CAP-GATE-commit-gates](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문):
   훅 래퍼, 내장 게이트, 게이트 인터페이스 규약, 배포 및 설정 계층.
 - [Gate reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/gate.md) (영어 원문): 명령어, 종료 코드 및
   오류 코드 레퍼런스.
 - 커밋 게이트는 [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md) 여정의 일상적인 개발 루프에 포함되어 있습니다.
-
-## 이 릴리스의 작업 방식
-
-규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

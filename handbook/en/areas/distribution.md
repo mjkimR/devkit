@@ -16,7 +16,7 @@ title: Distribution
 # Distribution
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -108,8 +108,11 @@ Things worth knowing when you choose:
   `<bundle> = false`.
 - Every sync lists installed but unselected bundles under `unselected`; a `BUNDLE_UNSELECTED` notice announces a
   new one once per clone.
-- Upgrade with `uv lock --upgrade-package <package>` and then `uv run devkit sync`. Removal is always explicit: a
-  deployed bundle whose package disappeared fails the sync (`SELECTION_INVALID`) instead of deleting committed files.
+- Upgrade with `uv lock --upgrade-package <package>` and then `uv run devkit sync`. A release inventory records each
+  package's actual version and original wheel URL and checksum: changed packages and their exact-pin dependents take
+  the release version while unchanged packages keep their published versions, so install from the selected inventory
+  rather than deriving every URL from the newest tag. Removal is always explicit: a deployed bundle whose package
+  disappeared fails the sync (`SELECTION_INVALID`) instead of deleting committed files.
 
 The built-in bundles (`devkit`, `advisory`, `git-commits`, `harness`, `authoring`) and the opt-in
 `response-style` and `maintenance` bundles of `devkit-catalog` are listed in
@@ -144,11 +147,12 @@ The receipt, the guidance block and seeded files are shared through Git; the man
   ignored copies to what the committed receipt records. If the receipt itself would change, it writes nothing and
   exits `1` with `RECEIPT_STALE`: someone changed a bundle source, the lock or the selection without committing the
   receipt. Run a plain `uv run devkit sync` and commit the result; an agent does not retry it away.
-- `uv run devkit sync --check` is the read-only "is anything pending?" check: when a sync is needed it exits `1`
+- `uv run devkit sync --check` is the read-only readiness check against desired state: when a sync is needed it exits `1`
   with `NOT_SYNCHRONIZED`, whose fix is `uv run devkit sync`. `--dry-run` shows the planned actions, including what
   post-sync extensions such as the commit-gate hooks would change.
-- `uv run devkit status` reports the installed state, errors and drift. Installed packages can add read-only checks
-  to it; with `devkit-agt` it also warns about broken commit-gate hooks ([Commit gates](gate.md)).
+- `uv run devkit status` diagnoses installed state against the receipt (and cannot replace `sync --check`), reporting
+  errors and drift. Installed packages can add read-only checks to it; with `devkit-agt` it also warns about broken
+  commit-gate hooks ([Commit gates](gate.md)).
 
 ## When a sync stops
 
@@ -163,6 +167,10 @@ leaves a half-written workspace.
 | `SYNC_CONFLICT` | an unowned or user-edited file is in the way | move the file, or turn your edit into an override |
 | `WORKSPACE_UNSAFE` | a symlink or file stands where devkit writes | move it out of the way |
 | `HARNESS_ENGINE_MISSING` | rule, gate or workflow assets deployed without `devkit-agt` | add `devkit-agt` if you want them run |
+
+Sync warns about untracked native projections without ignore coverage (`PROJECTION_NOT_IGNORED`) and tracked
+projections (`PROJECTION_TRACKED`), giving exact repair advice without editing root ignore files or the Git index.
+`PROJECTION_GIT_CHECK_FAILED` reports unavailable Git diagnostics without aborting an otherwise successful sync.
 
 The full transaction steps, the notice list and post-sync extensions are in
 [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md).
@@ -196,11 +204,15 @@ Startup files stay small; guidance is loaded in stages
   guidance pointers.
 - `uv run devkit get-context <bundle>` returns a bundle's constitution, the headers of its instructions and, when
   the bundle declares a context document directory, the title and summary of each project file in it (the `docs`
-  bundle lists `docs/steering/` this way). Every deployed skill carries a prerequisite telling the agent to run it
-  once per bundle per agent context.
+  bundle lists `docs/steering/` this way; `uv run devkit get-context docs --for <directory>` adds the registered
+  namespace selected by an existing project directory, with `documents_elsewhere` pointing to other namespace steering
+  directories, while instruction bodies stay on-demand reads). Automatic context loading applies only to bundles with at
+  least one of those sources; explicit `get-context` inspection remains available for bundles without them. Every
+  deployed skill carries a prerequisite telling the agent to load context once per bundle per agent context.
 - Playbooks are occasional procedures that `get-context` never lists. You invoke the generated `devkit-playbook`
   skill explicitly; it runs `uv run devkit playbook search "<query>"` and reads the chosen body.
-  `uv run devkit playbook get <bundle>/<playbook>` returns one playbook exactly, by asset ID or declared alias.
+  `uv run devkit playbook get <bundle>/<playbook>` returns one playbook exactly, by asset ID or declared alias, and
+  reports `context.required`; when true, load that bundle's context once per agent context and again after context loss.
 
 Ordinary task wording never starts a playbook. An entry skill such as `spec` may offer one candidate at intake, and
 your confirmation is the explicit invocation; see [Route development intent](../journeys/route-development-intent.md)
@@ -218,8 +230,9 @@ matrix and the role-contract format are in
 [CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-agent-projections.md).
 
 By default a role contract runs on whatever model and effort the host would give it. To choose, set a subagent
-model level: `inherit`, `minimal`, `compact`, `standard`, `deep` or `maximal`, each mapped to a native model and
-effort per agent. A contract may name its own level (devkit's `scout` asks for `compact`); the project decides in
+model level: `inherit`, `minimal`, `lean`, `compact`, `standard`, `deep` or `maximal`, each mapped to a native model and
+effort per agent (`lean` maps to Sonnet/medium on Claude Code, `gpt-6.1-terra`/medium on Codex and Flash without an
+effort override on Antigravity). A contract may name its own level (devkit's `scout` asks for `compact`); the project decides in
 the tracked `[subagents]` table, with `default_level`, per-host `levels` remappings and per-role `roles` overrides:
 
 ```toml
@@ -229,8 +242,8 @@ default_level = "inherit"
 level = "standard"
 ```
 
-Run `uv run devkit sync` after changing it. A level is a resource preset, not a quality guarantee: the host and
-your account still decide what actually runs.
+Run `uv run devkit sync` after changing it. A level is a resource preset, not a quality guarantee or authority grant, and
+it does not set delivery activity-effort: the host and your account still decide what actually runs.
 
 ## Personal preferences in one checkout
 
@@ -271,6 +284,9 @@ Edit its sources, run `uv run devkit sync`, and commit the source change togethe
 receipt fails Git snapshot gates, so rule edits always travel with their receipt. The layout, the `pyproject.toml`
 and the decision table for overrides versus in-repository bundles are in
 [CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md).
+To preserve a complete supported content provider locally without private-origin access, see
+[Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md) for `devkit bundle snapshot` and
+`devkit bundle refresh` (keeping consumer adaptations in project overrides).
 
 ## Capabilities in this area
 
@@ -283,28 +299,3 @@ and the decision table for overrides versus in-repository bundles are in
 | `CAP-DIST-agent-projections` | per-agent destinations, invocation settings, role contracts, subagent model levels |
 | `CAP-DIST-context-and-playbooks` | `get-context`, playbook search and exact retrieval |
 | `CAP-DIST-in-repo-bundles` | packaging a repository's own assets |
-
-## Namespace context and projection diagnostics
-
-`uv run devkit get-context docs --for <directory>` lists root steering documents plus the registered namespace
-selected by that directory; `documents_elsewhere` points to other namespace steering directories.
-The directory has to exist inside the project. Instruction bodies remain on-demand reads.
-
-Subagent levels include `lean`: Sonnet/medium on Claude Code, gpt-6.1-terra/medium on Codex and Flash without an
-effort override on Antigravity. These resource mappings confer no authority and do not set delivery activity-effort.
-
-Sync warns about untracked native projections without ignore coverage (`PROJECTION_NOT_IGNORED`) and tracked
-projections (`PROJECTION_TRACKED`). It gives exact repair advice but edits neither root ignore files nor the Git index.
-`PROJECTION_GIT_CHECK_FAILED` reports unavailable diagnostics without aborting an otherwise successful sync.
-
-## Release inventories and local source snapshots
-
-A release inventory records each package's actual version and original wheel URL and checksum. Changed payloads and their exact-pin dependents take the release version; unchanged packages keep their published identities. Install from the complete selected inventory rather than deriving every URL from its newest tag.
-
-[Bundle source snapshots](../journeys/snapshot-bundle-sources.md) preserve complete supported content providers in committed local packages with explicit reviewed refresh. Project overrides hold consumer adaptations.
-
-`devkit sync --check` is the readiness check against desired state. `devkit status` diagnoses installed state against the receipt and cannot replace it.
-
-## Working with this release
-
-Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.

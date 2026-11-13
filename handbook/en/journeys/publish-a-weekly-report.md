@@ -10,7 +10,7 @@ title: Publish a weekly report
 # Publish a weekly report
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -135,12 +135,5 @@ explicit authority for a destination you chose.
 
 Either a `published` record whose receipt you can check, or a clear `pending`, `failed` or `unknown` state with every
 attempt preserved. The report bytes and its generation outcome never change, nothing is replaced without authority
-naming it, and an `unknown` publication is never retried blindly.
-
-## Optional history stays separate
-
-The default local report and completion procedure work without maintenance history.
-Only an explicit companion-history request starts capture; command installation and this playbook's invocation
-start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
-later integration changes append amendments rather than rewrite the published report.
-See [Record a maintenance run](record-a-maintenance-run.md).
+naming it, and an `unknown` publication is never retried blindly. Optional maintenance history stays separate and runs
+only on an explicit companion-history request (see [Record a maintenance run](record-a-maintenance-run.md)).

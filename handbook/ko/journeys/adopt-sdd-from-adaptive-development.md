@@ -10,7 +10,7 @@ translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54
 # 적응형 개발에서 SDD 도입하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -66,7 +66,7 @@ translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54
 - [용어집](../glossary.md)
 <!-- /handbook:generated -->
 
-적응형 개발한 제품은 쓸모가 있는 한 계속 적응형 개발 상태로 둘 수 있습니다. 남겨 둘 부분을 앞으로 스펙 주도 개발(SDD)로 바꾸기로 했다면, `sdd-baseline` 플레이북이 이를 정직하게 진행합니다. 에이전트는 유지할 제품을 구현, 현재 문서, 실제로 실행된 검사와 대조하고, 문서를 고친 뒤, 사용자가 정확한 효과를 승인한 후에만 개발 방식을 전환합니다. 지난 실험에 대한 소급 제안, 스펙 유닛, 결정은 만들어 내지 않습니다.
+적응형 개발로 발전시킨 제품은 쓸모가 있는 한 계속 적응형 개발 상태로 둘 수 있습니다. 남겨 둘 부분을 앞으로 스펙 주도 개발(SDD)로 바꾸기로 했다면, `sdd-baseline` 플레이북이 이를 사실에 기반하여 진행합니다. 에이전트는 유지할 제품을 구현, 현재 문서, 실제로 실행된 검사와 대조하고, 문서를 고친 뒤, 사용자가 정확한 효과를 승인한 후에만 개발 방식을 전환합니다. 지난 실험에 대한 소급 제안, 스펙 유닛, 결정은 만들어 내지 않습니다.
 
 출처: [`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md) (영어 원문),
 계약 [`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문),
@@ -75,7 +75,7 @@ translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54
 
 ## 시작하기 전에
 
-- 저장소의 개발 방식(development approach)이 `adaptive-dev`입니다([아이디어 발전시키기](advance-an-idea.md)). 이미 `sdd`라면 전환할 것이 없으며, 드리프트는 [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)로 다룹니다.
+- 저장소의 개발 방식(development approach)이 `adaptive-dev`여야 합니다([아이디어 발전시키기](advance-an-idea.md)). 이미 `sdd`라면 전환할 것이 없으며, 드리프트는 [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)로 다룹니다.
 - 유지할 동작, 흐름, 구조, 선택과 제외할 것을 말할 수 있어야 합니다.
 - 에이전트가 저장소의 빌드, 린트, 테스트, 사용 점검을 실행할 수 있어야 합니다.
 - 저절로 시작되는 것은 없습니다. 제품 크기, 경과 시간, 실험 횟수는 도입을 일으키지 않으며, 사용자가 플레이북을 호출하거나 제안될 때 확인해야 합니다.
@@ -83,22 +83,22 @@ translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54
 ## 단계별 진행
 
 1. **전환 없이 시작.** 에이전트가 절차를 로드합니다(`uv run devkit playbook get spec/sdd-baseline` 또는 `/devkit-playbook`). 준비하는 동안 개발 방식은 계속 `adaptive-dev`입니다. `devkit-spec`이나 그 자산이 없으면 설치와 `uv run devkit add spec`의 효과를 제시합니다. 설치는 도입을 준비할 뿐, 활성화하거나 무언가를 입증하지 않습니다.
-2. **범위 확정.** 저장소, 정확한 `HEAD`, 관련 수정 경로, `uv run devkit config show`에서 본 적용 중인 개발 방식을 기록하고, `.devkit/adaptive-dev.md`와 현재 문서를 입력으로 읽은 뒤, 유지할 항목과 제외할 항목을 사용자와 합의합니다.
-3. **대조.** 유지할 항목마다 구현, 현재 문서(또는 없는 문서가 들어갈 곳), 증거를 연결하고 `verified`, `gap`, `excluded`로 표시합니다. 제외된 항목은 검증된 것으로 세지 않습니다. 범위가 필요로 하는 기능 명세, 유스케이스, 아키텍처, 결정 문서, 실행 지침만 쓰거나 고치며, 현재의 선택과 알려진 이유를 지난 대안을 지어내지 않고 적습니다.
+2. **범위 확정.** 저장소, 정확한 `HEAD`, 관련 수정 경로, `uv run devkit config show`에서 확인한 적용 중인 개발 방식을 기록하고, `.devkit/adaptive-dev.md`와 현재 문서를 입력으로 읽은 뒤, 유지할 항목과 제외할 항목을 사용자와 합의합니다.
+3. **대조.** 유지할 항목마다 구현, 현재 문서(또는 없는 문서가 들어갈 곳), 증거를 연결하고 `verified`, `gap`, `excluded`로 표시합니다. 제외된 항목은 검증된 것으로 세지 않습니다. 범위가 필요로 하는 기능 명세, 유스케이스, 아키텍처, 결정 문서, 실행 지침만 쓰거나 고치며, 과거 대안을 지어내지 않고 현재의 선택과 알려진 이유만 적습니다.
 4. **검사 실행.** 해당 프로젝트 명령을 실행하고 대표 사용자 흐름을 직접 실행하며, 명령, 소스 식별 정보, 환경, 결과를 기록합니다. 문서 형식 검사의 통과는 그것이 검사한 조건만 입증할 뿐, 제품이 준비되었다는 뜻이 아닙니다.
 5. **준비 상태 제시.** 공백이 남지 않으면 보고서, 유지 범위, 검사 결과, 정확한 활성화 효과를 제시합니다: `.devkit/config.toml`의 `[development] approach = "sdd"`, 통합 제공자 선택은 필요 없습니다. 다른 설정은 사용자가 변경을 승인하지 않는 한 유지됩니다.
 6. **사용자 결정.** 사용자가 같은 소스와 범위에 대해 바로 그 효과를 승인하거나, 에이전트가 정확히 그 효과에 대해 이미 받은 명시적 결정을 재사용합니다.
 7. **활성화와 확인.** 에이전트가 공유 설정을 편집하고 `uv run devkit sync`, `uv run devkit config show`, `uv run devkit spec policy`, `uv run devkit sync --check`를 실행해 관찰된 최종 상태를 기록합니다. 다음에 요청하는 변경은 [개발 요청 라우팅하기](route-development-intent.md)를 따르며, 기준선 자체는 유닛이나 엔벨로프를 남기지 않습니다.
 
-보고서의 기본 위치는 `docs/materials/<YYYY-MM>/<YYYYMMDD>-sdd-baseline/report.md`(또는 저장소의 일반 증거 위치)입니다. 워크플로 연결이나 상태가 없는 일반 자료입니다.
+보고서의 기본 위치는 `docs/materials/<YYYY-MM>/<YYYYMMDD>-sdd-baseline/report.md`(또는 저장소의 일반 증거 위치)입니다. 워크플로 바인딩이나 상태 값이 없는 일반 자료입니다.
 
 ## 문제가 생겼을 때
 
 - **요청한 적이 없는 경우:** 일반 적응형 개발이 계속되며, 이 여정은 시작되지 않습니다.
-- **검사가 없거나 실패했거나 건너뛰었거나, 문서가 코드와 다른 경우:** 공백을 기록하고 사용자가 고릅니다: 문서 수정, 동작 수정의 별도 승인, 유지 범위 축소, 또는 도입을 미루고 적응형 개발에 머무르기. 필요한 항목을 면제해서 준비 상태로 만들지는 않습니다.
+- **검사가 없거나 실패했거나 건너뛰었거나, 문서가 코드와 다른 경우:** 공백을 기록하고 사용자가 다음 중 하나를 선택합니다: 문서 수정, 동작 수정의 별도 승인, 유지 범위 축소, 또는 도입을 미루고 적응형 개발에 머무르기. 필요한 항목을 면제해서 준비 상태로 만들지는 않습니다.
 - **활성화 전에 소스가 바뀐 경우:** 영향받은 관찰을 무효로 하고 다시 확인합니다. 오래된 증거로 SDD를 활성화하지 않습니다.
 - **공유 개발 방식 변경 같은 효과를 승인하지 않은 경우:** 도입은 활성화되지 않고 불일치가 보고됩니다.
-- **설치, 정책 편집, 동기화가 중간에 실패한 경우:** 에이전트는 실제 부분 상태와 지원되는 복구 방법을 보고하며, 성공이나 롤백을 주장하지 않습니다. 완료는 재검증 후입니다.
+- **설치, 정책 편집, 동기화가 중간에 실패한 경우:** 에이전트는 실제 부분 상태와 지원되는 복구 방법을 보고하며, 성공이나 롤백을 주장하지 않습니다. 재검증을 마친 뒤에야 완료로 처리됩니다.
 
 ## 최종 결과
 

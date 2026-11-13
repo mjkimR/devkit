@@ -22,7 +22,7 @@ title: Harness
 # Harness
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -154,8 +154,11 @@ stays a draft until it is split. The full walk-through is
 Skills load only the instructions and references of the current phase, and each reference says when to read it.
 Ten role contracts are deployed for delegation: `challenger`, `scout`, `code-reviewer`, `reconcile-reviewer` and
 `ux-reviewer` for checks, `triage` and `decomposer` for Backlog (grouping open feedback, splitting a draft), and
-`planning-worker`, `development-worker` and `git-operator`. Each runs `devkit get-context spec` itself. Which model a role runs on is
-distribution's setting, not the harness's ([Distribution](distribution.md)).
+`planning-worker`, `development-worker` and `git-operator` (a reusable executor for exact current Host-authorized
+lifecycle jobs; the Host keeps decisions, scheduling and result acceptance). Each runs `devkit get-context spec` itself.
+`git-operator` uses the `lean` resource level and `scout` uses `compact`, while other roles inherit unless overridden;
+resource levels never change `activity-effort` or write authority, and which model a role runs on is distribution's
+setting, not the harness's ([Distribution](distribution.md)).
 
 ## Write documents the way the rules expect
 
@@ -171,7 +174,9 @@ milestone); the proposal template stays under `.devkit/managed/spec/templates/`.
 | `capability-writing`, `usecase-writing`, `ux-writing`, `architecture-writing`, `decision-writing` | each document kind |
 
 The bundles' rules check what these instructions describe; see the document and lifecycle rules in
-[Governance rules](governance.md).
+[Governance rules](governance.md). For necessary `justfile`, CLI and MCP entry points, the opt-in `command-design`
+catalog instruction identifies the operation and caller, reuses suitable existing paths and checks additions from their
+documented execution context; see [Design necessary command entry points](../journeys/design-command-entrypoints.md).
 
 ## Adopt it in a repository that already has docs
 
@@ -218,17 +223,9 @@ Every subcommand takes `-w/--workspace-root`, `--format text|json`, `-q`, `-v` a
 or one JSON object as `ARCH-08-1-agent-output` describes, and raises `SPEC_`- or `DOCS_`-prefixed advisories
 ([Advisories](advisory.md)). Listings page with `--limit` and `--offset`; when more items follow, a
 `[NEXT_CMD: ...]` line gives the exact command for the next page. Exit `0` is success with or without notices, `1` a
-warning under `--strict`, `2` a command that could not run or refused.
-
-## Lifecycle executor and command design
-
-Ten SDD roles include git-operator, a reusable executor for exact current Host-authorized lifecycle jobs.
-The Host keeps decisions, scheduling and result acceptance. Git Operator uses lean; scout uses compact;
-other role settings inherit unless overridden. Resource levels never change activity-effort or write authority.
-
-`command-design` is an opt-in catalog instruction for necessary justfile, CLI and MCP entry points.
-It identifies operation/caller, reuses suitable paths and checks additions from their documented execution context.
-See [Design necessary command entry points](../journeys/design-command-entrypoints.md).
+warning under `--strict`, `2` a command that could not run or refused. To run verification or build commands at a fixed
+commit in a detached checkout while retaining evidence outside it, use `devkit exec` as described in
+[Execute an isolated command](../journeys/execute-an-isolated-command.md).
 
 ## Sources
 
@@ -243,13 +240,3 @@ See [Design necessary command entry points](../journeys/design-command-entrypoin
 - [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
   and [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md):
   the adaptive development approach and the move to SDD.
-
-## Commands at a fixed commit
-
-[Isolated execution](../journeys/execute-an-isolated-command.md) uses `devkit exec` to prepare a detached checkout and retain command evidence outside it. Launch success is pending; collect the result before claiming verification. Cancellation, observation and cleanup have separate outcomes.
-
-## Working with this release
-
-The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.
-
-Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

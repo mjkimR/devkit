@@ -8,13 +8,13 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-resolve-stale-activity-branches: null
 title: 거버넌스 규칙
-translated_from: en/areas/governance.md@e943383ac3040484
+translated_from: en/areas/governance.md@fb160748c2934cc6
 ---
 
 # 거버넌스 규칙
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -95,8 +95,11 @@ devkit은 모호한 프롬프트 지침 대신 결정론적(deterministic) 규�
 
 각 위반 사항은 `[VIOLATION: <RULE-id> severity= file= line= status= message= remediation= guide=]` 형식의 한 줄로
 출력됩니다. `status=fixable`은 `devkit rules fix` 명령으로 자동 해결할 수 있음을 나타내며, `guide=`는 `explain` 명령이
-출력하는 배포된 가이드 문서 위치를 가리킵니다. error 심각도의 위반이 하나라도 있으면 명령 실행이 실패합니다. `--format json`
-플래그를 사용하면 단일 JSON 객체 형태로 결과를 받아볼 수 있으며, `--summary-only`는 규칙별 위반 건수만 요약 출력합니다. `[SUMMARY]` 줄은 해당 실행에서 활성화된 규칙 수(`rules=N`)를 셉니다.
+출력하는 배포된 가이드 문서 위치를 가리킵니다. `error` 심각도의 위반이 하나라도 있으면 명령 실행이 실패하며, `notice` 심각도의
+규칙 발견 사항은 `--strict`와 커밋 게이트에서도 차단하지 않는 참고 사항입니다. `uv run devkit rules context FILE`은 작업 파일과
+`HEAD` 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다(일반 파일 읽기는 이를 자동 실행하지 않으며, 근거가 없으면
+전체 파일 이력으로 대신하지 않고 누락을 알립니다). `--format json` 플래그를 사용하면 단일 JSON 객체 형태로 결과를 받아볼 수 있으며,
+`--summary-only`는 규칙별 위반 건수만 요약 출력합니다. `[SUMMARY]` 줄은 해당 실행에서 활성화된 규칙 수(`rules=N`)를 셉니다.
 활성 규칙이 하나도 없는 실행은 `rules=0`과 `RULES_NONE_ACTIVE` 알림과 함께 통과하므로, 깨끗한 검사 결과로 오인되지 않습니다.
 의도적으로 적용되지 않는 규칙은 통과로 세지 않고 `[RULE_OMITTED: <id> code= reason=]` 줄(JSON에서는 `omissions`)을 출력합니다.
 
@@ -181,9 +184,14 @@ max_bytes = 98304
 | `RULE-reconcile-contract` | `spec` | `reconcile.md`의 형식이 올바르고, 수정 대상 문서들이 실제로 변경되어야 함 | 수동 조치 |
 | `RULE-proposal-boundaries` | `spec` | 제안 문서에 명시된 소유 대상 경로들이 실제로 존재해야 함 | 수동 조치 |
 
+스티어링 검사는 루트 및 등록된 네임스페이스 디렉터리별로 선택형 용어집과 UX 객체 목록에도 적용되며, 참조 복구는 스티어링 본문,
+용어집 Owner 셀, 설정된 빠른 참조에서 유일하게 해석되는 별칭도 정규 ID로 바꿉니다. `RULE-decision-supersession`은 ADR 전체·부분
+대체의 상호 기록을 확인합니다(의미적 범위는 리뷰가 필요합니다).
+
 프로젝트의 개발 방식(development approach, `.devkit/config.toml`의 `[development] approach`)이 적응형 개발이면, 문서 규칙은
-이전과 똑같이 판정하지만 생명주기 규칙은 여전히 스펙 주도 워크플로에 묶인 문서에만 적용됩니다. 검사할 대상이 없으면 통과 대신
-`SDD_LIFECYCLE_INACTIVE` 생략(omission)을 보고합니다.
+이전과 똑같이 판정하고 미연결 문서는 SDD 생명주기 의무를 갖지 않습니다. 생명주기 규칙은 보존된 워크플로 연결 유닛에만 적용되며
+(앵커·바인딩이 삭제되더라도 기존 의무를 유지합니다), 검사할 대상이 없으면 통과 대신 `SDD_LIFECYCLE_INACTIVE` 생략(omission)을
+보고합니다.
 
 완료된 스펙 번들은 과거 이력으로 취급됩니다. 사용자가 경로를 직접 지정할 때만 검사 대상이 되며, 자동 수정(`fix`)으로 내용을
 임의 덮어쓰지 않습니다. 자유로운 형식의 `materials/` 디렉터리는 규칙 적용에서 제외됩니다. 이 규칙들을 활용한 일상적인
@@ -231,7 +239,7 @@ rules/doc_heading/
 분석 결과를 재사용합니다(파일별 규칙 팩트, per-file rule facts). 이 캐시는 파생 상태(derived state)이므로 메모 파일이 없거나
 손상되어도 분석 시간이 약간 더 걸릴 뿐 판정 결과 자체는 달라지지 않습니다.
 
-## 관련 자료
+## 출처
 
 - [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rules-engine.md) (영어 원문):
   규칙 엔진 아키텍처, 규칙 소스 및 파일별 팩트.
@@ -243,19 +251,3 @@ rules/doc_heading/
   문서 규칙과 생명주기 규칙 상세 명세.
 - [규칙 레퍼런스](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/rules.md) (영어 원문): 명령어, 출력 형식, 종료
   코드, 내장 규칙 카탈로그.
-
-## 보존된 소유권과 문서 검사
-
-docs는 상호 ADR 대체 기록을 확인하는 `RULE-decision-supersession`을 포함해 열 개 규칙을 제공합니다.
-스티어링 검사는 루트·등록된 네임스페이스별로 선택형 용어집과 UX 목록에도 적용합니다.
-참조 수리는 스티어링 본문, 용어집 Owner 셀과 설정된 빠른 참조의 유일하게 해석된 별칭도 정규 ID로 바꿉니다.
-
-적응형 개발의 미연결 문서는 SDD 생명주기 의무를 얻지 않습니다.
-보존된 워크플로 유닛은 anchor·binding이 삭제되어도 기존 의무를 유지합니다.
-생략된 생명주기 검사는 깨끗한 검사 대신 `SDD_LIFECYCLE_INACTIVE`를 보고합니다.
-브랜치는 자신의 런타임으로 통합 전에 검사하고 최종 대상은 반영된 런타임을 동기화한 뒤 검사합니다.
-통합 자체는 콘텐츠 준비 상태나 규칙 임포트를 평가하지 않습니다.
-
-## 이 릴리스의 작업 방식
-
-규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

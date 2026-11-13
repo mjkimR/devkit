@@ -6,13 +6,13 @@ sources:
   CAP-GEN-tracked-artifacts: null
   CAP-VIEW-repository-viewer: null
 title: 뷰어
-translated_from: en/areas/viewer.md@191d011265cabefc
+translated_from: en/areas/viewer.md@dfc36c163bc66b84
 ---
 
 # 뷰어
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -72,7 +72,7 @@ translated_from: en/areas/viewer.md@191d011265cabefc
 하나 이상의 devkit 저장소에 걸쳐 편리하게 열람할 수 있는 로컬 읽기 전용 웹 페이지입니다(`CAP-VIEW-repository-viewer`).
 선택형 패키지인 `devkit-viewer`를 통해 제공되며, `devkit viewer` 명령으로 구동됩니다. 뷰어는 문서 열람을 위한 도구이며,
 승인, 게이트 결정, 질문 답변 등 상태를 변경하는 작업은 여기서 수행되지 않습니다. 각 문서의 역할과 구조는 [개념](../concepts.md)을,
-명령줄에서 직접 문서를 검색하는 방법은 [알맞은 문서 찾기](../journeys/find-the-right-documents.md) 여정을 참고하세요.
+명령줄에서 직접 문서를 검색하는 방법은 [알맞은 문서 찾기](../journeys/find-the-right-documents.md) 여정을 참고하십시오.
 
 ## 실행하기
 
@@ -97,13 +97,13 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 - **Read**: `handbook/manifest.json`이 있으면 저장소의 릴리스 핸드북을 선택한 언어(브라우저에 기억됨)로 보여 주고,
   태그와 함께 체크아웃의 `VERSION`이 핸드북보다 앞서면 안내를 표시합니다. 핸드북이 없으면 짧은 안내만 보여 줍니다.
   **Living Spec book** 버튼을 누를 때만 `docs/`의 book을 계산하며, book은 Overview, Architecture, Capabilities, Use Cases, UX,
-  Steering, Decisions, Development 장(chapter)으로 분류되고 문서 간 링크를 ID 기반으로 연결합니다(`ADR-release-handbook`, `ADR-release-handbook`).
+  Steering, Decisions, Development 장(chapter)으로 분류되고 문서 간 링크를 ID 기반으로 연결합니다(`ADR-release-handbook`).
 - **Proposals** 및 **Specs**: `docs/proposals/PROP-*/proposal.md` 파일과 `specs/` 하위의 스펙 번들 목록을 파일 구성, 필터링 옵션,
   작업 진행 상황과 함께 제공합니다.
-- **로드맵**: `docs/roadmap/` 하위의 마일스톤을 active, planned 순서로 정렬하여 표시하며, `depends_on`을 바탕으로 준비 상태를 보여
+- **Roadmap**: 전역 및 등록된 네임스페이스 로드맵 루트 아래의 마일스톤을 active, planned 순서로 정렬하여 표시하며, `depends_on`을 바탕으로 준비 상태를 보여
   줍니다. `docs/roadmap/_archive/`에 보관된 `done` 및 `dropped` 마일스톤은 히스토리 토글로 확인할 수 있으며, 숨겨진 완료
   선행 조건도 충족된 것으로 계산됩니다.
-- **파일 탐색**: 작업 트리의 파일들을 표시하며, Markdown, frontmatter 메타데이터, Mermaid 다이어그램을 렌더링합니다.
+- **File browser**: 작업 트리의 파일들을 표시하며, Markdown, frontmatter 메타데이터, Mermaid 다이어그램을 렌더링합니다.
 
 뷰어는 현재 체크아웃된 브랜치를 기준으로, 커밋되지 않은 파일과 추적되지 않는 파일까지 포함하여 등록된 작업 트리의 저장된 파일들을
 실시간으로 보여 줍니다(`ADR-repository-viewer`). 브랜치를 자동으로 전환하지는 않습니다. 문서는 브라우저에서 직접 파싱되므로,
@@ -113,7 +113,14 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 ### 캐시 및 최신 상태
 
 조회 결과는 저장소 및 브랜치별로 30초 동안 캐시됩니다. 즉시 최신 상태로 갱신하려면 대시보드의 Refresh 버튼을 누르거나 브라우저
-페이지를 새로고침하세요. 별도의 파일 감시(file watching) 프로세스는 동작하지 않습니다.
+페이지를 새로고침하십시오. 별도의 파일 감시(file watching) 프로세스는 동작하지 않습니다.
+
+### 네임스페이스 로드맵
+
+로드맵과 대시보드는 전역 `docs/roadmap/` 및 등록된 네임스페이스의 `docs/packages/<name>/roadmap/` 마일스톤을 포함하며,
+이력을 선택하면 각각의 단일 계층 `_archive/` 디렉터리도 포함합니다.
+대시보드 섹션은 후보 헤더를 한 번만 읽고 본문은 첫 페이지만 불러오며, 펼친 페이지는 30초 캐시에 유지합니다.
+다음 페이지 로드에 실패하면 기존 카드를 유지하고 Retry를 제공하며, Refresh는 해당 소스의 캐시를 무효화합니다.
 
 ## Planning 단계의 제안서 오버레이
 
@@ -127,8 +134,8 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
 
 현재 작업 중인 `HEAD`에 이미 병합된 브랜치는 건너뛰며, 현재 위치한 브랜치에 대해서는 오버레이를 적용하지 않습니다. 오버레이된 카드에는
 출처를 나타내는 배지가 부착됩니다. 뷰어는 백그라운드에서 fetch하거나 GitHub API를 호출하지 않으므로, 동료의 원격 Planning 브랜치
-내용을 확인하려면 먼저 git fetch를 실행하세요. 오버레이 처리에 실패하면 베이스 체크아웃의 카드가 간단한 안내 문구와 함께 유지됩니다.
-이러한 오버레이는 제안서에만 적용되며, 스펙, 마일스톤, 피드백, Living Spec, 파일 탐색 탭은 항상 등록된 작업 트리의 파일을 직접 읽습니다.
+내용을 확인하려면 먼저 git fetch를 실행하십시오. 오버레이 처리에 실패하면 베이스 체크아웃의 카드가 간단한 안내 문구와 함께 유지됩니다.
+이러한 오버레이는 제안서에만 적용되며, 스펙, 마일스톤, 피드백, Living Spec, File browser 탭은 항상 등록된 작업 트리의 파일을 직접 읽습니다.
 
 ## 공유 제안서 리뷰 열람
 
@@ -136,7 +143,7 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
 아티팩트(shared artifact)를 표시합니다(`CAP-COLL-shared-artifacts`, [협업](collaboration.md) 참고). 페이지 상단에는 원본 커밋,
 작성 언어, 만료 시점이 눈에 띄게 표시되며, Markdown 본문은 임의의 코드가 실행되지 않도록 이스케이프된 텍스트로 안전하게 렌더링됩니다.
 만료된 보고서는 `410`, 존재하지 않는 보고서는 `404` 상태 코드로 응답합니다. 보고서가 만료되었거나 없는 경우 Host에게 새 보고서 게시를
-요청하세요. 뷰어가 보고서를 자체적으로 재생성하지는 않습니다.
+요청하십시오. 뷰어가 보고서를 자체적으로 재생성하지는 않습니다.
 
 ## 보안 원칙
 
@@ -158,19 +165,10 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
 - 컴포넌트 라이브러리 `devkit-viewer`: autohub가 벤더링하여 사용하는 tarball 아카이브 형태로 패키징됩니다. 호스트 애플리케이션은 자체
   `RepositoryDataSource`를 구현하여 연동하고 인증 처리를 자체적으로 담당합니다. 공개 패키지 레지스트리에 별도로 배포되지는 않습니다.
 
-## 네임스페이스 로드맵
-
-로드맵과 대시보드는 전역 `docs/roadmap/` 및 등록된 네임스페이스의 `docs/packages/<name>/roadmap/` 마일스톤을 포함합니다.
-이력을 선택하면 각 평면 `_archive/`도 포함합니다.
-대시보드 절은 후보 헤더를 한 번 읽고 본문은 첫 페이지만 불러오며 펼친 페이지를 30초 캐시에 유지합니다.
-다음 페이지가 실패하면 기존 카드를 유지하고 Retry를 제공합니다. Refresh는 해당 소스의 캐시를 무효화합니다.
-
 ## 출처
 
 - [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md) (영어 원문):
   서비스, 엔드포인트, Planning 출처, 페이지 동작, 로드맵, 라이브러리와 리뷰 페이지.
 - [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/viewer.md) (영어 원문).
 - [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md) (영어 원문),
-  [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md) (영어 원문),
-  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md) (영어 원문),
   [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md) (영어 원문).

@@ -16,7 +16,7 @@ title: Documents
 # Documents
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -124,7 +124,9 @@ an agent reads one only when it concerns the work; the document rules bound the 
 
 Move the file, set the new ID and keep the old ID in `aliases`. An alias resolves to its document everywhere an ID
 argument is accepted, and `uv run devkit rules fix` then rewrites current references to the new ID
-(`ADR-document-id-aliases`). An alias that two documents claim collides and is reported on both.
+(`ADR-document-id-aliases`). Alias repairs cover current indexed documents, steering code spans, glossary Owner cells
+and configured quick references; historical records and materials retain their earlier spelling. An alias that two
+documents claim collides and is reported on both.
 
 ## Look up what you already know
 
@@ -166,7 +168,8 @@ uv run devkit docs search "cache policy" --kind decision --kind capability --his
 
 A query that equals a document's ID, alias, path or file name pins that document first. The other hits are ranked
 by the ID and English summary (lexically and by meaning) and by title, area and body (lexically). An optional,
-project-owned `docs/steering/glossary.yaml` expands query terms with synonyms, useful for terms in another language.
+project-owned `docs/steering/glossary.yaml` expands query terms with synonyms, useful for terms in another language;
+search expands global synonyms followed by the selected namespace synonyms, while unselected namespaces have no effect.
 Without the search extra the ranking is lexical; install it with `uv add 'devkit-docs[search]'` (included in
 `devkit-spec[search]`) for hybrid ranking. Details
 are in [CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md);
@@ -195,6 +198,11 @@ A namespace narrows what you *browse*, never what exists
   packages freely. Use `--all-namespaces` to see cross-package impact.
 - A spec or proposal bundle belongs to the namespace in its `namespace` field, which `devkit spec new --namespace`
   and `devkit spec proposal new --namespace` write.
+- A registered namespace can keep optional `steering/glossary.md`, `steering/glossary.yaml` and
+  `steering/ux-objects.md` under `docs/packages/<name>/`, and its milestones live under
+  `docs/packages/<name>/roadmap/` with done and dropped records in `_archive/`. The agent reads applicable local
+  registers alongside the global ones, with local terms scoped to that namespace; a legacy package-level glossary
+  needs a manual move or merge.
 
 ## Capabilities in this area
 
@@ -204,15 +212,3 @@ A namespace narrows what you *browse*, never what exists
 | `CAP-DOCS-document-lookup` | `resolve`, `refs` and `list`: options, output, codes |
 | `CAP-DOCS-document-search` | `devkit docs search`: candidates, pinning, glossary, modes |
 | `CAP-DOCS-namespaces` | monorepo namespaces and their selection |
-
-## Namespace steering and stable aliases
-
-A registered namespace can keep optional `steering/glossary.md`, `steering/glossary.yaml` and `steering/ux-objects.md`
-under `docs/packages/<name>/`. The agent reads applicable local registers with the global ones;
-local terms apply only to that namespace. A legacy package-level glossary needs a manual move or merge.
-Search expands global synonyms followed by the selected namespace synonyms; unselected namespaces do not affect it.
-
-Namespace milestones live under `docs/packages/<name>/roadmap/`, with done/dropped records in its `_archive/`.
-Document IDs remain unique across the repository. Alias repairs cover current indexed documents, steering code spans,
-glossary Owner cells and configured quick references. Historical records and materials retain their earlier spelling.
-Reciprocal whole/partial ADR supersession is checked by `RULE-decision-supersession`; semantic scope still needs review.

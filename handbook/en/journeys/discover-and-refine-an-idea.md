@@ -8,7 +8,7 @@ title: Discover and refine an idea
 # Discover and refine an idea
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -66,6 +66,8 @@ title: Discover and refine an idea
 
 Select `deep-research` with `uv run devkit add deep-research`, then invoke `/discovery <idea>` for a half-formed idea. This entry is separate from sourced research and grants no implementation, commit or publication authority.
 
+## Step by step
+
 1. Recover the desired change, use scene, constraints and outcome from supplied context. Ask only owner choices that change the first proposals.
 2. State the exploration question, effort bound and stop condition. Develop concrete usage examples with benefits, costs, support and assumptions; optional independent roles inspect distinct premises.
 3. Route factual gaps to bounded research, experiential gaps to examples or proposed experiments, and failed premises to reframing, holding or rejection. Execution needs separate authority.
@@ -73,6 +75,7 @@ Select `deep-research` with `uv run devkit add deep-research`, then invoke `/dis
 
 Results stay in conversation unless you request retention. A retained material keeps complete/partial coverage distinct from the discovery outcome and is left uncommitted. Missing independent coverage is disclosed, and refused resources are not accessed through another route.
 
-- [CAP-DLV-idea-discovery](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-idea-discovery.md)
+## Sources
 
+- [CAP-DLV-idea-discovery](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-idea-discovery.md)
 - [UC-discover-and-refine-an-idea](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-discover-and-refine-an-idea.md)

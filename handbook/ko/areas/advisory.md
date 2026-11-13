@@ -9,7 +9,7 @@ translated_from: en/areas/advisory.md@dec7b8dbf7b5eb15
 # 어드바이저리
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -87,9 +87,9 @@ translated_from: en/areas/advisory.md@dec7b8dbf7b5eb15
 - `[TARGET]`은 확인해야 할 대상 경로, `[FIX]`는 실행 가능한 정확한 명령어 또는 수정 조치, `[REPORT]`는 사용자에게 보고할 내용, `[DETAIL]`은
   진단 상세 정보입니다. 내용이 없는 필드 줄은 생략되며, 블록 내부에는 빈 줄이 포함되지 않고 색상 서식도 사용하지 않습니다.
 
-## 명령이 실패했나요?
+## 명령의 실패 여부 확인
 
-동작 모드와 관계없이 심각도 레벨이 이 질문에 답합니다.
+동작 모드와 무관하게 심각도 레벨로 실패 여부를 판단합니다.
 
 | 레벨 | 헤드라인 | 의미 | 종료 코드 |
 | --- | --- | --- | --- |

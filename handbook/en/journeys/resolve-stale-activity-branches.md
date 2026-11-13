@@ -10,7 +10,7 @@ title: Resolve stale activity branches
 # Resolve stale activity branches
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -154,7 +154,3 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/
 
 Each branch you decided on is either resumed in its worktree with its unit intact, or gone together with its pull
 request, remote copies and worktree. A branch you keep stays as it was. A refused discard deletes nothing.
-
-## Working with this release
-
-Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

@@ -11,7 +11,7 @@ title: Run parallel work safely
 # Run parallel work safely
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -114,12 +114,17 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
    uv run devkit spec scope collect --fetch origin
    ```
 
-   One collection combines creation snapshots, activity refs and accessible worktree declarations and changes. Drafts without an activity source are excluded. `--fetch` refreshes a configured remote first; without it, remote branches
-   are what the last fetch saw. Output lists each `[SCOPE_CANDIDATE: ...]` and `[SCOPE_OBSERVATION: ...]`, the
-   `[PAIR: ...]` and `[EVIDENCE: ...]` lines, and a `[SUMMARY: ... coverage=complete|partial ...]`. Collecting changes
-   no record or token.
-6. **Order integration.** Use the overlaps, where each observation came from, and the coverage that is missing to
-   decide what keeps running in parallel; integrate overlapping work one after another.
+   One collection combines creation snapshots, activity refs and accessible worktree declarations and changes,
+   distinguishing observed current writes from a Planning proposal's declared future scope (`horizon`: `current` vs
+   `future`). Drafts without an activity source are excluded. `--fetch` refreshes a configured remote first; without
+   it, remote branches are what the last fetch saw. Output lists each `[SCOPE_CANDIDATE: ...]` and
+   `[SCOPE_OBSERVATION: ...]`, the `[PAIR: ...]` (with `current`/`future` counts) and `[EVIDENCE: ...]` lines, and a
+   `[SUMMARY: ... coverage=complete|partial ...]` reporting `current_overlapping`. Collecting changes no record or
+   token.
+6. **Order work and integration.** Use the overlaps, their `horizon` (`current` vs `future`), where each observation
+   came from, and the coverage that is missing to decide what runs in parallel. Serialize current overlap
+   (`current_overlapping`). Work with future-only overlap can keep Planning in parallel while ordering handoff and
+   integration one after another.
 7. **Finish.** Integration removes the worktree, and the post-finish cleanup removes that worktree's scope record.
    Other records stay.
 
@@ -131,7 +136,8 @@ means "no overlap". Adding `entrypoints` to the capabilities you target makes th
 
 `coverage=partial` with a `SPEC_SCOPE_COLLECTION_PARTIAL` warning means some source, base, identity or comparison
 could not be observed within its budget. The evidence that was collected is still usable, and the warning names
-each missing source with its reason. Pairs that were not computed never count as zero overlap.
+each missing source with its reason. Unknown inputs and unavailable sources never establish independence; pairs that
+were not computed never count as zero overlap.
 
 ## When it goes wrong
 
@@ -152,10 +158,3 @@ each missing source with its reason. Pairs that were not computed never count as
 You know every pair's shared documents and code, where each observation came from and how much coverage is missing,
 no task was ever blocked or given extra bookkeeping, and finished tasks leave no records behind. Overlap evidence is
 a join of declarations and Git observations: it proves neither a merge conflict nor independence.
-
-## Read overlap horizons before scheduling
-
-`scope collect` distinguishes observed current writes from a Planning proposal's declared future scope.
-Serialize current overlap. Future-only overlap can keep Planning parallel while ordering handoff and integration.
-Read `horizon`, pair `current`/`future` counts and `current_overlapping` alongside partial-coverage evidence.
-Unknown inputs and unavailable sources never establish independence.

@@ -4,13 +4,13 @@ sources:
   CAP-HARN-agent-guidance: null
   UC-research-an-idea-and-shape-a-roadmap: null
 title: 아이디어 조사와 로드맵 구체화하기
-translated_from: en/journeys/research-an-idea-and-shape-a-roadmap.md@92adc6cdba5ba30c
+translated_from: en/journeys/research-an-idea-and-shape-a-roadmap.md@0bffe8fdea0454e7
 ---
 
 # 아이디어 조사와 로드맵 구체화하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -73,9 +73,9 @@ translated_from: en/journeys/research-an-idea-and-shape-a-roadmap.md@92adc6cdba5
 ## 질문에서 보존할 근거까지
 
 1. 요청한 산출물, 용도, 제약과 유용한 조사 한도를 제공합니다.
-2. 조정자가 주어진 사실을 복구하고 결정을 구체화하며 필요한 독립 질문을 고릅니다.
+2. 조정자가 제공된 사실을 정리하고 결정을 구조화한 뒤 유용한 독립 질문을 고릅니다.
    작은 질문은 직접 처리할 수 있습니다. 선택적 역할은 출처 조사, 방향 탐색, 근거 비평이나 종합 초안을 맡습니다.
-3. 조정자는 실제 반환을 확인하고 중요한 누락·모순에 대해 출처를 다시 엽니다.
+3. 조정자는 실제 반환 결과를 확인하고 중요한 누락·모순에 대해 출처를 다시 엽니다.
    대안의 전제를 구분하고 관찰·추론·가정·미확인 사항을 나눕니다.
 4. 유용한 종합과 안정적인 근거를 `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/` 아래 하나의 자료(material)로 보존합니다.
    인덱스는 `id: MAT-<slug>`와 `Status: complete` 또는 `partial`을 가집니다.
@@ -93,15 +93,15 @@ translated_from: en/journeys/research-an-idea-and-shape-a-roadmap.md@92adc6cdba5
 
 일반적인 공개 출처 조회 실패는 한정된 재시도나 접근 가능한 다른 1차 출처로 복구하고 실제 확인한 대체 출처를 기록합니다.
 접근 거부가 있으면 해당 자원 접근을 멈춥니다. 부족한 근거는 미검증으로 남깁니다.
-우승 대안을 꾸미거나 거절된 비교를 요구하지 않아도 부분 결과는 유용할 수 있습니다.
+억지로 최선안을 만들어 내거나 사용자가 거절한 비교를 요구하지 않더라도 부분 결과는 유용할 수 있습니다.
 결과를 활용한 구현은 이후 프로젝트의 일반 개발 절차로 시작합니다.
+
+## 선택적 클라우드 조사
+
+필요하면 조정자는 사용자가 직접 운영하는 클라우드 조사 앱에 전달할 수 있도록 범위가 제한된 안전한 요청을 준비할 수 있습니다. 이때 요청 상태는 사용자 결과 대기로 기록하며, 외부 제공자 작업이 실행되었다고 단정하거나 폴링하지 않고 경과 시간으로 진행 상황을 추정하지도 않습니다. 사용자가 전달한 실제 반환 결과는 해당 조사에 연결한 뒤 지시문이 아니라 증거로 검토합니다. 보고서가 없거나 읽을 수 없는 경우에는 자료를 부분(`partial`) 상태로 두고 수집을 재개할 수 있는 후속 작업을 남깁니다.
 
 ## 출처
 
 - [UC-research-an-idea-and-shape-a-roadmap](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md) (영어 원문)
 - [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-deep-research.md) (영어 원문)
 - [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)
-
-## 선택적 클라우드 조사
-
-필요하면 조정자는 사용자가 운영하는 클라우드 조사 앱에 전달할 제한된 안전한 요청을 준비합니다. 사용자 결과 대기로 기록하며 제공자 작업 실행을 주장하거나 폴링하거나 경과 시간으로 진행을 추정하지 않습니다. 실제 반환은 해당 조사에 연결하고 지시가 아닌 증거로 검토합니다. 없거나 읽을 수 없는 보고서는 자료를 부분 상태로 두고 재개 가능한 수집 작업을 남깁니다.

@@ -34,7 +34,7 @@ title: Concepts
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -139,10 +139,13 @@ Text in startup files costs tokens on every turn, so devkit loads guidance in st
 - The managed block in the root `AGENTS.md` holds only orientation.
 - `devkit get-context <bundle>` returns a bundle's constitution, the headers of its instructions, each with the
   condition under which the agent reads its body, and the titles and summaries of the project documents in a
-  directory the bundle declares (the `docs` bundle lists root and applicable namespace steering documents).
+  directory the bundle declares (the `docs` bundle lists root and applicable namespace steering documents). Automatic
+  context loading applies only to bundles with at least one of those sources, while explicit `get-context` inspection
+  remains available for other bundles.
 - **Playbooks** are occasional procedures that stay on disk. The agent finds them with `devkit playbook search`
   and retrieves one exactly with `devkit playbook get <bundle>/<id>`, and runs one only when you invoke or confirm
-  it.
+  it. Exact retrieval reports `context.required`; when true, the agent loads that bundle's context once per agent
+  context and again after context loss.
 - **Skills** are the entry points an agent host invokes, such as `/spec`, `/spec-next` and `/adaptive-dev`;
   **subagents** are role contracts (a code reviewer, a reconcile reviewer, a worker) projected for each host. Most
   roles inherit the session's model; a project can pick a model level per role in the `[subagents]` table
@@ -163,7 +166,8 @@ guidance and this handbook follow it. Each document has an ID in its frontmatter
 | Proposal | `PROP-<slug>` | An idea being shaped before it becomes a spec |
 | Milestone | `MS-<slug>` | A roadmap theme with an exit condition |
 
-Capabilities and use cases cross-reference each other in their frontmatter. Work in progress lives apart from this, under `specs/`: a spec describes a change,
+Capabilities and use cases cross-reference each other in their frontmatter, and research material is cited by its
+`MAT-<slug>` ID rather than copied into active context. Work in progress lives apart from this, under `specs/`: a spec describes a change,
 and when it completes, its effect is written back into `docs/` (**reconcile**). The `devkit-docs` package owns
 the document model; `devkit docs resolve`, `devkit docs refs`, `devkit docs list` and `devkit docs search` find
 documents by ID, reference, kind or meaning.
@@ -245,11 +249,11 @@ definition applies to work already under way.
 
 A **gate** is a stage that waits for a decision; SDD has three approval boundaries ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
 
-Your explicit task instruction authorizes its stated scope; no intent approval record is needed.
-
 - `plan-accept`: you accept a proposal's direction.
 - `proposal-handoff`: you authorize Development to start; this boundary is read by the proposal lifecycle command.
 - `dev-integration`: you approve landing the finished work.
+
+Your explicit task instruction authorizes its stated scope, so no intent approval record is needed.
 
 Each gate is `ask` (wait for a person) or `auto` (delegated by project policy); a delegation is reported as policy,
 never as your consent. A separate `exception` stage handles work that cannot continue as agreed. You see
@@ -349,27 +353,3 @@ Under adaptive development the loop is shorter: you run `/adaptive-dev` with an 
 updates the current context.
 
 The [journeys](README.md#journeys) walk through each path; the [areas](README.md#areas) cover each capability group.
-
-## Explicit catalog entries and context
-
-`adaptive-dev` replaces the former incubation identifiers: use `/adaptive-dev`, the `adaptive-dev` bundle and
-`.devkit/adaptive-dev.md`. The old bundle/approach values are rejected and the old context is not a fallback.
-Research material is cited by its `MAT-<slug>` ID instead of copied into current context.
-
-`deep-research`, `design-explore` and `app-uiux-improve` are opt-in user-only entries. Their skill-local roles are loaded
-only for an assignment; selecting a bundle grants no implementation or publication authority.
-Research keeps one indexed material; exploration returns directions in conversation unless a destination is requested;
-UI/UX improvement follows the task-approved route and reports branch-specific checks.
-
-The `proposal-handoff` approval boundary decides whether accepted Planning starts Development,
-including worktree/setup effects. It is separate from accepting the direction and landing Development.
-
-## Working with this release
-
-The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.
-
-Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.
-
-Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.
-
-Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

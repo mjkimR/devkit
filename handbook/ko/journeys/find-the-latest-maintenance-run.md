@@ -9,7 +9,7 @@ translated_from: en/journeys/find-the-latest-maintenance-run.md@988fdb1dd957bc37
 # 최신 유지보수 실행 찾기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -66,23 +66,23 @@ translated_from: en/journeys/find-the-latest-maintenance-run.md@988fdb1dd957bc37
 <!-- /handbook:generated -->
 
 이전에 게시한 보고서나 이후 통합 결과가 필요할 때 유지보수 이력(maintenance history)을 사용합니다.
-근거를 고르기 전에 플레이북과 저장소를 확인합니다.
+근거를 고르기 전에 플레이북과 저장소 식별 정보를 먼저 확인합니다.
 
 ```bash
 uv run devkit maintenance history list --playbook <playbook> --limit 20
 uv run devkit maintenance history get --run-id <run-id> --file report.md
 ```
 
-list는 최신 연도부터 읽고 마지막 추가 기록을 합치며 대체된 실행은 기본적으로 제외합니다.
+list는 최신 연도부터 읽고 최신 수정(amendment) 기록을 병합하며 대체된 실행은 기본적으로 제외합니다.
 `--source-sha`, `--outcome`으로 좁히거나 `--include-superseded`로 대체된 실행도 포함합니다.
-소스 SHA(source SHA)는 시작 때 검사한 HEAD이며 `inspected_tree`가 수정 콘텐츠까지 식별합니다.
+소스 SHA(source SHA)는 시작 때 검사한 HEAD이며 `inspected_tree`가 미커밋 변경 내용(dirty content)까지 식별합니다.
 
 실행과 파일을 고릅니다. get의 기본 파일은 `record.json`입니다.
 `HISTORY_FILE`은 임의 바이트를 보존하도록 base64 콘텐츠를 반환합니다.
 조회는 로컬 Git ref를 fetch하거나 체크아웃·근거를 변경하지 않습니다.
 
 이력 브랜치가 없으면 알림과 빈 목록을 반환합니다. 실행·파일이 없으면 `HISTORY_RUN_MISSING`입니다.
-호출 제한은 `retry_after`를 포함한 `HISTORY_DEFERRED`를 반환하므로 나중에 재시도합니다.
+API 호출 제한에 도달하면 `retry_after`를 포함한 `HISTORY_DEFERRED`를 반환하므로 나중에 재시도하십시오.
 이력 부재를 이전 유지보수 성공이나 저장소가 깨끗하다는 뜻으로 해석하지 않습니다.
 수집·게시는 [유지보수 실행 기록하기](record-a-maintenance-run.md)를 참고하십시오.
 

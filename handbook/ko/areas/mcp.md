@@ -12,7 +12,7 @@ translated_from: en/areas/mcp.md@ad2799e914f6a28a
 # MCP
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -74,11 +74,11 @@ translated_from: en/areas/mcp.md@ad2799e914f6a28a
 도구 지원입니다([협업](collaboration.md) 참고).
 
 워크플로에서 Host와 승인 절차가 맡는 역할은 [개념](../concepts.md)과
-[개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md) 여정을 참고하세요.
+[개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md) 여정을 참고하십시오.
 
 ## 설치와 등록
 
-`devkit-mcp`는 유지되는 런타임(retained runtime), 즉 베이스 체크아웃 환경이나 별도의 도구 전용 환경에 설치해야 합니다. 작업 워크트리의
+`devkit-mcp`는 상시 유지되는 런타임(retained runtime), 즉 베이스 체크아웃 환경이나 별도의 도구 전용 환경에 설치해야 합니다. 작업 워크트리의
 `.venv`나 편집 가능(editable) 링크로 연결된 워크트리 소스에는 절대 설치하지 마십시오. 설치 후에는 sync 명령으로 자동 등록하거나, 다음과 같이
 직접 등록할 수 있습니다.
 
@@ -91,17 +91,17 @@ translated_from: en/areas/mcp.md@ad2799e914f6a28a
 
 런타임이 설치되어 있으면 일반적인 `devkit sync` 명령이 선택된 각 에이전트의 프로젝트 파일에 있는 devkit 등록 항목을 자동으로 맞춥니다.
 Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agents/mcp_config.json`을 사용합니다. 자동 등록을
-해제하려면 `[mcp] register = false`로 설정하세요. 새로 생성된 작업 워크트리는 잠긴 에셋 복원 직후 `devkit sync --registrations-only`를
+해제하려면 `[mcp] register = false`로 설정하십시오. 새로 생성된 작업 워크트리는 잠긴 에셋 복원 직후 `devkit sync --registrations-only`를
 통해 필요한 항목을 설정합니다([워크트리](worktree.md) 참고).
 
 검증된 런타임이 없으면 `mcp setup`은 아무것도 쓰기 전에 `MCP_RUNTIME_UNAVAILABLE`로 거부합니다. 일반 sync 뒤에는 같은 코드가
 경고로만 보고됩니다. `--host`(반복 가능)는 지정한 호스트로 등록을 제한하며, setup은 프로젝트 전체를 맞추므로 지정하지 않은
 호스트의 소유 항목은 제거됩니다. 이후 `--host` 없이 실행하면 설정된 에이전트가 다시 등록됩니다.
 
-`devkit status`는 MCP 등록을 전혀 검사하지 않습니다. locked sync가 원래 했을 등록 쓰기를 보류하면
+`devkit status`는 MCP 등록을 전혀 검사하지 않습니다. locked sync가 등록 쓰기 작업을 보류하면
 `uv run devkit sync --registrations-only`를 해결 방법으로 하는 `MCP_REGISTRATION_PENDING`을 보고합니다. 실제 등록 계획은
 `devkit mcp status`, `mcp setup`, 그리고 두 가지 sync 모드에서 진단합니다. 호스트별 상세 설정 절차는
-[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.6/guides/install/mcp.md) (영어 원문) 가이드를 참고하세요.
+[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.6/guides/install/mcp.md) (영어 원문) 가이드를 참고하십시오.
 
 ## 등록 작업의 파일 변경 원칙
 
@@ -118,17 +118,17 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 - 변경 작업이 중간에 중단되면 다음 작업 전에 먼저 복구됩니다(`MCP_REGISTRATION_INTERRUPTED`, `uv run devkit sync`로 해결).
   `--dry-run` 및 `--check` 옵션은 실제 쓰기 없이 계획만 수립하며, locked sync는 호스트 파일을 변경하지 않고 유효성만 검증합니다.
 - devkit이 마지막 소유 항목을 제거할 때, 유지되는 좁은 범위의 제외 규칙을 한 번 알려 줍니다(`MCP_EXCLUSIONS_RETAINED`). 더 이상
-  필요 없다면 직접 제거하세요.
+  필요 없다면 직접 제거하십시오.
 
-등록이 완료되었다고 해서 실제 연결까지 확인된 것은 아닙니다. `devkit mcp status`는 실제 연결 상태, 신뢰 및 권한 상태를 알 수
-없음(unknown)으로 보고합니다(JSON). 텍스트 출력은 `[MCP: ...]` 한 줄과 호스트마다 `[MCP_HOST: ...]` 한 줄을 출력합니다.
+등록이 완료되었다고 해서 실제 연결까지 확인된 것은 아닙니다. `devkit mcp status`는 JSON 출력에서 실제 연결 상태, 신뢰 및
+권한 상태를 알 수 없음(`unknown`)으로 보고하며, 텍스트 출력에서는 `[MCP: ...]` 한 줄과 호스트마다 `[MCP_HOST: ...]` 한 줄을 출력합니다.
 
 ## 서버 보호 메커니즘
 
-`devkit mcp serve`는 모든 호출을 세 가지 위치에 바인딩합니다. 바로 유지되는 런타임, 실행자 체크아웃, 그리고 설정이 적용되는
+`devkit mcp serve`는 모든 호출을 세 가지 위치에 바인딩합니다. 바로 상시 유지되는 런타임, 실행자 체크아웃, 그리고 설정이 적용되는
 소유 설정 작업 공간(owning configuration workspace)입니다. 도구 입력을 통해서는 작업 공간을 변경할 수 없습니다.
 
-- **실행 클래스(Execution classes).** 각 도구는 `read_only` 또는 `bounded_write`로 선언되며, 미선언 도구는 `bounded_write`로 취급합니다. 읽기 전용 주석은 이 분류를 따릅니다. 전송 계층은 확인 폼을 요청하지 않으며 비즈니스 권한도
+- **실행 클래스(Execution classes).** 각 도구는 `read_only` 또는 `bounded_write`로 선언되며, 미선언 도구는 `bounded_write`로 취급합니다. 읽기 전용 어노테이션(annotation)은 이 분류를 따릅니다. 전송 계층은 확인 폼을 요청하지 않으며 비즈니스 권한도
   부여하지 않습니다. 승인은 Host가 권한을 부여한 CLI의 몫입니다.
 - **클라우드 환경**에서는 읽기 전용 도구만 노출되며, 쓰기 작업은 거부됩니다. 가드 검사는 잠금 대기 후 및 실제 영향이 발생하기
   직전에 반복 수행됩니다.
@@ -155,15 +155,15 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 
 | 코드 | 조치 방법 |
 | --- | --- |
-| `MCP_RUNTIME_UNAVAILABLE` | 서비스 패키지와 일치하는 유지 런타임을 설치하거나 선택한 뒤 다시 동기화합니다. |
-| `MCP_RUNTIME_STALE` | 서비스를 재시작하거나 다시 연결한 뒤 명령을 다시 호출합니다. |
-| `MCP_REGISTRATION_CONFLICT` | 지목된 파일(수정되었거나 형식이 잘못되었거나 소유권이 없는 항목)을 어떻게 복원할지 사용자가 결정한 뒤 동기화합니다. |
-| `MCP_REGISTRATION_UNAVAILABLE` | 대상이 추적 중이거나, 보이는 파일이거나, 외부 파일을 숨기게 됩니다. 그대로 두고 호스트 설정 절차를 사용합니다. |
-| `MCP_REGISTRATION_INTERRUPTED`, `MCP_LEDGER_UNIGNORED` | `uv run devkit sync`를 실행합니다. |
-| `MCP_REGISTRATION_PENDING` | locked sync가 쓰기를 보류했습니다. `uv run devkit sync --registrations-only`를 실행합니다. |
-| `MCP_HOST_UNSUPPORTED`, `MCP_REGISTRATION_SHADOWED` | 선택된 호스트에 어댑터가 없거나, 같은 이름의 사용자·관리 항목이 프로젝트 항목을 가립니다. 호스트 고유 도구로 해결합니다. |
-| `MCP_CHECKOUT_REQUIRED` | `--workspace-root`가 `.devkit/`을 가진 Git 체크아웃의 최상위를 가리키게 합니다. |
-| `MCP_INTERACTIVE_UNAVAILABLE` | 로컬 대화형 Host나 CLI 경로를 사용합니다. |
+| `MCP_RUNTIME_UNAVAILABLE` | 서비스 패키지와 일치하는 상시 유지 런타임을 설치하거나 선택한 뒤 다시 동기화하십시오. |
+| `MCP_RUNTIME_STALE` | 서비스를 재시작하거나 다시 연결한 뒤 명령을 다시 호출하십시오. |
+| `MCP_REGISTRATION_CONFLICT` | 지정된 파일(수정되었거나 형식이 잘못되었거나 소유권이 없는 항목)을 어떻게 복원할지 사용자가 결정한 뒤 동기화하십시오. |
+| `MCP_REGISTRATION_UNAVAILABLE` | 대상이 추적 중이거나, 보이는 파일이거나, 외부 파일을 숨기게 됩니다. 그대로 두고 호스트 설정 절차를 사용하십시오. |
+| `MCP_REGISTRATION_INTERRUPTED`, `MCP_LEDGER_UNIGNORED` | `uv run devkit sync`를 실행하십시오. |
+| `MCP_REGISTRATION_PENDING` | locked sync가 쓰기를 보류했습니다. `uv run devkit sync --registrations-only`를 실행하십시오. |
+| `MCP_HOST_UNSUPPORTED`, `MCP_REGISTRATION_SHADOWED` | 선택된 호스트에 어댑터가 없거나, 같은 이름의 사용자·관리 항목이 프로젝트 항목을 가립니다. 호스트 고유 도구로 해결하십시오. |
+| `MCP_CHECKOUT_REQUIRED` | `--workspace-root`가 `.devkit/`을 가진 Git 체크아웃의 최상위를 가리키게 하십시오. |
+| `MCP_INTERACTIVE_UNAVAILABLE` | 로컬 대화형 Host나 CLI 경로를 사용하십시오. |
 
 ## 출처
 

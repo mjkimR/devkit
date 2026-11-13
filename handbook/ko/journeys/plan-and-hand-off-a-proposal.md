@@ -5,13 +5,13 @@ sources:
   CAP-DLV-spec-bundles: null
   UC-plan-and-hand-off-a-proposal: null
 title: 제안 계획 후 넘기기
-translated_from: en/journeys/plan-and-hand-off-a-proposal.md@e5a8a173a83d6d26
+translated_from: en/journeys/plan-and-hand-off-a-proposal.md@991b927645279271
 ---
 
 # 제안 계획 후 넘기기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -133,13 +133,13 @@ uv run devkit spec proposal accept-plan <slug> --by user --mode accept_only
 ```
 
 수락을 기록하고 Planning을 통합합니다. 이동한 베이스와 충돌이 없으면 `plan-<slug>`에 먼저 병합할 필요가 없습니다.
-제안 범위 변경이나 Git 충돌은 재검토·수리 후 진행합니다.
-`accept_and_handoff --effort <level>`는 handoff 권한도 필요하지만 Planning 병합 후 최종 검증 대기·handoff 미시작으로 반환합니다.
-Host가 반영된 런타임을 동기화·검사하고 승인된 범위와 강도를 유지해 새 프로세스에서 handoff를 실행합니다.
+제안 범위가 바뀌었거나 Git 충돌이 있으면 먼저 검토하고 해결해야 합니다.
+`accept_and_handoff --effort <level>`는 핸드오프 권한도 필요하지만, Planning 병합 후 최종 검증이 대기 중이고 핸드오프는 시작되지 않은 상태로 반환됩니다.
+Host가 반영된 런타임을 동기화·검사하고, 승인된 범위와 작업 강도를 유지한 채 새 프로세스에서 핸드오프를 실행합니다.
 
-## 5. 개발 스펙 번들로 핸드오프 (Handoff)
+## 5. 개발 스펙 번들로 핸드오프
 
-`proposal-handoff` 권한을 가진 상태에서 유지된 기본 체크아웃에서 실행합니다(`ask`에서는 Host가 제시한 효과와
+`proposal-handoff` 권한을 가진 상태에서 유지되는 베이스 체크아웃에서 실행합니다(`ask`에서는 Host가 제시한 효과와
 Development 작업 강도를 사용자가 승인한 후에만, `auto`에서는 `dev_effort` 힌트로 실행됩니다).
 
 ```bash
@@ -154,17 +154,20 @@ PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 �
 `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]`, `[CARRIED_GATE: ...]`, `[REWRITTEN: ...]`, 그리고
 `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`.
 
+복합 핸드오프는 검토한 베이스의 깨끗한 직접 자식 커밋으로 트랜잭션을 한 번 커밋하고 `commit`을 보고합니다.
+커밋 이후에 미커밋 파일이나 이력 변경이 발생하면 핸드오프를 다시 실행하지 말고 그 자리에서 상태를 점검하고 복구합니다.
+
 ## 6. 재작성 참조 점검 및 개발 착수
 
-`SPEC_PROPOSAL_REFS_REWRITTEN` 알림은 에이전트에게 다시 쓰인 문장을 재확인하도록 지시합니다. 에이전트는 해결되지 않은
-링크를 같은 변경에서 고치고, [개발부터 통합까지 진행하기](drive-development-to-integration.md)처럼 스펙 워크플로의 다음
+`SPEC_PROPOSAL_REFS_REWRITTEN` 알림은 에이전트에게 다시 쓰인 문장을 다시 읽도록 지시합니다. 에이전트는 해결되지 않은
+링크를 핸드오프 트랜잭션 SHA를 유지하는 후속 커밋으로 `dev-<slug>`에서 고치고, [개발부터 통합까지 진행하기](drive-development-to-integration.md)처럼 스펙 워크플로의 다음
 단계를 따릅니다.
 
 ## 다양한 분기 시나리오
 
-- **Planning이 필요 없는 경우.** 방향이 이미 정해진 초안이면 에이전트가 기본 체크아웃에서 자격을 읽기 전용으로 점검한 뒤,
+- **Planning이 필요 없는 경우.** 방향이 이미 정해진 초안이면 에이전트가 베이스 체크아웃에서 자격을 읽기 전용으로 점검한 뒤,
   사용자의 명시적 결정에 따라 직접 수락(direct acceptance)을 기록합니다:
-  `uv run devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"` 후 `--check`를 뺀 같은 명령.
+  `uv run devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`을 실행한 뒤 `--check`만 빼고 같은 명령을 다시 실행합니다.
   점검은 모든 자격 제한 조건을 보고하며 의도 기록을 요구하지 않습니다.
   `XL` 초안은 직접 수락 대상이 될 수 없습니다.
 - **실제로는 작은 작업인 경우.** 착수 시점에 PADR이 없는 대기 초안을 `session` 작업으로 정할 수 있습니다. 에이전트는
@@ -174,43 +177,29 @@ PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 �
 - **반려하는 경우.** 에이전트는 커밋 메시지에 사유를 담아 `status: rejected`로 설정하고 정책에 따라 Planning 브랜치를
   병합합니다. 이후 `devkit rules check --phase hygiene`이 `SPEC_PROPOSAL_REJECTED_PENDING`을 경고하며, 그 수정이 반려
   ADR을 작성하고 미해결 피드백을 보존한 채 제안을 삭제합니다.
-- **정책이 수락하는 경우.** 소유 기본 브랜치와 작업 브랜치가 모두 `plan-accept = "auto"`이면 에이전트가
-  `accept --by policy`를 실행하며, 보고서는 사용자의 동의가 아니라 정책을 근거로 밝힙니다. 그 밖의 정책에서
-  `--by policy`는 `SPEC_PROPOSAL_POLICY_NOT_AUTO`로 거부됩니다.
+- **정책이 수락하는 경우.** 소유 기본 브랜치와 작업 브랜치 모두에 `plan-accept = "auto"`가 설정되어 있으면 에이전트가
+  `accept --by policy`를 실행하며, 보고서에는 사용자 동의가 아니라 해당 정책이 근거로 기록됩니다. 다른 정책에서는
+  `--by policy`가 `SPEC_PROPOSAL_POLICY_NOT_AUTO`로 거부됩니다.
 
-## 문제 해결
+## 문제가 생겼을 때
 
 | 코드 | 의미 | 해야 할 일 |
 | --- | --- | --- |
-| `SPEC_LIFECYCLE_INACTIVE` | 개발 방식이 적응형 개발이어서 제안 생성, 수락, 핸드오프를 쓸 수 없습니다. | `uv run devkit config show`를 확인하십시오. SDD로 전환할지는 사용자의 명시적 선택입니다([적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)). |
+| `SPEC_LIFECYCLE_INACTIVE` | 개발 방식이 적응형 개발이어서 제안 생성, 수락, 핸드오프를 쓸 수 없습니다. | `uv run devkit config show`를 확인하고 SDD 전환 여부를 직접 결정하십시오([적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)). |
 | `SPEC_PROPOSAL_NOT_ELIGIBLE` | 직접 수락 조건을 충족하지 못했습니다(예: `size: XL`). 각 조건과 해결 명령이 나열됩니다. | 조건을 해결하거나 Planning을 진행하십시오. |
 | `SPEC_PROPOSAL_GATE_NOT_OPEN` | 워크플로가 `plan-accept`를 열지 않았습니다(예: 피드백 정리 누락). 상태는 복원됩니다. | 나열된 검사를 충족한 뒤 다시 수락하십시오. |
 | `SPEC_PROPOSAL_APPROVAL_NOT_READY` | 합성 수락에서 Planning이 끝나지 않았습니다: 미충족 검사, 열린 질문, 보류, 또는 `plan-<slug>` 없음. | 그곳에서 Planning을 마친 뒤 다시 실행하십시오. |
 | `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` | 커밋 게이트가 수락 커밋을 거부했고, 두 수락 기록은 철회되었습니다. | `plan-<slug>`에서 `uv run devkit rules check`를 실행하고 고쳐 커밋한 뒤 다시 실행하십시오. |
 | `SPEC_PROPOSAL_IN_PLANNING` | Backlog 변경이 `plan-<slug>`가 있는 초안을 건드렸습니다. | 초안은 Planning 브랜치에 맡기십시오. |
-| `SPEC_PROPOSAL_NOT_APPROVED` | 수락되지 않은 제안을 핸드오프하려 했습니다. | 결정을 요청하십시오. 승인은 추정되지 않습니다. |
+| `SPEC_PROPOSAL_NOT_APPROVED` | 수락되지 않은 제안을 핸드오프하려 했습니다. | 결정을 요청하십시오(승인은 추정하지 않습니다). |
 | `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | 제안이 `accepted`라고 하지만 `plan-accept` 기록이 없습니다. | 기본 브랜치에서 직접 수락으로 보완하거나 Planning 병합을 되돌릴지 결정하십시오. |
-| `SPEC_HANDOFF_NOT_READY` | 합성 핸드오프에서 제안이 수락되지 않았거나, 분할이 필요하거나, Planning이 완료되지 않았습니다. | 지목된 조건을 해결하고 유지된 기본 체크아웃에서 다시 실행하십시오. |
-| `SPEC_HANDOFF_BASE_DIRTY` | 유지된 기본 체크아웃에 커밋되지 않은 변경이 있습니다(목록 표시). | 그 변경의 처리를 정한 뒤 다시 실행하십시오. |
+| `SPEC_HANDOFF_NOT_READY` | 합성 핸드오프에서 제안이 수락되지 않았거나, 분할이 필요하거나, Planning이 완료되지 않았습니다. | 지목된 조건을 해결하고 유지되는 베이스 체크아웃에서 다시 실행하십시오. |
+| `SPEC_HANDOFF_BASE_DIRTY` | 유지되는 베이스 체크아웃에 커밋되지 않은 변경이 있습니다(목록 표시). | 그 변경의 처리를 정한 뒤 다시 실행하십시오. |
 | `SPEC_HANDOFF_WORKTREE_CONFLICT` | 이 수락된 기준을 위해 devkit이 만들지 않은 `dev-<slug>` 워크트리가 있거나, 변경 또는 다른 커밋을 담고 있습니다. 재사용하거나 제거하지 않습니다. | 그 워크트리를 직접 확인하고 정리하십시오. |
-| `SPEC_PROPOSAL_WRONG_WORKTREE` | 핸드오프가 `dev-<slug>` 밖에서 실행되었거나, 합성 명령이 유지된 기본 체크아웃 밖에서 실행되었습니다. | `[TARGET]`과 `[FIX]`가 가리키는 곳에서 실행하십시오. |
-| `SPEC_PROPOSAL_HANDOFF_FAILED` | 쓰기가 실패해 롤백을 시도하지만 일부 복구가 실패할 수 있습니다. | 보고된 롤백 결과와 남은 경로를 확인한 뒤 수리·재시도하십시오. |
-| `SPEC_HANDOFF_STALE` | 점검 후 효과 적용 전에 기본 브랜치, 수락된 계획, 정책이 바뀌었습니다(종료 코드 `2`). 또는 새 워크트리가 검토한 기본 커밋을 더 이상 담고 있지 않아 `status=needs_recovery`로 보존되었습니다(종료 코드 `1`). | 현재 상태를 검토하고 다시 승인하십시오. 보존된 워크트리를 점검하십시오. |
+| `SPEC_PROPOSAL_WRONG_WORKTREE` | 핸드오프가 `dev-<slug>` 밖에서 실행되었거나, 합성 명령이 유지되는 베이스 체크아웃 밖에서 실행되었습니다. | `[TARGET]`과 `[FIX]`가 가리키는 곳에서 실행하십시오. |
+| `SPEC_PROPOSAL_HANDOFF_FAILED` | 쓰기가 실패해 롤백을 시도하지만 일부 복구가 실패할 수 있습니다. | 보고된 롤백 결과와 남은 경로를 확인한 뒤 복구하거나 다시 시도하십시오. |
+| `SPEC_HANDOFF_STALE` | 점검 후 효과 적용 전에 기본 브랜치, 수락된 계획, 정책이 바뀌었습니다(종료 코드 `2`). 또는 새 워크트리가 검토한 기본 커밋을 더 이상 담고 있지 않아 `status=needs_recovery`로 보존되었습니다(종료 코드 `1`). | 현재 상태를 검토하고 다시 승인한 뒤 보존된 워크트리를 점검하십시오. |
+| `SPEC_HANDOFF_COMMIT_REFUSED` | 커밋 게이트가 복합 핸드오프 커밋을 거부해 `dev-<slug>`에 쓰기가 `status=needs_recovery` 상태로 스테이징된 채 남아 있습니다. | 보고된 원인을 해결하고 `dev-<slug>`에서 커밋하며, 변경이 남은 해당 워크트리에서 핸드오프를 다시 실행하지 마십시오. |
 
-사전 조건 거부는 아무것도 쓰지 않습니다. 효과가 발생한 뒤의 실패는 워크트리나 쓰기를 남길 수 있으므로 보고된 상태를 먼저 확인합니다. 버그 수정 제안은 `spec.md`만 담은 `sdd-spec-bugfix` 번들로
+사전 조건 거부는 아무것도 쓰지 않습니다. 커밋 이후의 더티 트리나 이력 변경을 포함해 효과가 발생한 뒤의 실패는 워크트리나 쓰기를 남길 수 있으므로, 복구 전에 보고된 상태를 그 자리에서 먼저 확인하십시오. 버그 수정 제안은 `spec.md`만 담은 `sdd-spec-bugfix` 번들로
 핸드오프됩니다. 관련 영역: [전달](../areas/delivery.md).
-
-## Handoff 커밋과 복구
-
-복합 handoff는 검토한 베이스의 깨끗한 직접 자식으로 트랜잭션을 한 번 커밋하고 `commit`을 보고합니다.
-커밋 게이트가 거부하면 `SPEC_HANDOFF_COMMIT_REFUSED`, `status=needs_recovery`와 함께
-`dev-<slug>`에 쓰기를 staged 상태로 남깁니다. 원인을 고치고 그곳에서 커밋하며 수정된 워크트리에 handoff를 재실행하지 않습니다.
-커밋 후 미커밋 파일이나 이력 변경도 현재 위치에서 확인·복구합니다.
-
-로컬 오케스트레이션에서는 git-operator가 관찰한 `head`, `dirty_paths`를 `checks.worker_input`으로 반환합니다.
-Host는 Git과 대조하고 해당 깨끗한 HEAD 또는 자신이 추가한 링크 수정 자식 커밋에서 워커를 시작합니다.
-재작성한 참조를 다시 읽고 별도 후속 커밋으로 고쳐 handoff 트랜잭션 SHA를 유지합니다.
-
-## 이 릴리스의 작업 방식
-
-UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

@@ -8,7 +8,7 @@ title: Execute an isolated command
 # Execute an isolated command
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Use `devkit exec` when a native command can run at a fixed local commit while you continue independent work. Provide disposable data, isolated services and ephemeral ports; the checkout is not an OS sandbox.

@@ -10,7 +10,7 @@ translated_from: en/areas/compact.md@273e11250f73b0ce
 # 컴팩트 명령 출력
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -136,15 +136,15 @@ devkit run --format json -- npm run lint
 (`devkit-run` 지침에서도 이를 권장합니다). 지정한 임계값(`--slow-after`, 기본값 60초, `0` 지정 시 비활성화)보다 오래 걸리는 명령어에는
 더 세부적인 타깃 실행을 권고하는 `RUN_SLOW_COMMAND` 알림이 추가됩니다.
 
-## 에이전트가 이를 학습하는 방식
+## 에이전트 안내 방식
 
 `devkit run`은 `devkit-agt` 패키지와 함께 배포됩니다. 자동 선택되는 `harness` 번들의 `devkit-run` 지침을 통해 에이전트가 이 실행기를
-사용하고 검증 레시피에 적용하도록 안내합니다. 만약 에이전트가 레시피 외부에서 특정 테스트나 검사 명령어를 직접 실행하는 빈도가 높다면,
+사용하고 검증 레시피에 적용하도록 안내합니다. 에이전트가 레시피 외부에서 개별 테스트나 검사 명령을 자주 실행한다면,
 `devkit add harness:run`을 실행하여 선택형 프리셋을 추가하십시오. `AGENTS.md`에 실행기 사용을 권고하는 간결한 지침 한 줄이 등록됩니다.
 
 커밋 게이트와 워크플로 검사에서도 동일한 실행기를 재사용합니다. 예를 들어 `verify-commands` 커밋 게이트는 모든 검증 명령어를 이 실행기를
 통해 실행하며, 거부 메시지에는 제한된 컴팩트 뷰만 포함합니다([커밋 게이트](gate.md)). `devkit generated`도 실패한 재생성 명령을
-같은 방식으로 보고합니다([생성 파일](generated.md)). 파이썬 라이브러리 레벨의 호출자는
+같은 방식으로 보고합니다([생성 파일](generated.md)). Python 라이브러리 호출자는
 `devkit_agt.features.compact.run_command`를 활용할 수 있으며, 이 함수는 표준 출력에 아무것도 직접 출력하지 않고
 `CommandRun` 객체를 반환합니다. 이 객체의 `failure_details`가 두 곳에서 함께 쓰는 어드바이저리 상세 줄입니다.
 

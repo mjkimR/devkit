@@ -11,13 +11,13 @@ sources:
   UC-reconcile-living-spec-drift: null
   UC-route-development-intent: null
 title: 배포
-translated_from: en/areas/distribution.md@0d1eeae1ff4582fc
+translated_from: en/areas/distribution.md@0241f60d80b219aa
 ---
 
 # 배포
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -95,10 +95,10 @@ translated_from: en/areas/distribution.md@0d1eeae1ff4582fc
 [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)를 참고하십시오.
 
 ```bash
-uv run devkit sync               # deploys auto-selected bundles (devkit, advisory, harness)
-uv run devkit add starter        # selects a bundle that is not auto-selected, then syncs
-uv run devkit add advisory:python  # joins another preset of a bundle
-uv run devkit remove starter     # deselects; unchanged deployed files are removed
+uv run devkit sync                 # 자동 선택 번들 배포(devkit, advisory, harness)
+uv run devkit add starter          # 자동 선택이 아닌 번들을 선택 후 동기화
+uv run devkit add advisory:python  # 번들의 다른 프리셋을 함께 선택
+uv run devkit remove starter       # 선택 해제(변경되지 않은 배포 파일 제거)
 ```
 
 번들을 구성할 때 알아 두면 유용한 사항은 다음과 같습니다.
@@ -108,9 +108,11 @@ uv run devkit remove starter     # deselects; unchanged deployed files are remov
 - 원치 않는 자동 선택 번들은 `devkit remove <bundle>` 명령어로 비활성화할 수 있으며, 이 경우 설정에 `<bundle> = false`가 기록됩니다.
 - `sync` 실행 시 설치는 되어 있으나 선택되지 않은 번들 목록이 `unselected` 항목에 표시되며, 신규 번들이 감지되면 클론당 1회
   `BUNDLE_UNSELECTED` 알림을 출력합니다.
-- 패키지 업그레이드는 `uv lock --upgrade-package <package>` 실행 후 `uv run devkit sync`를 수행합니다. 번들 제거는 항상 명시적인 절차를
-  따릅니다. 설치된 패키지가 제거되어 더 이상 찾을 수 없는 배포 번들이 있다면, 파일을 임의로 삭제하지 않고 동기화 실패(`SELECTION_INVALID`)를
-  보고합니다.
+- 패키지 업그레이드는 `uv lock --upgrade-package <package>` 실행 후 `uv run devkit sync`를 수행합니다. 릴리스 인벤토리는 각
+  패키지의 실제 버전과 원본 wheel URL 및 체크섬을 기록합니다. 변경된 패키지와 버전이 정확히 고정된 의존 패키지는 릴리스 버전을 받고,
+  변경되지 않은 패키지는 기존 배포 버전을 유지하므로, 모든 URL을 최신 태그에서 도출하지 말고 선택한 인벤토리로 설치하십시오.
+  번들 제거는 항상 명시적인 절차를 따릅니다. 설치된 패키지가 제거되어 더 이상 찾을 수 없는 배포 번들이 있다면, 파일을 임의로 삭제하지
+  않고 동기화 실패(`SELECTION_INVALID`)를 보고합니다.
 
 내장 번들(`devkit`, `advisory`, `git-commits`, `harness`, `authoring`)과 `devkit-catalog`의 선택형 번들(`response-style`,
 `maintenance`)은
@@ -147,11 +149,11 @@ devkit은 설치 기록(receipt)에 등록된 파일만 안전하게 관리합�
   하는 상황이라면 아무 파일도 쓰지 않고 `RECEIPT_STALE` 오류와 함께 종료 코드 `1`로 실패합니다. 이는 번들 소스, 락 파일, 번들 선택
   설정이 변경되었음에도 갱신된 설치 기록이 커밋되지 않았음을 의미합니다. 이 경우 일반 `uv run devkit sync`를 실행하여 변경 사항을
   커밋하십시오(에이전트가 단순 재시도로 우회할 수 없습니다).
-- `uv run devkit sync --check`는 변경 사항이 대기 중인지 확인하는 읽기 전용 검사 명령입니다. 동기화가 필요하면
+- `uv run devkit sync --check`는 목표 상태와 비교해 동기화가 필요한지 확인하는 읽기 전용 검사 명령입니다. 동기화가 필요하면
   `NOT_SYNCHRONIZED`와 함께 종료 코드 `1`로 끝나며, 조치는 `uv run devkit sync`입니다. `--dry-run`은 수행 예정인 파일 작업을 미리
   보여 주며, 커밋 게이트 훅 같은 sync 후 확장이 바꿀 내용도 포함합니다.
-- `uv run devkit status`는 현재 설치 상태, 오류, 드리프트 현황을 종합 보고합니다. 설치된 패키지가 읽기 전용 검사를 추가할 수
-  있으며, `devkit-agt`가 있으면 망가진 커밋 게이트 훅도 경고합니다([커밋 게이트](gate.md)).
+- `uv run devkit status`는 설치 기록을 기준으로 현재 설치 상태, 오류, 드리프트 현황을 진단합니다(`sync --check`를 대체하지는 않습니다).
+  설치된 패키지가 읽기 전용 검사를 추가할 수 있으며, `devkit-agt`가 있으면 망가진 커밋 게이트 훅도 경고합니다([커밋 게이트](gate.md)).
 
 ## sync가 중단되었을 때의 복구
 
@@ -166,6 +168,10 @@ devkit은 설치 기록(receipt)에 등록된 파일만 안전하게 관리합�
 | `SYNC_CONFLICT` | 소유되지 않은 파일이나 사용자 수정 파일이 위치함 | 파일을 이동하거나 수정 내용을 프로젝트 오버라이드로 전환 |
 | `WORKSPACE_UNSAFE` | devkit 쓰기 대상 위치에 심볼릭 링크나 기존 파일이 존재함 | 해당 위치의 파일이나 심볼릭 링크를 제거하거나 다른 곳으로 이동 |
 | `HARNESS_ENGINE_MISSING` | `devkit-agt` 없이 규칙, 게이트, 워크플로 자산이 배포됨 | 해당 기능을 실행하려면 `devkit-agt`를 의존성에 추가 |
+
+sync는 무시 규칙이 없는 미추적 네이티브 프로젝션에 `PROJECTION_NOT_IGNORED`, 추적 중인 프로젝션에 `PROJECTION_TRACKED`를 경고하며,
+루트 ignore 파일이나 Git 인덱스를 직접 편집하지 않고 정확한 수정 안내를 제공합니다. `PROJECTION_GIT_CHECK_FAILED`는 정상 완료된
+동기화를 중단하지 않고 Git 진단 불가를 보고합니다.
 
 전체 트랜잭션 단계, 알림 목록 및 sync 후 확장 훅은
 [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)을
@@ -199,11 +205,15 @@ uv run devkit override remove starter:development   # 오버라이드를 제거�
 
 - 루트 `AGENTS.md` 블록에는 오리엔테이션 안내만 담깁니다: 설치된 번들 목록, 컨텍스트 로딩 규칙, 진입 스킬, 핵심 지침 포인터.
 - `uv run devkit get-context <bundle>`은 번들의 헌장(constitution)과 지침 헤더를 반환하며, 번들이 컨텍스트 문서 디렉터리를
-  선언했다면 그 안의 프로젝트 파일마다 제목과 요약도 함께 반환합니다(`docs` 번들은 이 방식으로 `docs/steering/`을 보여 줍니다).
-  배포된 모든 스킬에는 에이전트 컨텍스트마다 번들당 1회 이 명령을 실행하라는 사전 요건이 선언되어 있습니다.
+  선언했다면 그 안의 프로젝트 파일마다 제목과 요약도 함께 반환합니다(`docs` 번들은 이 방식으로 `docs/steering/`을 보여 주며,
+  `uv run devkit get-context docs --for <directory>`를 실행하면 프로젝트 내 기존 디렉터리가 선택하는 등록된 네임스페이스 문서도
+  추가하고 `documents_elsewhere`로 다른 네임스페이스 스티어링 디렉터리를 안내합니다. 지침 본문은 필요할 때 읽습니다).
+  자동 컨텍스트 로드는 이러한 출처 중 하나 이상을 가진 번들에만 적용되며, 해당 출처가 없는 번들도 명시적 `get-context` 조회를
+  사용할 수 있습니다. 배포된 모든 스킬에는 에이전트 컨텍스트마다 번들당 1회 이 명령을 실행하라는 사전 요건이 선언되어 있습니다.
 - 플레이북은 `get-context`에 포함되지 않는 비정기적 절차 가이드입니다. 생성된 `devkit-playbook` 스킬을 명시적으로 호출하면
   `uv run devkit playbook search "<query>"`를 실행하여 적절한 플레이북을 탐색하고 본문을 로드합니다.
-  `uv run devkit playbook get <bundle>/<playbook>`은 자산 ID나 선언된 별칭(alias)을 통해 단일 플레이북을 정확히 반환합니다.
+  `uv run devkit playbook get <bundle>/<playbook>`은 자산 ID나 선언된 별칭(alias)을 통해 단일 플레이북을 정확히 반환하며,
+  조회 결과의 `context.required`가 참이면 에이전트 컨텍스트마다 한 번, 그리고 컨텍스트 손실 뒤에 해당 번들 컨텍스트를 다시 로드합니다.
 
 일반적인 프롬프트나 작업 지시 문구만으로는 플레이북이 자동으로 실행되지 않습니다. `spec`과 같은 진입 스킬이 접수(intake) 단계에서 적절한
 플레이북 후보를 제안할 수 있으며, 사용자의 승인이 있어야만 명시적으로 실행됩니다. 자세한 내용은
@@ -223,8 +233,9 @@ uv run devkit override remove starter:development   # 오버라이드를 제거�
 참고하십시오.
 
 기본적으로 역할 계약은 호스트가 부여하는 모델과 추론 강도로 실행됩니다. 직접 정하려면 서브에이전트 모델 수준(subagent model
-level)을 지정합니다. `inherit`, `minimal`, `compact`, `standard`, `deep`, `maximal` 중 하나이며, 각각 에이전트별 네이티브 모델과
-추론 강도에 대응됩니다. 계약 자체가 수준을 지정할 수 있고(devkit의 `scout`는 `compact`를 요청), 최종 결정은 프로젝트가 추적되는
+level)을 지정합니다. `inherit`, `minimal`, `lean`, `compact`, `standard`, `deep`, `maximal` 중 하나이며, 각각 에이전트별 네이티브 모델과
+추론 강도에 대응됩니다(`lean`은 Claude Code의 Sonnet/medium, Codex의 `gpt-6.1-terra`/medium, Antigravity의 추론 강도 덮어쓰기 없는
+Flash에 대응합니다). 계약 자체가 수준을 지정할 수 있고(devkit의 `scout`은 `compact`를 요청), 최종 결정은 프로젝트가 추적되는
 `[subagents]` 테이블에서 `default_level`, 호스트별 `levels` 재매핑, 역할별 `roles` 오버라이드로 내립니다.
 
 ```toml
@@ -234,8 +245,8 @@ default_level = "inherit"
 level = "standard"
 ```
 
-값을 바꾼 뒤에는 `uv run devkit sync`를 실행하십시오. 수준은 자원 프리셋일 뿐 품질을 보장하지 않습니다. 실제로 무엇이 실행될지는
-여전히 호스트와 계정이 결정합니다.
+값을 바꾼 뒤에는 `uv run devkit sync`를 실행하십시오. 수준은 자원 프리셋일 뿐 품질 보장이나 권한 부여가 아니며 전달 `activity-effort`를
+설정하지도 않습니다. 실제로 무엇이 실행될지는 여전히 호스트와 계정이 결정합니다.
 
 ## 로컬 체크아웃 전용 개인 설정
 
@@ -277,7 +288,9 @@ level = "standard"
 검사에서 실패하므로, 규칙 변경은 항상 설치 기록과 함께 동기화되어야 합니다. 패키지 디렉터리 레이아웃, `pyproject.toml` 설정 예시 및 오버라이드와
 저장소 내 번들 간의 선택 기준은
 [CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md) (영어 원문)에
-기술되어 있습니다.
+기술되어 있습니다. 비공개 원본 접근 없이 지원되는 콘텐츠 제공자 전체를 로컬 패키지에 보존하려면
+[번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)에서 `devkit bundle snapshot`과
+`devkit bundle refresh` 사용법을 확인하십시오(소비자 수정은 프로젝트 오버라이드로 관리합니다).
 
 ## 이 영역의 주요 기능 명세
 
@@ -290,28 +303,3 @@ level = "standard"
 | `CAP-DIST-agent-projections` | 에이전트별 프로젝션 경로, 호출 모드 설정, 역할 계약 규격, 서브에이전트 모델 수준 |
 | `CAP-DIST-context-and-playbooks` | `get-context` 프로토콜, 플레이북 검색 및 정확한 조회 |
 | `CAP-DIST-in-repo-bundles` | 저장소 자체 자산의 패키징 및 배포 |
-
-## 네임스페이스 컨텍스트와 프로젝션 진단
-
-`uv run devkit get-context docs --for <directory>`는 루트 스티어링 문서와 해당 디렉터리가 선택하는 등록된 네임스페이스 문서를 나열합니다.
-`documents_elsewhere`는 다른 네임스페이스의 스티어링 디렉터리를 안내합니다.
-디렉터리는 프로젝트 안에 존재해야 하며 지침 본문은 필요할 때 읽습니다.
-
-서브에이전트 수준(subagent model level) `lean`은 Claude Code의 Sonnet/medium, Codex의 gpt-6.1-terra/medium,
-Antigravity의 추론 강도 덮어쓰기 없는 Flash에 대응합니다. 자원 매핑이 권한이나 전달 activity-effort를 바꾸지는 않습니다.
-
-sync는 무시 규칙이 없는 미추적 프로젝션에 `PROJECTION_NOT_IGNORED`, 추적된 프로젝션에 `PROJECTION_TRACKED`를 경고합니다.
-정확한 수정 안내를 제공하되 루트 ignore 파일이나 Git index를 편집하지 않습니다.
-`PROJECTION_GIT_CHECK_FAILED`는 나머지 동기화를 실패시키지 않고 진단 불가를 보고합니다.
-
-## 릴리즈 인벤토리와 로컬 소스 스냅샷
-
-릴리즈 인벤토리(Release inventory)는 패키지별 실제 버전과 원본 wheel URL·체크섬을 기록합니다. 페이로드가 바뀐 패키지와 정확한 버전 고정의 역방향 의존 패키지가 릴리즈 버전을 받고 나머지는 배포된 식별자를 유지합니다. 모든 URL을 최신 태그로 만들지 않고 선택한 전체 인벤토리로 설치합니다.
-
-[번들 소스 스냅샷](../journeys/snapshot-bundle-sources.md)은 지원되는 콘텐츠 제공자 전체를 커밋된 로컬 패키지에 보존하고 명시적으로 검토한 갱신을 적용합니다. 소비자 수정은 프로젝트 오버라이드로 관리합니다.
-
-`devkit sync --check`가 원하는 상태에 대한 준비 상태 검사입니다. `devkit status`는 설치 기록에 대한 설치 상태를 진단하며 이를 대체하지 않습니다.
-
-## 이 릴리스의 작업 방식
-
-자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.

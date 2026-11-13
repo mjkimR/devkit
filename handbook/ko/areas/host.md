@@ -10,7 +10,7 @@ translated_from: en/areas/host.md@944930a6146fe0c1
 # 호스트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -111,7 +111,7 @@ timeout = 10
 ```
 
 `host`, `event`, `handler`는 필수 속성입니다. 지원되는 이벤트는 `SessionStart`, `UserPromptSubmit`, `PreToolUse`,
-`PostToolUse`, `Stop`, `SessionEnd`입니다. `SessionEnd` 이벤트에는 최대 3초 이하의 명시적인 타임아웃을 지정해야 하며,
+`PostToolUse`, `Stop`, `SessionEnd`입니다. `SessionEnd` 이벤트에는 최대 3초의 명시적인 타임아웃을 지정해야 하며,
 `UserPromptSubmit`과 `Stop`은 matcher를 지원하지 않습니다. matcher는 호스트가 표기된 그대로 해석하는 정규표현식입니다.
 알 수 없는 필드가 선언되면 오류로 처리됩니다.
 
@@ -120,7 +120,7 @@ sync 실행 시 호스트 설정을 수정하기 전에 실효 정의의 유효�
 
 ## sync를 통한 호스트 설정 자동 관리
 
-`devkit bundle plan`은 생성 예정인 등록 항목을 `host_hooks` 아래에 표시하며, `devkit sync --dry-run`이나 `--check`를
+`devkit bundle plan`은 생성된 등록 항목을 `host_hooks` 아래에 표시하며, `devkit sync --dry-run`이나 `--check`를
 실행해도 동일하게 포함됩니다. 이후 sync는 `.codex/hooks.json` 파일을 필요한 최소 범위 내에서만 정밀하게 수정합니다.
 
 - 설치 기록(receipt)에 devkit 소유로 명시된 matcher 그룹만 변경하며, 그 외의 항목(외부 이벤트, 외부 그룹, 정의 순서,
@@ -162,15 +162,15 @@ def context(event: HookEvent) -> HookResponse:
 
 핸들러는 호스트 식별자, 네이티브 이벤트 이름, 프로젝트 루트 경로, 네임스페이스가 포함된 정규 에셋 이름(qualified asset name),
 네이티브 페이로드를 인자로 받습니다. 빈 응답을 반환하거나, `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`
-이벤트에 대해서는 최대 4,096자까지 추가 컨텍스트를 반환할 수 있습니다. 핸들러는 간결하고 조용하게 작성해야 합니다. 표준
-출력으로 출력된 내용은 무시되며, 민감한 이벤트 내용을 로깅하거나 백그라운드 작업을 실행하거나 이벤트 입력을 사용자 승인으로
+이벤트에 대해서는 최대 4,096자까지 추가 컨텍스트를 반환할 수 있습니다. 핸들러는 불필요한 출력 없이 조용하게 유지하십시오. stdout으로
+출력된 내용은 버려지며, 민감한 이벤트 내용을 로깅하거나 백그라운드 작업을 실행하거나 이벤트 입력을 사용자 승인으로
 간주해서는 안 됩니다. 핸들러가 누락되었거나 중복되거나 실행 중 실패하면 `HOST_HOOK_DISPATCH_FAILED`로 보고됩니다.
 오버라이드를 통해 핸들러를 변경한 경우 sync를 다시 실행해야 새 핸들러로 디스패치됩니다.
 
 ## 설치 상태 및 관찰 이력 확인
 
 내장 `observe` 핸들러는 가장 최근에 발생한 이벤트의 호스트, 에셋, 이벤트 종류, UTC 시각만을 `.devkit/transient/host/`
-디렉터리에 기록합니다. 프롬프트 내용, 실행 명령, 대화 세션 등은 일절 저장하지 않으므로 감사 로그로 사용되지 않습니다.
+디렉터리에 기록합니다. 프롬프트 내용, 실행 명령, 대화 세션 등은 일절 저장하지 않으므로 감사 로그가 아닙니다.
 
 ```sh
 devkit host status --format json
@@ -191,7 +191,7 @@ devkit host status --format json
 호스트에 대한 신뢰, 도구 실행 승인, 샌드박스 보안 프롬프트는 이러한 비즈니스 결정과 완전히 독립적으로 작동하며, 훅이 이를
 대신할 수 없습니다.
 
-## 관련 자료
+## 출처
 
 - [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문):
   훅 에셋 규약, 공유 설정 소유권, 디스패치 메커니즘, 관찰자 및 상태 진단.

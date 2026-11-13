@@ -19,7 +19,7 @@ title: devkit handbook
 # devkit handbook
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 devkit is a developer toolkit for repositories where AI coding agents (Codex, Claude Code, Antigravity) do much of
@@ -111,10 +111,13 @@ does ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v
 
 Getting oriented:
 - [Adopt in an existing repository](journeys/adopt-in-an-existing-repository.md)
+- [Adopt and refresh bundle sources locally](journeys/snapshot-bundle-sources.md)
 - [Find the right documents](journeys/find-the-right-documents.md)
 
 Exploring an idea:
+- [Discover and refine an idea](journeys/discover-and-refine-an-idea.md)
 - [Advance an idea](journeys/advance-an-idea.md)
+- [Import selected third-party agent assets](journeys/import-third-party-agent-assets.md)
 - [Adopt SDD from adaptive development](journeys/adopt-sdd-from-adaptive-development.md)
 
 Delivering work:
@@ -123,11 +126,14 @@ Delivering work:
 - [Drive development to integration](journeys/drive-development-to-integration.md)
 - [Handle delivery problems and exceptions](journeys/handle-delivery-problems-and-exceptions.md)
 - [Run parallel work safely](journeys/run-parallel-work-safely.md)
+- [Execute an isolated command](journeys/execute-an-isolated-command.md)
 - [Resolve stale activity branches](journeys/resolve-stale-activity-branches.md)
 
 Keeping the Living Spec healthy:
 - [Keep the Living Spec consistent](journeys/keep-the-living-spec-consistent.md)
 - [Reconcile Living Spec drift](journeys/reconcile-living-spec-drift.md)
+- [Read decision supersession](journeys/read-decision-supersession.md)
+- [Assess a selected test suite](journeys/assess-test-management.md)
 - [Review and refactor accumulated slop](journeys/review-and-refactor-accumulated-slop.md)
 - [Speed up selected slow operations](journeys/speed-up-selected-slow-operations.md)
 
@@ -176,8 +182,3 @@ Selecting them starts no activity and changes no approach. Their walkthroughs ar
 - [Find the latest maintenance run](journeys/find-the-latest-maintenance-run.md)
 
 Maintenance history is a separately requested companion, not an automatic step in those playbooks.
-Integration separates confirmed Git landing from final target checks; see [Integration](areas/integration.md).
-
-## Working with this release
-
-The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.

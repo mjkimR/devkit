@@ -11,13 +11,13 @@ sources:
   UC-find-the-right-documents: null
   UC-keep-the-living-spec-consistent: null
 title: 문서
-translated_from: en/areas/documents.md@c7b672b9fe70d7ef
+translated_from: en/areas/documents.md@93b93d406f5b659c
 ---
 
 # 문서
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -123,8 +123,9 @@ ID 접두사는 문서의 종류를 나타냅니다. `CAP`은 기능(capability)
 ### 문서 이름 바꾸기
 
 파일 위치를 옮기고 새 ID를 설정한 뒤, 기존 ID는 `aliases`에 보존합니다. 별칭(alias)은 ID 인자를 받는 모든 곳에서 해당 문서로
-정상 해석되며, 이후 `uv run devkit rules fix`를 실행하면 기존 참조를 새 ID로 자동 갱신합니다(`ADR-document-id-aliases`). 두 문서가
-동일한 별칭을 선언하면 충돌이 발생하여 두 문서 모두에 보고됩니다.
+정상 해석되며, 이후 `uv run devkit rules fix`를 실행하면 기존 참조를 새 ID로 자동 갱신합니다(`ADR-document-id-aliases`).
+별칭 참조 복구는 현재 색인된 문서, 스티어링 코드 스팬, 용어집 Owner 셀, 설정된 빠른 참조에 적용되며, 과거 기록과 자료는
+이전 표기를 유지합니다. 두 문서가 동일한 별칭을 선언하면 충돌이 발생하여 두 문서 모두에 보고됩니다.
 
 ## 이미 아는 정보로 조회하기
 
@@ -169,6 +170,7 @@ uv run devkit docs search "cache policy" --kind decision --kind capability --his
 검색어가 문서의 ID, 별칭, 경로, 파일 이름과 정확히 일치하면 해당 문서가 최상단에 고정 표시됩니다. 나머지 검색 결과는 ID 및
 영문 요약(어휘 및 의미 유사도 기반)과 제목, 영역, 본문(어휘 유사도 기반)을 종합하여 순위가 매겨집니다. 프로젝트별 선택 사항인
 `docs/steering/glossary.yaml`에 용어 동의어를 등록해 두면 검색어가 확장되어 다른 언어로 작성된 용어를 검색할 때 유용합니다.
+검색 시 전역 동의어를 먼저 확장한 뒤 선택된 네임스페이스의 동의어를 확장하며, 선택되지 않은 네임스페이스는 영향을 주지 않습니다.
 search 엑스트라 패키지가 설치되지 않은 경우 어휘 기반으로만 순위가 매겨지며, `uv add 'devkit-docs[search]'`(`devkit-spec[search]`에 포함됨)를 설치하면
 하이브리드 검색 순위를 활용할 수 있습니다. 자세한 내용은
 [CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md) (영어 원문)를
@@ -198,6 +200,10 @@ path = "services/api"
   넘어 자유롭게 참조할 수 있습니다. 패키지 간 교차 영향도를 확인하려면 `--all-namespaces`를 사용하십시오.
 - 스펙 번들이나 제안 번들은 프런트매터의 `namespace` 필드에 지정된 네임스페이스에 속하며, 이 필드는 `devkit spec new --namespace`와
   `devkit spec proposal new --namespace` 실행 시 자동으로 기록됩니다.
+- 등록된 네임스페이스는 `docs/packages/<name>/` 아래에 선택적으로 `steering/glossary.md`, `steering/glossary.yaml`,
+  `steering/ux-objects.md`를 둘 수 있으며, 마일스톤은 `docs/packages/<name>/roadmap/`, 완료(`done`)·중단(`dropped`) 기록은 그
+  `_archive/`에 둡니다. 에이전트는 전역 목록과 해당 로컬 목록을 함께 읽으며 로컬 용어는 해당 네임스페이스에만 적용됩니다.
+  기존 패키지 수준의 용어집은 수동으로 이동하거나 병합해야 합니다.
 
 ## 이 영역의 핵심 기능
 
@@ -207,15 +213,3 @@ path = "services/api"
 | `CAP-DOCS-document-lookup` | `resolve`, `refs`, `list` 명령의 세부 옵션, 출력 형식, 반환 코드 |
 | `CAP-DOCS-document-search` | `devkit docs search`의 후보 선정, 최상단 고정, 용어집, 검색 모드 |
 | `CAP-DOCS-namespaces` | 모노레포 네임스페이스 구성 및 범위 선택 |
-
-## 네임스페이스 스티어링과 안정적인 별칭
-
-등록된 네임스페이스는 `docs/packages/<name>/` 아래 선택적으로 `steering/glossary.md`, `steering/glossary.yaml`,
-`steering/ux-objects.md`를 둘 수 있습니다. 에이전트는 전역 목록과 해당 로컬 목록을 함께 읽으며 로컬 용어는 그 네임스페이스에만 적용합니다.
-기존 패키지 루트 용어집은 수동 이동·병합이 필요합니다.
-검색은 전역 동의어 다음 선택된 네임스페이스 동의어를 확장하며 선택하지 않은 네임스페이스는 영향을 주지 않습니다.
-
-네임스페이스 마일스톤은 `docs/packages/<name>/roadmap/`, done·dropped 기록은 그 `_archive/`에 둡니다.
-문서 ID는 저장소 전체에서 유일합니다. 별칭 수리는 현재 색인 문서, 스티어링 코드 스팬,
-용어집 Owner 셀과 설정된 빠른 참조에 적용합니다. 과거 기록과 자료는 이전 표기를 유지합니다.
-`RULE-decision-supersession`이 ADR 전체·부분 대체의 상호 참조를 검사하며 의미적 범위는 리뷰가 필요합니다.

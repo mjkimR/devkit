@@ -4,7 +4,7 @@ generated: true
 # 용어집
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -14,9 +14,9 @@ devkit 문서가 쓰는 용어이며 Living Spec 용어집에서 생성됩니다
 
 | 용어 | 번역어 | 정의 | 출처 |
 | :--- | :--- | :--- | :--- |
-| **Release version** | 릴리즈 버전 | One human-selected X.Y.Z assigned to changed distributions and their exact-pin dependents; excludes unchanged package and bundle identities. | `ADR-selective-package-versions` |
+| **Release version** | 릴리스 버전 | One human-selected X.Y.Z assigned to changed distributions and their exact-pin dependents; excludes unchanged package and bundle identities. | `ADR-selective-package-versions` |
 | **Package version** | 패키지 버전 | A distribution's actual static version, retained when its shipped payload is unchanged; excludes the newest release number. | `ADR-selective-package-versions` |
-| **Release inventory** | 릴리즈 인벤토리 | Completed artifact provenance and compatible actual package versions for one release; excludes an unpublished preparation plan. | `ARCH-07-deployment` |
+| **Release inventory** | 릴리스 인벤토리 | Completed artifact provenance and compatible actual package versions for one release; excludes an unpublished preparation plan. | `ARCH-07-deployment` |
 | **devkit bundle** | devkit 번들 | devkit's unit of distributable agent assets, declared in `bundle.toml`. Bundles ship instructions, playbooks, rules, workflows, subagents, gates, and guidance fragments. | `CAP-DIST-manifest-spec` |
 | **Bundle source snapshot** | 번들 소스 스냅샷 | Repository-committed source copy of a complete supported content provider, with provenance and explicit refresh through an ordinary local package; excludes governance Snapshot run evaluation and runtime-package vendoring. | `CAP-DIST-in-repo-bundles` |
 | **Subagent model level** | 서브에이전트 모델 수준 | Distribution-owned preset (minimal, compact, lean, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` |

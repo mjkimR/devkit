@@ -38,7 +38,7 @@ title: Delivery
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -133,6 +133,8 @@ From the retained base checkout, composed acceptance integrates the reviewed Pla
 uv run devkit spec proposal accept-plan <slug> --by user --mode accept_only
 ```
 
+Plain `devkit spec proposal accept` has no `--mode` or `--effort` flags.
+
 `accept_and_handoff` also requires handoff authority and a selected `--effort`; after Planning lands it yields with
 verification pending and handoff unstarted. The Host synchronizes and checks the landed runtime, then invokes
 handoff in a fresh process with unchanged authorized scope and effort.
@@ -158,11 +160,18 @@ an explicit decision. See [Plan and hand off a proposal](../journeys/plan-and-ha
 The feature path covers specification, build/verification, review, Living Spec reflection, feedback and a final report
 before integration. The bugfix path adds characterization and Red/Green evidence.
 Screens are drafted in the proposal or spec before code; optional `ux-reviewer` findings are recorded there.
-The retained screens and use-case citations enter `docs/ux/` during reconciliation.
+Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather
+than another independent review round. The retained screens and use-case citations enter `docs/ux/` during
+reconciliation.
 
 `reconcile.md` maps the change to durable contracts in `docs/`. Every effort records a reconcile check.
 At medium, a self-check can replace an independent reconcile reviewer only when every affected contract and its
 agreement with the diff is unambiguous and no cross-component interpretation remains. High requires independence.
+A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or
+waived with a reason; required contract mismatches cannot be waived.
+
+When evaluating how a suite is organized, [Assess a selected test suite](../journeys/assess-test-management.md) consults
+on the selected suite before decided changes enter the native workflow.
 
 ## Decisions and records
 
@@ -178,23 +187,30 @@ Within the agreement, the executor makes implementation choices. A change to goa
 
 Unit envelopes record reviews, rechecks, feedback, final reports, questions and problems without overwriting history.
 An unanswered question or unresolved problem holds the workflow. Only the actor who fixed a problem records its resolution.
-For one fully authored envelope as the sole pending file, `uv run devkit workflow envelope commit --unit <dir>
---file envelopes/<name>.yaml` keeps normal hooks; source changes and multi-record transactions use ordinary combined commits.
+For one fully authored envelope as the sole pending file,
+`uv run devkit workflow envelope commit --unit <dir> --file envelopes/<name>.yaml` keeps normal hooks; source changes
+and multi-record transactions use ordinary combined commits.
 Session tasks report in conversation or the PR body and create none of these records.
 
 ## Orchestration and integration
 
 In direct mode the Host performs the work. Local-orchestrated work uses one-shot Planning or Development workers
-in their worktrees. Read-only support roles return evidence; workers commit only on their activity branches.
-A reusable `git-operator` executes exact currently authorized lifecycle jobs. The Host retains scheduling,
-semantic choices and result acceptance. Scout defaults to compact; git-operator uses lean, with medium effort where supported.
-These resource levels do not change delivery effort or authority.
+in their worktrees. The coordinator delegates useful separable research, implementation and verification while retaining
+integration and final validation; child scope and commit authority stay within the parent assignment with no fixed
+nesting-depth rule, and concurrent writers use separate worktrees or run serially. Read-only support roles return
+evidence; workers commit only on their activity branches. A reusable `git-operator` executes exact currently authorized
+lifecycle jobs. The Host retains scheduling, semantic choices and result acceptance. Scout defaults to compact;
+git-operator uses lean, with medium effort where supported. These resource levels do not change delivery effort or
+authority.
 
 Scope observations distinguish current writes from future Planning scope. Current overlap serializes running work;
 future-only overlap orders handoff/integration without serializing Planning. Partial coverage never proves independence.
 `uv run devkit spec worker inspect` audits the returned turn and cumulative rules against the intended base.
 
 The Host checks content using the source runtime, then prepares and executes the explicit branch integration.
+Guarded integration includes proposal pruning only when the proposal path appears in committed history reachable from
+its pinned source or target; an uncommitted directory alone does not make pruning applicable, and the approved cleanup
+tuple stays unchanged across landing and retries.
 After landing, it synchronizes dependencies and assets, regenerates stale tracked artifacts and runs final checks
 in fresh processes. A confirmed Git merge remains `verification=pending` until those checks pass.
 See [Integration](integration.md) and [Drive development to integration](../journeys/drive-development-to-integration.md).
@@ -206,6 +222,13 @@ bounded experiments, representative implementation and real usage checks without
 It checks that the shared approach is `adaptive-dev` before product work. Optional roles are product-clarifier,
 product-researcher and usage-reviewer. The coordinator keeps mutable current facts in `.devkit/adaptive-dev.md`:
 goals, retained choices versus assumptions, checks, unknowns and the next action. A product can keep this approach indefinitely.
+
+For delegated work under adaptive development, `devkit adaptive assignment new` records the goal, literal write prefixes,
+commit authority, declared checks and governing documents before dispatch, and `return`, `verify` and `close` retain
+evidence in a shared Git ledger. Verification checks repository facts and reported outcomes without dispatching an agent
+or running tests; `list` reports observations rather than agent liveness. See
+[Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md) when bringing external skills
+or role contracts into project-owned overlays.
 
 The former incubation approach, bundle and entry are not accepted, and the old context file is not a fallback.
 On your request, `spec/sdd-baseline` maps the retained product to code, current documents and actual evidence.
@@ -271,19 +294,3 @@ It is never a reconciliation target; `docs/` prevails when the two disagree.
 - [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md)
 - [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md)
 - [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-maintenance-history.md)
-
-## Assignment evidence and lifecycle ownership
-
-`devkit-adaptive` owns the adaptive bundle and assignment commands. `devkit adaptive assignment new` records goal, literal write prefixes, commit authority, declared checks and governing documents before dispatch. `return`, `verify` and `close` retain evidence in a shared Git ledger. Verification checks repository facts and reported outcomes; it dispatches no agent and runs no test. `list` reports observations, never agent liveness.
-
-Proposal execution interfaces live in `CAP-DLV-proposal-lifecycle`; worker authority and return validation live in `CAP-DLV-delivery-roles`. On a local Host, composed Planning acceptance uses `devkit spec proposal accept-plan <slug> --by user --mode accept_only`. Plain `accept` has no `--mode` or `--effort`.
-
-[Test management](../journeys/assess-test-management.md) consults on a selected suite before decided changes enter the native workflow.
-
-## Working with this release
-
-The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.
-
-Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.
-
-Guarded integration includes proposal pruning only when the proposal path occurs in committed history reachable from its pinned source or target. The approved cleanup tuple stays unchanged across landing and retries; an uncommitted directory alone does not make pruning applicable.

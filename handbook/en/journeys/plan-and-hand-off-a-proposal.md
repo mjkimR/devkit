@@ -10,7 +10,7 @@ title: Plan and hand off a proposal
 # Plan and hand off a proposal
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -153,11 +153,14 @@ records by name, rewrites references that pointed into the proposal, and removes
 `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]`, `[CARRIED_GATE: ...]`, `[REWRITTEN: ...]`, then
 `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`.
 
+Composed handoff commits its transaction once as a clean direct child of the reviewed base and reports `commit`.
+A post-commit dirty or changed-history result needs in-place inspection and recovery rather than rerunning handoff.
+
 ## 6. Reread and continue
 
-A `SPEC_PROPOSAL_REFS_REWRITTEN` notice asks the agent to reread the rewritten sentences. It fixes any unresolved link
-in the same change and follows the spec workflow's next stage, as in
-[Drive development to integration](drive-development-to-integration.md).
+A `SPEC_PROPOSAL_REFS_REWRITTEN` notice asks the agent to reread the rewritten sentences. It repairs any unresolved link
+in a follow-up commit on `dev-<slug>`—preserving the handoff transaction SHA—and follows the spec workflow's next
+stage, as in [Drive development to integration](drive-development-to-integration.md).
 
 ## Shortcuts and other endings
 
@@ -194,21 +197,8 @@ in the same change and follows the spec workflow's next stage, as in
 | `SPEC_PROPOSAL_WRONG_WORKTREE` | Handoff ran outside `dev-<slug>`, or a composed command ran off the retained base checkout. | Run where `[TARGET]` and `[FIX]` say. |
 | `SPEC_PROPOSAL_HANDOFF_FAILED` | A write failed; rollback is attempted and may be incomplete. | Inspect reported rollback results and retained paths before repairing or retrying. |
 | `SPEC_HANDOFF_STALE` | The base, accepted plan or policy changed since the check, before any effect (exit `2`); or the new worktree no longer holds the reviewed base commit and is kept with `status=needs_recovery` (exit `1`). | Review the current state and approve again; inspect a kept worktree. |
+| `SPEC_HANDOFF_COMMIT_REFUSED` | The commit gate refused the composed handoff commit, leaving writes staged in `dev-<slug>` with `status=needs_recovery`. | Fix the reported cause and commit in `dev-<slug>`; do not rerun handoff against that dirty worktree. |
 
-A preflight refusal writes nothing. Failures after effects can retain a worktree or writes; inspect the reported state before recovery. A bugfix proposal hands off to a bundle that holds only `spec.md`,
-bound to `sdd-spec-bugfix`. Area: [Delivery](../areas/delivery.md).
-
-## Handoff commit and recovery
-
-Composed handoff commits its transaction once as a clean direct child of the reviewed base and reports `commit`.
-When the commit gate refuses it, `SPEC_HANDOFF_COMMIT_REFUSED` leaves writes staged in `dev-<slug>` with
-`status=needs_recovery`. Fix the cause and commit there; do not rerun handoff against its dirty worktree.
-A post-commit dirty or changed-history result likewise needs in-place inspection.
-
-In local orchestration, git-operator reports `checks.worker_input` with the observed `head` and `dirty_paths`.
-The Host compares these with Git before starting a worker on that clean head or its own later link-fix descendant.
-The handoff's rewritten references are reread and repaired in a later commit, preserving the transaction SHA.
-
-## Working with this release
-
-Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.
+A preflight refusal writes nothing. Failures after effects—including a post-commit dirty tree or changed history—can
+retain a worktree or writes; inspect the reported state in place before recovery. A bugfix proposal hands off to a bundle
+that holds only `spec.md`, bound to `sdd-spec-bugfix`. Area: [Delivery](../areas/delivery.md).

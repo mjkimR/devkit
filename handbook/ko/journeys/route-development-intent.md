@@ -11,13 +11,13 @@ sources:
   UC-plan-and-hand-off-a-proposal: null
   UC-route-development-intent: null
 title: 개발 요청 라우팅하기
-translated_from: en/journeys/route-development-intent.md@aaeaa97047b803c5
+translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
 ---
 
 # 개발 요청 라우팅하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -87,7 +87,7 @@ translated_from: en/journeys/route-development-intent.md@aaeaa97047b803c5
 
 가장 일반적인 경로는 `direct` 모드의 `spec` 깊이 `feature`입니다.
 
-1. **요청 접수.** 에이전트가 적용 중인 개발 방식이 SDD인지 확인하고, 요청을 가지고 `spec` 스킬에 들어갑니다. 제한된 플레이북 검색을 한 번 실행하며(`devkit playbook search "<query>" --limit 3 --max-bytes 4096`), 요청한 작업을 가리키는 플레이북이 없으면 별도 질문 없이 계속합니다(`ADR-decision-ledger`).
+1. **요청 접수.** 에이전트가 적용 중인 개발 방식이 SDD인지 확인하고, 요청을 가지고 `spec` 스킬에 들어갑니다. 제한된 플레이북 검색을 한 번 실행하며(`devkit playbook search "<query>" --limit 3 --max-bytes 4096`), 요청한 작업을 가리키는 플레이북이 없으면 별도 안내 없이 조용히 계속 진행합니다(`ADR-decision-ledger`).
 2. **정책 확인.** 적용 중인 프로젝트 정책을 읽습니다.
 
    ```sh
@@ -116,7 +116,7 @@ translated_from: en/journeys/route-development-intent.md@aaeaa97047b803c5
 | 분류 | 진행 방식 |
 | --- | --- |
 | 개발 방식이 `adaptive-dev` | SDD 라우팅을 하지 않습니다. 에이전트는 프로젝트의 적응형 개발 지침과 독립적인 문서·프로젝트 검사를 따르며, 유닛을 만들지 않고 깊이도 정하지 않습니다. [아이디어 발전시키기](advance-an-idea.md)를 참고하십시오. 이미 SDD에 연결된 유닛은 자신의 검사를 유지합니다. |
-| `session` 깊이 | 대화로 의도를 합의하고 에이전트가 직접 `sdd-session-<task-kind>`를 따르며, 유닛, 엔벨로프, 게이트 기록, reconcile 문서를 쓰지 않습니다. |
+| `session` 깊이 | 대화로 의도를 합의하고 에이전트가 직접 `sdd-session-<task-kind>`를 따르며, 유닛, 엔벨로프, 게이트 기록, 조정(reconcile) 문서를 쓰지 않습니다. |
 | `proposal` 깊이 | `devkit spec proposal new <slug>`로 `docs/proposals/PROP-<slug>/proposal.md` 초안을 만들고, [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)로 이어집니다. |
 | 지금 시작하지 않거나 규모가 너무 큰 경우 | Backlog에 하나 이상의 제안 초안으로 보관하고, 필요하면 마일스톤에 넣으며, `decomposed_from` 또는 `supersedes`로 출처를 보존합니다. 둘 이상의 스펙이나 다른 `task-kind`가 필요한 작업은 `size: XL`이며 Planning 전에 분할합니다. |
 | `overall-refactor` | 동작을 추가하지 않고 여러 영역을 재구성하는 경우로, 유닛, 제안, 번들 없이 `direct` 모드의 `sdd-overall-refactor`를 따릅니다. |
@@ -130,11 +130,11 @@ translated_from: en/journeys/route-development-intent.md@aaeaa97047b803c5
 ## 문제가 생겼을 때
 
 - **플레이북이 일치하는 경우:** 에이전트가 분류와 함께 한 줄로 안내하고 기다립니다. 확인하면 실행하고, 거절하면 이번 대화에서 다시 제안하지 않습니다. 이어지는 작업과 후속 요청에서는 검색하지 않습니다.
-- **`devkit spec new` 또는 `devkit spec proposal new`가 `SPEC_LIFECYCLE_INACTIVE`를 반환하는 경우:** 개발 방식이 적응형 개발이어서 SDD 유닛을 만들 수 없으며, 아무것도 쓰이지 않습니다. SDD로 전환하는 것은 사용자의 명시적 결정이며 [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)에서 설명합니다.
+- **`devkit spec new` 또는 `devkit spec proposal new`가 `SPEC_LIFECYCLE_INACTIVE`를 반환하는 경우:** 개발 방식이 적응형 개발이어서 SDD 유닛을 만들 수 없으며, 아무것도 쓰이지 않습니다. SDD로 전환할지는 사용자의 명시적 선택이며 [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)에서 설명합니다.
 - **`DEVELOPMENT_CONFIG_INVALID`:** `[development]` 테이블에 알 수 없는 키나 값이 있습니다. `.devkit/config.toml`을 고칠 때까지 정책에 의존하는 명령이 거부됩니다.
 - **`devkit spec policy`가 `SPEC_CONFIG_INVALID`를 반환하는 경우:** `[tool.spec]` 키를 알 수 없거나 게이트 정책이 `ask`나 `auto`가 아닙니다(예: `plan-accept = "off"`). `.devkit/config.toml`을 고칠 때까지 에이전트는 정책에 의존하는 작업을 멈춥니다.
-- **`SPEC_WRONG_BRANCH`:** 체크아웃이 `dev-<slug>`에 있지 않아 아무것도 쓰이지 않았습니다. 그 브랜치를 시작하거나 이어서 `devkit spec new`를 다시 실행하십시오.
-- **`SPEC_EXISTS`:** 다른 문서, 제안, 번들이 이미 그 slug를 쓰고 있습니다(`[TARGET]`에 표시). 다른 slug를 고르십시오.
+- **`SPEC_WRONG_BRANCH`:** 체크아웃이 `dev-<slug>`에 있지 않아 아무것도 쓰이지 않았습니다. 그 브랜치를 시작하거나 이어서 `devkit spec new`를 다시 실행해야 합니다.
+- **`SPEC_EXISTS`:** 다른 문서, 제안, 번들이 이미 그 slug를 쓰고 있습니다(`[TARGET]`에 표시). 다른 slug를 골라야 합니다.
 - **워크트리가 필요한 경우:** `worktree=required`이거나, `auto`에서 체크아웃에 무관한 변경이나 다른 작업이 있으면 에이전트가 별도 워크트리에서 `dev-<slug>`를 시작합니다
   ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
 - **세션 작업에 계약 변경이 필요해진 경우:** 에이전트가 깊이를 `spec`으로 올리고(`depth_escalation=auto`면 스스로, `ask`면 사용자 확인 후), 같은 위치의 `dev-<slug>`에 스펙 유닛을 추가하며 지금까지의 작업을 유지합니다. 깊이가 저절로 낮아지는 일은 없습니다.
@@ -142,7 +142,3 @@ translated_from: en/journeys/route-development-intent.md@aaeaa97047b803c5
 ## 최종 결과
 
 작업마다 하나의 워크플로가 있고, 유닛 또는 세션의 경우 대화로 식별됩니다. 기록되는 모든 승인은 사용자의 지시, 명시적 답변, `auto` 정책 중 하나에서 오며, 거부된 `devkit spec new`는 워크스페이스를 바꾸지 않습니다.
-
-## 이 릴리스의 작업 방식
-
-UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

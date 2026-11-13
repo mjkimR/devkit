@@ -8,7 +8,7 @@ title: Commit gates
 # Commit gates
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -138,7 +138,8 @@ what kind of problem it is:
 - `BLOCKED` (exit `1`): a gate refused on policy the committer must not work around. Report it; changing the policy
   is the user's decision. Under `--strict` (`DEVKIT_STRICT=1`) a stage that reported a gate warning also ends with a
   `GATE_STRICT_WARNINGS` block of this kind; warning-severity rule findings (`GATE_RULES_WARNINGS`) never count,
-  because a rule's severity decides whether it refuses a commit.
+  because a rule's severity decides whether it refuses a commit. Likewise, `notice`-severity rules are advisory-only
+  and never block commits, even under `--strict` (see [Governance rules](governance.md)).
 - `AUTO` (exit `2`): the gates could not judge, and one fix covers it, usually `devkit sync` in a fresh worktree or
   clone whose managed rule files are missing (`RULES_RUN_FAILED`, `GATE_VERIFY_NOT_RUN`).
 - Setup errors (exit `2`): the gate setup itself is broken and the error's `[FIX]` names the repair, for example
@@ -199,7 +200,3 @@ at `900` so it sees the final message.
   codes and error codes.
 - Gates are part of the everyday loop in
   [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md).
-
-## Working with this release
-
-Rule findings at `notice` severity are nonblocking considerations, including under strict mode and commit gates. `uv run devkit rules context FILE` returns bounded working-versus-HEAD change evidence and applicable change-scoped notices; native file reads do not call it automatically. Missing evidence is disclosed rather than replaced with whole-file history.

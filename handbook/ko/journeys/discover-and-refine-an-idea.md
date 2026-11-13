@@ -3,13 +3,13 @@ sources:
   CAP-DLV-idea-discovery: null
   UC-discover-and-refine-an-idea: null
 title: 아이디어 발굴하고 구체화하기
-translated_from: en/journeys/discover-and-refine-an-idea.md@6fccf2ac6994f26f
+translated_from: en/journeys/discover-and-refine-an-idea.md@0aa5018850bf402b
 ---
 
 # 아이디어 발굴하고 구체화하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -65,15 +65,18 @@ translated_from: en/journeys/discover-and-refine-an-idea.md@6fccf2ac6994f26f
 - [용어집](../glossary.md)
 <!-- /handbook:generated -->
 
-`uv run devkit add deep-research`로 번들을 선택한 뒤 덜 구체화된 아이디어에 `/discovery <idea>`를 호출합니다. 아이디어 발굴(Idea discovery)은 출처 기반 조사와 별도 진입점이며 구현·커밋·게시 권한을 부여하지 않습니다.
+`uv run devkit add deep-research`로 `deep-research` 번들을 선택한 뒤 덜 구체화된 아이디어에 `/discovery <idea>`를 호출합니다. 아이디어 발굴(Idea discovery)은 출처 기반 조사와 별도 진입점이며 구현·커밋·게시 권한을 부여하지 않습니다.
 
-1. 제공된 문맥에서 원하는 변화, 사용 장면, 제약과 결과를 파악합니다. 첫 제안을 바꾸는 사용자 고유의 선택만 질문합니다.
-2. 탐색 질문, 투입 범위와 종료 조건을 밝힙니다. 편익, 비용, 근거와 가정을 갖춘 구체적 사용 예를 만들며 선택적 독립 역할이 서로 다른 전제를 살펴봅니다.
+## 단계별 절차
+
+1. 제공된 컨텍스트에서 원하는 변화, 사용 장면, 제약과 결과를 파악합니다. 첫 제안을 바꾸는 사용자 고유의 선택만 질문합니다.
+2. 탐색 질문, 투입 범위와 종료 조건을 밝힙니다. 편익, 비용, 근거와 가정을 갖춘 구체적 사용 예를 만들며 필요에 따라 독립 역할이 서로 다른 전제를 검토합니다.
 3. 사실 부족은 제한된 조사로, 경험 부족은 예시나 실험 제안으로, 실패한 전제는 재정의·보류·기각으로 연결합니다. 실행에는 별도 권한이 필요합니다.
 4. 제안, 추천, 실제 사용자 결정, 불확실성, 근거의 한계와 다음 결정을 반환합니다. 결과는 구체화됨, 검증 필요, 보류 또는 기각입니다.
 
-보존 요청이 없으면 결과는 대화에 남습니다. 보존 자료의 완전·부분 커버리지와 발굴 결과를 구분하고 커밋하지 않습니다. 독립 검증의 누락을 알리며 거부된 자원은 다른 경로로 접근하지 않습니다.
+보존 요청이 없으면 결과는 대화에 남습니다. 보존 자료는 완전·부분 커버리지를 발굴 결과와 구분하여 기록하며 커밋하지 않은 상태로 둡니다. 독립 검토 범위의 누락을 명시하며 거부된 자원은 다른 경로로 접근하지 않습니다.
+
+## 출처
 
 - [CAP-DLV-idea-discovery](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-idea-discovery.md) (영어 원문)
-
 - [UC-discover-and-refine-an-idea](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-discover-and-refine-an-idea.md) (영어 원문)

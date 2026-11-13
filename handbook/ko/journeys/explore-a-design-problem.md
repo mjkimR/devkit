@@ -3,13 +3,13 @@ sources:
   CAP-DLV-design-exploration: null
   UC-explore-a-design-problem: null
 title: 설계 문제 탐색하기
-translated_from: en/journeys/explore-a-design-problem.md@8432e7ef882051d9
+translated_from: en/journeys/explore-a-design-problem.md@b698e4ac98960c94
 ---
 
 # 설계 문제 탐색하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -67,28 +67,28 @@ translated_from: en/journeys/explore-a-design-problem.md@8432e7ef882051d9
 
 선택형 `design-explore` 번들을 선택한 뒤 구조, 데이터 모델, 모듈 경계 또는 처리·개발 워크플로 문제로
 `/design-explore <문제>`를 명시적으로 호출합니다.
-결과는 장점·상충 관계·불확실성을 이해하며 해결 기제(mechanism)를 고를 수 있는 방향입니다.
+결과는 장점·상충 관계·불확실성이 정리된 유용한 해결 방식 선택지입니다.
 
 1. 목표, 기존 설계, 필수 제약과 열려 있는 선호를 제공합니다.
 2. 조정자가 서로 다른 전제와 근거 질문을 고릅니다. 작은 문제는 직접 처리하고, 필요할 때만
    solution-explorer, reference-researcher, design-critic 관점을 사용합니다.
-3. 새 자식 컨텍스트를 지원하면 최초 독립 탐색에 다른 관점의 결론을 전달하지 않습니다.
+3. 새 하위 컨텍스트를 지원하면 최초 독립 탐색에 다른 관점의 결론을 전달하지 않습니다.
    지원되지 않으면 컨텍스트 공유와 빠진 범위를 밝힙니다.
 4. 종합 결과는 유용한 차이와 비관습적 기제를 유지합니다. 비평은 근거와 실패 조건을 담고,
-   발견 사항이 없어도 유효하며 보통 한 차례의 유용한 개선이면 충분합니다.
+   지적 사항이 없어도 유효하며 보통 한 차례의 유용한 개선이면 충분합니다.
 5. 대화에서 방향과 이유 있는 권고를 받습니다. 저장 위치를 명시적으로 요청한 경우에만 조정자가
    그 위치의 기존 형식으로 결과를 보존합니다.
 
 고정된 역할 구성·대안 수·점수·프로토타입·효익 증명 실험은 요구하지 않습니다.
-역할은 제품 소스, 보존 파일, 설정, index와 HEAD를 변경하지 않습니다.
+역할은 제품 소스, 보존 파일, 설정, `index`와 HEAD를 변경하지 않습니다.
 호출은 구현·설정 변경·커밋·승인·게시를 허가하지 않습니다.
 저장 위치가 거부되면 쓰기를 보류하고 유용한 대화 결과를 유지합니다.
+
+## 중요한 반론 확인하기
+
+조정자는 실제 후보와 반론을 탐색자에게 돌려보내 한 번의 응답을 받을 수 있습니다. 반론별 근거를 판단하고 불일치와 불확실성을 보존하며 합의나 역할 이름을 증거로 삼지 않습니다. 작성자 응답이 없으면 명시합니다. 추가 검토에는 결정을 바꿀 구체적 질문과 유한한 범위가 필요하며 자동 반박이나 구현으로 이어지지 않습니다.
 
 ## 출처
 
 - [UC-explore-a-design-problem](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-explore-a-design-problem.md) (영어 원문)
 - [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md) (영어 원문)
-
-## 중요한 반론 확인하기
-
-조정자는 실제 후보와 반론을 탐색자에게 돌려보내 한 번의 응답을 받을 수 있습니다. 반론별 근거를 판단하고 불일치와 불확실성을 보존하며 합의나 역할 이름을 증거로 삼지 않습니다. 작성자 응답이 없으면 명시합니다. 추가 검토에는 결정을 바꿀 구체적 질문과 유한한 범위가 필요하며 자동 반박이나 구현으로 이어지지 않습니다.

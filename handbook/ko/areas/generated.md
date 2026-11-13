@@ -4,13 +4,13 @@ sources:
   CAP-GATE-commit-gates: null
   CAP-GEN-tracked-artifacts: null
 title: 생성 파일
-translated_from: en/areas/generated.md@9fef0367e2c5059f
+translated_from: en/areas/generated.md@d409ad2f0eda7209
 ---
 
 # 생성 파일
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 `uv.lock`, devkit 자체의 설치 기록(`.devkit/installation.json`), 자동 생성된 클라이언트 코드, 렌더링된 스냅샷처럼 특정
@@ -68,7 +68,7 @@ uv run devkit generated resolve --dry-run   # 계획만 확인하고 파일은 �
 uv run devkit generated resolve             # 기준 파일 초기화(seed), 재생성, 스테이징
 ```
 
-`resolve`는 충돌 상태인 각 경로가 등록된 아티팩트 소유인지 여부를 판별합니다. 아티팩트가 소유한 파일의 충돌은 지정된 `seed`
+`resolve`는 충돌 상태인 각 경로가 등록된 아티팩트 소유인지 여부를 판별합니다. 아티팩트가 소유한 파일의 충돌은 지정된 기준 파일(`seed`)
 쪽 내용으로 초기화한 뒤, 등록된 명령어들을 순서대로 실행하고 그 결과를 자동으로 스테이징합니다. 단, 커밋은 자동으로 수행하지
 않습니다. 실행 후 상황은 다음과 같이 나뉩니다.
 
@@ -95,9 +95,11 @@ uv run devkit generated resolve             # 기준 파일 초기화(seed), 재
   쓰는 파일의 변경은 목록에 나오지만 판정에는 영향을 주지 않습니다. 텍스트 출력에는 오래된 아티팩트만 표시됩니다. 현재
   체크아웃된 작업 공간에는 전혀 영향을 주지 않으며, 새로 클론한 환경처럼 실행되므로 Git 무시(ignored) 파일 없이도 정상 동작해야
   합니다. 이 명령은 CI 파이프라인에서 실행하십시오.
-- `uv run devkit generated regen [ID...]`: 현재 작업 트리에서 명령어를 직접 다시 실행하며, 결과를 자동으로 스테이징하지는
-  않습니다. Git 인덱스에 충돌이 남아 있는 상태에서는 `GENERATED_UNMERGED` 오류와 함께 실행을 거부하며, 이 오류의 `[FIX]`는
-  `uv run devkit generated resolve`입니다.
+- `uv run devkit generated regen [ID...]`: 현재 작업 트리에서 명령어를 직접 다시 실행하며(ID를 지정하면 선택한 아티팩트와
+  후속 아티팩트만 실행), 결과를 자동으로 스테이징하지는 않습니다. Git 인덱스에 충돌이 남아 있는 상태에서는
+  `GENERATED_UNMERGED` 오류와 함께 실행을 거부하며, 이 오류의 `[FIX]`는 `uv run devkit generated resolve`입니다.
+  통합 과정에서 알려진 아티팩트 충돌을 선언된 기준 파일(`seed`) 쪽으로 유지했다면, 먼저 반영된 런타임을 동기화한 뒤
+  지목한 출력을 재생성·커밋하고 최종 대상 검사를 실행하십시오.
 
 ## 제약 사항과 신뢰성
 
@@ -114,14 +116,3 @@ uv run devkit generated resolve             # 기준 파일 초기화(seed), 재
 
 설치 기록 자체가 작성되는 원리와 여러 클론 간 일관성을 유지하는 메커니즘은 [배포](distribution.md) 및
 `CAP-DIST-sync-and-transactions`에서 자세히 다룹니다.
-
-## 통합 후 재생성
-
-`uv run devkit generated regen <ids>`는 선택한 생성물과 후속 생성물을 현재 위치에서 실행하며 stage하지 않습니다.
-index에 미병합 경로가 있으면 `GENERATED_UNMERGED`로 거부하므로 먼저 충돌을 해결합니다.
-통합이 알려진 생성물 충돌을 선언된 seed 쪽으로 유지했다면 반영된 런타임을 먼저 동기화하고
-지목한 출력을 재생성·커밋한 뒤 최종 대상 검사를 실행합니다.
-
-## 이 릴리스의 작업 방식
-
-규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.

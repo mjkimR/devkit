@@ -8,7 +8,7 @@ title: Import selected third-party agent assets
 # Import selected third-party agent assets
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Select `adaptive-dev:core` or `adaptive-dev:import`, sync, then explicitly invoke `/adaptive-import <repository-url-or-local-path>`.
@@ -25,7 +25,3 @@ Missing companion tools remain prerequisites, with no automatic setup. An unavai
 
 - [UC-import-third-party-agent-assets](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-import-third-party-agent-assets.md)
 - [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
-
-## Working with this release
-
-The coordinator delegates useful separable research, implementation and verification while retaining integration and final validation. Child scope and commit authority stay within the parent assignment; there is no fixed nesting-depth rule. Concurrent writers use separate worktrees or run serially.

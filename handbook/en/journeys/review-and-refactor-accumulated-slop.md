@@ -14,7 +14,7 @@ title: Review and refactor accumulated slop
 # Review and refactor accumulated slop
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `a6e769c5721d`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -193,18 +193,7 @@ A smaller surface where every applied change was agreed, committed alone through
 evidence, reviewed and integrated under its own approval, and a report that keeps findings apart from changes, lists
 approved behavior changes, and names its coverage, gaps, follow-ups and integration state. Invoking the playbook
 alone changes nothing, no contract change is passed off as refactoring, no governance check is relaxed to make a
-change pass, and a batch never claims the whole repository reviewed.
-
-## Optional history stays separate
-
-The default local report and completion procedure work without maintenance history.
-Only an explicit companion-history request starts capture; command installation and this playbook's invocation
-start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
-later integration changes append amendments rather than rewrite the published report.
-See [Record a maintenance run](record-a-maintenance-run.md).
-
-## Working with this release
-
-Automatic context loading applies only to bundles with a constitution, selected instructions or a declared context-document directory. Exact playbook retrieval reports `context.required`; load its context once per agent context when true, and again after context loss. Explicit context inspection remains available for bundles without these sources.
+change pass, and a batch never claims the whole repository reviewed. Optional maintenance history stays separate and
+runs only on an explicit companion-history request (see [Record a maintenance run](record-a-maintenance-run.md)).
 
 Close UX review findings at `build-verify`, including findings already fixed in drafts; this is a closure record rather than another independent review round. A closing reconcile check covers the whole reflection, identifies the earlier check and marks each finding resolved or waived with a reason. Required contract mismatches cannot be waived.

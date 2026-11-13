@@ -9,13 +9,13 @@ sources:
   CAP-DLV-review-refactor: null
   UC-review-and-refactor-accumulated-slop: null
 title: 누적된 군더더기 검토와 리팩터링
-translated_from: en/journeys/review-and-refactor-accumulated-slop.md@b6b89427bc3e8b32
+translated_from: en/journeys/review-and-refactor-accumulated-slop.md@d1410c97be534c1a
 ---
 
 # 누적된 군더더기 검토와 리팩터링
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -81,7 +81,7 @@ translated_from: en/journeys/review-and-refactor-accumulated-slop.md@b6b89427bc3
 
 ## 시작하기 전에
 
-- 선택형 `maintenance` 카탈로그 번들을 추가하고 동기화합니다. `uv run devkit add maintenance`(네 플레이북 전체), `maintenance:upkeep`(드리프트 조정 포함), `maintenance:refactoring`(본 플레이북 단독), `maintenance:performance`(`performance-pass` 포함) 중 하나를 선택할 수 있습니다([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)).
+- 선택형 `maintenance` 카탈로그 번들을 추가하고 동기화합니다. `uv run devkit add maintenance`(네 가지 플레이북 전체), `maintenance:upkeep`(드리프트 조정 포함), `maintenance:refactoring`(본 플레이북 단독), `maintenance:performance`(`performance-pass` 포함) 중 하나를 선택할 수 있습니다([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)).
 - 릴리스 전, 기능 개발이 한동안 누적된 후, 또는 저장소 일부가 지나치게 무거워졌을 때 실행하기에 적합합니다.
 - 검토 대상 영역(`code`, `guidance`, `cli`)과 각 영역의 루트 디렉터리를 미리 정해 둡니다. 실행 시 에이전트가 이를 묻습니다.
 - 작업과 무관한 변경 사항은 미리 커밋하거나 스태시(stash)해 둡니다. 에이전트는 이번 실행에 속하지 않는 변경을 발견하면 건드리지 않고 멈춥니다.
@@ -126,18 +126,6 @@ translated_from: en/journeys/review-and-refactor-accumulated-slop.md@b6b89427bc3
 
 ## 최종 결과
 
-적용된 모든 변경이 합의되고, 커밋 검사를 거쳐 증거와 함께 단독으로 커밋되며, 각자의 승인으로 검토·통합된 더 작은 표면을 얻습니다. 보고서는 발견 사항과 변경을 구분하고, 승인된 동작 변경을 나열하며, 검토 범위, 공백, 후속 작업, 통합 상태를 밝힙니다. 플레이북 호출만으로는 아무것도 바뀌지 않고, 계약 변경을 리팩터링으로 가장하지 않으며, 변경을 통과시키려고 거버넌스 검사를 완화하지 않고, 한 배치가 저장소 전체를 검토했다고 주장하지 않습니다.
-
-## 선택적 이력은 별개입니다
-
-기본 로컬 보고서와 완료 절차는 유지보수 이력 없이 동작합니다.
-명시적인 동반 이력 요청이 있어야 수집하며 명령 설치나 이 플레이북 호출만으로 이력을 시작하거나 반복 제안하지 않습니다.
-요청된 이력은 근거를 동결하고 별도 게시 권한을 사용합니다.
-이후 통합 변경은 게시된 보고서를 고치지 않고 추가 기록으로 남깁니다.
-[유지보수 실행 기록하기](record-a-maintenance-run.md)를 참고하십시오.
-
-## 이 릴리스의 작업 방식
-
-자동 문맥 로드는 구성 원칙, 선택된 지침 또는 문맥 문서 디렉터리 선언이 있는 번들에 적용됩니다. 정확한 플레이북 조회 결과의 `context.required`가 참이면 에이전트 문맥마다 한 번, 문맥 손실 뒤 다시 로드합니다. 해당 원본이 없는 번들도 명시적으로 문맥을 조회할 수 있습니다.
+적용된 모든 변경이 합의되고, 커밋 검사를 거쳐 증거와 함께 단독으로 커밋되며, 각자의 승인으로 검토·통합된 더 작은 표면을 얻습니다. 보고서는 발견 사항과 변경을 구분하고, 승인된 동작 변경을 나열하며, 검토 범위, 공백, 후속 작업, 통합 상태를 밝힙니다. 플레이북 호출만으로는 아무것도 바뀌지 않고, 계약 변경을 리팩터링으로 가장하지 않으며, 변경을 통과시키려고 거버넌스 검사를 완화하지 않고, 한 배치가 저장소 전체를 검토했다고 주장하지 않습니다. 선택적 유지보수 이력은 별개이며 명시적인 동반 이력 요청이 있을 때만 시작됩니다([유지보수 실행 기록하기](record-a-maintenance-run.md) 참고).
 
 UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

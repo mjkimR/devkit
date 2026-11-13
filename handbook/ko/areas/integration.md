@@ -10,13 +10,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-drive-development-to-integration: null
 title: 통합
-translated_from: en/areas/integration.md@e370c219b9e4817b
+translated_from: en/areas/integration.md@41b9ee7b7b6a10c2
 ---
 
 # 통합
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -74,12 +74,12 @@ translated_from: en/areas/integration.md@e370c219b9e4817b
 
 통합(integration)은 커밋된 작업 브랜치를 베이스 브랜치에 반영하고 정해진 범위를 정리합니다.
 Host는 승인 전에 소스 내용을 검사하고 반영 후 최종 내용을 다시 검증합니다.
-CLI는 Git 효과와 정책을 확인합니다. `status=completed`는 그 효과의 완료이며,
+CLI는 Git 효과와 정책을 확인합니다. `status=completed`는 해당 효과가 완료되었음을 확인하며,
 `verification=pending`은 최종 프로젝트 검증이 남았다는 뜻입니다.
 
 ## 정확한 효과 준비하기
 
-정리할 워크트리 밖의 런타임을 사용해 유지되는 베이스 체크아웃에서 실행합니다.
+정리 시 삭제되는 워크트리 밖의 런타임을 사용해, 유지되는 베이스 체크아웃에서 실행하십시오.
 
 ```bash
 uv run devkit integration prepare dev-login --route local
@@ -93,14 +93,14 @@ uv run devkit integration integrate dev-login --route local --expected-digest <d
 소스에서만 바뀐 정책으로 자신의 병합을 승인할 수는 없습니다.
 
 SDD와 적응형 개발(adaptive development)은 같은 명시적 브랜치 명령을 씁니다.
-task-kind, task-id, unit, claims 인자와 준비 상태 제공자 선택은 없습니다.
-`[integration]` 테이블은 키를 허용하지 않습니다. 폐기된 `provider` 키를 제거합니다. Host가 소스 런타임으로 워크플로 보류와 필수 검사를 먼저 확인합니다.
+task-kind, task-id, unit, claims 인자와 준비 상태 제공자(readiness provider) 선택은 없습니다.
+`[integration]` 테이블은 키를 허용하지 않으므로, 폐기된 `provider` 키는 제거하십시오. Host가 소스 런타임으로 워크플로 보류와 필수 검사를 먼저 확인합니다.
 
 ## 경로 선택하기
 
 - **로컬:** 대상 체크아웃 밖에서 예상 병합을 만들고 대상을 그 결과로 fast-forward합니다.
   `no-ff`에서는 이동한 대상과 충돌이 없으면 소스에 베이스를 먼저 병합하지 않아도 됩니다.
-  `ff-only`에서는 소스가 대상을 포함해야 합니다. fetch, push, 원격 브랜치 삭제는 수행하지 않습니다.
+  `ff-only`에서는 소스가 대상을 조상으로 포함해야 합니다. fetch, push, 원격 브랜치 삭제는 수행하지 않습니다.
 - **풀 리퀘스트:** 인증된 `gh`로 승인된 소스 SHA를 고정하고 필수 검사·리뷰와 반영을 확인한 뒤,
   lease를 이용한 원격 삭제와 로컬 정리를 수행합니다. 자동 실행하지 않습니다. PR 필수 정책은 로컬 경로를 거부하며,
   병합 큐나 보호 우회가 필요한 작업은 지원하지 않습니다.
@@ -110,7 +110,7 @@ PR 검사가 대기 중이면 `INTEGRATION_CHECKS_PENDING`과 함께 PR을 병�
 
 ## 반영 후 검증하기
 
-첫 병합 전에 대상 SHA를 저장합니다. 반영이 확인되면 다음을 수행합니다.
+첫 병합 전에 대상 SHA를 저장하십시오. 반영이 확인되면 다음을 수행하십시오.
 
 1. 대상의 선언된 의존성을 동기화합니다.
 2. 새 프로세스에서 자산을 동기화하고 추적되는 생성 파일을 검사합니다.
@@ -121,7 +121,7 @@ PR 검사가 대기 중이면 `INTEGRATION_CHECKS_PENDING`과 함께 PR을 병�
 그 HEAD가 통과하기 전까지 각 작업은 검증 대기입니다. 실패한 대상은 현재 위치에서 수리하고 다시 검사합니다.
 병합을 재실행하거나 자동 롤백하지 않습니다.
 
-`INTEGRATION_GENERATED_SEEDED`는 알려진 생성 파일 충돌을 선언된 seed 쪽 내용으로 유지했다는 뜻입니다.
+`INTEGRATION_GENERATED_SEEDED`는 알려진 생성 파일 충돌이 선언된 seed 쪽 내용으로 유지되었음을 뜻합니다.
 결과의 `generated.seeded`, `generated.regenerate`가 대상을 나열합니다. 통합은 재생성을 실행하지 않았으므로
 Host가 동기화 후 최종 검사 전에 처리합니다. 알 수 없는 충돌은 일반적인 충돌 해결이 필요합니다.
 
@@ -129,14 +129,14 @@ Host가 동기화 후 최종 검사 전에 처리합니다. 알 수 없는 충�
 
 | 결과 | 다음 행동 |
 | --- | --- |
-| `INTEGRATION_AUTHORITY_REQUIRED`, `INTEGRATION_REQUEST_STALE` | 현재 범위를 다시 준비·제시하고 `ask`에서는 결정을 받습니다. |
-| `INTEGRATION_TARGET_MOVED` | 현재 대상으로 다시 준비합니다. 로컬은 병합을 구성하고, PR 경로는 소스에 대상이 포함되어야 합니다. |
-| `INTEGRATION_RUNTIME_IN_WORKTREE`, `WORKTREE_RUN_FROM_BASE` | 유지되는 베이스와 정리 범위 밖의 런타임을 씁니다. |
-| `INTEGRATION_CLEANUP_INCOMPLETE` | Git·워크트리를 확인하고 보고된 남은 정리만 수행합니다. |
+| `INTEGRATION_AUTHORITY_REQUIRED`, `INTEGRATION_REQUEST_STALE` | 현재 범위를 다시 준비·제시하고 `ask`에서는 결정을 받으십시오. |
+| `INTEGRATION_TARGET_MOVED` | 현재 대상으로 다시 준비하십시오. 로컬 경로는 병합을 구성하고, PR 경로는 소스가 대상을 조상으로 포함해야 합니다. |
+| `INTEGRATION_RUNTIME_IN_WORKTREE`, `WORKTREE_RUN_FROM_BASE` | 유지되는 베이스 체크아웃과 정리 범위 밖의 런타임을 사용하십시오. |
+| `INTEGRATION_CLEANUP_INCOMPLETE` | Git·워크트리를 확인하고 보고된 남은 정리만 수행하십시오. |
 
 병합이 확인된 표시된 워크트리는 `uv run devkit worktree finish <branch>`로 남은 정리를 수행합니다.
-확장 기능만 남았다면 `uv run devkit spec proposal prune <slug>`처럼 소유 명령을 정확한 대상에 실행합니다.
-원격 결과가 불명확하면 쓰기를 반복하기 전에 확인합니다. 부분 정리의 종료 코드가 0이어도 남은 작업은 존재합니다.
+확장 정리 작업만 남았다면 `uv run devkit spec proposal prune <slug>`처럼 정확한 소유 명령을 실행하십시오.
+원격 결과가 불명확하면 쓰기를 반복하기 전에 확인하십시오. 부분 정리의 종료 코드가 0이어도 남은 작업은 존재합니다.
 `landed_sha`는 확인된 반영을 식별합니다.
 
 로컬 오케스트레이션에서는 재사용하는 `git-operator`가 현재 승인된 정확한 수명 주기 작업을 실행할 수 있습니다.
@@ -154,9 +154,3 @@ Host가 결정, 소스 준비, 의미적 충돌 판단과 결과 수용을 맡�
 - [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md) (영어 원문)
 - [ADR-post-merge-verification](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261104-post-merge-verification.md) (영어 원문)
 - [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)
-
-## 이 릴리스의 작업 방식
-
-규칙의 `notice` 심각도는 검토할 사항이며 strict 모드와 커밋 게이트에서도 차단하지 않습니다. `uv run devkit rules context FILE`은 작업 파일과 HEAD 사이의 제한된 변경 근거와 해당 변경 범위의 알림을 반환합니다. 일반 파일 읽기는 이 명령을 자동 실행하지 않으며, 근거가 없으면 전체 파일 이력으로 대신하지 않고 누락을 알립니다.
-
-UX 리뷰 지적은 초안에서 고친 항목까지 `build-verify`에서 닫습니다. 이 기록은 추가 독립 리뷰 회차가 아닙니다. 최종 조정 검사는 전체 반영을 확인하고 앞선 검사를 식별하며 각 지적을 해결 또는 사유가 있는 면제로 표시합니다. 필수 계약 불일치는 면제할 수 없습니다.

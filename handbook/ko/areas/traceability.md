@@ -6,13 +6,13 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-run-parallel-work-safely: null
 title: 추적성
-translated_from: en/areas/traceability.md@2c4bd237e269314a
+translated_from: en/areas/traceability.md@128112a2d10ae31b
 ---
 
 # 추적성
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a6e769c5721d` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 추적성(traceability)은 Living Spec 문서와 코드를 연결합니다. capability나 use case 문서는 해당 기능의 구현이
@@ -20,13 +20,13 @@ translated_from: en/areas/traceability.md@2c4bd237e269314a
 코드 경로에서 관련 문서로 쉽게 추적할 수 있으며, 문서에 연결된 코드가 삭제되었을 때 커밋 게이트(commit gate)가 이를 즉시
 감지할 수 있습니다. 경로 계약, 규칙, 역방향 조회는 devkit-docs가 맡고, devkit-spec은 스펙 번들에서 선언을 도출하는 기능을
 더합니다. 상세 사양 계약은
-[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)을 참고하세요.
+[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)을 참고하십시오.
 
-엔트리포인트는 코드 탐색을 시작하는 진입점일 뿐이며, 전체 구현 파일 목록이나 문서의 명세대로 코드가 동작함을 보증하는 증거는
+진입점(entrypoint)은 코드 탐색을 시작하는 출발점일 뿐이며, 전체 구현 파일 목록이나 문서의 명세대로 코드가 동작함을 보증하는 증거는
 아닙니다. 테스트 범위와 코드의 정확성은 테스트와 코드 리뷰를 통해 검증해야 합니다. Living Spec과 문서 체계에 대한 기본 개념은
 [개념](../concepts.md)에서 다룹니다.
 
-## 엔트리포인트 선언 방법
+## 진입점 선언 방법
 
 ```yaml
 entrypoints:
@@ -43,7 +43,7 @@ entrypoints:
 
 동일한 경로 규칙이 작업 범위 비교의 코드 경로에도 적용되며, 이를 통해 Host는 병렬 작업들이 동일한 코드를 수정하고 있는지
 파악합니다. 자세한 내용은 [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
-(`UC-run-parallel-work-safely`)를 참고하세요.
+(`UC-run-parallel-work-safely`)를 참고하십시오.
 
 ## 경로와 연결된 문서 찾기
 
@@ -54,10 +54,10 @@ uv run devkit docs list capability --file src/engine/
 uv run devkit docs list usecase --file src/engine/parse.py
 ```
 
-이 명령은 엔트리포인트가 지정한 경로와 일치하거나, 해당 경로 하위에 있거나, 해당 경로를 포함하는 디렉터리로 선언된 문서를 모두
+이 명령은 진입점이 지정한 경로와 일치하거나, 해당 경로 하위에 있거나, 해당 경로를 포함하는 디렉터리로 선언된 문서를 모두
 나열합니다. 파일이 실제로 디스크에 존재하지 않아도 조회가 가능하므로, 방금 삭제한 파일에 연결되어 있던 문서도 찾아낼 수 있습니다.
 경로 규칙을 위반한 경우 문서를 읽기 전에 `DOCS_ENTRYPOINTS_PATH_INVALID` 오류로 실패합니다. `devkit docs list`의 다른 기능에
-대한 설명은 [문서](documents.md)와 `CAP-DOCS-document-lookup`을 참고하세요.
+대한 설명은 [문서](documents.md)와 `CAP-DOCS-document-lookup`을 참고하십시오.
 
 ## 선언의 최신 상태 유지
 
@@ -73,7 +73,7 @@ uv run devkit docs list usecase --file src/engine/parse.py
 - 실수로 코드가 삭제된 경우: 삭제된 코드를 복원합니다.
 
 이는 [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)(`UC-keep-the-living-spec-consistent`)의
-핵심 활동입니다. 엔트리포인트는 `CAP-DLV-drift-reconciliation`에 따른 수동 드리프트 점검 시 관련 근거를 찾는 데도 유용하지만,
+핵심 활동입니다. 진입점은 `CAP-DLV-drift-reconciliation`에 따른 수동 드리프트 점검 시 관련 근거를 찾는 데도 유용하지만,
 경로 검사를 통과했다고 해서 문서 내용이 최신 상태임을 완전히 보증하는 것은 아닙니다.
 
 ## 완료된 스펙에서 선언 도출하기
@@ -97,7 +97,7 @@ uv run devkit spec entrypoints derive --spec <bundle-dir> \
    `--skipped`로 하나씩 나열).
 2. 실제 반영 전에 후보를 검토합니다. 단순 문구 수정 차원에서 capability를 수정한 번들이라도, 해당 작업이 명시한 모든 경로와
    짝지어질 수 있습니다. 이러한 문서는 제외하고, 디렉터리 후보는 해당 패키지를 실제로 소유한 문서에만 선언하며, 모든 번들이
-   공통으로 수정하는 허브 파일은 `--exclude` 옵션으로 제외하세요. 이 검토 절차는 `spec-entrypoints` 스킬이 안내하며, `spec-sync`
+   공통으로 수정하는 허브 파일은 `--exclude` 옵션으로 제외하십시오. 이 검토 절차는 `spec-entrypoints` 스킬이 안내하며, `spec-sync`
    단계에서 현재 번들을 대상으로 자동 수행됩니다.
 3. 문서별로 `--apply --target <ID>` 및 `--code <path>` 옵션을 지정하여 선별적으로 반영합니다. `--code` 경로로 `folded`
    후보를 그대로 쓰거나, 디렉터리 후보 아래의 파일(진입 파일)을 지정할 수도 있습니다. 어떤 후보와도 맞지 않는 `--code` 경로가
@@ -105,12 +105,12 @@ uv run devkit spec entrypoints derive --spec <bundle-dir> \
    반영되는 일은 없습니다. 프런트매터의 `entrypoints` 블록만 갱신되며 다른 내용은 그대로 보존됩니다. 이미 반영된 상태에서 다시
    실행해도 불필요한 파일 쓰기는 일어나지 않습니다. 페이지 나눔은 `--apply`가 쓰는 범위를 제한하지 않습니다.
 
-과거 문서를 일괄 보완할 때는 `--all`과 `--min-count` 옵션을 함께 사용하세요. 여러 스펙에서 반복적으로 도출된 쌍일수록 신뢰할 수
+과거 문서를 일괄 보완할 때는 `--all`과 `--min-count` 옵션을 함께 사용하십시오. 여러 스펙에서 반복적으로 도출된 쌍일수록 신뢰할 수
 있는 강력한 후보입니다. 상세 오류 코드와 전체 옵션 목록은 관련 사양 계약에서 확인할 수 있습니다.
 
-## 파생 진입점에서 생성 경로 제외하기
+### 파생 진입점에서 생성 경로 제외하기
 
-진입점 도출은 작업 범위가 지목해도 `.devkit/managed/`, `.devkit/installation.json`과 설치 기록 소유 출력을 건너뜁니다.
-전체가 관리 대상인 디렉터리는 제외하고 혼합 디렉터리, 무시된 작성 소스와 프로젝트 소유 seeded 경로는 후보로 유지합니다.
-이 제외는 진입점 도출에만 적용하며 생성 출력도 작업 범위 관찰에는 남습니다.
-존재하는 설치 기록이 잘못되면 `RECEIPT_INVALID`입니다. 관리 출력의 명시적 `--code` 선택도 후보로 인정하지 않습니다.
+진입점 도출은 작업 경계에 명시되어 있더라도 `.devkit/managed/`, `.devkit/installation.json`과 설치 기록이 관리하는 출력은 건너뜁니다.
+전체가 관리 대상인 디렉터리는 제외되며, 혼합 디렉터리, 무시되는 직접 작성 소스, 프로젝트 소유의 seeded 경로는 후보로 유지됩니다.
+이 제외는 진입점 도출에만 적용되며, 생성 출력도 작업 범위 관찰 대상에는 남습니다.
+존재하는 설치 기록 파일이 잘못된 경우 `RECEIPT_INVALID` 오류가 발생합니다. 관리 출력에 대한 명시적 `--code` 선택 역시 허용되지 않고 미일치(unmatched)로 처리됩니다.
