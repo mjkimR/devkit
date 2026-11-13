@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T11:31:52.282783Z'
+status: completed
+summary: 'Low-effort self-check: the capability and README reflect the overlay, assignment inputs, source comparison, document checks and preserved Host authority; no contract mismatch or deferred work.'
+findings: []
+checks:
+  docs: PASS compared capability and README against implemented role and delegation references
+diff_scope:
+  base: 614d58f1e1f66232982fc43d9d9cc58a130ba3fd
+  head: b0e8d5199de1033249ca0bc86d766e1cdd056014
