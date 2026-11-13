@@ -81,7 +81,9 @@ def test_delegation_orchestration_and_context_name_project_documents() -> None:
 def test_architect_and_builder_overlays_hold_to_governing_documents() -> None:
     architect = (SKILL / "roles/architect.md").read_text()
     assert_rule(architect, "governing documents", "report a partition that conflicts")
-    assert_rule(architect, "deliverables", "blocking dependencies", "shared interface ownership")
+    assert_rule(architect, "assumptions", "invalidate", "task split")
+    planner = (BUNDLE / "subagents/swarm-planner.md").read_text()
+    assert_rule(planner, "deliverables", "dependencies", "interface identity and ownership", "completion evidence")
     builder = (SKILL / "roles/builder.md").read_text()
     assert_rule(builder, "governing documents", "report a mismatch", "instead of diverging")
     assert_rule(builder, "agreed interface and failure handling")
