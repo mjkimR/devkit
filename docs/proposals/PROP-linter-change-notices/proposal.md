@@ -2,7 +2,7 @@
 id: PROP-linter-change-notices
 title: Non-blocking rule notices for changed code
 summary: "Introduce a distinct notice severity for change-scoped linter guidance while preserving warning semantics. Define changed-block targeting and read-time context so agents can review relevant considerations without remediation or approval records."
-status: reviewing
+status: accepted
 created_at: 2026-11-11
 target_area: governance/
 priority: low
