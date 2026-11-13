@@ -9,6 +9,7 @@ priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
+depends_on: [PROP-uiux-improve-impeccable-routing]
 boundaries:
   owns:
     - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -35,8 +36,9 @@ one needs clearer wording, a missing step or a test, and none changes who holds 
 
 Split from ~~`PROP-uiux-improve-pilot-fit`~~ (drafted in `6902170e9`, deleted in this split) with
 `PROP-uiux-improve-impeccable-routing` (question and load routing) and `PROP-uiux-improve-run-model` (the run model).
-All three touch the bundle's `SKILL.md` and `CAP-DLV-uiux-improvement`; whichever reaches Development later
-rebases on the earlier one.
+All three touch the bundle's `SKILL.md` and `CAP-DLV-uiux-improvement`. The user set the delivery order:
+`PROP-uiux-improve-run-model` first, then `PROP-uiux-improve-impeccable-routing`, then this proposal, which
+`depends_on` the routing proposal and builds on both.
 
 Hypothesis: with these gaps closed, a coordinator verifies the branch it changed, keeps a task focus from turning into
 a prohibition, tells an Impeccable session which rule wins, catches an in-list but out-of-scope change and measures

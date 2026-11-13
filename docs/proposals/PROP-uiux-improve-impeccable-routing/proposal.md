@@ -9,6 +9,7 @@ priority: medium                      # critical | high | medium | low
 size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
+depends_on: [PROP-uiux-improve-run-model]
 boundaries:
   owns:
     - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -33,7 +34,8 @@ workflow: sdd-proposal
 behalf", and let a fresh child run only refinement commands loaded through the host's skill mechanism, returning a
 load failure as a blocker. Findings A1 and A2 in `MAT-uiux-improve-pilot` test both clauses. Split from
 ~~`PROP-uiux-improve-pilot-fit`~~ (drafted in `6902170e9`, deleted in this split) with
-`PROP-uiux-improve-bundle-hygiene` and `PROP-uiux-improve-run-model`.
+`PROP-uiux-improve-bundle-hygiene` and `PROP-uiux-improve-run-model`. The user set the delivery order: after
+`PROP-uiux-improve-run-model` (`depends_on`) and before `PROP-uiux-improve-bundle-hygiene`, which depends on this one.
 
 - A1, question round. The pilot split `init` in a child. Phase 1 scanned and drafted the question round without
   writes. The coordinator pre-filled answers from the consumer's OOUX documents and asked the user only the gaps.

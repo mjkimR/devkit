@@ -40,7 +40,9 @@ The bundle owner's observation: running a UI/UX improvement through the reposito
 fit, and a whole-surface overhaul is hard to carry through it. This proposal is a workflow-neutral bundle policy: it
 does not add a route to any particular workflow, and it depends on no `devkit-spec` concept. Split from
 ~~`PROP-uiux-improve-pilot-fit`~~ (drafted in `6902170e9`, deleted in this split) with
-`PROP-uiux-improve-bundle-hygiene` and `PROP-uiux-improve-impeccable-routing`.
+`PROP-uiux-improve-bundle-hygiene` and `PROP-uiux-improve-impeccable-routing`. The user set the delivery order: this
+proposal first, then `PROP-uiux-improve-impeccable-routing` (`depends_on` this one), then
+`PROP-uiux-improve-bundle-hygiene` (`depends_on` the routing proposal).
 
 Proposed default (the bundle owner's): before starting, the skill tells the user that this procedure proceeds without
 following the repository's development workflow and guidelines, and proceeds only after the user approves (or hears
