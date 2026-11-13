@@ -30,8 +30,7 @@ Read these files only where they exist, using a partial set as far as it goes:
 - Attributes, states and interactions: the UX documents of the affected screens (`docs/ux/<area>/`).
 
 These paths are an optional project convention; if none exist, frame in conversation. Never write these files;
-after an accepted change, report each one the change made stale and leave its update to the consumer workflow's own
-step.
+after an accepted change, report each one the change made stale for the separate documentation follow-up.
 
 ## Task and information
 
@@ -65,6 +64,9 @@ step.
 
 Apply these to every changed view, on both tracks:
 
+- For color work, compute contrast for each key foreground/background pair and state using color-space conversion,
+  effective colors and opacity/compositing. Report numeric ratios and compare the consumer's applicable criteria;
+  name missing measurement coverage. An estimate does not establish measured contrast.
 - Secondary and disabled text keeps readable contrast against its background.
 - Type sizes follow one consistent scale; one typeface is not stretched across every role without a reason.
 - No decorative gradient or nested container without a purpose it explains.
@@ -76,8 +78,11 @@ Compare relevant directions by task clarity, required effort, discoverability, r
 implementation cost, as qualitative tradeoffs tied to the artifacts rather than a universal scorecard. A familiar
 design can be the best direction; an unusual idea can still reveal a worthwhile simplification.
 
-After implementation, repeat the representative task, inspect its changed states and record the tools and coverage
-actually used. A screenshot review does not establish interactive behavior or real-user usability.
+Repeat the same representative task and data before and after in the changed local branch build, retaining a
+re-runnable capture method. If live service use is costly or shared, a repeatable mocked backend may drive that
+build; label mocked coverage as mocked, not an end-to-end check, and name unavailable live coverage. A deployed
+environment is at most a baseline. Record tools and states; a screenshot review does not establish interaction or
+real-user usability.
 
 ## Reference provenance
 

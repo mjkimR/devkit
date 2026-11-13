@@ -32,13 +32,15 @@ request. A review-only request ends with findings and no product edits.
 
 1. Recover the target, intended user outcome, relevant artifacts and hard constraints from context; ask only for
    missing information that changes the work. For a broad request, choose a bounded initial focus and explain how
-   it serves the goal. For implementation or requested setup/cleanup, announce: this procedure runs outside the
+   it serves the goal. A focus such as color first orders work; only user-stated constraints or explicit deferrals
+   become non-goals. For implementation or requested setup/cleanup, announce: this procedure runs outside the
    repository's development workflow and its process guidelines. Obtain explicit approval for this task or follow
    the consumer workflow the user chooses, before product edits or write-capable delegation. Reuse an exact route
    instruction already given; do not ask twice. Without an answer or approval channel, preserve useful read-only
    inspection and wait before dependent edits. Silence selects no route. A review-only request needs no route approval.
-2. Inspect the current interface and representative task path, using the running UI when available; name
-   screenshot-, code- or text-only coverage when actual interaction cannot be checked.
+2. Inspect the current interface and representative task path in the local branch build when executable; retain
+   the baseline task, data and capture method before edits. A deployed environment supplies at most a baseline. If live service use is costly or shared, use a repeatable mocked backend
+   against that branch build; name screenshot-, code- or text-only coverage when interaction cannot be checked.
 3. Frame in proportion to the request. Read `references/design-guidance.md` when framing or choosing the design
    direction.
    - If the request is a local change (one component, one state, copy or spacing), proceed without an ORCA pass.
@@ -67,7 +69,9 @@ request. A review-only request ends with findings and no product edits.
      another access route. If an approval or tool is missing, preserve useful work and name that blocker.
    - Before a new surface or behavior beyond the approved goal, or a change to a user constraint, obtain a new user
      decision. An in-goal file addition or implementation choice alone is not scope growth; pause only dependent work.
-8. Inspect the changed interface and representative interactions: relevant layout states, feedback and recovery,
+8. Repeat the same representative task and data against the changed local branch build before and after, retaining
+   a re-runnable capture method. Label mocked coverage as mocked, not an end-to-end check, and name missing live
+   coverage. Inspect representative interactions: relevant layout states, feedback and recovery,
    keyboard/focus and responsive behavior as the change requires. Apply the baseline craft checks in
    `references/design-guidance.md` and run the project's applicable checks; fix exposed defects and recheck. If
    critique can improve the result, use one bounded critique/refinement pass; stop without a score or consensus quota.
