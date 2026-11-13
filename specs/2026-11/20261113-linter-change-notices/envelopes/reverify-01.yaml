@@ -1,0 +1,27 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:17:38.967156Z'
+status: completed
+review: review-01.yaml
+summary: Both P1 failures reproduced Red in formal regressions and fixed Green; output paths and unknown changes preserve original base; nested paths normalize; 510 focused tests pass; fresh high round required for behavior fixes
+findings:
+- issue: Autofix rechecks discard changed files outside the original targets.
+  evidence: packages/devkit/src/devkit_agt/features/rules/services/evaluator.py:139-148; packages/devkit/src/devkit_agt/features/rules/services/changes.py:75-82; .pytest_cache/dev-probe/review-01/test_notice_boundaries.py:26-47
+  failure_condition: A successful or failed fixer of targeted a.txt introduces a trigger in b.py; recheck rule selection expands but evidence remains filtered to a.txt and the notice is absent.
+  suggested_action: Add normalized successful-fixer output paths to evidence selection and recapture all workspace changes after unknown writes, preserving the original base; test both cases.
+  resolution: resolved
+  severity: P1
+- issue: Untargeted nested workspaces mix repository-relative and workspace-relative paths.
+  evidence: packages/devkit/src/devkit_agt/features/rules/repositories/workspace/changes.py:31-39,76-95; .pytest_cache/dev-probe/review-01/test_notice_boundaries.py:50-63
+  failure_condition: An untargeted check under repo/inner captures inner/a.py from Git diff but reads a.py from its workspace cache and silently misses a relevant notice.
+  suggested_action: Normalize tree, diff and untracked names into the same workspace-relative namespace, omit outside paths and test an untargeted nested workspace.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS 510; three P1 regressions failed before and passed after
+  types: PASS pyright devkit
+diff_scope:
+  base: ''
+  head: 6ed7e9e5b33edeb1e1dd368d3039d16942ac1c47
