@@ -1,0 +1,27 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:13:23.203169Z'
+status: completed
+summary: 'round 1; two source evidence gaps reproduced: outside-target autofix rechecks and nested workspaces'
+findings:
+- issue: Autofix rechecks discard changed files outside the original targets.
+  evidence: packages/devkit/src/devkit_agt/features/rules/services/evaluator.py:139-148; packages/devkit/src/devkit_agt/features/rules/services/changes.py:75-82; .pytest_cache/dev-probe/review-01/test_notice_boundaries.py:26-47
+  failure_condition: A successful or failed fixer of targeted a.txt introduces a trigger in b.py; recheck rule selection expands but evidence remains filtered to a.txt and the notice is absent.
+  suggested_action: Add normalized successful-fixer output paths to evidence selection and recapture all workspace changes after unknown writes, preserving the original base; test both cases.
+  resolution: open
+  severity: P1
+- issue: Untargeted nested workspaces mix repository-relative and workspace-relative paths.
+  evidence: packages/devkit/src/devkit_agt/features/rules/repositories/workspace/changes.py:31-39,76-95; .pytest_cache/dev-probe/review-01/test_notice_boundaries.py:50-63
+  failure_condition: An untargeted check under repo/inner captures inner/a.py from Git diff but reads a.py from its workspace cache and silently misses a relevant notice.
+  suggested_action: Normalize tree, diff and untracked names into the same workspace-relative namespace, omit outside paths and test an untargeted nested workspace.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated; absolute paths, probe-only writes and unchanged complete tree 040c810421ebd901558a47469e0a1cc308b93ac9 plus HEAD substitute for native enforcement
+checks:
+  tests: PASS caller 4535 affected incl E2E; three expected failing reviewer probes
+diff_scope:
+  base: fe54e1f8603e437869917792313ee899e138f1bb
+  head: f7fa4cb9568a46a039026ae73b553719300311a4
