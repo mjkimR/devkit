@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:39:44.743946Z'
+status: completed
+review: review-03.yaml
+summary: 'High minor-fix self-verification: exact suggested one-line _on_disk call only at named helper; same-package regression only; no public API/schema/error code/CLI output/decision changes; combined alias/case original-blob and false-reminder cases Red2fail Green2pass, outside rejection retained; diff matches cited location'
+findings:
+- issue: Absolute symlink-prefix resolution skips filesystem-spelling normalization.
+  evidence: packages/devkit/src/devkit_agt/features/rules/services/targets.py:59-64; .pytest_cache/dev-probe/review-03/test_composed_spelling.py:29
+  failure_condition: On a case-insensitive filesystem an accepted absolute alias/capital.py targeting tracked Capital.py executes but captures empty before text as added, so unchanged constructs can appear newly changed.
+  suggested_action: In _normalized_target outside-prefix branch apply existing _on_disk normalization to absolute.resolve() before continuing validation. Add combined absolute-alias/case regression asserting original before text and retain outside-workspace rejection.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS composed alias/case2; failed before exact one-line fix
+  minor_fix: PASS all four review-loop conditions; no further round required
+diff_scope:
+  base: ''
+  head: 27477f6a815063fc16806c8dd9100e77bef6f44d

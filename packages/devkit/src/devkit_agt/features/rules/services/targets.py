@@ -27,30 +27,7 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
     files: list[str] = []
     seen: set[str] = set()
     for target in targets:
-        path = Path(target)
-        absolute = _on_disk(
-            workspace_root, Path(os.path.normpath(path if path.is_absolute() else workspace_root / path))
-        )
-        if not absolute.is_relative_to(workspace_root):
-            absolute = absolute.resolve()
-        if not absolute.is_relative_to(workspace_root):
-            raise TargetError(
-                f"{target} is outside the workspace {workspace_root}",
-                target_files=[str(target)],
-                fix=f"Drop the argument {target}: rules check only files inside {workspace_root}",
-            )
-        if is_pinned(absolute, workspace_root) or is_pinned(absolute.resolve(), workspace_root):
-            raise TargetError(
-                f"{target} is a receipt-pinned copy under {MANAGED_PATH}/ or {OVERRIDES_PATH}/, which rules never read",
-                target_files=[str(target)],
-                fix=f"Name the project's own files; check a bundle's rules and documents in its source, not in {MANAGED_PATH}/ or {OVERRIDES_PATH}/",
-            )
-        if (absolute.is_dir() or absolute.is_file()) and not absolute.resolve().is_relative_to(workspace_root):
-            raise TargetError(
-                f"{target} is a symlink that resolves outside the workspace {workspace_root}",
-                target_files=[str(target)],
-                fix=f"Drop the argument {target}: rules check only files inside {workspace_root}",
-            )
+        absolute = _normalized_target(workspace_root, target)
         if absolute.is_dir():
             for found in cache.find_files(absolute, extensions=None):
                 rel = found.relative_to(workspace_root).as_posix()
@@ -69,6 +46,40 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
                 fix=f"Correct the path {target}, or drop it",
             )
     return files
+
+
+def normalized_change_targets(workspace_root: Path, targets: Sequence[str | Path]) -> tuple[str, ...]:
+    """Original file/directory/root selectors using the same validated path normalization as expansion."""
+    return tuple(
+        unicodedata.normalize("NFC", _normalized_target(workspace_root, target).relative_to(workspace_root).as_posix())
+        for target in targets
+    )
+
+
+def _normalized_target(workspace_root: Path, target: str | Path) -> Path:
+    path = Path(target)
+    absolute = _on_disk(workspace_root, Path(os.path.normpath(path if path.is_absolute() else workspace_root / path)))
+    if not absolute.is_relative_to(workspace_root):
+        absolute = _on_disk(workspace_root, absolute.resolve())
+    if not absolute.is_relative_to(workspace_root):
+        raise TargetError(
+            f"{target} is outside the workspace {workspace_root}",
+            target_files=[str(target)],
+            fix=f"Drop the argument {target}: rules check only files inside {workspace_root}",
+        )
+    if is_pinned(absolute, workspace_root) or is_pinned(absolute.resolve(), workspace_root):
+        raise TargetError(
+            f"{target} is a receipt-pinned copy under {MANAGED_PATH}/ or {OVERRIDES_PATH}/, which rules never read",
+            target_files=[str(target)],
+            fix=f"Name the project's own files; check a bundle's rules and documents in its source, not in {MANAGED_PATH}/ or {OVERRIDES_PATH}/",
+        )
+    if (absolute.is_dir() or absolute.is_file()) and not absolute.resolve().is_relative_to(workspace_root):
+        raise TargetError(
+            f"{target} is a symlink that resolves outside the workspace {workspace_root}",
+            target_files=[str(target)],
+            fix=f"Drop the argument {target}: rules check only files inside {workspace_root}",
+        )
+    return absolute
 
 
 def _on_disk(workspace_root: Path, path: Path) -> Path:

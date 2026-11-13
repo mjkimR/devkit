@@ -196,3 +196,27 @@ class RulesRunError(RulesError):
             **fields,
         )
         self.problems = tuple(problems)
+
+
+class ChangeEvidenceNotice(RulesError):
+    """A change-scoped evaluation lacks exact text evidence; independent rules still run."""
+
+    code = "RULE_CHANGE_EVIDENCE_UNAVAILABLE"
+    level = Level.NOTICE
+    brief = True
+
+
+class ReadSessionExpiredNotice(RulesError):
+    """A transient read session reached its age or fingerprint bound; results are unsuppressed."""
+
+    code = "RULE_READ_SESSION_EXPIRED"
+    level = Level.NOTICE
+    brief = True
+
+
+class ReadSessionUnavailableNotice(RulesError):
+    """Transient suppression could not safely update; results are unsuppressed."""
+
+    code = "RULE_READ_SESSION_UNAVAILABLE"
+    level = Level.NOTICE
+    brief = True

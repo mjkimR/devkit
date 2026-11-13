@@ -24,7 +24,13 @@ from devkit_core.core.paths import display_path
 
 from devkit_agt.features.rules.models.config import RulesConfig
 from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation, rule_file
-from devkit_agt.features.rules.models.errors import NoneActiveNotice, RuleProblem, RulesDirError, RulesRunError
+from devkit_agt.features.rules.models.errors import (
+    ChangeEvidenceNotice,
+    NoneActiveNotice,
+    RuleProblem,
+    RulesDirError,
+    RulesRunError,
+)
 from devkit_agt.features.rules.models.markdown import local_target
 from devkit_agt.features.rules.models.phases import (
     PhaseEntry,
@@ -41,9 +47,10 @@ from devkit_agt.features.rules.repositories.discovery import resolve_managed_rul
 from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
 from devkit_agt.features.rules.repositories.workspace.snapshot import matches_working_tree, materialize_snapshot
 from devkit_agt.features.rules.services.builtins.base import guide_path
+from devkit_agt.features.rules.services.changes import refresh_context_changes
 from devkit_agt.features.rules.services.evaluator import EvaluationResult, evaluate_rules
 from devkit_agt.features.rules.services.registry import RuleRegistry, default_rule_registry
-from devkit_agt.features.rules.services.targets import expand_targets
+from devkit_agt.features.rules.services.targets import expand_targets, normalized_change_targets
 
 SNAPSHOT_PREFIX = "devkit-rules-snapshot-"
 
@@ -154,7 +161,12 @@ class ProjectRun:
         them; none while loading failed, since no rule is evaluated then."""
         if self.load_errors:
             return []
-        return [r for r in self.rules if runs_in_phase(effective_phase(r, self.config.phase_overrides), self.phase)]
+        return [
+            r
+            for r in self.rules
+            if runs_in_phase(effective_phase(r, self.config.phase_overrides), self.phase)
+            and not (self.phase is Phase.HYGIENE and getattr(r, "change_scope", False))
+        ]
 
     @property
     def errors(self) -> list[RuleProblem]:
@@ -187,7 +199,11 @@ class ProjectRun:
     def notices(self) -> list[AdvisoryError]:
         """Notices of a completed run: ``RULES_NONE_ACTIVE`` when no rule is active in its phase, so its pass checked
         nothing, and, for a whole-workspace run, ``RULES_PROMOTION_READY`` (see ``transitions``)."""
-        notices: list[AdvisoryError] = []
+        notices: list[AdvisoryError] = [
+            ChangeEvidenceNotice(o.reason, target_files=[o.rule_id])
+            for o in self.result.omissions
+            if o.code == "RULE_CHANGE_EVIDENCE_UNAVAILABLE"
+        ]
         if not self.errors and not self.active_rules:
             notices.append(
                 NoneActiveNotice(f"no rule is active in the {self.phase.value} phase; the run checked nothing")
@@ -260,7 +276,13 @@ def _run(
         changed = expand_targets(workspace_root, cache, targets) if expand else [Path(t).as_posix() for t in targets]
         has_work = bool(changed or (snapshot is not None and bool(snapshot.deleted)))
     context: RuleContext | None = None
-    if has_work:
+    change_only = (
+        not has_work
+        and bool(targets)
+        and phase is Phase.LINTER
+        and any(getattr(rule, "change_scope", False) for rule in project.rules)
+    )
+    if has_work or change_only:
         # Targets are already workspace-relative (``expand_targets`` or the snapshot's diff).
         context = RuleContext(
             workspace_root=workspace_root,
@@ -277,9 +299,32 @@ def _run(
             snapshot=snapshot,
         )
 
+    if context is not None and targets is not None:
+        context.change_targets = normalized_change_targets(workspace_root, targets) if expand else tuple(changed)
+        if change_only:
+            context.has_targets = True
     result = EvaluationResult()
     if context is not None and not project.load_errors:
-        result = evaluate_rules(context, project.rules)
+        if phase is Phase.LINTER and any(getattr(rule, "change_scope", False) for rule in project.rules):
+            refresh_context_changes(context)
+        if change_only:
+            selected = [rule for rule in project.rules if getattr(rule, "change_scope", False)]
+            ids = {rule.id for rule in selected}
+            context.phase_overrides = {k: v for k, v in context.phase_overrides.items() if k in ids}
+            context.severity_overrides = {k: v for k, v in context.severity_overrides.items() if k in ids}
+            context.rule_settings = {k: v for k, v in context.rule_settings.items() if k in ids}
+            result = (
+                EvaluationResult(errors=list(project.policy_errors))
+                if project.policy_errors
+                else evaluate_rules(context, selected)
+            )
+            result.skipped.extend(
+                rule.id
+                for rule in project.rules
+                if rule.id not in ids and runs_in_phase(effective_phase(rule, config.phase_overrides), phase)
+            )
+        else:
+            result = evaluate_rules(context, project.rules)
         if not result.errors:
             cache.flush_file_facts()
     return ProjectRun(

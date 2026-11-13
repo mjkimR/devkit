@@ -81,7 +81,9 @@ def _execute(request: RunRequest) -> None:
             click.echo(snapshot.describe())
         if not snapshot.changed and not snapshot.deleted:
             if request.json:
-                echo_json({"violations": [], "errors": [], "notices": []})
+                echo_json(
+                    {"violations": [], "errors": [], "notices": [], "summary": output.summary_counts([], rules=0)}
+                )
             else:
                 output.echo_ok(output.NOTHING_TO_CHECK)
             return
@@ -105,6 +107,7 @@ def _execute(request: RunRequest) -> None:
         echo_json(
             {
                 "violations": [output.violation_json(v, run.guides, run.workspace_root) for v in violations],
+                "summary": output.summary_counts(violations, rules=len(run.active_rules)),
                 "errors": [e.to_dict() for e in errors],
                 **({"omissions": [o.to_dict() for o in run.result.omissions]} if run.result.omissions else {}),
                 "notices": [n.to_dict() for n in notices],
@@ -380,3 +383,27 @@ def test_cmd(
     if counts["failed"]:
         raise SystemExit(int(ExitCode.FINDINGS))
     exit_on_warnings(warnings)
+
+
+@cli.command(name="context")
+@_workspace_option
+@_rules_dir_option
+@_format_option
+@click.option("--session", default=None, help="Opaque per-agent-session token for bounded repeated-notice suppression")
+@click.argument("file", type=str)
+@boundary
+def context_cmd(
+    workspace_root: str | None, rules_dir: str | None, output_format: str, session: str | None, file: str
+) -> None:
+    """Read bounded changed-file evidence and applicable NOTICE considerations."""
+    from devkit_agt.features.rules.usecases.context import ReadRuleContextUseCase
+
+    result = ReadRuleContextUseCase().execute(
+        resolve_root(workspace_root), file, rules_dir=_rules_path(rules_dir), session=session
+    )
+    if is_json(output_format):
+        echo_json(result.to_dict())
+    else:
+        output.print_read_context(result)
+    echo_notices(result.notices)
+    exit_on_warnings(result.notices)

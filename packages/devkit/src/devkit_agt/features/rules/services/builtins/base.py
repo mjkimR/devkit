@@ -36,6 +36,7 @@ class BaseRule(Rule):
     # findings. A run with explicit working-tree targets skips the rule when no target matches one of them; ``None``
     # (undeclared) runs it in every run.
     inputs: tuple[str, ...] | None = None
+    change_scope: bool = False
 
     def __post_init__(self) -> None:
         check_inputs(self.id, self.inputs)

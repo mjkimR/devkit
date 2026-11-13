@@ -1,13 +1,13 @@
 ---
-id: PADR-change-scoped-rule-notices
+id: ADR-change-scoped-rule-notices
 title: Change-scoped rule notices and explicit read context
 summary: "For contextual rule guidance, we add a nonblocking notice severity and snapshot-bound change evidence with an explicit read surface, to preserve warning meaning, accepting opt-in read-time delivery."
-proposal: PROP-linter-change-notices
-status: draft
+proposal: SPEC-linter-change-notices
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-change-scoped-rule-notices] Change-scoped rule notices and explicit read context
+# [ADR-change-scoped-rule-notices] Change-scoped rule notices and explicit read context
 
 ## 1. Context & Problem Statement
 
@@ -24,7 +24,7 @@ from an unchanged handler in the same file; native host hooks supply no cross-ho
 
 ## 3. Considered Options
 
-1. Reuse warning: smaller API but a notice-only strict check can fail and warning meaning weakens.
+1. Reuse warning: smaller API, but weakens warning meaning; existing warning findings remain nonblocking under strict CLI checks.
 2. Alias INFO to notice: fewer severity names but changes wire/configuration semantics for existing consumers.
 3. Add NOTICE, independent change evidence and an explicit read companion: additive, with opt-in delivery cost.
 4. Intercept every native read: automatic delivery but requires unsupported host-specific integration and exceeds scope.
@@ -47,7 +47,6 @@ Choose option 3 for compatibility and relevant-change targeting.
 5. Gate notice delivery uses NOTICE-level advisories and preserves warning/error behavior.
    → `CAP-GATE-commit-gates` rule-check findings (MUST).
 
-These traces name the intended restating sections after Development, not existing implemented behavior.
 No existing accepted ADR is replaced; the current host observer remains unchanged.
 
 ## 5. Consequences
@@ -65,6 +64,6 @@ coverage becomes a requirement, revisit the host-specific scope in a later direc
 
 ## 6. Confirmation
 
-AC-N1 to AC-N10 of `PROP-linter-change-notices` map to rule/evaluator, snapshot, CLI, gate, workflow and memo tests in
+AC-N1 to AC-N10 of `SPEC-linter-change-notices` map to rule/evaluator, snapshot, CLI, gate, workflow and memo tests in
 `packages/devkit/tests/`. Document rules validate structure; Development code review checks semantic-span relevance.
-Planning has not run the future implementation tests.
+Tests include exact-source Git integration, transient memo failure/concurrency and installed CLI/commit-gate checks. Model receipt and comparative quality remain review-only, best-effort observations.

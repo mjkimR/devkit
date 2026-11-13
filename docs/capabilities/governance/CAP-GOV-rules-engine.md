@@ -1,12 +1,13 @@
 ---
 id: CAP-GOV-rules-engine
 title: "Governance Rules Engine"
-summary: "Deterministic static verification, convergence rechecks, explicit rule omission evidence and rule-owned per-file extraction reuse."
+summary: "Deterministic static verification, nonblocking change-scoped considerations, explicit changed-file context, convergence rechecks and rule-owned extraction reuse."
 area: governance
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/rules/__init__.py
   - packages/devkit/src/devkit_agt/features/rules/usecases/project.py
+  - packages/devkit/src/devkit_agt/features/rules/usecases/context.py
 created_at: 2026-10-17
 ---
 
@@ -52,7 +53,7 @@ Library callers import the public API from `devkit_agt.features.rules`; built-in
 
 - **Content wheels**: bundles ship rules as `kind = "rule"` assets; `devkit sync` records each deployed file in `.devkit/installation.json`, and `devkit rules` loads them from the receipt without any flag (`CAP-GOV-rule-authoring`).
 - **Project policy**: a consumer changes a distributed rule's phase, severity or settings only through `[rules]` in `.devkit/config.toml`; managed rule files are hash-checked and never edited in place.
-- **Command help**: `devkit rules --help` lists the operating commands `check`, `fix` and `explain`. The authoring commands `phases` (`CAP-GOV-evaluation-lifecycle`) and `test` (`CAP-GOV-rule-authoring`) stay callable with their own `--help` but are hidden from the group help, as the workflow authoring commands are (`CAP-DLV-cli-and-output`).
+- **Command help**: `devkit rules --help` lists the operating commands `check`, `fix`, `context` and `explain`. The authoring commands `phases` (`CAP-GOV-evaluation-lifecycle`) and `test` (`CAP-GOV-rule-authoring`) stay callable with their own `--help` but are hidden from the group help, as the workflow authoring commands are (`CAP-DLV-cli-and-output`).
 - **Pre-commit and CI**: the built-in `rules-check` commit gate evaluates what `devkit rules check --staged` evaluates on every commit, on by default once the hooks are installed (`CAP-GATE-commit-gates`); CI runs `devkit rules check --ci --base <ref>`. Both evaluate the exact Git tree, so the result cannot depend on unstaged or ignored files (`CAP-GOV-evaluation-lifecycle`).
 
 ## 4. Shared Foundation
@@ -96,5 +97,41 @@ of a rule the convergence recheck omits is reported as found, never `fixed`.
 
 WHEN omissions exist, rules JSON MUST include `omissions: [{rule_id, code, reason}]` and text MUST emit one
 `[RULE_OMITTED: <id> code=<code> reason=<reason>]` per omission, each value one sentinel field. Without omissions the
-existing JSON shape is retained. An omission does not suppress document rules or independent project checks.
+optional omissions field is absent. An omission does not suppress document rules or independent project checks.
 Applicability errors, including a code that is not `UPPER_SNAKE`, are rule-execution errors, not omissions. `packages/devkit/tests/unit/features/rules/engine/test_scoping.py` enforces rescoping.
+
+
+## Rule finding severity and explicit read context
+
+1. **Nonblocking consideration**: WHEN an effective finding has `Severity.NOTICE`, the engine MUST retain it as a
+   `Violation` with wire value `notice` without blocking ordinary, strict, commit-gate or workflow lint-clean checks.
+   Existing `INFO = "info"`, warning and error behavior remains unchanged.
+   Test: `packages/devkit/tests/integration/features/rules/engine/test_change_notices.py`.
+2. **No repair obligation**: WHEN NOTICE findings render, text MUST use `status=consider` and summaries MUST include
+   the separate `notices` count. NOTICE findings MUST NOT request or claim repair, enter remaining/promotion counts
+   or invoke fixers at effective NOTICE severity. Invalid metadata is `RULES_EXECUTION_FAILED`.
+   Tests: rules change-notice unit and integration tests.
+3. **Explicit read companion**: WHEN `devkit rules context FILE` runs, it MUST return working-versus-HEAD change
+   status, source identities and bounded old/new hunk evidence even without matching rules or findings. It evaluates
+   only applicable change-scoped NOTICE rules. Unknown/outside/pinned targets are `RULES_TARGET_INVALID`;
+   excluded files return `status=excluded` with no source excerpts or findings.
+   Test: rules change-notice integration tests.
+4. **Bounded excerpts**: WHEN read context contains changed text, it MUST return at most 20 hunks, 20 lines per side
+   per hunk and 8192 UTF-8 source bytes, with omitted hunk/line/byte counts. JSON is one object with `file`, `change`,
+   `hunks`, `findings`, `suppressed`, `omitted` and advisory `notices`; text uses `RULE_CONTEXT`, `CHANGE_HUNK`,
+   `VIOLATION` and `SUMMARY` sentinels. Test: rules change-notice unit tests.
+5. **Transient reminder suppression**: WHERE `--session TOKEN` is supplied, read context MUST suppress repeated
+   delivered fingerprints only within the caller's token and never suppress hunk evidence. Fingerprints use the
+   executing rule/settings, logical path and relevant construct/change bytes. An unrelated edit does not reissue the
+   consideration; a relevant edit does. Ordinary checks and tokenless reads remain complete.
+   Test: rules change-notice integration tests.
+6. **Bounded memo failure**: WHEN a session reaches 24 hours or 2048 fingerprints, it MUST return unsuppressed
+   findings with `RULE_READ_SESSION_EXPIRED`. IF safe memo read/lock/write fails, THEN it MUST return unsuppressed
+   findings with `RULE_READ_SESSION_UNAVAILABLE`. The existing project lock serializes atomic memo writes under
+   `.devkit/transient/rules/read-notices/`; memos retain only hashed token/fingerprints and delivery metadata.
+   Test: rules change-notice integration tests.
+
+Rule NOTICE findings and the result's advisory `notices` array are distinct. Rule warning/INFO findings remain
+stdout results unaffected by `--strict`; advisory warnings preserve their existing strict behavior. Native file
+reads do not invoke this companion. A crash after memo update and before host display can suppress a retry;
+exactly-once model delivery is not claimed. `ADR-change-scoped-rule-notices` records this trade-off.

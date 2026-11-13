@@ -1,0 +1,21 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:25:18.911895Z'
+status: completed
+summary: round 2; both earlier P1 fixes pass; one new canonical original-target selector defect remains
+findings:
+- issue: Original change-target selectors discard accepted canonical-equivalent path spellings.
+  evidence: packages/devkit/src/devkit_agt/features/rules/usecases/project.py:296-300; packages/devkit/src/devkit_agt/features/rules/services/changes.py:78-85; .pytest_cache/dev-probe/review-02/test_targets.py:5-54
+  failure_condition: expand_targets accepts normalized relative or absolute parent-component, directory/root, symlink-prefix and macOS case or Unicode spellings, but raw selectors omit notices or raise ValueError.
+  suggested_action: Derive original file/directory/root selectors through the existing validated target-normalization owner, preserving lexical normalization, resolved absolute prefixes, actual case/Unicode spelling and NFC membership. Compare captured changes in the same workspace namespace; preserve root and directory prefixes for deletion evidence; add same-input spelling regressions.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated; probe-only writes and unchanged complete tree 96c5f7d1b8ed2d543ef8d34e5ff0b1db68fd1540 and HEAD substitute for native enforcement
+checks:
+  tests: PASS earlier regressions5 and caller affected4538; spelling probes expected8 fail8 pass
+diff_scope:
+  base: f7fa4cb9568a46a039026ae73b553719300311a4
+  head: 27ac4a11aa25d28b114f08462486fc3d92331c62

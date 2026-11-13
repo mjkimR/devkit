@@ -18,6 +18,8 @@ protocol, workspace API, rule sources), `ARCH-08-2-resource-taxonomy`.
 devkit rules check [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--format text|json] [TARGETS]...
 devkit rules check --staged [-w DIR] [--rules-dir DIR] [--format text|json]
 devkit rules check --ci [--base REF] [-w DIR] [--rules-dir DIR] [--format text|json]   # --base defaults to origin/main
+devkit rules context FILE [-w DIR] [--rules-dir DIR] [--session TOKEN] [--format text|json]
+
 devkit rules fix [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--dry-run] [--format text|json] [TARGETS]...
 devkit rules phases [-w DIR] [--rules-dir DIR] [--format text|json]
 devkit rules explain RULE-ID [-w DIR] [--rules-dir DIR] [--format text|json]
@@ -110,7 +112,7 @@ parseable:
 ```text
 [SNAPSHOT: mode=staged tree=3f2a9c1d0b7e base=9e8d7c6b5a4f changed=2 deleted=0]
 [VIOLATION: RULE-markdown-link severity=error file=docs/a.md line=3 status=fixable message="Broken relative link: wrong/setup.md" remediation="..." guide=...]
-[SUMMARY: errors=1 warnings=0 infos=0 fixed=0 rules=4]
+[SUMMARY: errors=1 warnings=0 infos=0 notices=0 fixed=0 rules=4]
 ```
 
 - `check` and `fix`: a `[SNAPSHOT: ...]` line first in a snapshot gate; one
@@ -121,7 +123,7 @@ parseable:
   and a `RULES_PROMOTION_READY` notice on stderr when one has `remaining=0`;
   a whole-workspace `check --phase hygiene` adds the notices of the `devkit.hygiene`
   extensions (`CAP-GOV-evaluation-lifecycle`);
-  then `[SUMMARY: errors=N warnings=N infos=N fixed=N rules=N]` counting unfixed
+  then `[SUMMARY: errors=N warnings=N infos=N notices=N fixed=N rules=N]` counting unfixed
   findings per severity and the fixed ones, and `rules` the loaded rules active
   in the run's phase (target scoping does not change it); then `[OK: ...]` when the command
   exits `0`. With `rules=0` the pass checked nothing, and a `RULES_NONE_ACTIVE`
@@ -195,7 +197,7 @@ exclude = ["docs/research/**", "CHANGELOG.md"]   # never targeted by any rule
 RULE-markdown-link = "hygiene"          # only "hygiene": park a linter rule while debt is cleared
 
 [rules.severity_overrides]
-RULE-file-length = "error"              # error | warning | info
+RULE-file-length = "error"              # error | warning | info | notice
 
 [rules.settings.RULE-file-length]       # typed settings declared by the rule
 max_bytes = 49152
@@ -304,7 +306,7 @@ Warnings and notices are returned, never raised, at level `WARNING` or
 | `HYGIENE_EXTENSION_FAILED` | `WARNING` | a `devkit.hygiene` extension raised or returned something other than a list; the run's own result stands |
 | any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule, `test` any loading or policy problem (`with_level`; the code is unchanged) |
 
-Rule violations of severity `warning` or `info` are findings, not advisories:
+Rule violations of severity `warning`, `info` or `notice` are findings, not advisories:
 they are results on stdout and never affect `--strict`.
 
 ## Current limits
@@ -350,3 +352,37 @@ cache bytes, so UTF-8 multibyte characters and CRLF retain their actual sizes. E
 Obsolete `max_lines` and `consolidated_max_lines` keys fail validation; select byte budgets explicitly rather than
 converting line counts.
 See `CAP-GOV-evaluation-lifecycle` section 5 and the built-in guide for the contract.
+
+
+### Change-scoped considerations and read context
+
+`Severity.NOTICE = "notice"` adds a consideration without changing `INFO`, warnings or error exits. Effective
+NOTICE findings use `status=consider`, no repair metadata, no fixer and no remaining/promotion count.
+`check`/`fix` JSON adds a `summary` object with `errors`, `warnings`, `infos`, `notices`, `fixed` and `rules` counts.
+The advisory `notices` array remains a separate field.
+
+`devkit rules context a.py --session <opaque-random-token> --format json` returns a single object with `file`,
+`change`, `hunks`, `findings`, `suppressed`, `omitted` and `notices`. It compares the working tree with HEAD and runs
+only applicable change-scoped NOTICE rules. It is an explicit read companion, never native-read interception.
+Change status/identities/ranges return even without matching rules; an unchanged file has no hunks, a deleted
+tracked file retains before evidence and an excluded path returns `status=excluded` without source text.
+Unknown, outside-workspace and receipt-pinned paths are `RULES_TARGET_INVALID`.
+
+Old/new ranges are one-based and half-open. A zero-length range is an insertion/deletion anchor. At most 20 hunks,
+20 lines per side per hunk and 8192 UTF-8 source bytes are shown; `omitted` counts omitted hunks, lines and bytes.
+Text emits `RULE_CONTEXT`, `CHANGE_HUNK`, ordinary NOTICE `VIOLATION` lines and `SUMMARY`; free text is escaped.
+
+The optional token suppresses only previously delivered identical relevant considerations; it never hides hunks.
+No token means complete output on every call. The derived memo under `.devkit/transient/rules/read-notices/` stores
+hashed tokens/fingerprints and metadata only, with atomic updates under the existing project lock. Expiry after
+24 hours or 2048 fingerprints returns `RULE_READ_SESSION_EXPIRED`; a corrupt/unavailable/locked memo returns
+`RULE_READ_SESSION_UNAVAILABLE`. Both are NOTICE advisories and return unsuppressed findings. A relevant construct
+edit reissues its consideration; an unrelated edit does not. A crash after memo update but before display can
+suppress a retry, so exactly-once model delivery is not guaranteed.
+
+Change-scoped rule checks compare exact source pairs: HEAD/cached working text, before tree/captured index or
+CI merge-base/captured HEAD. Renames are delete/add. Hygiene excludes these rules regardless of severity;
+incompatible phase/promotion declarations fail policy validation. A binary/decode/Git/capture failure yields
+`RULE_CHANGE_EVIDENCE_UNAVAILABLE` and no guessed historical findings for that evidence; independent rules keep
+running. Snapshot capture failures retain exit 2. Source exclusions apply. `CAP-GOV-evaluation-lifecycle` and
+`CAP-GOV-rule-authoring` specify author-facing evidence and the single autofix recheck.

@@ -33,12 +33,12 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from devkit.advisory import Actor
+from devkit.advisory import Actor, AdvisoryError
 from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage, more_line
-from devkit_agt.features.gate.models.errors import GateFindingsError, RulesWarningsNotice
+from devkit_agt.features.gate.models.errors import GateFindingsError, RulesNoticesNotice, RulesWarningsNotice
 from devkit_agt.features.gate.usecases.gates.commands import HOOK_GIT_VARIABLES, hook_environment
 from devkit_agt.features.rules import COMMIT_INDEX_VARIABLE
 
@@ -112,9 +112,17 @@ class RulesCheckGate(BaseGate):
                 ),
             )
         warnings = [v for v in run.result.violations if v.severity is Severity.WARNING and not v.fixed]
-        notices = (
+        notices: list[AdvisoryError] = (
             [RulesWarningsNotice(f"{len(warnings)} rule warning(s) in the staged tree", *_listed(warnings))]
             if warnings
             else []
         )
+        considerations = [v for v in run.result.violations if v.severity is Severity.NOTICE]
+        if considerations:
+            notices.append(
+                RulesNoticesNotice(
+                    f"{len(considerations)} rule consideration(s) in the staged tree", *_listed(considerations)
+                )
+            )
+        notices.extend(run.notices)
         return GateResult.passed(f"{len(snapshot.changed)} staged file(s) checked", notices=notices)

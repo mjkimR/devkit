@@ -96,4 +96,18 @@ def validate_policy(
         *validate_severity_overrides(rules, severity_overrides),
         *settings_errors,
     ]
+    for rule in rules:
+        scoped = getattr(rule, "change_scope", False)
+        if not isinstance(scoped, bool):
+            errors.append(RuleDefinitionError(f"{rule.id}: change_scope must be bool", rule_id=rule.id))
+        elif scoped and (
+            rule.phase is not Phase.LINTER
+            or getattr(rule, "promote_to", None) is not None
+            or phase_overrides.get(rule.id, Phase.LINTER) is not Phase.LINTER
+        ):
+            errors.append(
+                PolicyError(
+                    f"{rule.id}: change-scoped rules must remain linter rules without promotion", rule_id=rule.id
+                )
+            )
     return resolvers, errors

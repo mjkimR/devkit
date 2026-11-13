@@ -25,6 +25,7 @@ from devkit_agt.features.rules.models.errors import RuleExecutionError, RuleProb
 from devkit_agt.features.rules.models.phases import effective_phase, runs_in_phase
 from devkit_agt.features.rules.models.policy import effective_severity, validate_policy
 from devkit_agt.features.rules.models.settings import match_path
+from devkit_agt.features.rules.services.changes import refresh_context_changes
 
 logger = get_logger(__name__)
 
@@ -83,7 +84,8 @@ def scope_rules(ctx: RuleContext, rules: Sequence[Rule], modified: Iterable[str]
     skipped: list[str] = []
     for rule in rules:
         inputs: tuple[str, ...] | None = getattr(rule, "inputs", None)
-        if inputs is None or any(match_path(pattern, name) for pattern in inputs for name in names):
+        candidates = [*names, *ctx.changes] if getattr(rule, "change_scope", False) else names
+        if inputs is None or any(match_path(pattern, name) for pattern in inputs for name in candidates):
             selected.append(rule)
         else:
             skipped.append(rule.id)
@@ -115,7 +117,12 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
         return EvaluationResult(errors=list(policy_errors))
     ctx.settings_resolvers = resolvers
 
-    active = [r for r in rules if runs_in_phase(effective_phase(r, ctx.phase_overrides), ctx.phase)]
+    active = [
+        r
+        for r in rules
+        if runs_in_phase(effective_phase(r, ctx.phase_overrides), ctx.phase)
+        and not (ctx.phase.value == "hygiene" and getattr(r, "change_scope", False))
+    ]
     selected, skipped = scope_rules(ctx, active)
     result = EvaluationResult(skipped=skipped)
     _log_skipped(skipped)
@@ -136,6 +143,8 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
         rechecked, skipped = scope_rules(ctx, active, modified)
     result.skipped = skipped
     result.omissions = []
+    if any(getattr(r, "change_scope", False) for r in active):
+        refresh_context_changes(ctx, modified=modified, all_changes=bool(result.errors))
     rechecked = _applicable(ctx, rechecked, result)
     recheck = _check_rules(ctx, rechecked, "recheck", result.errors)
     ran = {rule.id for rule in rechecked}
@@ -147,6 +156,16 @@ def _applicable(ctx: RuleContext, rules: Sequence[Rule], result: EvaluationResul
     applicable = []
     for rule in rules:
         try:
+            if getattr(rule, "change_scope", False) and (
+                not ctx.change_available or any(not c.available for c in ctx.changes.values())
+            ):
+                result.omissions.append(
+                    RuleOmission(
+                        rule.id,
+                        "RULE_CHANGE_EVIDENCE_UNAVAILABLE",
+                        "exact textual change evidence is unavailable for one or more selected paths",
+                    )
+                )
             omit = getattr(rule, "omission", lambda _ctx: None)(ctx)
             if omit is not None:
                 if not isinstance(omit, RuleOmission):
@@ -155,7 +174,8 @@ def _applicable(ctx: RuleContext, rules: Sequence[Rule], result: EvaluationResul
                     raise ValueError(f"omission code must be UPPER_SNAKE, got {omit.code!r}")
                 result.omissions.append(omit)
             else:
-                applicable.append(rule)
+                if not getattr(rule, "change_scope", False) or ctx.change_available:
+                    applicable.append(rule)
         except Exception as exc:
             result.errors.append(_execution_error(rule, f"{rule.id}: applicability failed", exc))
     return applicable
@@ -187,10 +207,26 @@ def _check_rules(ctx: RuleContext, rules: Sequence[Rule], stage: str, errors: li
             continue
         phase = effective_phase(rule, ctx.phase_overrides)
         severity = effective_severity(rule, ctx.severity_overrides)
+        valid: list[Violation] = []
         for v in found:
             v.phase = phase
             v.severity = severity
-        violations.extend(found)
+            try:
+                if severity is Severity.NOTICE and (v.remediation or v.fixable or v.fixed):
+                    raise ValueError("NOTICE findings cannot request or claim repair")
+                if getattr(rule, "change_scope", False):
+                    span = v.change_span
+                    change = ctx.changes.get(v.file)
+                    if span is None or change is None:
+                        raise ValueError("change-scoped finding needs selected source evidence")
+                    if not change.available:
+                        continue
+                    if not change.affects(span):
+                        raise ValueError("finding construct must overlap its exact source change")
+                valid.append(v)
+            except ValueError as exc:
+                errors.append(_execution_error(rule, f"Invalid finding ({rule.id}): {exc}", exc))
+        violations.extend(valid)
     return violations
 
 
@@ -203,7 +239,7 @@ def _apply_fixes(ctx: RuleContext, rules: Sequence[Rule], errors: list[RuleProbl
     """
     modified: set[str] = set()
     for rule in rules:
-        if not isinstance(rule, Autofixable):
+        if effective_severity(rule, ctx.severity_overrides) is Severity.NOTICE or not isinstance(rule, Autofixable):
             continue
         try:
             changed = rule.fix(ctx)

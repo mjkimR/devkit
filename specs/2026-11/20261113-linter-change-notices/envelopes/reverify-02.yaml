@@ -1,0 +1,20 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:33:25.048362Z'
+status: completed
+review: review-02.yaml
+summary: Canonical selectors now reuse validated target normalization and NFC membership without losing Git before identity; 16 equivalent spelling cases Green after8 Red; empty-directory deletion and ordinary-only negative cases pass; owner helper and deletion branch require fresh high round3
+findings:
+- issue: Original change-target selectors discard accepted canonical-equivalent path spellings.
+  evidence: packages/devkit/src/devkit_agt/features/rules/usecases/project.py:296-300; packages/devkit/src/devkit_agt/features/rules/services/changes.py:78-85; .pytest_cache/dev-probe/review-02/test_targets.py:5-54
+  failure_condition: expand_targets accepts normalized relative or absolute parent-component, directory/root, symlink-prefix and macOS case or Unicode spellings, but raw selectors omit notices or raise ValueError.
+  suggested_action: Derive original file/directory/root selectors through the existing validated target-normalization owner, preserving lexical normalization, resolved absolute prefixes, actual case/Unicode spelling and NFC membership. Compare captured changes in the same workspace namespace; preserve root and directory prefixes for deletion evidence; add same-input spelling regressions.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS 527 related tests;19 focused target/deletion cases; previous failures reproduced Red
+diff_scope:
+  base: ''
+  head: d92d58c1fd9ccbcbec88aea529f3fbecf33cc1be

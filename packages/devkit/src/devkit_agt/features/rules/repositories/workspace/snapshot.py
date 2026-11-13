@@ -104,7 +104,9 @@ def _require_toplevel(root: Path) -> None:
 
 def _changes(root: Path, prior: str, tree: str) -> tuple[list[str], list[str]]:
     """Changed and deleted paths between two trees, from one ``--name-status`` diff."""
-    output = _git(root, "diff", "--name-status", "-z", "--no-renames", prior, tree, "--")
+    output = _git(
+        root, "diff", "--no-ext-diff", "--no-textconv", "--name-status", "-z", "--no-renames", prior, tree, "--"
+    )
     parts = [part for part in output.split(b"\0") if part]
     changed: list[str] = []
     deleted: list[str] = []

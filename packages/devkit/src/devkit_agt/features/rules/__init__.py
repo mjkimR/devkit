@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from devkit_agt.features.rules.models.changes import ChangeHunk, ChangeSpan, FileChange, LineRange
 from devkit_agt.features.rules.models.config import RulesConfig
 from devkit_agt.features.rules.models.contracts import (
     Autofixable,
@@ -77,15 +78,19 @@ from devkit_agt.features.rules.usecases.related import RelatedAsset, ResolveRela
 __all__ = [
     "COMMIT_INDEX_VARIABLE",
     "Autofixable",
+    "ChangeHunk",
+    "ChangeSpan",
     "ChecklistItem",
     "Document",
     "DocumentCatalog",
     "EvaluationResult",
     "FactsDependency",
+    "FileChange",
     "FileFactsDescriptor",
     "FileFactsSource",
     "JsonValue",
     "LineKind",
+    "LineRange",
     "LinkRelocation",
     "LinkRelocationReport",
     "ManagedRules",

@@ -242,3 +242,11 @@ class HookInstallSkippedNotice(GateError):
     code = "GATE_HOOK_INSTALL_SKIPPED"
     level = Level.WARNING
     what_to_report = "Git hook installation was skipped; report the reason and remediation to the user"
+
+
+class RulesNoticesNotice(GateError):
+    """Rule considerations do not request repair or change gate exit status."""
+
+    code = "GATE_RULES_NOTICES"
+    level = Level.NOTICE
+    brief = True

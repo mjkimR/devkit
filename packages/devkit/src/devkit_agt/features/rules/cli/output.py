@@ -14,7 +14,10 @@ import json
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from devkit_agt.features.rules.usecases.context import RuleReadContext
 
 import click
 from devkit_core.core.paths import display_path
@@ -86,6 +89,8 @@ def _count_fields(counts: Counter[str]) -> str:
 
 
 def _status(v: Violation) -> str:
+    if v.severity is Severity.NOTICE:
+        return "consider"
     if v.fixed:
         return "fixed"
     return "fixable" if v.fixable else "open"
@@ -234,4 +239,20 @@ def print_rule_tests(results: Sequence[RuleTestRun], workspace_root: Path, summa
     click.echo(
         f"[SUMMARY: rules={summary['rules']} passed={summary['passed']} failed={summary['failed']} "
         f"no_tests={summary['no_tests']} interrupted={summary['interrupted']}]"
+    )
+
+
+def summary_counts(violations: Sequence[Violation], *, rules: int) -> dict[str, int]:
+    counts = _counts(violations)
+    return {**{s.value + "s": counts[s.value] for s in Severity}, "fixed": counts["fixed"], "rules": rules}
+
+
+def print_read_context(result: RuleReadContext) -> None:
+    click.echo(f"[RULE_CONTEXT: file={field_value(result.file)} status={result.change['status']}]")
+    for hunk in result.hunks:
+        click.echo(f"[CHANGE_HUNK: {_value(hunk)}]")
+    for finding in result.findings:
+        click.echo(_violation_line(finding, {}, Path(".")))
+    click.echo(
+        f"[SUMMARY: notices={len(result.findings)} suppressed={result.suppressed} omitted={_value(result.omitted)}]"
     )
