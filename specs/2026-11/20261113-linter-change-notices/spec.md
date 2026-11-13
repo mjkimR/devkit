@@ -2,7 +2,7 @@
 id: SPEC-linter-change-notices
 title: Non-blocking rule notices for changed code
 summary: "Adds nonblocking NOTICE findings, exact change evidence and an explicit bounded read-context companion while preserving INFO, warnings and snapshot semantics."
-status: in-progress
+status: completed
 created: 2026-11-13
 related_capabilities: [CAP-GOV-rules-engine, CAP-GOV-evaluation-lifecycle, CAP-GOV-rule-authoring, CAP-GATE-commit-gates]
 related_usecases: []

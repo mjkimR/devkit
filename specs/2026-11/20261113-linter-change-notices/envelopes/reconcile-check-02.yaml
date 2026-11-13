@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:47:36.737782Z'
+status: completed
+summary: 'round 1; closes reconcile-check-01; high minor wording self-verification: exact suggested replacement only at named ADR option, chosen decision and contracts unchanged; actual one-line diff agrees with current warning/INFO strict0 regression and source; all7 targets reflected'
+findings: []
+unverified_areas:
+- Live model receipt/comparative quality best effort, not claimed
+checks:
+  reflection: PASS exact named wording-only correction; no source/API/schema/error code/decision change
+  tests: PASS 4557 affected incl E2E; whole lint/type; source unchanged since tests
+diff_scope:
+  base: 50659df092bb83ed492d9ecd14bfb28221349e5f
+  head: 686f6d11e6919e81bd00ab64e6e7561697f9031a

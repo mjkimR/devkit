@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-linter-change-notices
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-rules-engine.md
     resolution: modified
