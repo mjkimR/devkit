@@ -10,7 +10,7 @@ targets:
   - file: docs/capabilities/governance/CAP-GOV-rule-authoring.md
   - file: docs/capabilities/gate/CAP-GATE-commit-gates.md
   - file: docs/development/reference/rules.md
-  - file: docs/decisions/ADR-change-scoped-rule-notices.md
+  - file: docs/decisions/2026-11/20261113-change-scoped-rule-notices.md
   - file: packages/devkit/README.md
 ---
 
@@ -34,7 +34,7 @@ approval boundaries do not change.
 
 ## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)
 
-Promote `ADR-change-scoped-rule-notices` to ADR-change-scoped-rule-notices. No accepted ADR is superseded:
+`ADR-change-scoped-rule-notices` records the accepted additive decision. No accepted ADR is superseded:
 the choice extends the rule contract without changing existing INFO/warning/snapshot meanings. Current host and
 advisory contracts are read authorities, not modified targets. Existing `rules -> project` and `gate -> rules`
 edges suffice; no change to `.devkit/architecture.toml`, dist or MCP.

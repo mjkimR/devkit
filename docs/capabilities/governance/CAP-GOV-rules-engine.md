@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/rules/__init__.py
   - packages/devkit/src/devkit_agt/features/rules/usecases/project.py
+  - packages/devkit/src/devkit_agt/features/rules/usecases/context.py
 created_at: 2026-10-17
 ---
 
