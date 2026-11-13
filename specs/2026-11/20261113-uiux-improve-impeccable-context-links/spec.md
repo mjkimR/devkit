@@ -2,7 +2,7 @@
 id: SPEC-uiux-improve-impeccable-context-links
 title: Link tracked Impeccable context through a bundled POSIX script
 summary: "Link tracked Impeccable context into each checkout through optional relative root symlinks, and inspect missing or replaced links without changing consumer content."
-status: in-progress
+status: completed
 created: 2026-11-13
 related_capabilities: [CAP-DLV-uiux-improvement]
 related_usecases: [UC-improve-an-interface-and-user-flow]
@@ -214,4 +214,3 @@ implementation. The choice preserves the requested dependency boundary and repor
 Size `M`: the script and its tests/guide/contracts remain one feature spec. No concrete deferred implementation is
 created by these exclusions. Source-side retention setup is existing consumer responsibility rather than a follow-up
 feature. The unseen consumer pilot and live upstream/editor save behavior remain unverified observations.
-
