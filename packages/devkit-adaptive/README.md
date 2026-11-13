@@ -15,6 +15,14 @@ product iteration guidance; command use needs neither bundle selection nor a dev
 - `base/errors`: stable adaptive advisories.
 - `bundles/adaptive_dev`: opt-in guidance, reusable agents and import conversion assets.
 
+## Document delegation
+
+For useful separable document work after the described code is integrated, invoke `swarm-worker` with the
+installed adaptive-dev skill's `roles/documenter.md`. Resolve the role from the invoked skill directory and pass
+its absolute path, described source identity, governing documents, exclusive document paths and checks.
+The role compares implementation with current-state documents and returns document mappings and check results;
+the Host owns `.devkit/adaptive-dev.md` and final integration.
+
 ## Usage
 
 ```sh

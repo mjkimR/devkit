@@ -1,7 +1,7 @@
 # Delegation
 
 1. Work directly when a separate context adds no useful evidence; no action requires every role or a fixed team sequence.
-2. Pick by need and keep each agent's contract: `product-clarifier`, `product-researcher` or `usage-reviewer` for product support, which never commits; `swarm-planner` for read-only partitioning, `swarm-worker` for bounded implementation, `swarm-verifier` for source-specific checks with assigned ignored probe/test outputs. Compatible external callers can reuse the swarm agents under their own workflow.
+2. Pick by need and keep each agent's contract: `product-clarifier`, `product-researcher` or `usage-reviewer` for product support, which never commits; `swarm-planner` for read-only partitioning, `swarm-worker` for bounded implementation or document writing with `roles/documenter.md`, `swarm-verifier` for source-specific checks with assigned ignored probe/test outputs. Compatible external callers can reuse the swarm agents under their own workflow.
 3. Invoke a registered agent through the host's registered-role mechanism so its execution settings apply; if unavailable, report the gap and work directly or emulate it with an explicitly labelled generic role file.
 4. Resolve `roles/<role>.md` from the directory of the invoked `SKILL.md`, never the cwd or a reference directory; if that location is unavailable, locate and verify the invoked skill first. Verify the role exists, pass its absolute installed path and read only that overlay.
 5. Accept an external caller's verified absolute role path only when its permissions are compatible with the agent, project and assignment; reject incompatible requirements explicitly.

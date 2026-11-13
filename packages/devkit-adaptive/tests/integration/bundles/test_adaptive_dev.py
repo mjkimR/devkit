@@ -52,6 +52,7 @@ def test_adaptive_dev_projects_roles_and_entry_without_seeding_product_state(tmp
         "references/orchestration.md",
         "roles/architect.md",
         "roles/builder.md",
+        "roles/documenter.md",
         "roles/qa-tester.md",
         "roles/reviewer.md",
     ):
@@ -314,7 +315,7 @@ def test_local_role_paths_resolve_from_installed_skill_not_cwd(tmp_path: Path, m
     unrelated = tmp_path / "other-working-directory"
     unrelated.mkdir()
     monkeypatch.chdir(unrelated)
-    for role in ("architect", "builder", "qa-tester", "reviewer"):
+    for role in ("architect", "builder", "documenter", "qa-tester", "reviewer"):
         overlay = (skill.parent / "roles" / f"{role}.md").resolve(strict=True)
         assert overlay.is_absolute()
         assert "caller" in overlay.read_text()
