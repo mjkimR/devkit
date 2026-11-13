@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-adaptive-orchestration
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-adaptive-development.md
     resolution: modified
