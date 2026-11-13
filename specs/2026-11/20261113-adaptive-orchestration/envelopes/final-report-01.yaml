@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-12T23:22:01.408563Z'
+status: completed
+summary: Main coordinator actively delegates; fixed nesting and child-budget guidance and CLI depth refusal removed, while scoped authority and lifecycle checks remain.
+findings: []
+assumptions:
+- Source changes only; no upstream push or downstream agents dependency update.
+unverified_areas:
+- Actual model orchestration behavior.
+checks:
+  tests: PASS 185 affected tests; agents just verify also passed
+  build: PASS devkit-adaptive wheel build
+  lint: PASS just lint-check, just check and CI rules; independent code/reconcile review findings resolved
+diff_scope:
+  base: a1ffedafd49ccd4bb6298bacacca1c25c0cf48ef
+  head: 3d9da47de5621521daa13439f3566dc3b4dc2f6f
+activity_effort: medium
