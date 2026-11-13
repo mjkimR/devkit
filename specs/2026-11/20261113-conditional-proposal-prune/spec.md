@@ -2,7 +2,7 @@
 id: SPEC-conditional-proposal-prune
 title: Plan proposal cleanup only when applicable
 summary: "Omit proposal-prune effects for spec-only activity without proposal history while preserving exact prepared cleanup identity and retry validation."
-status: in-progress
+status: completed
 created: 2026-11-13
 related_capabilities:
   - CAP-DLV-proposal-lifecycle

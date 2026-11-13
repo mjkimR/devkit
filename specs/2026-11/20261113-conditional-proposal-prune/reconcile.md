@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-conditional-proposal-prune
 spec: SPEC-conditional-proposal-prune
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
     resolution: modified
@@ -15,7 +15,7 @@ targets:
 
 ## Verification and review
 
-Medium independent code review found one P2 in Git path simplification. The fix uses --full-history and the permanent merged-before-both-pins regression passes, alongside 17 targeted cleanup tests. Implementer self-reverification closed the finding without scope expansion. The initial 53 delivery/plan-accept E2E and 1820 affected tests passed; the affected suite is rerun after the source fix. Lint covers 311 Python files; pyright reports zero errors/warnings. Final checks and exact source identities are in the Unit envelopes.
+Medium independent code review found one P2 in Git path simplification. The fix uses --full-history and the permanent merged-before-both-pins regression passes, alongside 17 targeted cleanup tests. Implementer self-reverification closed the finding without scope expansion. The 53 targeted delivery/plan-accept E2E tests passed. After the source fix, affected tests passed 1821 cases across 109 selected paths, including required E2E. Lint covers 311 Python files; pyright reports zero errors/warnings. Independent reconcile review passed on head 710b3edf9e3557f82e8f9dbcc207e9d6cdad57ae with no findings; complete-tree snapshot 1cb74bc2222880f15fc9811415909d6f7b4e344f was unchanged. Final checks and exact source identities are in the Unit envelopes.
 
 An ignored before/after probe disables the helper to reproduce the accepted branch-slug behavior: spec-only proposal target count 1 to 0, handoff 1 to 1, successful prune and unchanged retry identity. No base checkout was used. No deferred required work remains.
 
