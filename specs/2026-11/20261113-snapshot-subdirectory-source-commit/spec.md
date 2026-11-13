@@ -1,28 +1,24 @@
 ---
-id: PROP-snapshot-subdirectory-source-commit
+id: SPEC-snapshot-subdirectory-source-commit
 title: Record the source commit for snapshots of subdirectory providers
-summary: "Restore verified snapshot source commits for content providers below a Git repository root by making ls-tree resolve repository-relative paths. Preserve existing content verification and explicit refresh behavior."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-13
-target_area: capabilities/distribution/
-priority: medium                      # critical | high | medium | low
-size: S                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: low                       # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/distribution/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/tests/
-  excludes:
-    - docs/decisions/
-task_kind: bugfix                     # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Restore verified snapshot source commits for content providers below a Git repository root by making ls-tree resolve repository-relative paths. Preserve existing content verification and explicit refresh behavior.
+status: planned
+created: 2026-11-13
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-bugfix
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-snapshot-subdirectory-source-commit] Record the source commit for snapshots of subdirectory providers
+# [SPEC-snapshot-subdirectory-source-commit] Record the source commit for snapshots of subdirectory providers
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-snapshot-subdirectory-source-commit on 2026-11-13.
+- **Preserved Materials**: `docs/materials/2026-11/20261113-snapshot-subdirectory-source-commit`
+- Target Docs Blueprint: `PROP-snapshot-subdirectory-source-commit-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `devkit bundle snapshot` records `source.commit` in `snapshot.json` only when every copied input matches the
 captured `HEAD` (`CAP-DIST-in-repo-bundles` rule 5, verified identity). `source_commit()` in
@@ -43,7 +39,29 @@ Hypothesis: resolving the paths from the repository root (`ls-tree --full-tree`,
 repository root as working directory) records the verified commit for subdirectory providers without changing the
 result for root providers or for sources that differ from `HEAD`.
 
-## 2. Planning Decisions
+## 2. Defect Characterization
+
+- **Current behavior**: <trigger, environment and the observed wrong result, with evidence>
+- **Expected behavior and its basis**: <the result the existing contract requires, citing its capability, use case, ADR or test>
+- **Behavior to preserve**: <call paths, input boundaries and contracts that must keep working, with their tests>
+- **Reproduction conditions**: <the command, data and environment that reproduce the defect>
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
 
 - **Q1 resolved**: add `--full-tree` to the existing `ls-tree` invocation in `source_commit()`. The copied input paths
   are already relative to the repository root. The flag gives those paths the matching interpretation while retaining
@@ -54,20 +72,20 @@ result for root providers or for sources that differ from `HEAD`.
   `packaging_changed=false`. Preview writes nothing. Applying the reviewed digest pair records the commit and returns
   `BUNDLE_SNAPSHOT_UPDATED`; repeating the same refresh returns `BUNDLE_SNAPSHOT_UNCHANGED` without writing.
 - No user design decision remains. Planning used a focused real-Git probe and the existing source/path tests; no Scout
-  or Challenger is required at `low` effort. The evidence and exact baseline are in `materials/source-commit-probe.md`.
+  or Challenger is required at `low` effort. The evidence and exact baseline are in `docs/materials/2026-11/20261113-snapshot-subdirectory-source-commit/source-commit-probe.md`.
 - Development stays `bugfix`, size `S`, effort `low`. No package, feature edge, schema, CLI field or lasting policy is
   added. No PADR or ADR is needed for restoring the existing verified-identity contract.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Implementation boundary
+#### Implementation boundary
 
 Change only `packages/devkit-dist/src/devkit_dist/features/distribution/repositories/snapshots.py` and the existing
 snapshot integration tests under `packages/devkit-dist/tests/integration/features/distribution/`. The repository
 helper keeps returning `None` on non-Git sources, failed/timed-out Git commands, missing/nonblob entries, changed
 copied bytes or executable-mode mismatches. Unrelated untracked files remain outside copied-input verification.
 
-### Acceptance criteria for Development
+#### Acceptance criteria for Development
 
 - **AC-01 — subdirectory identity**: Given a committed content provider at `tools/content` below a repository root,
   when creating a snapshot from either its absolute path or an equivalent unlinked relative spelling, then
@@ -85,7 +103,7 @@ Development first adds the subdirectory regression against the unfixed implement
 adds the flag and verifies these criteria. Run the snapshot integration module, the independent dist check, repository
 lint/type checks and `just test-affected` with its full fallback retained. No viewer frontend check applies.
 
-### Living Spec impact
+#### Living Spec impact
 
 No canonical document wording changes are planned. `CAP-DIST-in-repo-bundles` section 8 rules 4–7 and 10 already
 cover optional verified commits, immutable input comparison, deterministic preview/reviewed adoption and unchanged
@@ -93,14 +111,15 @@ metadata/content. The fix restores those guarantees without adding a contract. `
 canonical target list and the reconciliation rationale; Development must re-evaluate it if its actual diff changes
 that conclusion.
 
-### Non-Goals
+#### Non-Goals
 
 - No provenance schema, digest algorithm, result status/code or refresh protocol change.
 - No change to source-path admission, symlink handling, Git environment handling or timeout policy.
 - No snapshot repair outside the existing user-requested refresh operation.
 - No architecture, package or feature dependency change.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr snapshot-subdirectory-source-commit "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -110,3 +129,10 @@ that conclusion.
 - On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
+
+### Target Area & Boundaries
+
+- Target Area: capabilities/distribution/
+- Planned Boundaries: `capabilities/distribution/`, `packages/devkit-dist/src/devkit_dist/features/distribution/`, `packages/devkit-dist/tests/`
+- Excluded Boundaries: `docs/decisions/`
+
