@@ -1,14 +1,14 @@
 ---
-id: PADR-uiux-task-approved-run
+id: ADR-uiux-task-approved-run
 title: Offer task-approved UI/UX runs outside the consumer workflow
 summary: "For UI/UX improvement requests, we offer a task-approved run outside the consumer workflow, to reduce process overhead while retaining permissions and checks, accepting that independent reviews remain optional."
-proposal: PROP-uiux-improve-run-model
+proposal: SPEC-uiux-improve-run-model
 supersedes: [ADR-uiux-improvement-workflow-boundary, ADR-impeccable-session-authority]
-status: draft
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-uiux-task-approved-run] Offer task-approved UI/UX runs outside the consumer workflow
+# [ADR-uiux-task-approved-run] Offer task-approved UI/UX runs outside the consumer workflow
 
 ## 1. Context & Problem Statement
 

@@ -76,7 +76,7 @@ the Impeccable track. Paths and identifiers of the consumer are masked.
   documentation does not say whether plugin skills reach subagents.
 - The findings are split across three proposals that each cite this material by ID:
   `PROP-uiux-improve-bundle-hygiene` (A3, A4a to A4c, A5 neutral line, A7, the A2 troubleshooting note),
-  `PROP-uiux-improve-impeccable-routing` (A1, A2) and `PROP-uiux-improve-run-model` (section 2, with
+  `PROP-uiux-improve-impeccable-routing` (A1, A2) and `SPEC-uiux-improve-run-model` (section 2, with
   `MAT-uiux-improve-second-pilot`).
 - A6 is recorded as `FB-projection-guard-after-mid-session-install`; A2b and A2c, with a missing `audit-storage write`
   CLI command, are recorded as upstream feedback (`FB-impeccable-autonomy-probe-in-subagent`,

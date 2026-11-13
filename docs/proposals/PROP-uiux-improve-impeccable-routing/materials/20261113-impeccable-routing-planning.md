@@ -61,13 +61,13 @@ per-run capability checks pass, the command stays in the user session.
 `ADR-impeccable-session-authority`, `ADR-role-worker-subagent`, `ADR-uiux-improvement-workflow-boundary`,
 `ARCH-05-2-components`, `CAP-DLV-design-exploration`, `FB-impeccable-autonomy-probe-in-subagent`,
 `FB-projection-guard-after-mid-session-install`, `PLAN-uiux-improve-ooux-impeccable`,
-`PROP-uiux-improve-bundle-hygiene`, `PROP-uiux-improve-impeccable-routing`, `PROP-uiux-improve-run-model`,
+`PROP-uiux-improve-bundle-hygiene`, `PROP-uiux-improve-impeccable-routing`, `SPEC-uiux-improve-run-model`,
 `REC-lightweight-general-subagent`, `REC-uiux-improve-ooux-impeccable`, `SPEC-lightweight-general-subagent`,
 `SPEC-uiux-improve-ooux-impeccable`, `UC-improve-an-interface-and-user-flow`.
 
 `devkit docs refs ADR-impeccable-session-authority --direction in -n 0` returned 9 IDs:
 `ADR-uiux-improvement-workflow-boundary`, `CAP-DLV-uiux-improvement`, `MAT-uiux-improve-pilot`,
-`PLAN-uiux-improve-ooux-impeccable`, `PROP-uiux-improve-impeccable-routing`, `PROP-uiux-improve-run-model`,
+`PLAN-uiux-improve-ooux-impeccable`, `PROP-uiux-improve-impeccable-routing`, `SPEC-uiux-improve-run-model`,
 `PROP-uiux-improve-ooux-impeccable-target`, `REC-uiux-improve-ooux-impeccable`, `SPEC-uiux-improve-ooux-impeccable`.
 
 Historical specs retain their records. Current targets are the capability/use case, the exact old-ADR pointer and

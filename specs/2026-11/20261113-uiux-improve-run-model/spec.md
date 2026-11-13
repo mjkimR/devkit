@@ -1,35 +1,25 @@
 ---
-id: PROP-uiux-improve-run-model
+id: SPEC-uiux-improve-run-model
 title: app-uiux-improve runs outside the repository workflow on per-task approval
-summary: "Offers an explicitly approved per-task UI/UX run outside the consumer workflow while retaining product constraints, host permissions and applicable checks. The user can instead keep the consumer workflow."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-13
-target_area: capabilities/delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
-    - docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md
-    - docs/decisions/2026-11/
-    - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
-    - packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py
-    - packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/
-  excludes:
-    - docs/capabilities/harness/
-    - packages/devkit-spec/
-    - packages/devkit/src/devkit_agt/features/workflow/
-    - packages/devkit-dist/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
+summary: Offers an explicitly approved per-task UI/UX run outside the consumer workflow while retaining product constraints, host permissions and applicable checks. The user can instead keep the consumer workflow.
+status: planned
+created: 2026-11-13
 decomposed_from: PROP-uiux-improve-pilot-fit
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-uiux-improve-run-model] app-uiux-improve runs outside the repository workflow on per-task approval
+# [SPEC-uiux-improve-run-model] app-uiux-improve runs outside the repository workflow on per-task approval
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-uiux-improve-run-model on 2026-11-13.
+- **Preserved Materials**: `docs/materials/2026-11/20261113-uiux-improve-run-model`
+- Target Docs Blueprint: `PROP-uiux-improve-run-model-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `CAP-DLV-uiux-improvement` rule 3 (consumer authority) requires the coordinator to carry every requested change
 through the consumer's existing workflow, permissions and approvals (`ADR-uiux-improvement-workflow-boundary`
@@ -49,7 +39,7 @@ following the repository's development workflow and guidelines, and proceeds onl
 the user's preference). The user may instead choose to follow the repository workflow, and the skill then keeps
 rule 3 as it is today.
 
-### Evidence
+#### Evidence
 
 Two runs in one SDD consumer; `MAT-uiux-improve-pilot` holds the first and `MAT-uiux-improve-second-pilot` (held in
 this bundle) the second, the commit attribution and the measurement plan.
@@ -70,7 +60,7 @@ this bundle) the second, the commit attribution and the measurement plan.
 The evidence supports "much less bookkeeping"; it does not yet show "no loss of caught defects". The measurement plan
 in `MAT-uiux-improve-second-pilot` tracks that.
 
-### Governance objection and how this proposal answers it
+#### Governance objection and how this proposal answers it
 
 A challenger review objected that a catalog skill defaulting outside a configured approach contradicts rule 3,
 `ADR-uiux-improvement-workflow-boundary` clause 2, `CAP-HARN-agent-guidance` ("installing or selecting spec assets
@@ -90,11 +80,30 @@ Hypothesis: announcing and asking per task gives the user the light route when i
 attributable to a user decision, and loses no defect-catching value if the loop keeps the independent checks the user
 wants.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement app-uiux-improve runs outside the repository workflow on per-task approval so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 Planning recommendations below settle Q1 to Q6 for `plan-accept`; they are not an acceptance record.
 `MAT-uiux-run-model-planning` records the option comparison, source SHA, incoming-reference inventory and limitations.
-`PADR-uiux-task-approved-run` records the lasting decision and precise partial supersession.
+`ADR-uiux-task-approved-run` records the lasting decision and precise partial supersession.
 
 - **Q1 — Entry and approval**: retain the owner's announced outside-workflow option. At entry, identify the task and
   say that this procedure runs outside the repository's development workflow and its process guidelines. Ask
@@ -124,9 +133,9 @@ Planning recommendations below settle Q1 to Q6 for `plan-accept`; they are not a
   installation, product constraints, host restrictions, explicit Impeccable selection, context-file ownership, local-role limits and no implicit Git
   authority. Question/load routing stays with `PROP-uiux-improve-impeccable-routing`.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Options and recommendation
+#### Options and recommendation
 
 | Option | Benefit | Cost or risk | Disposition |
 | --- | --- | --- | --- |
@@ -140,7 +149,7 @@ applicable project checks still apply.” This is illustrative wording; the cont
 contract. “Outside” concerns workflow steps and workflow-specific records, not host controls, secrets, product
 constraints or permission to publish.
 
-### Execution and authority
+#### Execution and authority
 
 - Outside the workflow, the coordinator uses the existing improvement loop: inspect, proportionate framing, useful
   independent perspectives, user choices, inline implementation or a selected Impeccable session, applicable
@@ -155,7 +164,7 @@ constraints or permission to publish.
 - Keep the Impeccable brief's recorded base, edit list, no concurrent coordinator edits, unchanged index/HEAD and
   acceptance checks. This proposal changes no interactive-command or skill-load route.
 
-### Target documents and implementation
+#### Target documents and implementation
 
 `PROP-uiux-improve-run-model-target` contains prospective capability rules, use-case branches and acceptance cases.
 Development updates the capability summary and rules 3, 11, 12, 16, 17 and 19 as needed, adds bounded entry, scope and
@@ -168,7 +177,7 @@ after loading authoring context before those edits. Keep all agent wording workf
 entry/authority, delegation and requested setup, and the installed-consumer test for independent installation.
 No new runtime, package, feature dependency edge, distribution behavior or global workflow policy is in scope.
 
-### Verification plan
+#### Verification plan
 
 | Check | Observable outcome |
 | --- | --- |
@@ -187,7 +196,7 @@ procedure still apply.
 These are instruction and distribution checks. They do not prove model obedience, design quality, lower latency or
 equal defect detection. The two recorded pilots are confounded; no comparative performance gate is proposed.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Before acceptance: present this committed proposal, its PADR, target draft, Scout/Challenger findings and unverified
   areas. Existing Living Spec contracts stay in force throughout Planning.
@@ -198,3 +207,4 @@ equal defect detection. The two recorded pilots are confounded; no comparative p
   `PROP-uiux-improve-bundle-hygiene`. Overlapping Development and handoff run sequentially.
 - On rejection: retain `status: rejected` with the user's reason in the commit message; follow the normal rejection
   and feedback-retirement procedure before deletion.
+

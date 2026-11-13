@@ -5,7 +5,7 @@ created_at: 2026-11-13
 
 # [MAT-uiux-improve-second-pilot] app-uiux-improve run cost by route: attribution, second run and measurement plan
 
-Evidence for `PROP-uiux-improve-run-model`. The first run is described in `MAT-uiux-improve-pilot`; this file adds
+Evidence for `SPEC-uiux-improve-run-model`. The first run is described in `MAT-uiux-improve-pilot`; this file adds
 the commit attribution of that run, a second run in the same consumer, and a plan for measuring further runs. Paths,
 commit hashes and identifiers of the consumer are masked.
 

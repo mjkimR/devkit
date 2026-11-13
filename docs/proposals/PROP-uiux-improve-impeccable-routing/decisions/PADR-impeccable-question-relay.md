@@ -59,7 +59,7 @@ certifies no live-supported host.
 Supersedes in part `ADR-impeccable-session-authority`: Decision Outcome clause restricting fresh children to answer-free refinement and routing every interactive command to a user-operated session.
 
 Its native skill-loading requirement and all other in-force clauses remain. Consumer workflow authority is owned
-separately by `PROP-uiux-improve-run-model`; this decision neither chooses nor changes that proposal's outcome.
+separately by `SPEC-uiux-improve-run-model`; this decision neither chooses nor changes that proposal's outcome.
 
 ## 5. Consequences
 
