@@ -57,6 +57,20 @@ review: review-01.yaml       # reverify only: the review-NN.yaml or challenger-N
 - Finding `severity`, when supplied, is a non-empty string label. Empty, whitespace-only and non-string values are malformed. It is preserved in loading, serialization and reverify carry-forward; omission stays omitted. It has no effect on open-finding counts, check satisfaction or exit codes. The engine validates nothing beyond that: the `spec` bundle's review procedures require `P1`, `P2` or `P3` on every finding of a `review`, `reconcile-check` or `challenger` envelope and define the levels (`CAP-DLV-delivery-workflows` rule 15).
 - Malformed envelopes are not loaded; evaluation continues. Each is reported once: by `devkit workflow next` as an `[ENVELOPE_ERROR: file "reason"]` line, by `envelope check` as an `ENVELOPE_INVALID` advisory on stderr ([section 3](#3-checking)), and in JSON as an `ENVELOPE_INVALID` entry of `errors` with its unit-relative `file`. Its `[TARGET]` is the workspace-relative file and its `[FIX]` names the `envelope check --unit DIR` to rerun once it is fixed.
 
+The spec bundle's check-evidence procedure distinguishes the recording role's executed checks from caller inputs.
+A reviewer that did not rerun a supplied check records `SKIP` with its source envelope and exact source SHA, compares
+that SHA with the reviewed source and states unconfirmed or different-source evidence as unverified. A caller pass
+is not the reviewer's executed pass and does not satisfy a required rerun. For example:
+
+```text
+tests: SKIP not rerun; caller reports PASS in envelopes/green-01.yaml at 0123456789abcdef0123456789abcdef01234567
+```
+
+A reconcile-check closes earlier reconcile findings through a new full `reconcile-check` at `living-spec-draft`,
+naming the earlier file in its summary and repeating each finding's existing `resolution` and, for a waiver,
+`waiver` fields. It re-verifies the whole reflection and leaves newly discovered findings open; a required contract
+mismatch cannot be waived. This procedure changes no schema or reverify admission (`CAP-DLV-delivery-workflows`).
+
 ### 1.1 Questions, Answers, Problems and Resolutions
 
 A run of delegated work leaves one `worker` envelope: what it did, the questions it puts to a person (`questions`) and an execution problem it stopped on (`problem`). What another actor does later is a separate envelope that references that run: an `answer` records the rewritten answers to its questions and the assumptions of the run the user settled, a `resolution` closes its problem. A question waiting for answers and an execution problem are different states: a question is answered, a problem is resolved, and neither is inferred from `needs_input` alone.

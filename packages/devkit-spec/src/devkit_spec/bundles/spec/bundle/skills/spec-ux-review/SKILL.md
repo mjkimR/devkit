@@ -73,12 +73,22 @@ devkit workflow envelope new --unit <dir> --kind ux-review --stage <specify|char
 YAML
 ```
 
-- At most two rounds per unit; a second round reviews the revised drafts and the first round's findings.
-- In Development the implementer closes the last round with a further `ux-review` envelope repeating each finding
-  with `resolution: resolved`, or `resolution: waived` and a `waiver` reason.
+- At most two rounds per unit for independent reviewers; a second round reviews the revised drafts and the first round's findings.
+- In Development at `build-verify`, the implementer closes the last round with a further `ux-review` envelope
+  repeating each finding with `resolution: resolved`, or `resolution: waived` and a `waiver` reason.
+- Include findings already folded into the draft at `specify` or `characterize`, citing the retained draft change
+  and its implementation verification; draft fixes are reported in this Development closure.
+- Treat the implementer's closure as a closing record, not another independent reviewer round.
+
+```bash
+devkit workflow envelope new --unit <dir> --kind ux-review --stage build-verify \
+  --summary "implementer closure of ux-review-01; verified implementation against revised Screens" \
+  --head <implementation-sha> --findings-file <last-round-findings-with-resolutions.yaml>
+```
+
 - In Planning open findings go to the user at `plan-accept` (the `spec` skill's `references/planning.md`).
 
 ## Completion
 
 - [ ] Every linked use case was walked, main scenario and extensions, and every screen scored on R1-R6.
-- [ ] The envelope holds the findings without severity, and the round count is at most two.
+- [ ] The envelope holds the findings without severity, and the independent reviewer round count is at most two.

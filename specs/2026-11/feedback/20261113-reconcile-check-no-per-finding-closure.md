@@ -8,7 +8,7 @@ target: the spec skill's references/review-loop.md (reconcile-check closure)
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-13
 ---
 
@@ -43,3 +43,12 @@ created_at: 2026-11-13
 review-loop.md Fixing: "close the round: `reverify` for code, a new `reconcile-check` for reconcile,
 `reverify --from envelopes/challenger-NN.yaml` for Planning."
 ```
+
+## Disposition
+
+Resolved through `SPEC-feedback-guidance-clarifications`. A new full reconcile-check example closes each finding using existing resolved/waived fields, while preserving whole-reflection verification and non-waivable required contract mismatches.
+
+Verification: AC-01; test_feedback_guidance.py reconcile closure scenario; spec bundle 685 passed, docs bundle 9 passed, affected all-tier 2664 passed
+and independent code review with no findings at f356771f1224f847d459c39e339a0b8c31480030, retained in the Unit's
+build-check-01 and review-01 envelopes. This resolves the authorized guidance scope; live consumer/model behavior
+remains best effort and unverified.

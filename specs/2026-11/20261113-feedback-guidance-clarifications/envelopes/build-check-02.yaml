@@ -1,0 +1,20 @@
+kind: build-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:36:19.889095Z'
+status: completed
+summary: 'Refreshes and corrects spec lint/type timing in build-check-01: exact committed source at 4fc704932 passes; tests unchanged since verified f356771f1.'
+findings: []
+assumptions:
+- Original spec lint/type execution preceded the last assertion-string wording adjustment. This refresh, rather than an exact-source timing claim in build-check-01, supplies the final spec lint/type evidence.
+unverified_areas:
+- No live consumer/model empirical trials.
+checks:
+  lint: PASS executed just lint-check devkit-spec, ruff check passes and format 312 unchanged
+  build: PASS executed just check devkit-spec, 0 errors/warnings/informations
+  tests: SKIP not rerun; own native tests in envelopes/build-check-01.yaml at f356771f1224f847d459c39e339a0b8c31480030; reviewer confirms packages and installation output identical at current head
+  docs_lint_types: SKIP not rerun; own native docs checks in envelopes/build-check-01.yaml at f356771f1224f847d459c39e339a0b8c31480030; docs package unchanged
+diff_scope:
+  base: 021ad3c06c5ac0b3fffd8dad2fe931c2687db48e
+  head: 4fc7049327058562147ad0abb9fe435e0eba2c3d

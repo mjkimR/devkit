@@ -8,7 +8,7 @@ target: the spec-specify skill (Completion)
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-13
 ---
 
@@ -46,3 +46,12 @@ spec-specify Completion: "Do not commit yet: the `specify` stage boundary is com
 `tasks.md` satisfy `RULE-task-coverage`."
 consumer history: ux-review-01 envelope committed alone before the plan commit.
 ```
+
+## Disposition
+
+Resolved through `SPEC-feedback-guidance-clarifications`. The feature specify sequence now keeps uncommitted Screens and review evidence together through fold, plan/tasks and a covered combined commit.
+
+Verification: AC-03; test_feedback_guidance.py Screens sequence scenario; spec bundle 685 passed, docs bundle 9 passed, affected all-tier 2664 passed
+and independent code review with no findings at f356771f1224f847d459c39e339a0b8c31480030, retained in the Unit's
+build-check-01 and review-01 envelopes. This resolves the authorized guidance scope; live consumer/model behavior
+remains best effort and unverified.

@@ -156,7 +156,10 @@ sequence.
     change the effort, stages or required policies (`ADR-review-loop`).
     The implementer always writes, fixes and resolves the Living Spec reflection and `reconcile.md`; the
     verification at every effort is a `reconcile-check` envelope the `living-spec-draft` exit reads, so its findings
-    are fixed in the reconcile and never reopen `review-refine`.
+    are fixed in the reconcile and never reopen `review-refine`. A closing check re-verifies the whole reflection,
+    names the earlier reconcile-check in its summary and repeats each finding with `resolution: resolved` or
+    `resolution: waived` and a waiver reason. Newly discovered findings remain open; a required contract mismatch
+    cannot be waived. The existing generic finding fields suffice; `reverify --from` does not accept reconcile-check.
     At `high`, code review, reconcile verification and Planning criticism run in rounds. Each round is a fresh
     reviewer given the earlier rounds' findings, the round's diff scope and the effort: round 1 covers the whole
     change, each later round every fix since the previous round, never a subset. The implementer fixes every finding
@@ -208,14 +211,18 @@ sequence.
     stage). It walks each linked use case's main scenario and extensions through the screens and scores each screen
     0, 1 or 2 on six rubric items with evidence for every score below 2; it checks the link-rule items on the drafts
     by hand as its own judgment, outside the rubric. Its findings carry no severity and stay out of the review loop;
-    a unit has at most two rounds. In Development the implementer closes the last round with a further `ux-review`
-    envelope marking each finding `resolved` or `waived` with a reason. The effort table recommends one round at
+    a unit has at most two independent reviewer rounds. At `build-verify` the Development implementer closes the last
+    round with a further `ux-review` envelope marking each finding `resolved` or `waived` with a reason, including
+    findings already folded into the drafts at `specify` or `characterize` and their implementation verification.
+    This closing record is not another independent reviewer round. UX drafts cite an existing project-owned style
+    or token source; when none exists and the change decides style, the author drafts a shared project-owned source
+    within the agreed write scope. No fixed filename or seeded style file is required. The effort table recommends one round at
     `medium` and `high` when screens change; a `session` task applies the `ux-writing` instruction and runs none.
 16. **Only the workers write to Git**: a read-only role never stages or commits (`x-git-actions: [read]`). The two
     workers (`[read, commit]`) commit on their activity branch, write their own records and never push, merge, rebase,
     reset or amend (`ADR-orchestration-workers`).
 
-17. **Stage commits and record-only opt-in**: WHEN a stage boundary is reached, the executor MUST persist its changes with ordinary Git hooks. For one fully authored envelope as the sole pending file, it MAY use `devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml` (`CAP-DLV-workflow-envelopes`). Review/reverify, final-report and feedback with no findings are eligible after their associated work is committed. Accompanying source/document changes, multiple records, Planning returns, acceptance/decision transactions and problem/emergency work keep their required combined manual commits. Evidence SHAs remain unchanged. Integration preparation follows record commit; changed HEAD invalidates older preparation. A known Git/hook/signing failure uses same-file retry after fixing the cause, while uncertain effects require inspection. This adds no approval, push or merge authority. Source guidance checks: `packages/devkit-spec/tests/integration/bundles/spec/test_envelope_commit_guidance.py`.
+17. **Stage commits and record-only opt-in**: WHEN a stage boundary is reached, the executor MUST persist its changes with ordinary Git hooks. For one fully authored envelope as the sole pending file, it MAY use `devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml` (`CAP-DLV-workflow-envelopes`). Review/reverify, final-report and feedback with no findings are eligible after their associated work is committed. Accompanying source/document changes, multiple records, Planning returns, acceptance/decision transactions and problem/emergency work keep their required combined manual commits. Evidence SHAs remain unchanged. Integration preparation follows record commit; changed HEAD invalidates older preparation. A known Git/hook/signing failure uses same-file retry after fixing the cause, while uncertain effects require inspection. This adds no approval, push or merge authority. At feature `specify`, uncommitted Screens are reviewed against the last committed HEAD with an uncommitted-draft assumption. Findings are folded before `spec-plan` and `spec-tasks`; after `RULE-task-coverage` passes, spec, plan, tasks and associated UX review records share one ordinary manual commit. A review record is not detached while its reviewed spec remains uncommitted. Source guidance checks: `packages/devkit-spec/tests/integration/bundles/spec/test_envelope_commit_guidance.py` and `packages/devkit-spec/tests/integration/bundles/spec/test_feedback_guidance.py`.
 
 ## 4. Interfaces & Data Contracts
 
@@ -363,7 +370,7 @@ Envelopes are devkit envelope files under a unit's `envelopes/`, written with
 | `feedback` | `envelopes/feedback-NN.yaml` (`checks.swept`), in the proposal or spec Unit | the executor; each Planning run supplies fresh coverage |
 | `final-report` | `envelopes/final-report-NN.yaml` (`checks.tests`, `build`, `lint`) | the implementer |
 | `challenger`, `scout` | role returns | the caller, from the role's fields; a `challenger` round is closed by a `reverify` |
-| `ux-review` | `envelopes/ux-review-NN.yaml`, the `ux-reviewer`'s round outside the review loop (no severity, at most two rounds), recorded at `spike`, `specify` or `characterize`; read by no check | the caller, from the role's fields; in Development the implementer closes the last round with a further `ux-review` marking each finding `resolved` or `waived` |
+| `ux-review` | `envelopes/ux-review-NN.yaml`, the `ux-reviewer`'s round outside the review loop (no severity, at most two rounds), recorded at `spike`, `specify` or `characterize`; read by no check | the caller, from the role's fields; at `build-verify` the implementer closes the last round with a further `ux-review` marking each finding `resolved` or `waived`, including draft-fixed findings; closure is not an independent reviewer round |
 | `reconcile-check` | the reconcile verification at `living-spec-draft`, read by its exit (`envelope-completed(reconcile-check)`) | the implementer: self-check at `low`, reconcile-reviewer's returned fields at `medium`/`high`, medium self-verification of the initial check or `high` self-verification of a minor-fix batch under rule 15; identify verifier, evidence, any initial omission reason and, at `high`, the `round <N>;` marker |
 | `worker` | one run's result, exactly one per run: the applied `activity-effort`, the run's `questions` (status `needs_input`) and its `problem` (`cause`, `attempts`, `recovery`; `failed` requires it) | the run itself: a worker, the Host in `direct`, or the Host for a range it blocks |
 | `answer` | the rewritten answers to a run's questions (`answers_to: worker-NN.yaml`), one decision per question, and the run's `assumptions` the user settled (`settles`, by 1-based position; an answer may hold settles alone) | the run that processes them, first, in a commit of its own |

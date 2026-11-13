@@ -8,7 +8,7 @@ target: the ux-writing instruction (Visual style)
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-13
 ---
 
@@ -42,3 +42,12 @@ created_at: 2026-11-13
 ux-writing: "- **Visual style**: cite the project's steering style files; never restate colors, type, spacing or
 tokens."
 ```
+
+## Disposition
+
+Resolved through `SPEC-feedback-guidance-clarifications`. UX authors use an existing project style/token source or an agreed-scope project-owned shared source; no filename, seeded file or additional write authority is required.
+
+Verification: AC-05; test_style_source_guidance.py; spec bundle 685 passed, docs bundle 9 passed, affected all-tier 2664 passed
+and independent code review with no findings at f356771f1224f847d459c39e339a0b8c31480030, retained in the Unit's
+build-check-01 and review-01 envelopes. This resolves the authorized guidance scope; live consumer/model behavior
+remains best effort and unverified.
