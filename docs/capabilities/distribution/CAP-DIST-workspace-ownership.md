@@ -8,6 +8,7 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/workspace.py
   - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/guidance_block.py
 created_at: 2026-10-17
 usecases:
   - UC-snapshot-bundle-sources
@@ -87,11 +88,16 @@ See `CAP-HOST-lifecycle-observation`.
 6. **Host guidance block (root `AGENTS.md`)**: the
    `ARCH-08-2-resource-taxonomy` between `<!-- DEVKIT:START -->`
    and `<!-- DEVKIT:END -->`.
-   - Content: the once-per-bundle `devkit get-context` rule with the installed bundle names, the rule against
+   - Content: the installed bundle inventory and a `devkit get-context` rule naming only bundles with context
+     sources (`CAP-DIST-context-and-playbooks`), the rule against
      editing managed and projected files, then the selected `guidance` fragments ordered by bundle name and asset id; deterministic for a given
      selection, source content and template inputs. A project MUST change a fragment with `devkit override create <bundle>:<asset>`, never inside
      the markers. Ordinary overridden instructions are cited by their override paths; template instructions are cited
      by their rendered managed `.md` paths, including when their raw `.md.jinja` source is overridden.
+   - Context requirement: WHEN selected bundles have no context sources, the block MUST state that no automatic
+     bundle context load is required. Mixed selections name only required bundles for loading, once per agent
+     context and again after context loss. An empty selection retains selection guidance
+     (`packages/devkit-dist/tests/integration/features/distribution/test_guidance_block.py`).
    - Placement: the file is created when absent, the block appended when it has no markers, and replaced in place
      otherwise. Bytes outside the markers are project-owned. Each marker stands on a line of its own; a marker
      elsewhere, or more than one of either, is malformed and MUST stop the sync (`GUIDANCE_BLOCK_INVALID`). The block is

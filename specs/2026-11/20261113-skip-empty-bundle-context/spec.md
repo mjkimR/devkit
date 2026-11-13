@@ -2,7 +2,7 @@
 id: SPEC-skip-empty-bundle-context
 title: Skip Context Loading for Bundles Without Context Sources
 summary: Skip automatic get-context calls for bundles without declared context sources. Keep required loading for constitutions, selected instructions and declared context documents consistent across guidance, skills and playbooks.
-status: in-progress
+status: completed
 created: 2026-11-13
 related_capabilities: [CAP-DIST-context-and-playbooks, CAP-DIST-workspace-ownership, CAP-DIST-agent-projections]
 related_usecases: []
