@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-idea-discovery
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-idea-discovery.md
     resolution: modified

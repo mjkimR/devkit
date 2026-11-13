@@ -2,7 +2,7 @@
 id: SPEC-idea-discovery
 title: Idea discovery before research and delivery
 summary: "Add a discovery entry with bounded interviewing, autonomous exploration and uncertainty-driven routing while preserving the research entry."
-status: in-progress
+status: completed
 created: 2026-11-13
 related_capabilities:
   - CAP-DLV-idea-discovery

@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T05:24:41.295257Z'
+status: completed
+summary: Independent reconcile review verified all five targets and found one host-policy wording contradiction.
+findings:
+- issue: The discovery capability overstates native explicit-only invocation support.
+  evidence: docs/capabilities/delivery/CAP-DLV-idea-discovery.md:87-88 contradicts CAP-DIST-agent-projections host support; Antigravity follows the skill body.
+  failure_condition: An Antigravity consumer relies on this wording as native explicit-only enforcement.
+  suggested_action: Qualify native settings for Codex and Claude Code and the explicit skill-body guard for Antigravity.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated read-only reconcile-reviewer; HEAD and snapshot unchanged.
+unverified_areas:
+- Actual delegation, external retrieval and retention resume not executed; unchanged native test results reused.
+checks:
+  coverage: PASS all five targets, bidirectional trace, entrypoints and research compatibility verified
+  alignment: FAIL unqualified native-only statement overstates Antigravity enforcement
+diff_scope:
+  base: fc35dd50285cb20bef9e7541b7a547449583c04f
+  head: 674d398a8124335d061740ae80cb26d845366780

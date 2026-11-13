@@ -84,8 +84,9 @@ independence and routing are semantic agent contracts verified through behaviora
 ## 4. Interfaces and Data Contracts
 
 Select with `uv run devkit add deep-research`, then explicitly invoke `/discovery <idea, request or decision>`.
-No bundle rename, dependency or change to the existing research skill paths is required. Both entries use native
-user-only projection policy. An invocation starts no SDD intake; subsequent implementation uses ordinary intake.
+No bundle rename, dependency or change to the existing research skill paths is required. Both entries declare
+user-only invocation; Codex and Claude Code use native settings, while Antigravity follows the explicit skill-body
+guard. An invocation starts no SDD intake; subsequent implementation uses ordinary intake.
 
 Local roles: idea-explorer develops one premise, evidence-researcher answers one factual question, idea-challenger
 checks developed proposals. Returns carry completed/needs_input/failed status, exact source/artifact identity,
