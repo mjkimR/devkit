@@ -44,6 +44,16 @@ Edit only stale pages, gap pages and pages the user names; leave fresh pages as 
 - Read each cited source at `HEAD` and reorganize it by user journey and concept; do not copy contract text.
   Use plain descriptive wording: no capitalized normative keywords outside code. Link detail to its source instead of
   restating it.
+- If a stale page's changed sources do not affect that page's topic or journey, verify the existing prose against
+  `HEAD` and run `just handbook stamp en/<path>` without adding unrelated material.
+- Weave relevant updates into the existing sections instead of appending release-delta sections (such as
+  "Working with this release" or "Recent changes"); `changes.md` records what is new.
+- Place each new fact on the single canonical journey or area page that owns it instead of repeating the same
+  paragraph across multiple stale pages.
+- Keep `## Sources` (or `## Capabilities in this area`) as the final section of a page; place new material before it,
+  never after it.
+- When you add a new journey or area page, add its link under the matching section in `en/README.md` (and update each
+  translated `README.md` in step 4).
 - List every cited document ID under the frontmatter `sources` key (values may be empty). Never add `id:`.
 - Insert generated sections where they help: `<!-- handbook:generated toc -->`, `usecases` or `capabilities`, each
   closed by `<!-- /handbook:generated -->`. Text inside them is replaced on every run.
@@ -55,9 +65,11 @@ Edit only stale pages, gap pages and pages the user names; leave fresh pages as 
 
 For every language in the manifest other than `en` (`ko` first):
 
-- Translate each English page you changed into the same relative path; keep identifiers (commands, error codes,
-  document IDs, paths) untranslated and give the English term on a term's first use.
+- Translate each English page you changed into the same relative path, keeping the same section order and `sources`
+  frontmatter keys (with `null` values); keep identifiers (commands, error codes, document IDs, paths) untranslated and
+  give the English term on a term's first use.
 - Use `handbook/<lang>/terms.yaml` for every glossary term; add the missing renderings first.
+- Follow the language's established conventions for section headings, source markers, register and non-glossary terms.
 - Mark each source link as an English original; never translate a Living Spec source.
 - Run `just handbook stamp <lang>/<path>` for each translated page.
 
@@ -69,6 +81,9 @@ For every language in the manifest other than `en` (`ko` first):
    stamp it again when its narrative or sources changed, then rerun generate and verify until it prints
    `[HANDBOOK_VERIFIED: ...]`.
 3. `just rules-check handbook/` stays clean.
+4. Review the diff of touched pages for release-delta headings, sections placed after `## Sources` or
+   `## Capabilities in this area`, paragraphs duplicated across pages, missing `README.md` index links and register
+   drift; fix any before requesting human review.
 
 ## 6. Human review and commit
 
