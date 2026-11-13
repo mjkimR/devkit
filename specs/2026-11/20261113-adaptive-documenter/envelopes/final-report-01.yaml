@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T11:32:21.795976Z'
+status: completed
+summary: Added a skill-local documenter for swarm-worker, connected document delegation, updated capability/README and verified installed projection. Self-review and reconciliation passed at low effort.
+findings: []
+assumptions:
+- Local integration under auto policy; no platform review or CI required for this bounded content change.
+unverified_areas:
+- Native subagent invocation was not exercised; projection coverage does not prove host confinement.
+checks:
+  tests: PASS 186 affected tests and 35 bundle tests
+  build: PASS sdist and wheel; packaged overlay bytes match source
+  lint: PASS ruff check/format, pyright and CI rules
+diff_scope:
+  base: 614d58f1e1f66232982fc43d9d9cc58a130ba3fd
+  head: bcd973cb504d6f0714cc192a902f0c65acd4d8c6
