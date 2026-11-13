@@ -1,7 +1,7 @@
 ---
 id: PROP-uiux-improve-impeccable-routing
 title: Impeccable question and load routing for app-uiux-improve
-summary: Decides whether app-uiux-improve may relay an Impeccable command's question round through the coordinator with the user confirming every answer, and how a child loads a plugin-installed Impeccable, partially superseding ADR-impeccable-session-authority.
+summary: "Proposes capability-gated Impeccable question relay with every answer confirmed by the user, host-only skill loading and user-session fallback. Native plugin-load checks remain unmet on Claude Code and Codex."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
@@ -53,46 +53,109 @@ load failure as a blocker. Findings A1 and A2 in `MAT-uiux-improve-pilot` test b
 Hypothesis: a relayed route where the user confirms every answer keeps the user deciding every answer while saving
 the separate user-operated session, and a properly enabled plugin removes the need for any file-read fallback.
 
-## 2. Technical Spike Questions
+## 2. Technical Spike Findings and Planning Decisions
 
-- **Q1 (main)**: May the coordinator relay an interactive command's question round from a child? Conditions to
-  settle: the user confirms every pre-filled answer, not only the gaps, and each pre-filled answer cites its source
-  document; the route is gated on the host's ability to resume the same child (Claude Code observed; Codex
-  unverified, needs a live check), with the user-operated session as the fallback; answers that write `PRODUCT.md`
-  or `DESIGN.md` still need the user's explicit direction (rule 19). Does it extend to `shape` and `critique`, which
-  run two isolated sub-agents?
-- **Q2**: Load route. With the plugin enabled for the consumer project, does a fresh child load Impeccable through the
-  Skill tool on Claude Code, and on Codex? Run a live check on both before deciding. Is any file-read route
-  acceptable, or does the skill keep "load through the host's skill mechanism, otherwise return a blocker" and add
-  an enablement check to the blocker report?
-- **Q3**: Supersession scope. Which clauses of `ADR-impeccable-session-authority` does a new ADR partially supersede
-  (the routing clause for Q1; the load clause only if Q2 changes it), and what stays (consumer authority as amended by
-  `PROP-uiux-improve-run-model`, if accepted)?
+Planning at `high` compared the current user-operated session, a capability-gated relay and unconditional relay
+with cache loading. `MAT-impeccable-routing-planning` records the evidence, inbound references and live-check limits.
+`PADR-impeccable-question-relay` drafts the recommended direction; it is not acceptance authority.
+
+- **Q1 — Question ownership**: recommend a read-only question phase followed by explicit user confirmation of every
+  answer and continuation of the same child. An OOUX-derived pre-fill is a suggestion with its source, never an
+  answer on the user's behalf. Missing answers and additional upstream questions stop writes.
+- **Q2 — Load and host evidence**: keep the host's skill mechanism as the only loading route. Current-project plugin
+  enablement is the first diagnostic when a child cannot see the skill. Both requested native Impeccable load checks
+  remain unmet: this session exposes neither an Impeccable invocation nor a Claude Code runtime. A Codex same-child
+  continuation probe passed, but it tested no plugin loading or interactive Impeccable command.
+- **Q3 — Supersession**: replace only the interactive-command routing restriction in `ADR-impeccable-session-authority`.
+  Its host-only load mechanism, user ownership of answers, context-file direction, edit boundary and coordinator
+  acceptance remain. `PROP-uiux-improve-run-model` separately owns consumer workflow authority; Development reads
+  its landed result rather than assuming its draft was accepted.
+
+**Evidence decision (`by: user`)**: empirical validation is best-effort for this personal project and does not
+hold Planning. Retain both host plugin-load and interactive live checks as unverified; usage and concrete feedback
+will inform later repair. This settles the draft's original two-host-before-decision requirement without certifying
+either host. The Host selects capability-gated relay within that direction. Runtime capability checks and
+user-session fallback remain in force.
 
 ## 3. Proposed Design & Impact
 
-Directions, not final wording; Planning settles each.
+### Options
 
-1. Relayed question route. Two phases in one resumable child: phase 1 scans and drafts the question round without
-   writes; the coordinator shows every question with its pre-filled answer and cited source, and the user confirms or
-   changes each one; phase 2 resumes the same child to write. Without resume support, the existing user-operated
-   session applies.
-2. Load route. Keep the host skill mechanism as the only named route. When a child cannot see the skill, the blocker
-   report names plugin enablement for the current project as the first thing to check. Record the cache read in the
-   ADR's consequences as an observed workaround, not a sanctioned route.
-3. A partial supersession of `ADR-impeccable-session-authority` for the routing clause, and rule 16 rewritten to
-   match.
+| Option | Benefit | Cost and risk | Recommendation |
+| --- | --- | --- | --- |
+| Keep all interactive work in a user-operated session | Existing supported fallback; no new relay contract | Manual handoff and report even where continuation works | Use whenever a relay prerequisite fails |
+| Capability-gated relay with every answer user-confirmed | Keeps one coordinated request and preserves answer ownership | Native loading, continuation and command capabilities need per-run evidence; Impeccable live behavior is unverified | Selected under the user's best-effort evidence direction |
+| Relay all commands and read the plugin cache on load failure | Avoids host enablement troubleshooting | No supported cache contract; bypasses enablement and can misstate nested-agent coverage | Rejected as a sanctioned route |
 
-Impact: `CAP-DLV-uiux-improvement` rule 16 (and rule 10 if the blocker text changes),
-`UC-improve-an-interface-and-user-flow`, one new ADR, the bundle's `SKILL.md`, `references/orchestration.md` and
-README, and `test_app_uiux_improve.py`. Upstream Impeccable behaviors seen in the same runs are recorded as upstream
-feedback (`FB-impeccable-autonomy-probe-in-subagent`, `FB-impeccable-context-target-no-visual-implementation`,
-`FB-impeccable-audit-storage-write-missing`), not here.
+### Proposed relay contract
+
+1. The user selects Impeccable for this request as today. The coordinator preserves the self-contained brief,
+   recorded base, edit list, context-file permissions and exclusive product-writer interval. The preceding
+   run-model's landed authority terms apply unchanged.
+2. Before offering relay for a command, verify that a fresh child can load Impeccable through the host's supported
+   skill mechanism and that the host can resume that same child with its retained state. Report observations for
+   the actual host and project; a documentation statement, inherited skill name or cache-file read is insufficient.
+   If either capability is unavailable or unverified, use the user-operated session.
+3. The brief's first phase permits inspection and question drafting only, with no retained-file, product, index or
+   HEAD writes. The child returns the complete current question round, an identifier for each question, suggested
+   answers where useful, the source path and passage for each document-derived suggestion, and any blocker.
+4. The coordinator shows the complete packet to the user and obtains an explicit answer or confirmation for every
+   question, including every pre-fill. A user may confirm the entire visible packet together; silence, omitted
+   answers and confirmation of gaps alone grant no answer authority. The coordinator does not change confirmed
+   answers. `PRODUCT.md` or `DESIGN.md` edits still require explicit user direction naming those files and the action.
+5. Resume the same child with the complete confirmed packet and the same brief/base. Before writes, recheck the
+   brief's source facts and observed file state. If they changed in a way that affects questions, answers or scope,
+   stop, refresh the packet and obtain confirmation for the affected answers. A lost child or missing continuation
+   state falls back to the user-operated session; never recreate a writing child from an assumed transcript.
+6. New upstream questions return to the coordinator without writes dependent on their answers. Relay each new round
+   through the same confirmation process. Partial or unexpected writes are reported against the recorded base;
+   neither the coordinator nor a restarted child blindly replays the command or reverts consumer files.
+7. `shape` and `critique` also require the child to have the nested-role capabilities their loaded upstream command
+   requires. Host documentation alone does not prove those tools are available to this child. Missing or unverified
+   nested-role support routes the command to the user-operated session; never replace upstream isolated roles with
+   inline reasoning while claiming equivalent coverage. `live` remains excluded.
+8. Load failure reports the current project/plugin enablement and native skill availability actually observed, the
+   failed operation and the user-session fallback. Do not change enablement or install a plugin without the existing
+   user-requested setup authority. Plugin cache reads stay an observed undocumented workaround, not an allowed
+   load route.
+9. Coordinator acceptance compares the result to the brief and recorded base under the existing rules. The relay
+   adds no delivery record, prompt vendoring, runtime, plugin setup, Git authority or consumer-document edit authority.
+
+### Target documents and source
+
+- `CAP-DLV-uiux-improvement`: rule 16 gains the relay contract and capability fallbacks; rule 10 names observed
+  enablement as load-failure diagnosis. Rules 15, 17, 18 and 19 retain their authority and ownership boundaries.
+- `UC-improve-an-interface-and-user-flow`: its delegated-session extension and examples cover complete confirmation,
+  unavailable continuation, native-load failure, additional questions and unavailable nested roles.
+- `PADR-impeccable-question-relay` promotes to a partial superseding ADR. The old ADR stays accepted and gains the
+  exact partial-supersession pointer; no unrelated clause is reworded.
+- The bundle's `SKILL.md`, `references/orchestration.md` and README describe the same conditions. Keep workflow-neutral
+  language and keep this bundle installable without `devkit-spec`, `devkit-docs` or harness runtime dependencies.
+- Extend `test_app_uiux_improve.py` for the changed instruction contract. No new package, feature edge or test tier.
+
+### Acceptance and verification plan
+
+| ID | Given / When | Expected result and check |
+| --- | --- | --- |
+| AC-R1 | Native skill load and same-child continuation are observed, and the user selects relay | Read-only question phase, every answer confirmed, then same-child writing phase; instruction review and contract assertions |
+| AC-R2 | Only gaps are answered, one pre-fill is omitted, or an extra upstream question appears | Dependent writes wait for explicit user answers; packet scenario review and contract assertions |
+| AC-R3 | Native loading fails or the plugin is unavailable in the consumer project | Report observed enablement/availability, keep cache reading outside sanctioned routes, use user-session fallback; negative scenario and assertions |
+| AC-R4 | Same-child continuation is unavailable, state is lost or relevant brief facts changed | No guessed resume; fallback or refreshed confirmation before writes; negative scenario review |
+| AC-R5 | `shape` or `critique` requires nested roles that the child lacks | User-session fallback and limited-coverage report; no claim that inline work ran the roles |
+| AC-R6 | A confirmed answer implies `PRODUCT.md` or `DESIGN.md` changes without explicit file permission | Do not authorize those writes; existing rule 19 remains; assertions and brief scenario review |
+| AC-R7 | A relay returns changes or partial execution | Existing base comparison, edit-list acceptance and qualified reporting still apply; retain existing tests |
+| AC-R8 | Review requests native Impeccable behavior on Claude Code and Codex | Record both live checks as unmet until performed; assertions and continuation probe are not end-to-end evidence |
+
+Development runs the bundle integration test and required repository lint, types and affected tests. Review distinguishes
+text-contract assertions and scenario review from model obedience, plugin loading and live interaction. No live
+support or performance improvement is claimed from these checks. `dev_effort: medium` remains appropriate for this
+instruction/contract change; Planning stays high because the direction revises an accepted authority contract.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to `sdd-spec-feature` on
-  `dev-uiux-improve-impeccable-routing`. The proposal is deleted there and its decision becomes the partially
-  superseding ADR.
-- On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal.
+- On Acceptance: the Host uses the composed `devkit spec proposal accept-plan` command after review is ready. Development follows `PROP-uiux-improve-run-model` and precedes
+  `PROP-uiux-improve-bundle-hygiene`. Handoff promotes the PADR and preserves the source material and unmet checks.
+- On Rejection: keep `status: rejected` only after the Host carries the user's decision. Later retirement follows
+  the repository procedure and preserves useful evidence.
+- This Planning turn makes no acceptance, handoff or live-support claim. Both live plugin-load checks and an
+  end-to-end interactive relay remain unverified and visible at plan acceptance; they do not hold Planning.
