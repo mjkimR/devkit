@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:36:20.161210Z'
+status: completed
+summary: Independent medium reconcile-reviewer verified all five ACs against the three declared Living Spec targets and five authorized feedback dispositions; no findings.
+findings: []
+assumptions:
+- Codex isolation is emulated through absolute cwd/read scope, read-only reviewer and parent full-tree/HEAD audits. Reviewer reported no intentional outside-worktree reads.
+- Original spec lint/type checks preceded the final assertion-string edit; refreshed passing results were caller-reported during review and recorded afterward in build-check-02.
+unverified_areas:
+- Live consumer/model behavior, empirical improvement and reviewer reruns of native broad checks remain unverified; parent final cumulative rules still to run.
+checks:
+  reflection: PASS independent reviewer compared source/test/docs and all targets; no omission, contradiction or required-contract waiver
+  scope: PASS declared assets/tests/docs/Unit/five sources/installation only; no runtime/CLI/schema/verdict/gate/round/preset/feature-edge change
+  source_identity: PASS reviewer git diff f356771f1224f847d459c39e339a0b8c31480030..4fc7049327058562147ad0abb9fe435e0eba2c3d -- packages .devkit/installation.json .devkit/architecture.toml is empty
+  diff: PASS reviewer git diff --check and envelope validation, two records zero findings
+  tests: SKIP reviewer did not rerun; envelopes/build-check-01.yaml at f356771f1224f847d459c39e339a0b8c31480030 reports 685+9+2664 passing tests
+  lint: SKIP reviewer did not rerun; caller refreshed evidence retained after review in envelopes/build-check-02.yaml at 4fc7049327058562147ad0abb9fe435e0eba2c3d
+  build: SKIP reviewer did not rerun; caller refreshed spec types retained after review in envelopes/build-check-02.yaml at 4fc7049327058562147ad0abb9fe435e0eba2c3d, docs in build-check-01 at f356771f1224f847d459c39e339a0b8c31480030
+  boundary: PASS parent full-tree before=after 122eb28068d1fa6414d24bb3c4a3738e3f1ff6b8 and HEAD unchanged
+diff_scope:
+  base: 021ad3c06c5ac0b3fffd8dad2fe931c2687db48e
+  head: 4fc7049327058562147ad0abb9fe435e0eba2c3d
