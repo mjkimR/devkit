@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-run-model
 title: app-uiux-improve runs outside the repository workflow on per-task approval
 summary: Makes app-uiux-improve announce up front that it proceeds outside the repository's development workflow, whatever that workflow is, and continue only on the user's explicit per-task approval or follow the workflow when the user prefers.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
