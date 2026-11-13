@@ -26,6 +26,9 @@ def repository(tmp_path: Path, source_name: str = "docs/materials/impeccable") -
     root = tmp_path / "repo with spaces"
     root.mkdir()
     git(root, "init", "-q")
+    # Snapshot assertions include Git metadata; fixture commits must leave no background writer.
+    git(root, "config", "maintenance.auto", "false")
+    git(root, "config", "gc.auto", "0")
     git(root, "config", "user.name", "Context test")
     git(root, "config", "user.email", "context@example.invalid")
     source = root / source_name

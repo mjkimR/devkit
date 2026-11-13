@@ -15,6 +15,10 @@ from devkit_spec.features.scope import load_token, open_session
 @pytest.fixture
 def accepted_worktree(tmp_path: Path) -> Path:
     repo = make_repo(tmp_path / "repo")
+    # The production handoff commits without the test helper's author environment.
+    git(repo, "config", "user.name", "Handoff test")
+    git(repo, "config", "user.email", "handoff@example.invalid")
+    git(repo, "config", "commit.gpgsign", "false")
     proposal = CreateProposalUseCase().execute(repo, "handoff", today=TODAY)
     accept(repo / proposal.path)
     git(repo, "add", ".")
@@ -131,8 +135,8 @@ def test_native_handoff_suppresses_registration_diagnostics(
     result = native_handoff.HandoffUseCase(base)._execute(preview, "medium")
 
     completed = captured[0]
-    assert result["status"] == "handed_off", result
     assert result["errors"] == []
+    assert result["status"] == "handed_off", result
     assert result["handoff"] == completed.handoff.to_dict()
     # The native transport carries the same merge fields as the CLI's JSON.
     assert result["handoff"]["materials_merged"] is False and result["handoff"]["dropped_duplicates"] == []
