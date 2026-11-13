@@ -95,6 +95,8 @@ request. A review-only request ends with findings and no product edits.
     reference section, read `references/orchestration.md` before acting and follow its project-file rules; carry the
     change through the selected route and host approvals like any product change.
 
+Read `references/context-links.md` before requested tracked-context linking or when inspecting context links.
+
 ## Completion
 
 - A normal improvement request finishes with the changed interface or flow and its verification status, selected route,

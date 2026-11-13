@@ -2,7 +2,7 @@
 id: SPEC-uiux-improve-impeccable-context-links
 title: Link tracked Impeccable context through a bundled POSIX script
 summary: "Link tracked Impeccable context into each checkout through optional relative root symlinks, and inspect missing or replaced links without changing consumer content."
-status: planned
+status: in-progress
 created: 2026-11-13
 related_capabilities: [CAP-DLV-uiux-improvement]
 related_usecases: [UC-improve-an-interface-and-user-flow]

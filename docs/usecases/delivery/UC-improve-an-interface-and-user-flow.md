@@ -53,6 +53,12 @@ entrypoints:
 - **3d.** Impeccable is selected but unavailable: the agent names the upstream install routes; the user installs it,
   or asks the agent to run a route that needs no prompt answers (resumes at 3c), or continues inline (resumes at
   step 4 without 5c).
+- **3e.** Tracked context needs root entry points in this worktree: on the user's request the agent runs bounded
+  link setup after showing the exact excludes and stopping its writers. Existing entries are preserved; resumes at
+  step 4 with reported setup state (`CAP-DLV-uiux-improvement`).
+- **3f.** A read-only context check reports missing, foreign or replaced entries: the agent reports the stable state,
+  preserves both content versions and obtains any needed recovery direction; resumes at step 4 using usable context
+  or existing absolute read-only fallback, without automatic repair (`CAP-DLV-uiux-improvement`).
 - **4a.** A product or scope decision exceeds existing authority: the agent presents the concrete choice and preserves
   independent useful work; dependent work waits and resumes at step 4 after the user's decision.
 - **4b.** A craft default conflicts with authorized brief/specification content: the agent follows the authorized
@@ -315,3 +321,19 @@ audit persistence.
 - **When**: the agent would persist the audit.
 - **Then**: findings and coverage remain in the session report with persistence unavailable, no invented/retried
   command and no unrequested file or installation change.
+
+### Scenario 27: Link tracked context in another worktree
+
+- **Covers**: 3e
+- **Given**: tracked source context exists in a linked worktree and the user requests setup.
+- **When**: the agent runs the helper after showing exact excludes with managed entries and source quiescent.
+- **Then**: root links resolve into that worktree, the shared local exclude retains its existing bytes and requested
+  setup is reported without source-content edits (`CAP-DLV-uiux-improvement`).
+
+### Scenario 28: Preserve a replaced context link
+
+- **Covers**: 3f
+- **Given**: an atomic-save editor replaced a root link with a different regular file.
+- **When**: the agent checks context links while gathering context.
+- **Then**: `LINK_REPLACED` is reported with differing content, both versions stay unchanged and recovery waits for
+  consumer direction (`CAP-DLV-uiux-improvement`).

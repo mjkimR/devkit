@@ -141,6 +141,44 @@ Ask the coordinator for any of these; it never does them on its own:
 `PRODUCT.md` and `DESIGN.md` hold your product and design context. They are left out of any cleanup unless you
 name them, and they change only on your explicit direction.
 
+### Tracked context across worktrees
+
+To keep one tracked copy, put existing context under `docs/materials/impeccable/` (or your chosen in-repository
+source directory) and commit that source through your own process. A typical source contains `PRODUCT.md`, optional
+`DESIGN.md` and optional `.impeccable/`. The helper creates none of this content.
+
+Before requesting setup, review the exact local exclude lines it adds:
+
+```text
+/PRODUCT.md
+/DESIGN.md
+/.impeccable
+```
+
+Stop editors, context-writing sessions and other helpers that can modify those root entries or the source during
+link mode. Mutating setup requires quiescent entries; noncooperating concurrent writers are unsupported. Run the
+script deployed inside your selected host's skill directory, for example:
+
+```sh
+sh .agents/skills/app-uiux-improve/scripts/link-impeccable-context.sh
+sh .agents/skills/app-uiux-improve/scripts/link-impeccable-context.sh --check
+```
+
+For another layout, append its path: `sh <installed-skill>/scripts/link-impeccable-context.sh docs/context`.
+Relative paths resolve from the current worktree root, including when invoked from a subdirectory. Run setup once
+per worktree and clone; linked worktrees share Git's exclude file but each needs its own relative links.
+Source symlinks escaping the worktree and symlinked source entries are refused. Existing root entries are preserved.
+The script neither stages/untracks anything nor edits the root `.gitignore`. Root symlink exclusion does not ignore
+runtime files reachable through a tracked `.impeccable` source; retain your own source-side ignore policy.
+
+Check mode changes no files, locks or temporary files. It reports stable link/exclude codes and actions, then exits
+0 when clean, 1 for unresolved states, or 2 when it cannot run. Repeated link mode changes no existing correct links
+or exclude bytes. An I/O failure can retain completed links or exclude lines; inspect the report before rerunning.
+If an editor replaces a link, `LINK_REPLACED` reports whether file/directory content is equal, differs or has a type
+mismatch. Preserve both versions, merge desired changes into the tracked source by your own decision, then restore
+the root link manually. Check again before continuing. The coordinator performs this recovery only on your request.
+The local-only absolute read-only path fallback remains available when you do not use links.
+
 ## 8. Troubleshooting
 
 | Symptom | What to do |
