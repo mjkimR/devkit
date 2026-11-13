@@ -23,7 +23,7 @@ created_at: 2026-11-13
 - **Actual**: `AUTONOMY_DIRECTIVE_CHECK` asks for a live probe that a subagent cannot perform.
 - **Workaround (or Interpretation Chosen)**: The child proceeded under the brief's stop conditions.
 - **Suggestion**: Report upstream to Impeccable: accept an explicit delegation directive (for example a brief naming
-  the stop conditions) in place of the live probe. In devkit, `PROP-uiux-improve-impeccable-routing` decides whether
+  the stop conditions) in place of the live probe. In devkit, `SPEC-uiux-improve-impeccable-routing` decides whether
   the brief template should name this directive.
 
 ## Diagnostic Details

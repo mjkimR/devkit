@@ -9,7 +9,7 @@ priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
-depends_on: [PROP-uiux-improve-impeccable-routing]
+depends_on: [SPEC-uiux-improve-impeccable-routing]
 boundaries:
   owns:
     - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -35,9 +35,9 @@ refer to it. This proposal takes the findings that are instruction gaps inside t
 one needs clearer wording, a missing step or a test, and none changes who holds authority. It needs no ADR.
 
 Split from ~~`PROP-uiux-improve-pilot-fit`~~ (drafted in `6902170e9`, deleted in this split) with
-`PROP-uiux-improve-impeccable-routing` (question and load routing) and `SPEC-uiux-improve-run-model` (the run model).
+`SPEC-uiux-improve-impeccable-routing` (question and load routing) and `SPEC-uiux-improve-run-model` (the run model).
 All three touch the bundle's `SKILL.md` and `CAP-DLV-uiux-improvement`. The user set the delivery order:
-`SPEC-uiux-improve-run-model` first, then `PROP-uiux-improve-impeccable-routing`, then this proposal, which
+`SPEC-uiux-improve-run-model` first, then `SPEC-uiux-improve-impeccable-routing`, then this proposal, which
 `depends_on` the routing proposal and builds on both.
 
 Hypothesis: with these gaps closed, a coordinator verifies the branch it changed, keeps a task focus from turning into
@@ -80,7 +80,7 @@ No business question remains; acceptance and Development handoff stay with the H
 6. Plugin visibility note (A2, corrected). The README troubleshooting table says a plugin skill is visible only
    where the plugin is enabled, so a child or session in a project without that enablement cannot load it. Reading
    `SKILL.md` from the plugin cache is recorded as an observed, undocumented workaround, not a route the skill names;
-   routing decisions belong to `PROP-uiux-improve-impeccable-routing`.
+   routing decisions belong to `SPEC-uiux-improve-impeccable-routing`.
 
 Impact: `CAP-DLV-uiux-improvement` rules 4, 11, 16, 17 and 18; `UC-improve-an-interface-and-user-flow` inspection,
 acceptance and coverage examples; the bundle's `SKILL.md`, `references/orchestration.md`,
@@ -92,7 +92,7 @@ package dependency or distribution change is required.
 
 - Keep `planning_effort: low` because direction is settled; retain `dev_effort: medium` for instruction review and
   bundle checks. No scout or challenger pass is required at this Planning effort.
-- Preserve delivery order: `SPEC-uiux-improve-run-model`, then `PROP-uiux-improve-impeccable-routing`, then this
+- Preserve delivery order: `SPEC-uiux-improve-run-model`, then `SPEC-uiux-improve-impeccable-routing`, then this
   proposal. Rebase is not worker work: the Host refreshes this Planning branch or the Development input when those
   predecessors land. Recheck the affected rule numbers and wording then; no sibling decision is treated as settled
   by this plan.

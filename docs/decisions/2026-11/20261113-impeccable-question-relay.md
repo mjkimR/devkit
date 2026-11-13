@@ -1,14 +1,14 @@
 ---
-id: PADR-impeccable-question-relay
+id: ADR-impeccable-question-relay
 title: Capability-gated Impeccable question relay
 summary: "For interactive Impeccable work, we relay questions through a verified resumable child with every answer user-confirmed, to keep one request context, accepting user-session fallback where host capabilities are unverified."
-proposal: PROP-uiux-improve-impeccable-routing
+proposal: SPEC-uiux-improve-impeccable-routing
 supersedes: [ADR-impeccable-session-authority]
-status: draft
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-impeccable-question-relay] Capability-gated Impeccable question relay
+# [ADR-impeccable-question-relay] Capability-gated Impeccable question relay
 
 - **Status**: Draft; direction ready for plan acceptance.
 - **Date**: 2026-11-13

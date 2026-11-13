@@ -1,33 +1,27 @@
 ---
-id: PROP-uiux-improve-impeccable-routing
+id: SPEC-uiux-improve-impeccable-routing
 title: Impeccable question and load routing for app-uiux-improve
-summary: "Proposes capability-gated Impeccable question relay with every answer confirmed by the user, host-only skill loading and user-session fallback. Native plugin-load checks remain unmet on Claude Code and Codex."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-13
-target_area: capabilities/delivery/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-depends_on: [SPEC-uiux-improve-run-model]
-boundaries:
-  owns:
-    - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
-    - docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md
-    - docs/decisions/
-    - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
-    - packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py
-  excludes:
-    - packages/devkit-dist/
-    - packages/devkit-spec/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
+summary: Proposes capability-gated Impeccable question relay with every answer confirmed by the user, host-only skill loading and user-session fallback. Native plugin-load checks remain unmet on Claude Code and Codex.
+status: planned
+created: 2026-11-13
+depends_on:
+  - SPEC-uiux-improve-run-model
 decomposed_from: PROP-uiux-improve-pilot-fit
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-uiux-improve-impeccable-routing] Impeccable question and load routing for app-uiux-improve
+# [SPEC-uiux-improve-impeccable-routing] Impeccable question and load routing for app-uiux-improve
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-uiux-improve-impeccable-routing on 2026-11-13.
+- **Preserved Materials**: `docs/materials/2026-11/20261113-uiux-improve-impeccable-routing`
+- Target Docs Blueprint: `PROP-uiux-improve-impeccable-routing-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `CAP-DLV-uiux-improvement` rule 16 and `ADR-impeccable-session-authority` route Impeccable's interactive commands
 (new work, `init`, `shape`, `critique`) to a session the user operates, because "no actor answers on the user's
@@ -53,11 +47,30 @@ load failure as a blocker. Findings A1 and A2 in `MAT-uiux-improve-pilot` test b
 Hypothesis: a relayed route where the user confirms every answer keeps the user deciding every answer while saving
 the separate user-operated session, and a properly enabled plugin removes the need for any file-read fallback.
 
-## 2. Technical Spike Findings and Planning Decisions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Impeccable question and load routing for app-uiux-improve so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Findings and Planning Decisions
 
 Planning at `high` compared the current user-operated session, a capability-gated relay and unconditional relay
 with cache loading. `MAT-impeccable-routing-planning` records the evidence, inbound references and live-check limits.
-`PADR-impeccable-question-relay` drafts the recommended direction; it is not acceptance authority.
+`ADR-impeccable-question-relay` drafts the recommended direction; it is not acceptance authority.
 
 - **Q1 — Question ownership**: recommend a read-only question phase followed by explicit user confirmation of every
   answer and continuation of the same child. An OOUX-derived pre-fill is a suggestion with its source, never an
@@ -77,9 +90,9 @@ will inform later repair. This settles the draft's original two-host-before-deci
 either host. The Host selects capability-gated relay within that direction. Runtime capability checks and
 user-session fallback remain in force.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Options
+#### Options
 
 | Option | Benefit | Cost and risk | Recommendation |
 | --- | --- | --- | --- |
@@ -87,7 +100,7 @@ user-session fallback remain in force.
 | Capability-gated relay with every answer user-confirmed | Keeps one coordinated request and preserves answer ownership | Native loading, continuation and command capabilities need per-run evidence; Impeccable live behavior is unverified | Selected under the user's best-effort evidence direction |
 | Relay all commands and read the plugin cache on load failure | Avoids host enablement troubleshooting | No supported cache contract; bypasses enablement and can misstate nested-agent coverage | Rejected as a sanctioned route |
 
-### Proposed relay contract
+#### Proposed relay contract
 
 1. The user selects Impeccable for this request as today. The coordinator preserves the self-contained brief,
    recorded base, edit list, context-file permissions and exclusive product-writer interval. The preceding
@@ -121,19 +134,19 @@ user-session fallback remain in force.
 9. Coordinator acceptance compares the result to the brief and recorded base under the existing rules. The relay
    adds no delivery record, prompt vendoring, runtime, plugin setup, Git authority or consumer-document edit authority.
 
-### Target documents and source
+#### Target documents and source
 
 - `CAP-DLV-uiux-improvement`: rule 16 gains the relay contract and capability fallbacks; rule 10 names observed
   enablement as load-failure diagnosis. Rules 15, 17, 18 and 19 retain their authority and ownership boundaries.
 - `UC-improve-an-interface-and-user-flow`: its delegated-session extension and examples cover complete confirmation,
   unavailable continuation, native-load failure, additional questions and unavailable nested roles.
-- `PADR-impeccable-question-relay` promotes to a partial superseding ADR. The old ADR stays accepted and gains the
+- `ADR-impeccable-question-relay` promotes to a partial superseding ADR. The old ADR stays accepted and gains the
   exact partial-supersession pointer; no unrelated clause is reworded.
 - The bundle's `SKILL.md`, `references/orchestration.md` and README describe the same conditions. Keep workflow-neutral
   language and keep this bundle installable without `devkit-spec`, `devkit-docs` or harness runtime dependencies.
 - Extend `test_app_uiux_improve.py` for the changed instruction contract. No new package, feature edge or test tier.
 
-### Acceptance and verification plan
+#### Acceptance and verification plan
 
 | ID | Given / When | Expected result and check |
 | --- | --- | --- |
@@ -151,7 +164,7 @@ text-contract assertions and scenario review from model obedience, plugin loadin
 support or performance improvement is claimed from these checks. `dev_effort: medium` remains appropriate for this
 instruction/contract change; Planning stays high because the direction revises an accepted authority contract.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: the Host uses the composed `devkit spec proposal accept-plan` command after review is ready. Development follows `SPEC-uiux-improve-run-model` and precedes
   `PROP-uiux-improve-bundle-hygiene`. Handoff promotes the PADR and preserves the source material and unmet checks.
@@ -159,3 +172,4 @@ instruction/contract change; Planning stays high because the direction revises a
   the repository procedure and preserves useful evidence.
 - This Planning turn makes no acceptance, handoff or live-support claim. Both live plugin-load checks and an
   end-to-end interactive relay remain unverified and visible at plan acceptance; they do not hold Planning.
+
