@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:36:25.385198Z'
+status: completed
+summary: 'Medium author self-verification PASS: the only catalog bundle and delivery area have two exact identified targets; CAP rules23-26 and UC extensions5g-5i/scenarios24-26 agree with source and all five ACs. No findings or waivers.'
+findings: []
+assumptions:
+- 'Medium exception: all affected contracts and documents are identified in one catalog bundle and one delivery capability area; current Living Spec reflection is not cross-component. Direct source-to-target clauses are certain, so no reconcile-reviewer was invoked.'
+- Author verified reconciliation separately from fresh independent code-reviewer PASS review-01; no new authority, term, runtime, edge or decision.
+unverified_areas:
+- Native Impeccable and model behavior remain unverified; content/distribution tests prove no upstream fix or host enforcement.
+checks:
+  semantic_mapping: PASS AC01 detector to CAP23/UC5g24; AC02 brief/probe to CAP24-25/UC5h25; AC03 persistence to CAP26/UC5i26; AC04 route/asset retained; AC05 three local dispositions
+  rules: PASS exact committed reconciliation tree66e8e016a16b cumulative CI22rules errors0 warnings0; targeted docs/Unit0 violations; diff-check0
+  entrypoints: PASS both existing SKILL.md doorways retained; reject README human-guide, conditional helper and tests; missing0 applied0
+  source_feedback: PASS exactly three promoted completed-local-mitigation dispositions with verification and explicit upstream-not-fixed; no deferred/external task
+diff_scope:
+  base: 5cab6156a60de1a2a2845e38fc19bda92961c90e
+  head: a171b35f75d124ae9c7f1e460ed95964824f1fa2
+activity_effort: medium
