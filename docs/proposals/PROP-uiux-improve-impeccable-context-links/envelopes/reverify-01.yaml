@@ -1,0 +1,22 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-13T05:53:30.160094Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Folded both concrete Challenger actions: byte-preserving target capture with macOS/GNU shell probes, and Host-selected quiescent setup with explicit concurrent-writer limitation.'
+findings:
+- issue: Literal-target capture can misclassify a foreign link as LINK_OK.
+  evidence: docs/proposals/PROP-uiux-improve-impeccable-context-links/proposal.md:83 and 121-122; Challenger in-memory sh probe demonstrated command-substitution trailing-newline removal.
+  failure_condition: A resolving foreign root symlink targets the expected path followed by a newline; ordinary command substitution strips the target newline and can compare equal, violating AC-02 and AC-04.
+  suggested_action: Append a non-newline sentinel inside command substitution, remove it and exactly one ls record terminator, compare the complete target, and add a resolving foreign target ending in newline regression. Never print raw target bytes.
+  resolution: resolved
+  severity: P1
+- issue: Plain ln -s cannot preserve the stated competing-creation boundary.
+  evidence: docs/proposals/PROP-uiux-improve-impeccable-context-links/proposal.md:114-120 promises preservation on a race but POSIX ln treats a directory destination as a directory to receive a new nested link.
+  failure_condition: A concurrent writer creates a directory or directory symlink at the destination after the absence check; ln can create a nested link, possibly outside the worktree, violating the proposed mutation boundary and AC-02.
+  suggested_action: Require quiescent managed root entries and source during mutating setup, remove the competing-creation guarantee, and preserve entries occupied at invocation start. Document unsupported concurrent writers, test occupied content/identity, and retain partial effect reporting and exclude locking.
+  resolution: resolved
+  severity: P1
+checks: {}

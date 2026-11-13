@@ -80,7 +80,7 @@ No product screen changes are proposed, so there is no Screens draft or UX revie
 | Q1: authority | `PADR-impeccable-context-links` narrowly extends requested setup to links and exact root excludes; read-only `--check` is inspection the coordinator may run while gathering context. | Treating link creation as an automatic preflight would exceed consumer authority. No Python/runtime package is added. |
 | Q2: source | One optional argument, relative to the current worktree root; default `docs/materials/impeccable`. | No Git/devkit configuration key: another state source is unnecessary. A project with another layout passes the argument. |
 | Q3: projection | The script stays inside the existing skill asset; document `sh <deployed-skill>/scripts/link-impeccable-context.sh`. | No new asset kind or distribution change; `sh` avoids a dependency on executable-bit preservation. Existing subtree loading includes non-Markdown files. |
-| Q4: inspection | Use POSIX `test -L`, then capture `LC_ALL=C QUOTING_STYLE=literal ls -dn ./<fixed-entry>` and remove the exact ` ./<fixed-entry> -> ` prefix before comparing the complete target string. | No `readlink`, `realpath`, `test -ef`, field splitting or generic filename parser. GNU's quoting override is harmless to other implementations; clear color-forcing variables. macOS and `dash` probes pass with spaces and ` -> ` in the source path. GNU/BusyBox utility runs remain Development coverage. |
+| Q4: inspection | Use POSIX `test -L`, then capture `LC_ALL=C QUOTING_STYLE=literal ls -dn ./<fixed-entry>` with an appended non-newline sentinel, remove the sentinel and exactly one output record newline, then remove the exact ` ./<fixed-entry> -> ` prefix and compare the complete target string. | No `readlink`, `realpath`, `test -ef`, field splitting or generic filename parser. GNU's quoting override is harmless to other implementations; clear color-forcing variables. macOS and `dash` probes pass with spaces and ` -> ` in the source path. GNU utility target-capture probes also pass; BusyBox remains Development coverage. |
 | Q5: directory | Link `.impeccable` as one directory when present. Source-side upstream retention/ignore rules remain the consumer's responsibility; root-link exclusion does not ignore files reachable through the tracked source path. | Linking selected children would split shared/runtime layout and require upstream-specific inventory maintenance. The helper neither creates source content nor installs source-side ignores. |
 
 These are proposed technical choices within the feature request, pending Host/user plan acceptance.
@@ -116,8 +116,14 @@ All relative source paths are relative to the worktree root even when invoked fr
 
 ### 3.2 Link and exclude operations
 
+Mutating setup requires quiescent managed root entries and source for the command duration. The guide tells the
+consumer to stop editors, context-writing sessions and other helpers before running link mode. This is a supported
+use precondition, not a concurrency lock against arbitrary writers. Check mode stays read-only.
+
 - For each present source entry, create a relative root symlink to `<normalized-source>/<entry>` only when no root
-  entry exists, including dangling links. Use `ln -s` without force; a competing creation is preserved and reported.
+  entry exists, including dangling links. Use `ln -s` without force under the quiescence precondition. Preserve all entries occupied at invocation start.
+  Concurrent noncooperating destination changes are unsupported: POSIX `ln` can treat a raced-in directory as a
+  destination directory, so this helper makes no competing-creation guarantee.
 - Preserve a correct existing link. Compare literal target spelling with the normalized relative target; an
   equivalent absolute or differently spelled path is a wrong target, not something silently rewritten.
 - Preserve any other existing root file, directory or symlink, report its state, and continue inspecting/linking
@@ -155,7 +161,8 @@ absent, root nonlink, dangling root link, wrong target, correct link. Source pre
 
 For `LINK_REPLACED`, report `content=equal|differs|type_mismatch`; compare regular file bytes with `cmp -s` and
 matching directory contents with Git's read-only `diff --no-index --quiet --no-ext-diff --no-textconv`, with file
-mode differences disabled. A comparison failure returns `LINK_INSPECTION_FAILED` exit 2, not an equality claim.
+mode differences disabled. Capture diagnostic output: only empty-output exits 0/1 mean equal/different; any
+diagnostic or other exit is inspection failure, so unreadable nested content is not silently called different. A comparison failure returns `LINK_INSPECTION_FAILED` exit 2, not an equality claim.
 Never execute a configured external diff or textconv. No modification is proposed by check output.
 
 Stdout uses one-line sentinels with fixed entry names, stable codes and actions, for example:
@@ -185,12 +192,15 @@ No new Python feature, dependency edge, package or test tier is introduced.
   inside that worktree and use the common exclude file; no link points into the main checkout.
 - **AC-04**: Given every classification above, including atomic-save replacement with equal/different content and a
   replaced `.impeccable` directory, when `--check` runs, codes/actions and exit precedence match the contract and the
-  filesystem/index/HEAD remain unchanged.
+  filesystem/index/HEAD remain unchanged. A resolving foreign link whose target is the expected path plus one or
+  more trailing newline bytes MUST be `LINK_WRONG_TARGET`; exact-target capture preserves those bytes without
+  printing them.
 - **AC-05**: Given spaces, ` -> `, leading-dash arguments after `--`, lexical `..`, source symlink escapes,
   wrong source types, no repository and disabled symlinks, when run, containment/preflight behavior matches 3.1.
 - **AC-06**: Given an exclude file without final newline, existing exact patterns, unrelated patterns or a held
   helper lock, when link mode runs, existing bytes survive, exact lines are deduplicated and a held lock fails
-  before exclude writes. Injected I/O failure reports exit 2 and retained partial effects without overwrite.
+  before exclude writes. Injected I/O failure reports exit 2 and retained partial effects without overwrite under the quiescence precondition. Tests preserve occupied
+  directory contents as well as root identity, and instruction assertions require the no-concurrent-writer limitation.
 - **AC-07**: Given selected bundle projection to supported hosts, when synchronized, the script is byte-identical
   under managed/shared/Claude skill directories and runs via `sh`; it introduces no runtime dependency or asset kind.
 - **AC-08**: Given the guide and orchestration text, when reviewed against the PADR, mutating setup is requested and
@@ -204,6 +214,9 @@ type checks and `just test-affected` with full fallback run in Development.
 Non-Goals: a devkit CLI command, Python runtime feature, installer, asset kind, config key, context-file creation or
 content editing, automatic replacement repair, root `.gitignore` edits, staging/untracking, source-side ignore
 installation, Windows beyond an explicit unsupported result, run/question/load routing or upstream-fallback changes.
+
+Host technical decision: setup requires quiescence rather than adding non-POSIX link flags or a Git-apply
+implementation. The choice preserves the requested dependency boundary and reports its concurrency limitation.
 
 Size `M`: the script and its tests/guide/contracts remain one feature spec. No concrete deferred implementation is
 created by these exclusions. Source-side retention setup is existing consumer responsibility rather than a follow-up

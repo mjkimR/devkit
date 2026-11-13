@@ -6,6 +6,7 @@ status: draft
 proposal: PROP-uiux-improve-impeccable-context-links
 created_at: 2026-11-13
 targets:
+  - file: docs/decisions/2026-11/20261113-impeccable-context-links.md
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
   - file: docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md
   - file: docs/decisions/2026-11/20261110-impeccable-session-authority.md
@@ -30,7 +31,7 @@ targets:
 - `references/orchestration.md` Project files and user requests conditionally invokes the script for the requested
   setup, shows the exact exclude lines, permits inspection with `--check` and preserves content/route authority.
 - The guide documents committing the source separately, default and explicit layouts, each-worktree/clone link setup,
-  independent source-side runtime ignores, exit states, and manual reconciliation after atomic-save replacement.
+  independent source-side runtime ignores, quiescent setup and unsupported concurrent writers, exit states, and manual reconciliation after atomic-save replacement.
 - Deployed instructions contain no authoring-repository IDs and require only their own script plus POSIX tools/Git.
 
 ## Implementation owners

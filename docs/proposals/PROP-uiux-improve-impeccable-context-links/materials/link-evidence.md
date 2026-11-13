@@ -42,3 +42,20 @@ The shell target comparison captured `LC_ALL=C QUOTING_STYLE=literal ls -dn ./PR
 entry prefix and compared the complete expected target. `dash` here still used macOS utilities; GNU/BusyBox utility
 behavior is not measured. The link exclusion pattern without a trailing slash matched the directory symlink.
 No live Impeccable session, consumer pilot checkout or editor atomic-save behavior was inspected.
+
+## Challenger corrections and bounded recheck
+
+- Host chose quiescent mutating setup, preserving occupied-at-start entries, rather than non-POSIX `ln` flags or
+  Git-apply implementation complexity. POSIX `ln` cannot promise safety against noncooperating destination races.
+- A resolving foreign symlink with a trailing newline target is distinct only when capture preserves target bytes.
+  Appending a sentinel before shell capture, removing it and exactly one record newline passed the following probes:
+
+```text
+sh /bin/ls: FOREIGN_NEWLINE=distinct
+sh /opt/homebrew/bin/gls: FOREIGN_NEWLINE=distinct
+dash /bin/ls: FOREIGN_NEWLINE=distinct
+dash /opt/homebrew/bin/gls: FOREIGN_NEWLINE=distinct
+```
+
+These use macOS and installed GNU `gls`; `dash` is a shell check, not BusyBox utility coverage. BusyBox, full
+subprocess implementation coverage and live upstream/editor behavior remain unverified.
