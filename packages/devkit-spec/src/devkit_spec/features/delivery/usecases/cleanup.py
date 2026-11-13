@@ -140,7 +140,9 @@ def _proposal_targets(context: IntegrationContext) -> tuple[CleanupTarget, ...]:
     if not slug:
         return ()
     identity = proposal_unit(slug)
-    history = run_git(Path(plan.base), "log", "-1", "--format=%H", plan.source_sha, plan.target_sha, "--", identity)
+    history = run_git(
+        Path(plan.base), "log", "-1", "--full-history", "--format=%H", plan.source_sha, plan.target_sha, "--", identity
+    )
     return (CleanupTarget(KIND_PROPOSAL, identity, plan.source_sha),) if history.strip() else ()
 
 

@@ -11,7 +11,7 @@ None. `CAP-DLV-proposal-lifecycle` receives a bounded applicability condition. `
 
 ## 2. Architecture Overview & Impact
 
-Only the delivery scoped-cleanup extension changes. A shared helper derives its expected proposal target from a valid branch slug and a Git history read bounded to FinishPlan.source_sha and FinishPlan.target_sha. `integration_plan` and `_parse_targets` use the same helper; validate/run retain exact tuple equality and all scope checks. Use `git log -1 --format=%H <source_sha> <target_sha> -- <proposal-path>` to detect provenance. Checking only the pinned trees would miss cleanup-only preparation after a handoff already landed; checking the live directory would change validation after prune. No new stored state is needed.
+Only the delivery scoped-cleanup extension changes. A shared helper derives its expected proposal target from a valid branch slug and a Git history read bounded to FinishPlan.source_sha and FinishPlan.target_sha. `integration_plan` and `_parse_targets` use the same helper; validate/run retain exact tuple equality and all scope checks. Use `git log -1 --full-history --format=%H <source_sha> <target_sha> -- <proposal-path>` to detect provenance. Checking only the pinned trees would miss cleanup-only preparation after a handoff already landed; checking the live directory would change validation after prune. `--full-history` retains provenance when a no-ff merge has the same final proposal tree as its first parent. No new stored state is needed.
 
 ## 3. Component & Interface Design
 

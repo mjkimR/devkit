@@ -430,3 +430,25 @@ def test_spec_only_cleanup_omits_proposal_even_if_an_untracked_directory_appears
         integration_validate(context, extra)
     with pytest.raises(StaleRequestError):
         integration_run(context, _finish_result(context), extra)
+
+
+def test_proposal_history_merged_before_both_pins_still_plans_cleanup(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".devkit/managed/spec").mkdir(parents=True)
+    git(repo, "checkout", "-q", "-b", "handoff-s")
+    _commit_handoff(repo)
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--no-ff", "-m", "merge handed-off proposal", "handoff-s")
+    # Both pinned trees omit the proposal, and default path simplification would hide the side branch.
+    assert git(repo, "log", "-1", "--format=%H", "HEAD", "--", "docs/proposals/PROP-s") == ""
+    context = _context(repo, repo)
+    directory = repo / "docs/proposals/PROP-s/decisions"
+    directory.mkdir(parents=True)
+    expected = (CleanupTarget(KIND_PROPOSAL, "docs/proposals/PROP-s", context.finish.source_sha),)
+    assert integration_plan(context) == expected
+    integration_validate(context, expected)
+    assert integration_run(context, _finish_result(context), expected).done
+    assert not directory.parent.exists()
+    integration_validate(context, expected)
+    assert integration_plan(context) == expected
+    assert integration_run(context, _finish_result(context), expected).notices == ()
