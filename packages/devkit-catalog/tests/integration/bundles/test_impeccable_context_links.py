@@ -294,3 +294,54 @@ def test_file_difference_and_failed_directory_inspection_are_distinct(tmp_path: 
     assert "code=LINK_INSPECTION_FAILED exit=2" in result.stdout
     assert ".impeccable code=LINK_REPLACED" not in result.stdout
     assert tree(root) == before
+
+
+def test_lock_creation_io_failure_is_not_reported_busy(tmp_path: Path) -> None:
+    root, _ = repository(tmp_path)
+    utilities = tmp_path / "mkdir-fault-utils"
+    utilities.mkdir()
+    shim = utilities / "mkdir"
+    shim.write_text('#!/bin/sh\ncase "$1" in *.impeccable-context.lock) exit 1;; esac\nexec /bin/mkdir "$@"\n')
+    shim.chmod(0o755)
+    before = tree(root)
+    result = run(root, extra_env={"PATH": f"{utilities}:{os.environ['PATH']}"})
+    assert result.returncode == 2
+    assert "code=LINK_IO_FAILED exit=2 action=CHECK_PERMISSIONS" in result.stdout
+    assert "LINK_EXCLUDE_BUSY" not in result.stdout
+    assert tree(root) == before
+
+
+def test_directory_difference_does_not_hide_unreadable_later_content(tmp_path: Path) -> None:
+    root, source = repository(tmp_path)
+    original = source / ".impeccable"
+    (original / "aaa").write_text("source")
+    (original / "zzz").write_text("secret")
+    replaced = root / ".impeccable"
+    shutil.copytree(original, replaced)
+    (replaced / "aaa").write_text("replacement")
+    (replaced / "zzz").chmod(0)
+    try:
+        before = tree_without_unreadable(root, replaced / "zzz")
+        result = run(root, "--check")
+        assert result.returncode == 2
+        assert "code=LINK_INSPECTION_FAILED exit=2" in result.stdout
+        assert ".impeccable code=LINK_REPLACED" not in result.stdout
+        assert tree_without_unreadable(root, replaced / "zzz") == before
+    finally:
+        (replaced / "zzz").chmod(0o600)
+
+
+def tree_without_unreadable(root: Path, unreadable: Path) -> dict[str, tuple[int, int, bytes | str]]:
+    # Keep the fixture unreadable while observing every other file and its own metadata.
+    result = {}
+    for path in root.rglob("*"):
+        metadata = path.lstat()
+        value = (
+            os.readlink(path)
+            if path.is_symlink()
+            else path.read_bytes()
+            if path.is_file() and path != unreadable
+            else b""
+        )
+        result[path.relative_to(root).as_posix()] = (metadata.st_mode, metadata.st_mtime_ns, value)
+    return result

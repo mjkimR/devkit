@@ -97,7 +97,12 @@ done
 if [ "$mode" = link ] && [ "$need_exclude" = yes ]; then
     mkdir -p "${exclude%/*}" 2>/dev/null || fail LINK_IO_FAILED CHECK_PERMISSIONS
     lock=$exclude.impeccable-context.lock
-    mkdir "$lock" 2>/dev/null || fail LINK_EXCLUDE_BUSY RETRY_AFTER_UNLOCK
+    if ! mkdir "$lock" 2>/dev/null; then
+        if [ -e "$lock" ] || [ -L "$lock" ]; then
+            fail LINK_EXCLUDE_BUSY RETRY_AFTER_UNLOCK
+        fi
+        fail LINK_IO_FAILED CHECK_PERMISSIONS
+    fi
     owns_lock=yes
 fi
 
@@ -142,7 +147,7 @@ for entry in PRODUCT.md DESIGN.md .impeccable; do
             comparison=$?
             case "$comparison" in 0) content=equal ;; 1) content=differs ;; *) fail LINK_INSPECTION_FAILED INSPECT_FILES ;; esac
         elif [ -d "$root_entry" ] && [ -d "$path" ]; then
-            diagnostic=$(git -c core.filemode=false diff --no-index --quiet --no-ext-diff --no-textconv -- "$path" "$root_entry" 2>&1)
+            diagnostic=$(git -c core.filemode=false diff --no-index --exit-code --no-ext-diff --no-textconv -- "$path" "$root_entry" 2>&1 >/dev/null)
             comparison=$?
             [ -z "$diagnostic" ] || fail LINK_INSPECTION_FAILED INSPECT_FILES
             case "$comparison" in 0) content=equal ;; 1) content=differs ;; *) fail LINK_INSPECTION_FAILED INSPECT_FILES ;; esac

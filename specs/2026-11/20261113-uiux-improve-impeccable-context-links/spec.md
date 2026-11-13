@@ -153,8 +153,8 @@ absent, root nonlink, dangling root link, wrong target, correct link. Source pre
 | `LINK_ARGUMENT_INVALID`, `LINK_NOT_WORKTREE`, `LINK_SYMLINKS_DISABLED`, `LINK_SOURCE_INVALID`, `LINK_INSPECTION_FAILED`, `LINK_IO_FAILED`, `LINK_EXCLUDE_BUSY` | Invalid invocation, unsupported checkout, source/preflight, inspection, I/O or lock failure | `FIX_INPUT`, `USE_WORKTREE`, `ENABLE_SYMLINKS`, `FIX_SOURCE`, `INSPECT_FILES`, `CHECK_PERMISSIONS`, `RETRY_AFTER_UNLOCK` respectively |
 
 For `LINK_REPLACED`, report `content=equal|differs|type_mismatch`; compare regular file bytes with `cmp -s` and
-matching directory contents with Git's read-only `diff --no-index --quiet --no-ext-diff --no-textconv`, with file
-mode differences disabled. Capture diagnostic output: only empty-output exits 0/1 mean equal/different; any
+matching directory contents with Git's read-only `diff --no-index --exit-code --no-ext-diff --no-textconv`, with file
+mode differences disabled. Discard diff stdout and capture stderr only; only diagnostic-free exits 0/1 mean equal/different; any
 diagnostic or other exit is inspection failure, so unreadable nested content is not silently called different. A comparison failure returns `LINK_INSPECTION_FAILED` exit 2, not an equality claim.
 Never execute a configured external diff or textconv. No modification is proposed by check output.
 
