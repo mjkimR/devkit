@@ -2,7 +2,7 @@
 id: SPEC-adaptive-documenter
 title: Adaptive documenter role
 summary: "Add a skill-local documenter overlay for swarm-worker and connect retained-result document delegation."
-status: planned
+status: in-progress
 created: 2026-11-13
 related_capabilities: [CAP-DLV-adaptive-development]
 related_usecases: []
