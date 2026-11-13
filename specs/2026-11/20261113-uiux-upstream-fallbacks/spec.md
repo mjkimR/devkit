@@ -2,7 +2,7 @@
 id: SPEC-uiux-upstream-fallbacks
 title: Handle observed Impeccable limitations in the UIUX skill
 summary: "Add local guidance for false UI detection, unavailable delegated autonomy probes and unsupported audit persistence while preserving native skill loading and consumer authority."
-status: planned
+status: in-progress
 created: 2026-11-13
 related_capabilities: [CAP-DLV-uiux-improvement]
 related_usecases: [UC-improve-an-interface-and-user-flow]

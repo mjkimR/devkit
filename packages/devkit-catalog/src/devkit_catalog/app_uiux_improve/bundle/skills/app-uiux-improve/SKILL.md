@@ -52,6 +52,8 @@ request. A review-only request ends with findings and no product edits.
    after the user selects it. Read `references/orchestration.md` before delegating to a local role or to Impeccable.
    Assign designer, unconventional-designer, reference-researcher or critic work on either track where useful, and
    preserve independent first passes until their returns arrive.
+   Read `references/impeccable-limits.md` when preparing an Impeccable brief or handling detector, autonomy-probe
+   or audit-persistence limits.
 5. Synthesize a coherent direction from the inspected artifacts and actual returns, with alternatives when the
    choice matters. Preserve a useful unusual mechanism and its tradeoff instead of averaging suggestions into a
    feature list. Resolve routine design choices within scope; raise product or scope choices to the user.

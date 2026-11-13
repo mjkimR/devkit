@@ -147,6 +147,9 @@ name them, and they change only on your explicit direction.
 | --- | --- |
 | Impeccable asks another question in a child session | Dependent writes stop; confirm the complete returned question round through the same child, or use your own session when relay capabilities are missing. |
 | The child cannot load Impeccable | Plugin skills are visible only where their plugin is enabled. Check the observed current-project plugin enablement and native skill availability. Use your session if loading fails; do not load plugin-cache files or change enablement without a setup request. |
+| The detector reports `hasVisualImplementation=false` | Inspect the actual target, UI code and executable local branch build. The signal is advisory; `--target` guarantees no detection fix. Report detector limits separately from inspected evidence. |
+| A child cannot run `AUTONOMY_DIRECTIVE_CHECK` | The brief names actual capabilities and stop conditions, but does not satisfy or override a required live probe. Report it unavailable and stop dependent work; use your session or already authorized inline work, preserving native loading, every-answer confirmation and host permissions. |
+| Audit persistence is unsupported | Check the installed supported help/interface before persistence. Return findings in the session report instead of inventing or retrying `audit-storage write`; create no unrequested file or installation change. These are local mitigations, not upstream runtime fixes. |
 | A change appears outside the edit list | The coordinator reports the file and does not deliver it. Keep, move or revert it yourself, or ask the coordinator to include it in a new brief. |
 | HEAD moved or attribution is unverifiable | A commit or checkout happened during the session. Review the reported changes yourself before accepting them. |
 | Impeccable is not installed | Install it through a route in section 2, ask the coordinator to, or continue on the inline track. |

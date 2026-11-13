@@ -36,11 +36,16 @@ def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: P
         "skills/app-uiux-improve/SKILL.md",
         "skills/app-uiux-improve/references/orchestration.md",
         "skills/app-uiux-improve/references/design-guidance.md",
+        "skills/app-uiux-improve/references/impeccable-limits.md",
         *(f"skills/app-uiux-improve/roles/{role}.md" for role in ROLES),
     }
     shared = tmp_path / ".agents/skills/app-uiux-improve"
     claude = tmp_path / ".claude/skills/app-uiux-improve"
     assert (shared / "SKILL.md").read_bytes() == (SKILL / "SKILL.md").read_bytes()
+    for projected in (shared, claude):
+        assert (projected / "references/impeccable-limits.md").read_bytes() == (
+            SKILL / "references/impeccable-limits.md"
+        ).read_bytes()
     assert yaml.safe_load((shared / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
     assert yaml.safe_load((claude / "SKILL.md").read_text().split("---", 2)[1])["disable-model-invocation"] is True
     for role in ROLES:
@@ -395,3 +400,41 @@ def test_local_context_and_plugin_diagnosis_stay_workflow_neutral() -> None:  # 
     # Generic checkout vocabulary remains valid; the policy syntax is the forbidden dependency.
     assert "branch" in (SKILL / "SKILL.md").read_text()
     assert "worktree" in (SKILL / "SKILL.md").read_text()
+
+
+def test_impeccable_limits_require_evidence_and_authorized_continuation() -> None:  # AC-01..04
+    entry = (SKILL / "SKILL.md").read_text()
+    assert_rule(entry, "read `references/impeccable-limits.md`", "when preparing", "or handling")
+    limits = (SKILL / "references/impeccable-limits.md").read_text()
+    assert_rule(
+        limits,
+        "user-selected impeccable",
+        "selected task route",
+        "native skill loading",
+        "every-answer confirmation",
+        "host permissions",
+        "context-file ownership",
+        "recorded-base acceptance",
+        "fix no upstream runtime",
+    )
+    assert_rule(limits, "actual observed capabilities", "unavailable or unverified")
+    assert_rule(limits, "stop conditions", "unavailable required capability or probe", "denied operation")
+    assert_rule(limits, "hasvisualimplementation=false", "advisory", "does not establish", "has no ui")
+    assert_rule(limits, "actual target path and ui code", "local branch build", "not as proof")
+    assert_rule(
+        limits, "detector result separately", "unavailable coverage", "do not promise", "`--target`", "guarantees"
+    )
+    assert_rule(limits, "autonomy_directive_check", "live probe", "cannot run", "stop dependent impeccable work")
+    assert_rule(limits, "do not claim", "check passed", "substitute brief stop conditions", "upstream requirement")
+    assert_rule(limits, "session the user operates", "inline only when already authorized", "coordinator work")
+    assert_rule(limits, "native loading", "every-answer confirmation", "change no sandbox", "tool permission")
+    assert_rule(
+        limits, "before attempting audit persistence", "installed version", "supported help or exposed interface"
+    )
+    assert_rule(limits, "audit-storage write", "unsupported", "do not invent or retry", "guessed replacement")
+    assert_rule(limits, "audit findings and coverage in the session report", "persistence was unavailable")
+    assert_rule(limits, "no fallback files or installation changes", "user's request", "required permissions")
+    guide = (BUNDLE / "README.md").read_text()
+    assert_rule(guide, "hasvisualimplementation=false", "advisory")
+    assert_rule(guide, "autonomy_directive_check", "does not satisfy")
+    assert_rule(guide, "audit-storage write", "session report", "local mitigations", "not upstream runtime fixes")

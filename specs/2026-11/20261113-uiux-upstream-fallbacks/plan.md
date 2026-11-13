@@ -45,3 +45,18 @@ All continuations keep the already selected task route and permissions.
   Living Spec/reconcile and verify exact single-area semantic agreement. Repeat only checks affected by fixes.
 - Source identity is each last work commit plus the recorded precommit tracked diff. No live upstream or host test
   is required, and instruction assertions establish no model or upstream-runtime guarantee.
+
+## Outcome Measurement
+
+Read all skill Markdown from accepted head 5cab6156a60de1a2a2845e38fc19bda92961c90e using `git ls-tree` and
+`git show`, without checking it out. Explicit handling of hasVisualImplementation=false,
+AUTONOMY_DIRECTIVE_CHECK and audit-storage write was absent (0/3). The changed reference names all three cases
+(3/3); `test_impeccable_limits_require_evidence_and_authorized_continuation` verifies the required evidence,
+non-substitution, supported-interface and permission clauses. Orchestration remains 12,280 bytes; the conditional
+reference is 3,303 bytes. This measures explicit instruction coverage, not upstream correctness or model behavior.
+
+Native verification: focused integration 16 passed, selected installed-consumer E2E 1 passed, affected selection
+mode=partial (16 selected paths) 182 passed, catalog lint/format and pyright passed. `devkit sync` changed no tracked
+outputs and bundle hygiene reported zero errors and warnings. Initial new assertion grouping and fixture setup
+failures were corrected before these passing runs; pytest-managed fixtures use isolated system temporary paths
+because sync rejects nested repository roots.

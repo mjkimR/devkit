@@ -64,8 +64,16 @@ def test_installed_app_uiux_improve_without_delivery_packages(tmp_path: Path) ->
         assert not (consumer / f".codex/agents/{role}.toml").exists()
     for absent in ("docs", "specs", ".devkit/managed/spec", ".devkit/managed/deep-research", ".devkit/adaptive-dev.md"):
         assert not (consumer / absent).exists()
-    for relative in ("references/design-guidance.md", "references/orchestration.md"):
+    for relative in (
+        "references/design-guidance.md",
+        "references/orchestration.md",
+        "references/impeccable-limits.md",
+    ):
         assert (skill / relative).is_file()
+    limits = (skill / "references/impeccable-limits.md").read_text()
+    for statement in ("hasVisualImplementation=false", "AUTONOMY_DIRECTIVE_CHECK", "audit-storage write"):
+        assert statement in limits
+    assert "Read `references/impeccable-limits.md` when" in entry
     # The human usage guide ships in the wheel but never reaches managed or projected files.
     assert not list((consumer / ".devkit/managed/app-uiux-improve").rglob("README.md"))
     assert not list(skill.rglob("README.md"))
