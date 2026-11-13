@@ -65,6 +65,6 @@ coverage becomes a requirement, revisit the host-specific scope in a later direc
 
 ## 6. Confirmation
 
-AC-N1 to AC-N9 of `PROP-linter-change-notices` map to rule/evaluator, snapshot, CLI, gate, workflow and memo tests in
+AC-N1 to AC-N10 of `PROP-linter-change-notices` map to rule/evaluator, snapshot, CLI, gate, workflow and memo tests in
 `packages/devkit/tests/`. Document rules validate structure; Development code review checks semantic-span relevance.
 Planning has not run the future implementation tests.

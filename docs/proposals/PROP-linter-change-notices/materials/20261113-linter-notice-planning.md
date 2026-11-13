@@ -26,7 +26,7 @@ No production behavior was changed or runtime performance measured.
 from its advisory levels and the result-level `notices` array. `CAP-GOV-rules-engine`,
 `CAP-GOV-evaluation-lifecycle` and `CAP-GOV-rule-authoring` own the rule-facing extensions.
 
-Verification is the behavioral matrix AC-N1 to AC-N9 in `PROP-linter-change-notices`; target-docs names the future
+Verification is the behavioral matrix AC-N1 to AC-N10 in `PROP-linter-change-notices`; target-docs names the future
 write owners. No native host delivery, end-to-end model receipt, installed third-party plugin behavior or performance
 gain is inferred from source inspection. Host projection is emulated: absolute worktree cwd, per-operation approval
 and before/after committed diff snapshots substitute for native role/path enforcement.

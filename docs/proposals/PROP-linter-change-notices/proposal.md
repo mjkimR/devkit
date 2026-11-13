@@ -109,7 +109,7 @@ A change-scoped warning remains possible. A change-scoped rule is a linter rule,
 hygiene ordinarily includes linter rules, and cannot be parked/promoted through hygiene; an incompatible phase
 or phase override is a policy error. Existing rules without the declaration keep their selection behavior.
 
-`RuleContext` gains immutable change evidence, captured once for the evaluation, with source mode and base identity,
+`RuleContext` gains immutable change evidence, captured immutably for each evaluation pass, with source mode and base identity,
 logical path, change status, old/new path, before/after content identities and old/new line ranges. Ranges use
 1-based half-open intervals; a zero-length range is an insertion/deletion anchor, not an empty change. Source bytes
 are read through the evaluated cache or the named Git object. Public helpers expose before text and changed
@@ -134,6 +134,15 @@ report at its old header; editing an unrelated function cannot trigger the uncha
 that finding evidence belongs to the selected path/source pair and overlaps a changed range. The authoring contract
 requires tests of the rule's semantic choice; overlap alone does not prove that a broad whole-file span is useful.
 A representative Python broad-exception fixture, not a shipped catalog of reminder rules, exercises this contract.
+
+For working-tree `rules fix`, keep the original before/base identity across the one repair pass and one recheck.
+After successful fixes, refresh cached after-content, content identities, hunks and affected-construct evidence for
+every returned modified path before the recheck. After a failed fixer with unknown writes, invalidate and recapture
+all working-tree change evidence before the existing all-active recheck. Each pass receives a fresh immutable
+evidence object; no initial notice survives merely because its trigger existed before a successful repair. If
+fresh capture fails, apply the stated unavailable-evidence omission rather than matching old ranges to fresh text.
+Snapshot runs remain read-only and never enter an autofix pass. An integration case has another fixer introduce
+and remove the representative trigger, proving the final findings reflect the single recheck's bytes.
 
 If Git evidence is unavailable in an ordinary working-tree check (outside Git, unreadable HEAD, binary/undecodable
 content or a content race), omit only the affected change-scoped evaluation with stable reason
@@ -207,6 +216,7 @@ Acceptance and planned checks (each original criterion is retained):
 | AC-N7 | Given FILE and a session token, when context is read twice, then hunk evidence is returned twice and identical notices once; a relevant edit returns a fresh notice. | Memo concurrency, expiry/cap, corruption/lock failure, no-match/unchanged and excerpt-bound tests. |
 | AC-N8 | Given legacy INFO imports/settings/findings, when the additive API is installed, then they keep `info` and the existing counts/exit behavior. | Legacy rule/plugin compatibility fixtures. |
 | AC-N9 | Given unavailable working evidence or failed snapshot capture, when evaluated, then omission versus execution-failure codes and independent-rule results remain distinct. | Outside-Git, binary/decode, capture race and failing Git tests. |
+| AC-N10 | Given another fixer introduces or removes the representative trigger, when the single recheck runs, then fresh after-evidence against the original base yields only the final notices; unknown writes refresh all evidence. | Autofix integration cases, successful output paths and failed-fixer all-active recheck. |
 
 No runtime or timing improvement is claimed. Development validates with repository lint, types and
 `just test-affected --base <unit-base>` preserving full fallback, plus targeted source-specific checks and installed
@@ -217,7 +227,7 @@ CLI/gate coverage. These are future checks; Planning runs document and envelope 
 Keep `priority: low`; this batch explicitly selects Planning. Acceptance settles the additive severity, exact
 source evidence and explicit read companion together. `plan-accept` integrates only the Planning documents.
 `proposal-handoff` then creates the spec worktree and promotes `PADR-change-scoped-rule-notices`; Development
-implements AC-N1 to AC-N9 and reconciles the named Living Spec contracts. No criterion is silently deferred.
+implements AC-N1 to AC-N10 and reconciles the named Living Spec contracts. No criterion is silently deferred.
 
 If the owner requires automatic context on native reads rather than the explicit companion, retain this proposal
 in review and revisit scope before handoff; the current design makes no universal-host delivery claim.

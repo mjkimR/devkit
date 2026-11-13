@@ -47,7 +47,7 @@ Candidate code paths (future evidence; Development chooses exact files inside th
   `packages/devkit/src/devkit_agt/features/gate/models/errors.py`: returning notice considerations.
 - `packages/devkit/tests/unit/features/rules/`, `packages/devkit/tests/integration/features/rules/`,
   `packages/devkit/tests/integration/features/gate/`, `packages/devkit/tests/integration/features/workflow/` and
-  `packages/devkit/tests/e2e/features/gate/`: AC-N1 to AC-N9 and existing-contract regression evidence.
+  `packages/devkit/tests/e2e/features/gate/`: AC-N1 to AC-N10 and existing-contract regression evidence.
 
 New files stay under these existing feature/layer owners. Exposed operations implement `BaseUseCase`; models never
 start Git or write memo state. No separate package, feature, test tier or native host handler is introduced.
