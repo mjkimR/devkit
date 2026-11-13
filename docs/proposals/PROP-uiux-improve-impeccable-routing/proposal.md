@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-impeccable-routing
 title: Impeccable question and load routing for app-uiux-improve
 summary: "Proposes capability-gated Impeccable question relay with every answer confirmed by the user, host-only skill loading and user-session fallback. Native plugin-load checks remain unmet on Claude Code and Codex."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
