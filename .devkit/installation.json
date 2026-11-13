@@ -1148,7 +1148,7 @@
     },
     ".agents/skills/discovery/SKILL.md": {
       "mode": 420,
-      "sha256": "c90b68eacb0f7e993259536daa4ce1a71be32f69127ee74407117fa9094ae11f"
+      "sha256": "dd3db00a7897b5526d57d9c946c66ffd6879c72a274ac95711560bcdf8d9421e"
     },
     ".agents/skills/discovery/agents/openai.yaml": {
       "mode": 420,
@@ -1156,23 +1156,23 @@
     },
     ".agents/skills/discovery/references/orchestration.md": {
       "mode": 420,
-      "sha256": "87968dcbed163e90607c53f95a627ed47e12122b6019398abc34e3e72d4f9c0d"
+      "sha256": "622491ee8e5813493b7691ce52c68a61475b3f29b61e7fcb1940465617195fe0"
     },
     ".agents/skills/discovery/references/retention.md": {
       "mode": 420,
-      "sha256": "e6b7359318be01a4d26bdca5b28b921a9871b432563ea8541ec462c15175deed"
+      "sha256": "6e5da5ad1b67f398fbec78447688a4c8a89f4556e82dc041159c5ee32a63403c"
     },
     ".agents/skills/discovery/roles/evidence-researcher.md": {
       "mode": 420,
-      "sha256": "eabd473ace1a1b9e893387e8a179b22780edc88098ae67debaa83eec56e0a9f8"
+      "sha256": "ab1cf75deb5694865fa354932d124a7d7be589822b527f3b95dfcf6cbe325ce7"
     },
     ".agents/skills/discovery/roles/idea-challenger.md": {
       "mode": 420,
-      "sha256": "51e6f481a9d73e70850223eeda8bfade1e07cfc5de8ff6ad5a30baac0bc7f5a6"
+      "sha256": "bf31b32539c71d11bb74a6f0c34fa28cb6e76ebfe186eaf49bb78ed6db6958af"
     },
     ".agents/skills/discovery/roles/idea-explorer.md": {
       "mode": 420,
-      "sha256": "bd438d13af992439ebbbc0a6a943145eb9c303adae2ea98d02f8e526bf665f60"
+      "sha256": "2d715d738432d92c3ac287291d57a63958ebdfd0b5e996aaaa647d5eff686406"
     },
     ".agents/skills/response-style/SKILL.md": {
       "mode": 420,
@@ -1488,27 +1488,27 @@
     },
     ".claude/skills/discovery/SKILL.md": {
       "mode": 420,
-      "sha256": "0779581dc9ad0e18b3c92868654c528d04c76f408ba9301d0b2161443cf75bd2"
+      "sha256": "71f99af2b9cc5d063d0b6317b4a899ee180f4dbedb494f6a88c39ad6d61d8547"
     },
     ".claude/skills/discovery/references/orchestration.md": {
       "mode": 420,
-      "sha256": "87968dcbed163e90607c53f95a627ed47e12122b6019398abc34e3e72d4f9c0d"
+      "sha256": "622491ee8e5813493b7691ce52c68a61475b3f29b61e7fcb1940465617195fe0"
     },
     ".claude/skills/discovery/references/retention.md": {
       "mode": 420,
-      "sha256": "e6b7359318be01a4d26bdca5b28b921a9871b432563ea8541ec462c15175deed"
+      "sha256": "6e5da5ad1b67f398fbec78447688a4c8a89f4556e82dc041159c5ee32a63403c"
     },
     ".claude/skills/discovery/roles/evidence-researcher.md": {
       "mode": 420,
-      "sha256": "eabd473ace1a1b9e893387e8a179b22780edc88098ae67debaa83eec56e0a9f8"
+      "sha256": "ab1cf75deb5694865fa354932d124a7d7be589822b527f3b95dfcf6cbe325ce7"
     },
     ".claude/skills/discovery/roles/idea-challenger.md": {
       "mode": 420,
-      "sha256": "51e6f481a9d73e70850223eeda8bfade1e07cfc5de8ff6ad5a30baac0bc7f5a6"
+      "sha256": "bf31b32539c71d11bb74a6f0c34fa28cb6e76ebfe186eaf49bb78ed6db6958af"
     },
     ".claude/skills/discovery/roles/idea-explorer.md": {
       "mode": 420,
-      "sha256": "bd438d13af992439ebbbc0a6a943145eb9c303adae2ea98d02f8e526bf665f60"
+      "sha256": "2d715d738432d92c3ac287291d57a63958ebdfd0b5e996aaaa647d5eff686406"
     },
     ".claude/skills/response-style/SKILL.md": {
       "mode": 420,
@@ -1908,27 +1908,27 @@
     },
     ".devkit/managed/deep-research/skills/discovery/SKILL.md": {
       "mode": 420,
-      "sha256": "c90b68eacb0f7e993259536daa4ce1a71be32f69127ee74407117fa9094ae11f"
+      "sha256": "dd3db00a7897b5526d57d9c946c66ffd6879c72a274ac95711560bcdf8d9421e"
     },
     ".devkit/managed/deep-research/skills/discovery/references/orchestration.md": {
       "mode": 420,
-      "sha256": "87968dcbed163e90607c53f95a627ed47e12122b6019398abc34e3e72d4f9c0d"
+      "sha256": "622491ee8e5813493b7691ce52c68a61475b3f29b61e7fcb1940465617195fe0"
     },
     ".devkit/managed/deep-research/skills/discovery/references/retention.md": {
       "mode": 420,
-      "sha256": "e6b7359318be01a4d26bdca5b28b921a9871b432563ea8541ec462c15175deed"
+      "sha256": "6e5da5ad1b67f398fbec78447688a4c8a89f4556e82dc041159c5ee32a63403c"
     },
     ".devkit/managed/deep-research/skills/discovery/roles/evidence-researcher.md": {
       "mode": 420,
-      "sha256": "eabd473ace1a1b9e893387e8a179b22780edc88098ae67debaa83eec56e0a9f8"
+      "sha256": "ab1cf75deb5694865fa354932d124a7d7be589822b527f3b95dfcf6cbe325ce7"
     },
     ".devkit/managed/deep-research/skills/discovery/roles/idea-challenger.md": {
       "mode": 420,
-      "sha256": "51e6f481a9d73e70850223eeda8bfade1e07cfc5de8ff6ad5a30baac0bc7f5a6"
+      "sha256": "bf31b32539c71d11bb74a6f0c34fa28cb6e76ebfe186eaf49bb78ed6db6958af"
     },
     ".devkit/managed/deep-research/skills/discovery/roles/idea-explorer.md": {
       "mode": 420,
-      "sha256": "bd438d13af992439ebbbc0a6a943145eb9c303adae2ea98d02f8e526bf665f60"
+      "sha256": "2d715d738432d92c3ac287291d57a63958ebdfd0b5e996aaaa647d5eff686406"
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
