@@ -41,6 +41,8 @@ Verification exit 1 means a failed result or a warning under strict; inspect `re
 
 ## Library
 
+The legacy `NestingDepth` class (`ADAPTIVE_NESTING_DEPTH`) remains importable but is no longer emitted.
+
 `devkit_adaptive.features.assignment.usecases.listing.ListAssignmentsUseCase.execute(root, options)` returns a
 result with assignments, observations, summary and notices. The ledger format is private. This command executes
 no declared check, observes no ignored/out-of-worktree file or submodule content, excludes preexisting dirty paths,

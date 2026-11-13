@@ -2,7 +2,7 @@
 id: SPEC-adaptive-orchestration
 title: Coordinator-led adaptive delegation without fixed nesting limits
 summary: "Make adaptive-dev actively delegate useful work and remove fixed nesting and child-budget requirements from guidance and assignment recording."
-status: planned
+status: in-progress
 created: 2026-11-13
 related_capabilities: [CAP-DLV-adaptive-development, CAP-DLV-adaptive-assignments]
 related_usecases: [UC-advance-an-idea]
