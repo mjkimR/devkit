@@ -1,138 +1,65 @@
 ---
 id: SPEC-snapshot-subdirectory-source-commit
 title: Record the source commit for snapshots of subdirectory providers
-summary: Restore verified snapshot source commits for content providers below a Git repository root by making ls-tree resolve repository-relative paths. Preserve existing content verification and explicit refresh behavior.
+summary: "Restore verified snapshot source commits for providers below a Git repository root while preserving copied-input verification and explicit metadata refresh."
 status: planned
 created: 2026-11-13
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DIST-in-repo-bundles]
+related_usecases: [UC-snapshot-bundle-sources]
 workflow: sdd-spec-bugfix
 ---
-<!-- devkit:skeleton -->
 
-# [SPEC-snapshot-subdirectory-source-commit] Record the source commit for snapshots of subdirectory providers
+# [SPEC-snapshot-subdirectory-source-commit] Record verified subdirectory source commits
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-snapshot-subdirectory-source-commit on 2026-11-13.
-- **Preserved Materials**: `docs/materials/2026-11/20261113-snapshot-subdirectory-source-commit`
-- Target Docs Blueprint: `PROP-snapshot-subdirectory-source-commit-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-`devkit bundle snapshot` records `source.commit` in `snapshot.json` only when every copied input matches the
-captured `HEAD` (`CAP-DIST-in-repo-bundles` rule 5, verified identity). `source_commit()` in
-`packages/devkit-dist/src/devkit_dist/features/distribution/repositories/snapshots.py` runs every Git command with
-the snapshot source directory as its working directory, but passes `ls-tree` a path relative to the repository root
-(`path.relative_to(repository)`). Git resolves `ls-tree` paths against the working directory, so for a provider that
-lives below the repository root no path matches, `ls-tree` prints nothing and the function returns `None`.
-
-Observed while snapshotting a content-only provider at `tools/<package>` of a private game-foundation repository:
-the committed, unchanged checkout produced `"commit": null` on every run (absolute and relative source paths alike),
-while the copied bytes matched that commit exactly. The existing test
-`test_optional_commit_matches_only_copied_committed_inputs` initializes the Git repository at the provider root, so
-it never exercises a subdirectory provider. Provenance of every monorepo-hosted snapshot is therefore weaker than the
-contract promises. Refresh retains its existing explicit preview/apply protocol; correcting the optional commit
-changes provenance metadata and therefore its digest.
-
-Hypothesis: resolving the paths from the repository root (`ls-tree --full-tree`, or running the lookups with the
-repository root as working directory) records the verified commit for subdirectory providers without changing the
-result for root providers or for sources that differ from `HEAD`.
+A bundle source snapshot of a committed content provider below its Git repository root records a null source
+commit. The provider's copied inputs match HEAD, but `source_commit()` gives `ls-tree` repository-relative paths
+while running from the provider directory. `CAP-DIST-in-repo-bundles` section 8 rules 4–7 and 10 already define
+verified identity, deterministic preview, reviewed adoption and idempotence.
 
 ## 2. Defect Characterization
 
-- **Current behavior**: <trigger, environment and the observed wrong result, with evidence>
-- **Expected behavior and its basis**: <the result the existing contract requires, citing its capability, use case, ADR or test>
-- **Behavior to preserve**: <call paths, input boundaries and contracts that must keep working, with their tests>
-- **Reproduction conditions**: <the command, data and environment that reproduce the defect>
+- **Current behavior**: a provider at `tools/content` produces `source.commit=null` because the relative path is
+  resolved again from `tools/content`. Planning reproduced this at baseline `7161366d4c1908f13cea6e54c771c42244d9ad0d`.
+- **Expected behavior and its basis**: record the captured HEAD when every copied input's bytes and normalized
+  executable mode match that immutable commit, following `CAP-DIST-in-repo-bundles` section 8 rule 5.
+- **Behavior to preserve**: root-provider identity, equivalent unlinked path spelling, captured-HEAD binding,
+  null identity for modified/untracked inputs and explicit preview/reviewed refresh remain unchanged.
+- **Reproduction conditions**: create a real Git fixture with its provider at `tools/content`, commit it, create
+  a snapshot and compare recorded identity to HEAD. The retained subdirectory regression fails before the fix.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded**: provenance schema, digest algorithm, result codes, refresh protocol and source-path admission changes.
+- **Scope Excluded**: altered symlink handling, Git environment handling, timeout policy or automatic snapshot repair.
+- **Scope Excluded**: package, feature dependency, architecture or lasting policy changes.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Verified subdirectory identity and path equivalence
 
-## 5. Carried Proposal Notes
+- **Given** a committed content provider below its Git repository root at `tools/content`.
+- **When** creating a snapshot from its absolute path and previewing from an equivalent unlinked relative spelling.
+- **Then** provenance records the captured HEAD, the digests match and preview reports no changed files.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Copied-input verification remains intact
 
-### 2. Planning Decisions
+- **Given** a subdirectory provider whose copied files have uncommitted byte or executable-mode changes.
+- **When** creating or refreshing a snapshot.
+- **Then** provenance records null identity; a root provider still records its verified commit and the existing
+  captured-HEAD race regression continues to reject bytes belonging only to a later commit.
 
-- **Q1 resolved**: add `--full-tree` to the existing `ls-tree` invocation in `source_commit()`. The copied input paths
-  are already relative to the repository root. The flag gives those paths the matching interpretation while retaining
-  the existing working directory, one captured immutable commit, 10-second timeout, blob-byte checks and normalized
-  executable-mode checks. Changing every lookup's working directory adds no benefit to this defect fix.
-- **Q2 resolved**: adopt the existing metadata-change behavior. When an unchanged subdirectory provider first gains a
-  verified commit, preview reports only `snapshot.json` modified, different current/candidate digests and
-  `packaging_changed=false`. Preview writes nothing. Applying the reviewed digest pair records the commit and returns
-  `BUNDLE_SNAPSHOT_UPDATED`; repeating the same refresh returns `BUNDLE_SNAPSHOT_UNCHANGED` without writing.
-- No user design decision remains. Planning used a focused real-Git probe and the existing source/path tests; no Scout
-  or Challenger is required at `low` effort. The evidence and exact baseline are in `docs/materials/2026-11/20261113-snapshot-subdirectory-source-commit/source-commit-probe.md`.
-- Development stays `bugfix`, size `S`, effort `low`. No package, feature edge, schema, CLI field or lasting policy is
-  added. No PADR or ADR is needed for restoring the existing verified-identity contract.
+### [AC-03] Metadata-only refresh uses the existing explicit protocol
 
-### 3. Proposed Design & Impact
+- **Given** an unchanged committed subdirectory provider and a valid snapshot whose older identity is null.
+- **When** previewing refresh, applying the reviewed digest pair and applying again.
+- **Then** preview changes only `snapshot.json`, changes the digest and reports `packaging_changed=false` without
+  destination writes; apply records HEAD with `BUNDLE_SNAPSHOT_UPDATED`, and the repeat returns
+  `BUNDLE_SNAPSHOT_UNCHANGED` without changing any destination file modification time.
 
-#### Implementation boundary
+## 5. Living Spec Impact
 
-Change only `packages/devkit-dist/src/devkit_dist/features/distribution/repositories/snapshots.py` and the existing
-snapshot integration tests under `packages/devkit-dist/tests/integration/features/distribution/`. The repository
-helper keeps returning `None` on non-Git sources, failed/timed-out Git commands, missing/nonblob entries, changed
-copied bytes or executable-mode mismatches. Unrelated untracked files remain outside copied-input verification.
-
-#### Acceptance criteria for Development
-
-- **AC-01 — subdirectory identity**: Given a committed content provider at `tools/content` below a repository root,
-  when creating a snapshot from either its absolute path or an equivalent unlinked relative spelling, then
-  `source.commit` equals that repository's captured `HEAD` and equivalent source spellings yield identical provenance.
-- **AC-02 — verified inputs**: Given that subdirectory provider, when a copied input has uncommitted byte changes or
-  a normalized executable-mode mismatch, then a snapshot records `source.commit=null`. A provider rooted at its Git
-  repository continues to record the verified commit. The captured-HEAD race regression continues to pass.
-- **AC-03 — metadata-only refresh**: Given an unchanged committed subdirectory provider and a valid existing snapshot
-  whose only older provenance difference is `source.commit=null`, when previewing refresh with the fix, then only
-  `snapshot.json` is modified, current/candidate digests differ, `packaging_changed=false`, and the destination tree
-  is unchanged. Applying that digest pair returns `BUNDLE_SNAPSHOT_UPDATED` and records `HEAD`; applying again returns
-  `BUNDLE_SNAPSHOT_UNCHANGED` and preserves all destination file modification times.
-
-Development first adds the subdirectory regression against the unfixed implementation and records its failure, then
-adds the flag and verifies these criteria. Run the snapshot integration module, the independent dist check, repository
-lint/type checks and `just test-affected` with its full fallback retained. No viewer frontend check applies.
-
-#### Living Spec impact
-
-No canonical document wording changes are planned. `CAP-DIST-in-repo-bundles` section 8 rules 4–7 and 10 already
-cover optional verified commits, immutable input comparison, deterministic preview/reviewed adoption and unchanged
-metadata/content. The fix restores those guarantees without adding a contract. `target-docs.md` declares an empty
-canonical target list and the reconciliation rationale; Development must re-evaluate it if its actual diff changes
-that conclusion.
-
-#### Non-Goals
-
-- No provenance schema, digest algorithm, result status/code or refresh protocol change.
-- No change to source-path admission, symlink handling, Git environment handling or timeout policy.
-- No snapshot repair outside the existing user-requested refresh operation.
-- No architecture, package or feature dependency change.
-
-### 4. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr snapshot-subdirectory-source-commit "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept snapshot-subdirectory-source-commit --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff snapshot-subdirectory-source-commit.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->
-
-### Target Area & Boundaries
-
-- Target Area: capabilities/distribution/
-- Planned Boundaries: `capabilities/distribution/`, `packages/devkit-dist/src/devkit_dist/features/distribution/`, `packages/devkit-dist/tests/`
-- Excluded Boundaries: `docs/decisions/`
-
+The fix restores the existing capability and use case without a new public contract. The blueprint
+`PROP-snapshot-subdirectory-source-commit-target` has no canonical targets. Planning evidence is retained at
+`docs/materials/2026-11/20261113-snapshot-subdirectory-source-commit/source-commit-probe.md`.
