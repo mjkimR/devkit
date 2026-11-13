@@ -30,8 +30,8 @@ def test_presets_pair_each_playbook_with_its_rule() -> None:
         "skill-document-size",
     }
     assert bundle.select(["agent-guide-authoring"]) == {"agent-guide-authoring", "agent-guide-size"}
-    pyproject = tomllib.loads((PACKAGE / "pyproject.toml").read_text())
-    assert bundle.version == pyproject["project"]["version"]
+    manifest = tomllib.loads((BUNDLE / "bundle.toml").read_text())
+    assert bundle.version == manifest["version"]
 
 
 def test_the_agent_asset_writing_instruction_stands_alone() -> None:

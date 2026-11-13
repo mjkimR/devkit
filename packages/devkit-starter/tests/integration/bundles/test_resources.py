@@ -16,11 +16,11 @@ def test_resource_manifest_and_skill_are_in_package() -> None:
     assert (BUNDLE / "playbooks/review.md").is_file()
 
 
-def test_bundle_loads_and_its_version_matches_the_package_version() -> None:
-    pyproject = tomllib.loads((PACKAGE / "pyproject.toml").read_text())
+def test_bundle_loads_with_its_manifest_version() -> None:
+    manifest = tomllib.loads((BUNDLE / "bundle.toml").read_text())
     bundle = load_bundle(BUNDLE)
     assert bundle.name == "starter" and bundle.default_preset in bundle.presets
-    assert bundle.version == pyproject["project"]["version"]
+    assert bundle.version == manifest["version"]
 
 
 @pytest.mark.parametrize("example", sorted(path.name for path in EXAMPLES.iterdir() if path.is_dir()))

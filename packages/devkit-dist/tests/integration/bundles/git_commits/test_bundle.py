@@ -21,7 +21,7 @@ def test_manifest_is_opt_in_with_one_preset() -> None:
     bundle = load_bundle(BUNDLE)
     assert (bundle.name, bundle.default_preset, bundle.auto_select) == ("git-commits", "core", False)
     assert bundle.select(["core"]) == {"git-commits", "commit-pointer"}
-    assert bundle.version == tomllib.loads((PACKAGE / "pyproject.toml").read_text())["project"]["version"]
+    assert bundle.version == tomllib.loads((BUNDLE / "bundle.toml").read_text())["version"]
     hangul = re.compile(r"[ᄀ-ᇿ㄰-㆏가-힣]")
     assert not any(hangul.search(path.read_text()) for path in BUNDLE.rglob("*.md"))
 

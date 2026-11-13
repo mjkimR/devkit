@@ -26,6 +26,7 @@ jobs:
     # The full suite must remain usable even when the working-tree runner breaks.
     env:
       DEVKIT_RUN_MODE: raw
+      UV_PYTHON: 3.12.8
     strategy:
       fail-fast: false
       matrix:
@@ -36,8 +37,9 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          version: "0.12.8"
       - uses: extractions/setup-just@v2
-      - run: uv python install 3.12
+      - run: uv python install 3.12.8
       - run: just init
       # Tests and rules read the bundle copies under .devkit/managed/, which Git ignores; sync rebuilds them.
       - run: uv run --no-active devkit sync

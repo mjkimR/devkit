@@ -42,7 +42,7 @@ def test_the_bundle_is_auto_selected_with_its_core_preset() -> None:
     kinds = {asset.id: asset.kind for asset in bundle.assets}
     assert {kinds[asset] for asset in bundle.select(["core"])} == {"instruction"}  # nothing in AGENTS.md by default
     assert kinds["run-pointer"] == "guidance"
-    assert bundle.version == tomllib.loads((PACKAGE / "pyproject.toml").read_text())["project"]["version"]
+    assert bundle.version == tomllib.loads((BUNDLE / "bundle.toml").read_text())["version"]
 
 
 def test_the_constitution_holds_the_harness_contracts() -> None:

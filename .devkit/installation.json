@@ -1932,7 +1932,7 @@
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
-      "sha256": "be57fee84d87413c2db522c9d3a7cfd744f2bda4be71b9a43747bb28112df6d7"
+      "sha256": "bf1941fc2d8531d629bf45bd811299631baffb208cd1f09dd4103249352260a7"
     },
     ".devkit/managed/devkit-dev/instructions/project-structure.md": {
       "mode": 420,

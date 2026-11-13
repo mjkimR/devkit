@@ -8,37 +8,37 @@ id = "drift-reconciliation"
 kind = "playbook"
 source = "playbooks/drift-reconciliation.md"
 
-[presets.upkeep]
-assets = ["drift-reconciliation", "review-refactor"]
-
 [[assets]]
 id = "weekly-report"
 kind = "playbook"
 source = "playbooks/weekly-report.md"
-
-[presets.reporting]
-assets = ["weekly-report"]
 
 [[assets]]
 id = "review-refactor"
 kind = "playbook"
 source = "playbooks/review-refactor"
 
-[presets.refactoring]
-assets = ["review-refactor"]
-
 [[assets]]
 id = "performance-pass"
 kind = "playbook"
 source = "playbooks/performance-pass"
 
-[presets.performance]
-assets = ["performance-pass", "review-refactor"]
-
 [[assets]]
 id = "test-management"
 kind = "playbook"
 source = "playbooks/test-management"
+
+[presets.upkeep]
+assets = ["drift-reconciliation", "review-refactor"]
+
+[presets.reporting]
+assets = ["weekly-report"]
+
+[presets.refactoring]
+assets = ["review-refactor"]
+
+[presets.performance]
+assets = ["performance-pass", "review-refactor"]
 
 [presets.testing]
 assets = ["test-management"]

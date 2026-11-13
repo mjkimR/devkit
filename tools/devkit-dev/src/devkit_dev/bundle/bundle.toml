@@ -23,13 +23,13 @@ id = "usecase-boundaries"
 kind = "rule"
 source = "rules/usecase-boundaries"
 
-[presets.structure]
-assets = ["project-structure", "testing", "architecture", "usecase-boundaries"]
-
 [[assets]]
 id = "handbook"
 kind = "playbook"
 source = "playbooks/handbook.md"
+
+[presets.structure]
+assets = ["project-structure", "testing", "architecture", "usecase-boundaries"]
 
 [presets.handbook]
 assets = ["handbook"]

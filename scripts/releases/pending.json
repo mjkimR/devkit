@@ -1,0 +1,883 @@
+{
+  "baseline": {
+    "bootstrap": {
+      "checksums_sha256": "f8e2eb0570290e93fe0e9ae9666785f2701d80234c619040c91fafe6b6bcc0c0",
+      "source_sha": "96f34f89b689bf73a5cf225224d93583249c3bf3",
+      "tag": "v0.1.5"
+    },
+    "digest": "0f72d03005c447daa35c05ad019f4717dd677a637a3586059696e715fb487e9e",
+    "extras": {
+      "devkit-embed": {
+        "artifact": {
+          "filename": "devkit_embed-0.1.0-py3-none-any.whl",
+          "sha256": "2b8534b60d85e36c2027e2c0d13d110289fa877b9c0b2639b8c4daedbe461f38",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_embed-0.1.0-py3-none-any.whl"
+        },
+        "version": "0.1.0"
+      }
+    },
+    "kind": "completed",
+    "packages": {
+      "devkit-advisory": {
+        "artifact": {
+          "filename": "devkit_advisory-0.1.5-py3-none-any.whl",
+          "sha256": "052646dc829299ce8195b30e068f8737b693b88ea82c06dc7ea05e0e69701128",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_advisory-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {},
+        "fingerprint": "26213934fe742a786166227841680e92bc974a58e0e764ea694825ffd12e6b72",
+        "path": "packages/devkit-advisory",
+        "requires": [],
+        "version": "0.1.5"
+      },
+      "devkit-agt": {
+        "artifact": {
+          "filename": "devkit_agt-0.1.5-py3-none-any.whl",
+          "sha256": "22ed60dc6d8cfe1c3a3c6e3c2b8a46a841dacdb4b28e7ffbabe0747c8044882a",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_agt-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {
+          "authoring": {
+            "fingerprint": "d905ab7fdd1cf53c50f38c548715b8c5fd4215266bd7cf873ad78c825cd22947",
+            "manifest": "src/devkit_agt/bundles/authoring/bundle/bundle.toml",
+            "version": "0.1.5"
+          },
+          "harness": {
+            "fingerprint": "fd7c057e5d90dec266800c39d1ddc55a9e8a66d11b457dfbfc341ec44c613d4f",
+            "manifest": "src/devkit_agt/bundles/harness/bundle/bundle.toml",
+            "version": "0.1.5"
+          }
+        },
+        "fingerprint": "351cee42febd09b2dc41c7a3a728d4951b3d33493ec093247bcb5a6482d9b11c",
+        "path": "packages/devkit",
+        "requires": [
+          "click>=8.1.7",
+          "devkit-advisory==0.1.5",
+          "devkit-core==0.1.5",
+          "devkit-dist==0.1.5",
+          "pyyaml>=6.0.1",
+          "tomlkit>=0.13",
+          "devkit-mcp==0.1.5; extra == 'mcp'",
+          "devkit-dist[search]; extra == 'search'"
+        ],
+        "version": "0.1.5"
+      },
+      "devkit-catalog": {
+        "artifact": {
+          "filename": "devkit_catalog-0.1.5-py3-none-any.whl",
+          "sha256": "4d6cab3c5544df2906551e69231dab8a94695cf4ad3f9f46d793d48d6034312d",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_catalog-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {
+          "cli-tool": {
+            "fingerprint": "51f5784e348b3f2d1f4e4bcfe15fc7d5c1c7f4b875ffe8bc0d0fd2770a49d6c7",
+            "manifest": "src/devkit_catalog/cli_tool/bundle/bundle.toml",
+            "version": "0.1.5"
+          },
+          "incubation": {
+            "fingerprint": "a4b3385ef9dfddd014940ad133ed04f1afc457f771d636dcfec19b298f5ea775",
+            "manifest": "src/devkit_catalog/incubation/bundle/bundle.toml",
+            "version": "0.1.5"
+          },
+          "maintenance": {
+            "fingerprint": "38a3cfa261402b4af3ac7e2dc760cf0905608a9872805c9b8bf0bc0321354fbe",
+            "manifest": "src/devkit_catalog/maintenance/bundle/bundle.toml",
+            "version": "0.1.5"
+          },
+          "response-style": {
+            "fingerprint": "1861592d36aa969af9ce85c5f074a1d4f5968c9c057605f516a0beb823552751",
+            "manifest": "src/devkit_catalog/response_style/bundle/bundle.toml",
+            "version": "0.1.5"
+          }
+        },
+        "fingerprint": "9ac753b0423c41a2bc75c24c2c381c4bf12eccc92385121591a167121c7d358c",
+        "path": "packages/devkit-catalog",
+        "requires": [],
+        "version": "0.1.5"
+      },
+      "devkit-cli": {
+        "artifact": {
+          "filename": "devkit_cli-0.1.5-py3-none-any.whl",
+          "sha256": "b12465b1e79ec1018bc49e60dc957adc37c42e411eb30a8723cde9e8fbae8f50",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_cli-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {},
+        "fingerprint": "7010bc405280b58ab36f6da91e06578519666c3995ddfe79459ed61b9a67ee4d",
+        "path": "packages/devkit-cli",
+        "requires": [
+          "click>=8.2",
+          "devkit-advisory==0.1.5"
+        ],
+        "version": "0.1.5"
+      },
+      "devkit-core": {
+        "artifact": {
+          "filename": "devkit_core-0.1.5-py3-none-any.whl",
+          "sha256": "e827acb6867033fa9a8ce6acd7be76041151240e78dbffcbacf1cf7456ce9ad0",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_core-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {},
+        "fingerprint": "7c4bedea25256ccd1975756623c616c06e0b93bb3e95714af8ebafbf6cc25e64",
+        "path": "packages/devkit-core",
+        "requires": [
+          "devkit-advisory==0.1.5",
+          "pyyaml>=6.0.1"
+        ],
+        "version": "0.1.5"
+      },
+      "devkit-dev": {
+        "artifact": {
+          "filename": "devkit_dev-0.1.5-py3-none-any.whl",
+          "sha256": "ffc139f6f20c32aceef497209adf8f0b9462c1aec51c4118ae9353a0030df7ea",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_dev-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {
+          "devkit-dev": {
+            "fingerprint": "4d4ed6c4ed3a8c64e6b0a8a1cabc306101e2e0116ad8d5ab931e9cec81775ae7",
+            "manifest": "src/devkit_dev/bundle/bundle.toml",
+            "version": "0.1.5"
+          }
+        },
+        "fingerprint": "9e40190695dc0aad07a439e6b3a07ffb1641e1b161aa81ee849226cba1929ebd",
+        "path": "tools/devkit-dev",
+        "requires": [],
+        "version": "0.1.5"
+      },
+      "devkit-dist": {
+        "artifact": {
+          "filename": "devkit_dist-0.1.5-py3-none-any.whl",
+          "sha256": "47006f76f2f4f396ea2ae493dd30dfde98c908dc74855e0fd7ed0b8bc2c97eaa",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_dist-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {
+          "advisory": {
+            "fingerprint": "5cf170fa135a7cd8e99c83f9635770cb5140b7bed56dfc945f5d3d2ed8e54cea",
+            "manifest": "src/devkit_dist/bundles/advisory/bundle/bundle.toml",
+            "version": "0.1.5"
+          },
+          "devkit": {
+            "fingerprint": "00d555a7d6db3e6f0d5c7885417eb545c29c2bed599367b3d6ecf1835eed7091",
+            "manifest": "src/devkit_dist/bundles/devkit/bundle/bundle.toml",
+            "version": "0.1.5"
+          },
+          "git-commits": {
+            "fingerprint": "125243740b8e79f45e9b467a6ecf65edadeb8426cb12d5f1c3a4b1d0b53621e4",
+            "manifest": "src/devkit_dist/bundles/git_commits/bundle/bundle.toml",
+            "version": "0.1.5"
+          }
+        },
+        "fingerprint": "8d360e2ae41f64c8035c78508dbb37d2ebb89c2cf312274eccbf0cf57f7193cb",
+        "path": "packages/devkit-dist",
+        "requires": [
+          "click>=8.2",
+          "devkit-advisory==0.1.5",
+          "devkit-cli==0.1.5",
+          "devkit-core==0.1.5",
+          "jinja2<4,>=3.1.6",
+          "pyyaml>=6.0.1",
+          "tomlkit>=0.13",
+          "devkit-embed<0.2,>=0.1; extra == 'search'",
+          "numpy>=2.0; extra == 'search'",
+          "tokenizers>=0.20; extra == 'search'"
+        ],
+        "version": "0.1.5"
+      },
+      "devkit-docs": {
+        "artifact": {
+          "filename": "devkit_docs-0.1.5-py3-none-any.whl",
+          "sha256": "3532471e4f107a297f68056e85be05524db881c9359b67d47bfbe349b75e2025",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_docs-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {
+          "docs": {
+            "fingerprint": "da67ca7d45c65acd0b57178f8e600b65950c2cd459a065f138f2828cf466778d",
+            "manifest": "src/devkit_docs/bundles/docs/bundle/bundle.toml",
+            "version": "0.1.5"
+          }
+        },
+        "fingerprint": "a461fb67a1e8803afd175cdbe7b289e9b4867685d75f927e7619e8c81146633a",
+        "path": "packages/devkit-docs",
+        "requires": [
+          "click>=8.1.7",
+          "devkit-agt==0.1.5",
+          "devkit-core==0.1.5",
+          "devkit-agt[search]; extra == 'search'"
+        ],
+        "version": "0.1.5"
+      },
+      "devkit-mcp": {
+        "artifact": {
+          "filename": "devkit_mcp-0.1.5-py3-none-any.whl",
+          "sha256": "1cfa1632b75d12729f353dc83ad570751cffca31b0b1933f4283f5a126f691c7",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_mcp-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {},
+        "fingerprint": "b4dcbffac6a8dfca0619ddf9ba1510a085934dda44f028df401c101059404920",
+        "path": "packages/devkit-mcp",
+        "requires": [
+          "devkit-core==0.1.5",
+          "devkit-dist==0.1.5",
+          "fastmcp<5,>=4.0.3",
+          "jsonschema<5,>=4.23",
+          "mcp-types<3,>=2"
+        ],
+        "version": "0.1.5"
+      },
+      "devkit-spec": {
+        "artifact": {
+          "filename": "devkit_spec-0.1.5-py3-none-any.whl",
+          "sha256": "e0b69bec7b813281c5c93068356bfe4012b81aabca525e2cdb59041d2336db98",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_spec-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {
+          "spec": {
+            "fingerprint": "a61570cb1116b65bb2bd0ecdd6f2ce0928d25eca5ea4e8f5d395d8e422ba61db",
+            "manifest": "src/devkit_spec/bundles/spec/bundle/bundle.toml",
+            "version": "0.1.5"
+          }
+        },
+        "fingerprint": "2014b2ede58b6006f9832ed078ba2148ac7cfb5e9b0361569ca902300b92a893",
+        "path": "packages/devkit-spec",
+        "requires": [
+          "click>=8.1.7",
+          "devkit-agt==0.1.5",
+          "devkit-core==0.1.5",
+          "devkit-docs==0.1.5",
+          "devkit-docs[search]; extra == 'search'"
+        ],
+        "version": "0.1.5"
+      },
+      "devkit-starter": {
+        "artifact": {
+          "filename": "devkit_starter-0.1.5-py3-none-any.whl",
+          "sha256": "899ae67394a7105b13841c3a20d45afae271f6912f1e195afd91e0c7a113c25d",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_starter-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {
+          "starter": {
+            "fingerprint": "15234e8a340e42120283bf75c0d48befcdf7f375c00a723bb6ed33bc13b53310",
+            "manifest": "src/devkit_starter/bundle/bundle.toml",
+            "version": "0.1.5"
+          }
+        },
+        "fingerprint": "a94599b1a103d81621e803b8ea4e0b6aaa115f66e8f838bc3bee8c76fff0fcc5",
+        "path": "packages/devkit-starter",
+        "requires": [],
+        "version": "0.1.5"
+      },
+      "devkit-viewer": {
+        "artifact": {
+          "filename": "devkit_viewer-0.1.5-py3-none-any.whl",
+          "sha256": "0561f9c0e7240e94f0bab727f8d1347fdfc6b09f23f8f3c7f8fea591220c11fb",
+          "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_viewer-0.1.5-py3-none-any.whl"
+        },
+        "bundles": {},
+        "fingerprint": "3f5a92fb00eb79e67db37e22e63daa3432d812b91827d3750ef711b35ae1089c",
+        "path": "packages/devkit-viewer",
+        "requires": [
+          "click>=8.1.7",
+          "devkit-agt==0.1.5",
+          "devkit-core==0.1.5"
+        ],
+        "version": "0.1.5"
+      }
+    },
+    "recipe": {
+      "canonical": 1,
+      "hatchling": "1.27.0",
+      "python": "3.12.8",
+      "uv": "0.12.8"
+    },
+    "release": "0.1.5",
+    "schema": 1,
+    "source_sha": "96f34f89b689bf73a5cf225224d93583249c3bf3"
+  },
+  "baseline_digest": "0f72d03005c447daa35c05ad019f4717dd677a637a3586059696e715fb487e9e",
+  "baseline_release": "0.1.5",
+  "closure": {
+    "devkit-adaptive": [
+      "devkit-core",
+      "devkit-docs",
+      "payload"
+    ],
+    "devkit-advisory": [
+      "payload"
+    ],
+    "devkit-agt": [
+      "devkit-advisory",
+      "devkit-core",
+      "devkit-dist",
+      "devkit-mcp",
+      "payload"
+    ],
+    "devkit-catalog": [
+      "payload"
+    ],
+    "devkit-cli": [
+      "devkit-advisory",
+      "payload"
+    ],
+    "devkit-core": [
+      "devkit-advisory",
+      "payload"
+    ],
+    "devkit-dev": [
+      "payload"
+    ],
+    "devkit-dist": [
+      "devkit-advisory",
+      "devkit-cli",
+      "devkit-core",
+      "payload"
+    ],
+    "devkit-docs": [
+      "devkit-agt",
+      "devkit-core",
+      "payload"
+    ],
+    "devkit-mcp": [
+      "devkit-core",
+      "devkit-dist",
+      "payload"
+    ],
+    "devkit-spec": [
+      "devkit-agt",
+      "devkit-core",
+      "devkit-docs",
+      "payload"
+    ],
+    "devkit-starter": [
+      "payload"
+    ],
+    "devkit-viewer": [
+      "devkit-agt",
+      "devkit-core",
+      "payload"
+    ]
+  },
+  "digest": "ac7f35c1750fb40a514dfbd3eff81e0db9229b52afd859b573ae64ebdbd9a148",
+  "edits": [
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit/pyproject.toml"
+    },
+    {
+      "after": "devkit-core==0.1.6",
+      "before": "devkit-core==0.1.5",
+      "field": "dependencies|devkit-core||",
+      "path": "packages/devkit/pyproject.toml"
+    },
+    {
+      "after": "devkit-advisory==0.1.6",
+      "before": "devkit-advisory==0.1.5",
+      "field": "dependencies|devkit-advisory||",
+      "path": "packages/devkit/pyproject.toml"
+    },
+    {
+      "after": "devkit-dist==0.1.6",
+      "before": "devkit-dist==0.1.5",
+      "field": "dependencies|devkit-dist||",
+      "path": "packages/devkit/pyproject.toml"
+    },
+    {
+      "after": "devkit-mcp==0.1.6",
+      "before": "devkit-mcp==0.1.5",
+      "field": "optional-dependencies.mcp|devkit-mcp||",
+      "path": "packages/devkit/pyproject.toml"
+    },
+    {
+      "after": "devkit-core==0.1.6",
+      "before": "devkit-core==0.1.5",
+      "field": "dependencies|devkit-core||",
+      "path": "packages/devkit-adaptive/pyproject.toml"
+    },
+    {
+      "after": "devkit-docs==0.1.6",
+      "before": "devkit-docs==0.1.5",
+      "field": "dependencies|devkit-docs||",
+      "path": "packages/devkit-adaptive/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-advisory/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-catalog/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-cli/pyproject.toml"
+    },
+    {
+      "after": "devkit-advisory==0.1.6",
+      "before": "devkit-advisory==0.1.5",
+      "field": "dependencies|devkit-advisory||",
+      "path": "packages/devkit-cli/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-core/pyproject.toml"
+    },
+    {
+      "after": "devkit-advisory==0.1.6",
+      "before": "devkit-advisory==0.1.5",
+      "field": "dependencies|devkit-advisory||",
+      "path": "packages/devkit-core/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-dist/pyproject.toml"
+    },
+    {
+      "after": "devkit-core==0.1.6",
+      "before": "devkit-core==0.1.5",
+      "field": "dependencies|devkit-core||",
+      "path": "packages/devkit-dist/pyproject.toml"
+    },
+    {
+      "after": "devkit-cli==0.1.6",
+      "before": "devkit-cli==0.1.5",
+      "field": "dependencies|devkit-cli||",
+      "path": "packages/devkit-dist/pyproject.toml"
+    },
+    {
+      "after": "devkit-advisory==0.1.6",
+      "before": "devkit-advisory==0.1.5",
+      "field": "dependencies|devkit-advisory||",
+      "path": "packages/devkit-dist/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-docs/pyproject.toml"
+    },
+    {
+      "after": "devkit-core==0.1.6",
+      "before": "devkit-core==0.1.5",
+      "field": "dependencies|devkit-core||",
+      "path": "packages/devkit-docs/pyproject.toml"
+    },
+    {
+      "after": "devkit-agt==0.1.6",
+      "before": "devkit-agt==0.1.5",
+      "field": "dependencies|devkit-agt||",
+      "path": "packages/devkit-docs/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-mcp/pyproject.toml"
+    },
+    {
+      "after": "devkit-core==0.1.6",
+      "before": "devkit-core==0.1.5",
+      "field": "dependencies|devkit-core||",
+      "path": "packages/devkit-mcp/pyproject.toml"
+    },
+    {
+      "after": "devkit-dist==0.1.6",
+      "before": "devkit-dist==0.1.5",
+      "field": "dependencies|devkit-dist||",
+      "path": "packages/devkit-mcp/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-spec/pyproject.toml"
+    },
+    {
+      "after": "devkit-core==0.1.6",
+      "before": "devkit-core==0.1.5",
+      "field": "dependencies|devkit-core||",
+      "path": "packages/devkit-spec/pyproject.toml"
+    },
+    {
+      "after": "devkit-agt==0.1.6",
+      "before": "devkit-agt==0.1.5",
+      "field": "dependencies|devkit-agt||",
+      "path": "packages/devkit-spec/pyproject.toml"
+    },
+    {
+      "after": "devkit-docs==0.1.6",
+      "before": "devkit-docs==0.1.5",
+      "field": "dependencies|devkit-docs||",
+      "path": "packages/devkit-spec/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-starter/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "packages/devkit-viewer/pyproject.toml"
+    },
+    {
+      "after": "devkit-core==0.1.6",
+      "before": "devkit-core==0.1.5",
+      "field": "dependencies|devkit-core||",
+      "path": "packages/devkit-viewer/pyproject.toml"
+    },
+    {
+      "after": "devkit-agt==0.1.6",
+      "before": "devkit-agt==0.1.5",
+      "field": "dependencies|devkit-agt||",
+      "path": "packages/devkit-viewer/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "project.version",
+      "path": "tools/devkit-dev/pyproject.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit-catalog/src/devkit_catalog/response_style/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit/src/devkit_agt/bundles/authoring/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "packages/devkit/src/devkit_agt/bundles/harness/bundle/bundle.toml"
+    },
+    {
+      "after": "0.1.6",
+      "before": "0.1.5",
+      "field": "version",
+      "path": "tools/devkit-dev/src/devkit_dev/bundle/bundle.toml"
+    }
+  ],
+  "extras": {
+    "devkit-embed": {
+      "artifact": {
+        "filename": "devkit_embed-0.1.0-py3-none-any.whl",
+        "sha256": "2b8534b60d85e36c2027e2c0d13d110289fa877b9c0b2639b8c4daedbe461f38",
+        "url": "https://github.com/mjkimR/devkit/releases/download/v0.1.5/devkit_embed-0.1.0-py3-none-any.whl"
+      },
+      "version": "0.1.0"
+    }
+  },
+  "kind": "pending",
+  "packages": {
+    "devkit-adaptive": {
+      "bundles": {
+        "adaptive-dev": {
+          "fingerprint": "e688b6db0a45c3b40066018b864ed857a24c018684eaaea7b91340ec7894a79a",
+          "manifest": "src/devkit_adaptive/bundles/adaptive_dev/bundle/bundle.toml",
+          "version": "0.1.6"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "71e6fe1a9cfb7f2b4e72730f75d3c53a458e45d7cc0d7db6460ca277d960bc5b",
+      "path": "packages/devkit-adaptive",
+      "requires": [
+        "click>=8.1.7",
+        "devkit-core==0.1.6",
+        "devkit-docs==0.1.6"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-advisory": {
+      "bundles": {},
+      "disposition": "changed",
+      "fingerprint": "d0da81cd87176b09c5c793af816cddba5ced065f872e99dd19ae989c39dd4a83",
+      "path": "packages/devkit-advisory",
+      "requires": [],
+      "version": "0.1.6"
+    },
+    "devkit-agt": {
+      "bundles": {
+        "authoring": {
+          "fingerprint": "1cc8c13285d1e15d17febc6b1bd251f65c4056814e957704d610e6d22ea1e6d0",
+          "manifest": "src/devkit_agt/bundles/authoring/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "harness": {
+          "fingerprint": "e42ba084af379b4e45ca7f9ee125c42a7c4f83a9251bcebea75a03b7f4fbd83c",
+          "manifest": "src/devkit_agt/bundles/harness/bundle/bundle.toml",
+          "version": "0.1.6"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "be43e2f17da0115b173a216c50078ef053631f6859e7cbeeb61069129e280168",
+      "path": "packages/devkit",
+      "requires": [
+        "click>=8.1.7",
+        "devkit-advisory==0.1.6",
+        "devkit-core==0.1.6",
+        "devkit-dist==0.1.6",
+        "pyyaml>=6.0.1",
+        "tomlkit>=0.13",
+        "devkit-mcp==0.1.6; extra == 'mcp'",
+        "devkit-dist[search]; extra == 'search'"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-catalog": {
+      "bundles": {
+        "app-uiux-improve": {
+          "fingerprint": "578619af4212f365b54d2c0eac687d0aa8f244abd7d7f4dd8b482f0ec514541f",
+          "manifest": "src/devkit_catalog/app_uiux_improve/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "cli-tool": {
+          "fingerprint": "2f4e637e9217f82b3096ffe358e4255f640627fb86f48a3cb873e3cbae59ad85",
+          "manifest": "src/devkit_catalog/cli_tool/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "command-design": {
+          "fingerprint": "d83ac6c1009423f01703d1f483e5fc5ebf6528d9185388c70b4a55ea8134dc16",
+          "manifest": "src/devkit_catalog/command_design/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "deep-research": {
+          "fingerprint": "b5bd20235153ee2c605127aa682973e19b701da3ba5bb0a6bae92e55a4b5cd19",
+          "manifest": "src/devkit_catalog/deep_research/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "design-explore": {
+          "fingerprint": "11d6d31f8d56891917acce2283ba62886f376150ea5b29ef24e46972fce42791",
+          "manifest": "src/devkit_catalog/design_explore/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "maintenance": {
+          "fingerprint": "5561575f4734c5fffee58a799325aee17bdbc7ab028e2f40f59627585cbe5243",
+          "manifest": "src/devkit_catalog/maintenance/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "response-style": {
+          "fingerprint": "61c9c369d26892e0a4b173ec22aa4a1bae18ab512a79451b8dceb44fb8514737",
+          "manifest": "src/devkit_catalog/response_style/bundle/bundle.toml",
+          "version": "0.1.6"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "851832888db194ff22a866f83e02f8eadd133b18abaa04ecd1f143dc17451816",
+      "path": "packages/devkit-catalog",
+      "requires": [],
+      "version": "0.1.6"
+    },
+    "devkit-cli": {
+      "bundles": {},
+      "disposition": "changed",
+      "fingerprint": "8c3f3c3195858583c30a790d2a79153e60a351221bde4e23f7b672834b96a313",
+      "path": "packages/devkit-cli",
+      "requires": [
+        "click>=8.2",
+        "devkit-advisory==0.1.6"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-core": {
+      "bundles": {},
+      "disposition": "changed",
+      "fingerprint": "1d353cb577a3ed7053646d99287d6e435a6ef850c2e3172620b499da0f7677a3",
+      "path": "packages/devkit-core",
+      "requires": [
+        "devkit-advisory==0.1.6",
+        "pyyaml>=6.0.1"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-dev": {
+      "bundles": {
+        "devkit-dev": {
+          "fingerprint": "6d69b1b00fbd2f56d24902954d927375cf486a292bdc8b8da192a600a23d5fdf",
+          "manifest": "src/devkit_dev/bundle/bundle.toml",
+          "version": "0.1.6"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "f2dbb10961690f2385233586167d812f8d113ef4e59e5a0cc1952783d3476456",
+      "path": "tools/devkit-dev",
+      "requires": [],
+      "version": "0.1.6"
+    },
+    "devkit-dist": {
+      "bundles": {
+        "advisory": {
+          "fingerprint": "d90b7d32b7626efe446042da4f59490e0fa9b758131172726d618a9b0d459303",
+          "manifest": "src/devkit_dist/bundles/advisory/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "devkit": {
+          "fingerprint": "674bca48c0c6dcbde1fca0dfa7134414ec5b40d9964141fdecb1ff1c36a64efd",
+          "manifest": "src/devkit_dist/bundles/devkit/bundle/bundle.toml",
+          "version": "0.1.6"
+        },
+        "git-commits": {
+          "fingerprint": "125243740b8e79f45e9b467a6ecf65edadeb8426cb12d5f1c3a4b1d0b53621e4",
+          "manifest": "src/devkit_dist/bundles/git_commits/bundle/bundle.toml",
+          "version": "0.1.5"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "f9baf309128fbafd3387c0f3765547f98862945c243328f1463887197f5b6890",
+      "path": "packages/devkit-dist",
+      "requires": [
+        "click>=8.2",
+        "devkit-advisory==0.1.6",
+        "devkit-cli==0.1.6",
+        "devkit-core==0.1.6",
+        "jinja2<4,>=3.1.6",
+        "pyyaml>=6.0.1",
+        "tomlkit>=0.13",
+        "devkit-embed<0.2,>=0.1; extra == 'search'",
+        "numpy>=2.0; extra == 'search'",
+        "tokenizers>=0.20; extra == 'search'"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-docs": {
+      "bundles": {
+        "docs": {
+          "fingerprint": "5593a547ea56e579bcbea4423497321a3ed70d1e56f56691e7a50b709fad785a",
+          "manifest": "src/devkit_docs/bundles/docs/bundle/bundle.toml",
+          "version": "0.1.6"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "3a3aded2ebba3ed6d018f440d3625b0541f47c62c5169119913ab7fc112c10f5",
+      "path": "packages/devkit-docs",
+      "requires": [
+        "click>=8.1.7",
+        "devkit-agt==0.1.6",
+        "devkit-core==0.1.6",
+        "devkit-agt[search]; extra == 'search'"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-mcp": {
+      "bundles": {},
+      "disposition": "changed",
+      "fingerprint": "4faacf8b8b36af596854648fe4bb0197f09155d2ef2174da5e237512ea05b198",
+      "path": "packages/devkit-mcp",
+      "requires": [
+        "devkit-core==0.1.6",
+        "devkit-dist==0.1.6",
+        "fastmcp<5,>=4.0.3",
+        "jsonschema<5,>=4.23",
+        "mcp-types<3,>=2"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-spec": {
+      "bundles": {
+        "spec": {
+          "fingerprint": "9f05a578ef52cd1d176306cf93c88530313ccce4b68902b9fcdac3c23b9c4f7b",
+          "manifest": "src/devkit_spec/bundles/spec/bundle/bundle.toml",
+          "version": "0.1.6"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "0296368db19ed93829af5cd3087e8aefcc504d7aaf2f77a002f8026e9a4aec72",
+      "path": "packages/devkit-spec",
+      "requires": [
+        "click>=8.1.7",
+        "devkit-agt==0.1.6",
+        "devkit-core==0.1.6",
+        "devkit-docs==0.1.6",
+        "devkit-docs[search]; extra == 'search'"
+      ],
+      "version": "0.1.6"
+    },
+    "devkit-starter": {
+      "bundles": {
+        "starter": {
+          "fingerprint": "15234e8a340e42120283bf75c0d48befcdf7f375c00a723bb6ed33bc13b53310",
+          "manifest": "src/devkit_starter/bundle/bundle.toml",
+          "version": "0.1.5"
+        }
+      },
+      "disposition": "changed",
+      "fingerprint": "c7c552f7edef274e2efed2a459189a3f14208c872b2f3bcb6075439587bcf1c2",
+      "path": "packages/devkit-starter",
+      "requires": [],
+      "version": "0.1.6"
+    },
+    "devkit-viewer": {
+      "bundles": {},
+      "disposition": "changed",
+      "fingerprint": "08ede9bb0bb59ef0aed25c1ddd769db814002fd84495afc68235c4c1236a33a2",
+      "path": "packages/devkit-viewer",
+      "requires": [
+        "click>=8.1.7",
+        "devkit-agt==0.1.6",
+        "devkit-core==0.1.6"
+      ],
+      "version": "0.1.6"
+    }
+  },
+  "recipe": {
+    "canonical": 1,
+    "hatchling": "1.27.0",
+    "python": "3.12.8",
+    "uv": "0.12.8"
+  },
+  "release": "0.1.6",
+  "schema": 1,
+  "state": "complete"
+}

@@ -21,7 +21,8 @@ def _bundle_root(module: str) -> Path:
 def test_registered_bundle_loads_under_its_entry_point_name(name: str) -> None:
     bundle = load_bundle(_bundle_root(ENTRY_POINTS[name]))
     assert bundle.name == name
-    assert bundle.version == PROJECT["version"]
+    manifest = tomllib.loads((_bundle_root(ENTRY_POINTS[name]) / "bundle.toml").read_text())
+    assert bundle.version == manifest["version"]
 
 
 @pytest.mark.parametrize("name", sorted(ENTRY_POINTS))
