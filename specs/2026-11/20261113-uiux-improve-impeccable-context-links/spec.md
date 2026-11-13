@@ -1,30 +1,24 @@
 ---
-id: PROP-uiux-improve-impeccable-context-links
+id: SPEC-uiux-improve-impeccable-context-links
 title: Link tracked Impeccable context through a bundled POSIX script
 summary: The app-uiux-improve bundle ships a POSIX sh script that links a project's tracked Impeccable context (PRODUCT.md, DESIGN.md, .impeccable/) into the repository root as git-excluded relative symlinks and checks them, so the context survives worktrees and clones without a second copy.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-13
-target_area: capabilities/delivery/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/delivery/
-    - usecases/delivery/
-    - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
-    - packages/devkit-catalog/tests/
-  excludes:
-    - packages/devkit-dist/
-    - packages/devkit-catalog/src/devkit_catalog/design_explore/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-13
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-uiux-improve-impeccable-context-links] Link tracked Impeccable context through a bundled POSIX script
+# [SPEC-uiux-improve-impeccable-context-links] Link tracked Impeccable context through a bundled POSIX script
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-uiux-improve-impeccable-context-links on 2026-11-13.
+- **Preserved Materials**: `docs/materials/2026-11/20261113-uiux-improve-impeccable-context-links`
+- Target Docs Blueprint: `PROP-uiux-improve-impeccable-context-links-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Impeccable reads `PRODUCT.md`, `DESIGN.md` and an optional `.impeccable/` directory from the project root.
 `CAP-DLV-uiux-improvement` and `references/orchestration.md` ("Project files and user requests") treat these files as
@@ -57,7 +51,7 @@ Hypothesis: a POSIX `sh` script shipped inside the skill directory removes the m
 needs no devkit runtime, so the bundle stays content-only and independently installable. A devkit CLI command is out
 of scope by intent: `devkit-catalog` declares no runtime dependencies and `app-uiux-improve` has no Python feature.
 
-### Related specs and boundary
+#### Related specs and boundary
 
 - `SPEC-uiux-improve-ooux-impeccable` (completed) owns context-file ownership and the user-requested setup list. That
   list allows ignore entries confined to `.impeccable/` paths after showing the exact lines. This proposal adds one
@@ -70,14 +64,33 @@ of scope by intent: `devkit-catalog` declares no runtime dependencies and `app-u
   and this proposal leaves them unchanged.
 - None of these specs defines where tracked Impeccable context lives or how it reaches the root.
 
-## 2. Planning Decisions
+## 2. User Stories
 
-Planning applies `medium` effort; Development remains `medium`. Evidence is in `materials/link-evidence.md`.
+- **US-1**: As a developer/agent, I want to implement Link tracked Impeccable context through a bundled POSIX script so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
+
+Planning applies `medium` effort; Development remains `medium`. Evidence is in `docs/materials/2026-11/20261113-uiux-improve-impeccable-context-links/link-evidence.md`.
 No product screen changes are proposed, so there is no Screens draft or UX review.
 
 | Question | Decision | Rejected alternative and consequence |
 | --- | --- | --- |
-| Q1: authority | `PADR-impeccable-context-links` narrowly extends requested setup to links and exact root excludes; read-only `--check` is inspection the coordinator may run while gathering context. | Treating link creation as an automatic preflight would exceed consumer authority. No Python/runtime package is added. |
+| Q1: authority | `ADR-impeccable-context-links` narrowly extends requested setup to links and exact root excludes; read-only `--check` is inspection the coordinator may run while gathering context. | Treating link creation as an automatic preflight would exceed consumer authority. No Python/runtime package is added. |
 | Q2: source | One optional argument, relative to the current worktree root; default `docs/materials/impeccable`. | No Git/devkit configuration key: another state source is unnecessary. A project with another layout passes the argument. |
 | Q3: projection | The script stays inside the existing skill asset; document `sh <deployed-skill>/scripts/link-impeccable-context.sh`. | No new asset kind or distribution change; `sh` avoids a dependency on executable-bit preservation. Existing subtree loading includes non-Markdown files. |
 | Q4: inspection | Use POSIX `test -L`, then capture `LC_ALL=C QUOTING_STYLE=literal ls -dn ./<fixed-entry>` with an appended non-newline sentinel, remove the sentinel and exactly one output record newline, then remove the exact ` ./<fixed-entry> -> ` prefix and compare the complete target string. | No `readlink`, `realpath`, `test -ef`, field splitting or generic filename parser. GNU's quoting override is harmless to other implementations; clear color-forcing variables. macOS and `dash` probes pass with spaces and ` -> ` in the source path. GNU utility target-capture probes also pass; BusyBox remains Development coverage. |
@@ -87,9 +100,9 @@ These are proposed technical choices within the feature request, pending Host/us
 The PADR supersedes only the existing setup list's restriction on root link/exclude actions; content ownership,
 explicit request, task route, host permissions and no implicit Git authority remain unchanged.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Interface and preflight
+#### 3.1 Interface and preflight
 
 Bundle source: `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/scripts/`.
 The directory will be created in Development; it is part of the existing skill asset.
@@ -114,7 +127,7 @@ All relative source paths are relative to the worktree root even when invoked fr
 4. Manage exactly `PRODUCT.md`, `DESIGN.md` and `.impeccable`; absent source entries are optional.
    The helper neither stages files nor changes context bytes or root `.gitignore`.
 
-### 3.2 Link and exclude operations
+#### 3.2 Link and exclude operations
 
 Mutating setup requires quiescent managed root entries and source for the command duration. The guide tells the
 consumer to stop editors, context-writing sessions and other helpers before running link mode. This is a supported
@@ -138,7 +151,7 @@ use precondition, not a concurrency lock against arbitrary writers. Check mode s
 - Serialize helper exclude edits with an exclusively created adjacent lock, refuse an existing lock with
   `LINK_EXCLUDE_BUSY` exit 2, and remove only the lock this invocation created. Check mode creates no lock.
 
-### 3.3 Read-only classification and result contract
+#### 3.3 Read-only classification and result contract
 
 `--check` creates no link, exclude line, lock or temporary file. It emits one state for each fixed root entry and
 one exclude state for each of the three exact lines. Classification order is tracked root, source absent, root
@@ -178,7 +191,7 @@ specific failure code/action exit 2. Exit 1 covers unresolved link states and mi
 in link mode do not count as problems. Stderr carries bounded failure details without changing the stdout schema.
 No JSON mode or devkit Python dependency is introduced.
 
-### 3.4 Delivery scope and acceptance
+#### 3.4 Delivery scope and acceptance
 
 `target-docs.md` lists exact Living Spec, guide and source owners. Development adds one script, extends the existing
 projection test and adds subprocess integration coverage under `packages/devkit-catalog/tests/integration/bundles/`.
@@ -222,7 +235,8 @@ Size `M`: the script and its tests/guide/contracts remain one feature spec. No c
 created by these exclusions. Source-side retention setup is existing consumer responsibility rather than a follow-up
 feature. The unseen consumer pilot and live upstream/editor save behavior remain unverified observations.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr uiux-improve-impeccable-context-links "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -232,3 +246,4 @@ feature. The unseen consumer pilot and live upstream/editor save behavior remain
 - On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
+

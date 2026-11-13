@@ -1,16 +1,16 @@
 ---
-id: PADR-impeccable-context-links
+id: ADR-impeccable-context-links
 title: User-requested links to tracked Impeccable context
 summary: "For tracked Impeccable context across worktrees, we ship a user-requested POSIX link helper with read-only inspection, to reuse one source without overwrites, accepting per-worktree setup and source-side ignore management."
-proposal: PROP-uiux-improve-impeccable-context-links
+proposal: SPEC-uiux-improve-impeccable-context-links
 supersedes: [ADR-impeccable-session-authority]
-status: draft
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-impeccable-context-links] User-requested links to tracked Impeccable context
+# [ADR-impeccable-context-links] User-requested links to tracked Impeccable context
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-13
 
 ## 1. Context & Problem Statement
