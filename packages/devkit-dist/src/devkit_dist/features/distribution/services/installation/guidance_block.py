@@ -26,7 +26,12 @@ _START_LINE = re.compile(rf"^{re.escape(START)}[ \t]*\r?$", re.MULTILINE)
 _END_LINE = re.compile(rf"^{re.escape(END)}[ \t]*\r?$", re.MULTILINE)
 
 
-def render(bundles: list[str], fragments: list[str] | tuple[str, ...] = ()) -> str:
+def render(
+    bundles: list[str],
+    fragments: list[str] | tuple[str, ...] = (),
+    *,
+    context_bundles: list[str],
+) -> str:
     """Return the block text (markers included, no trailing newline) for a selection.
 
     Every agent and subagent session loads the block, so devkit's own lines carry only what no skill description,
@@ -34,10 +39,16 @@ def render(bundles: list[str], fragments: list[str] | tuple[str, ...] = ()) -> s
     assets, placed after devkit's own lines in the order the caller fixes (bundle, then asset ID).
     """
     if bundles:
-        context = (
-            "- Before using a bundle's assets, run `uv run devkit get-context <bundle>` once per agent context."
-            " Installed: " + ", ".join(f"`{b}`" for b in bundles) + "."
-        )
+        context = "- Installed: " + ", ".join(f"`{b}`" for b in bundles) + "."
+        if context_bundles:
+            context += (
+                " Before using assets from the following bundles, run `uv run devkit get-context <bundle>`"
+                " once per agent context and again after context loss: "
+                + ", ".join(f"`{b}`" for b in context_bundles)
+                + "."
+            )
+        else:
+            context += " No automatic bundle context load is required."
     else:
         context = "- No bundle is selected. `uv run devkit list` shows installed bundles; `uv run devkit add <bundle>` selects one."
     lines = [

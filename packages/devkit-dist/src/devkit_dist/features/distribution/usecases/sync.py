@@ -426,7 +426,9 @@ def _plan_inventory(
 
 def _render_block(selection: Selection, inventory: Inventory) -> str:
     """The guidance block a sync of ``selection`` writes."""
-    return guidance_block.render(list(selection.presets), inventory.fragments())
+    return guidance_block.render(
+        list(selection.presets), inventory.fragments(), context_bundles=sorted(inventory.context_bundles)
+    )
 
 
 def planned_guidance_block(

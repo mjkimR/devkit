@@ -69,7 +69,7 @@ E2E and CI: [CI/CD](docs/development/ci-cd.md).
 <!-- DEVKIT:START -->
 ## devkit
 
-- Before using a bundle's assets, run `uv run devkit get-context <bundle>` once per agent context. Installed: `advisory`, `authoring`, `deep-research`, `devkit`, `devkit-dev`, `docs`, `harness`, `response-style`, `spec`.
+- Installed: `advisory`, `authoring`, `deep-research`, `devkit`, `devkit-dev`, `docs`, `harness`, `response-style`, `spec`. Before using assets from the following bundles, run `uv run devkit get-context <bundle>` once per agent context and again after context loss: `advisory`, `authoring`, `devkit`, `devkit-dev`, `docs`, `harness`, `spec`.
 - Never edit `.devkit/managed/` or projected agent files; change the source bundle or use `devkit override`.
 - Before document work, run `uv run devkit get-context docs`.
 - Before replying, read and apply the `response-style` skill: conclusion first, `→ **Core sentence.** Explanation` for ordinary points, required facts and formats kept, unfinished work and user decisions stated.

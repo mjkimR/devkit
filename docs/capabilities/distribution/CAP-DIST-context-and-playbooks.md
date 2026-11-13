@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-context-and-playbooks
 title: "Context Loading & Playbooks"
-summary: "On-demand context loading, playbook discovery and exact receipt-backed retrieval with effective content identity and external execution boundaries."
+summary: "Source-based context loading requirements, on-demand inspection and receipt-backed playbook retrieval with effective content identity and execution boundaries."
 area: distribution
 status: active
 entrypoints:
@@ -104,7 +104,18 @@ Context reads the actual recorded render mode when validating personal evidence,
 
 ### Skill Prerequisite
 
-For a bundle with a constitution or synchronized instructions, `devkit sync` inserts a context-loading prerequisite
+WHEN a synchronized bundle has a constitution, selected instructions or a declared `context_documents` directory,
+devkit MUST require context loading through root guidance, deployed skill prerequisites and playbook metadata.
+Literal and rendered template constitutions and selected instructions count as sources. A declared document
+directory counts when absent or empty, because its files and providers are resolved at execution time. A bundle
+without these sources requires no automatic load. Source presence comes from the synchronized selection, so preset
+changes take effect after sync; no preliminary `get-context` probe is needed
+(`packages/devkit-dist/tests/integration/features/distribution/test_guidance_block.py`).
+
+Explicit `devkit get-context <bundle>` remains available for every synchronized bundle. A bundle without sources
+returns a successful empty context with the existing JSON fields and errors for unsynchronized bundles unchanged.
+
+For a bundle with any of those sources, `devkit sync` inserts a context-loading prerequisite
 right after the frontmatter of every deployed skill: call `devkit get-context <bundle>` **once per bundle in the
 current agent context**, shared by all skills, and again only when that context is gone (compaction, a new
 conversation). The CLI keeps no loading state; avoiding duplicate reads is the agent's job. Source skills in the
@@ -123,8 +134,8 @@ explicitly, for the current task only: Codex via `policy.allow_implicit_invocati
 (`$devkit-playbook <task>`), Claude Code via `disable-model-invocation: true` (`/devkit-playbook <task>`), other
 agents through the instructions in the skill body.
 
-The skill runs the search, reads the chosen body from the returned path (loading its bundle's context first when
-needed), and when nothing matches, completes the task and asks whether to save a reusable draft into an authoring
+The skill runs the search, retrieves the selected playbook by exact ID and follows its returned body and
+`context.required` metadata. When nothing matches, it completes the task and asks whether to save a reusable draft into an authoring
 source; drafts need explicit approval and never touch installed or generated files. The draft offer belongs to this
 explicitly requested discovery only. The skill names no other bundle's asset: it states generically that a user's
 confirmation of a playbook another installed entry skill offered is the explicit invocation of that playbook.
@@ -221,13 +232,17 @@ Libraries return data without printing. The normative result fields are:
 - `source`: `{path, sha256}` with the absolute effective entrypoint and SHA-256 of the exact
   bytes read including frontmatter. Overrides name their override path; other playbooks name
   the managed path. This identifies content, not package provenance or execution attestation.
-- `context`: `{bundle, argv, policy}` with the same bundle, argv
+- `context`: `{bundle, argv, policy, required}` with the same bundle, argv
   `["uv", "run", "devkit", "get-context", "<bundle>"]` (the agent-facing invocation,
   `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`) and policy `"once-per-agent-context"`.
+  `required` is a boolean computed from the recorded constitution and instruction assets and receipt-validated
+  manifest document declaration. The existing fields keep their values even when `required` is false.
 
-Run the context argv in the same resolved workspace (or pass its `-w`) before following the
-procedure unless already loaded in this agent context; reload after loss. Apply the full
-constitution and read relevant instruction bodies, including when the bundle context is empty.
+When `context.required` is true, run the context argv in the same resolved workspace (or pass its `-w`) before
+following the procedure unless already loaded in this agent context; reload after loss. Apply the full constitution
+and read relevant instruction bodies. When false, proceed without a context load. Retrieval validates the managed
+manifest through receipt ownership and hashes; a modified manifest retains `NOT_SYNCHRONIZED`. It does not list
+documents or invoke document providers to compute this flag. Exact IDs and aliases use the same source predicate.
 Retrieval loads no context and tracks no execution state. Resolve relative body resources
 against the parent of `source.path`, reading only needed resources under existing permissions;
 no resource bytes or directory inventory are returned.

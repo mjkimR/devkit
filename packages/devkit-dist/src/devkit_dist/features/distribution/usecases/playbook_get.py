@@ -17,6 +17,7 @@ from devkit_dist.features.distribution.services.bundles.common import read_front
 from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader
 from devkit_dist.features.distribution.services.installation.local_render import LocalRenderStaleError
 from devkit_dist.features.distribution.services.installation.reading import (
+    bundle_requires_context,
     read_playbook,
     read_synchronized,
     synchronized_project_root,
@@ -102,6 +103,7 @@ class GetPlaybook(BaseUseCase):
                 str(root / name),
                 hashlib.sha256(data).hexdigest(),
                 alias,
+                bundle_requires_context(root, receipt, bundle),
             )
 
 

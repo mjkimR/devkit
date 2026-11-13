@@ -80,6 +80,7 @@ def test_complete_body_identity_and_no_resource_reads(tmp_path: Path, directory:
             "bundle": "team",
             "argv": ["uv", "run", "devkit", "get-context", "team"],
             "policy": "once-per-agent-context",
+            "required": True,
         },
     }
     assert json.loads(invoke(root, "team/recovery").stdout) == result
@@ -230,7 +231,12 @@ def test_empty_context(tmp_path):
         "documents_elsewhere": [],
         "notices": [],
     }
-    assert GetPlaybook().execute(root, "empty/run").to_dict()["context"]["policy"] == "once-per-agent-context"
+    assert GetPlaybook().execute(root, "empty/run").to_dict()["context"] == {
+        "bundle": "empty",
+        "argv": ["uv", "run", "devkit", "get-context", "empty"],
+        "policy": "once-per-agent-context",
+        "required": False,
+    }
 
 
 def test_unrelated_stale_personal_evidence(tmp_path):
@@ -263,6 +269,8 @@ def test_generated_exact_invocation_guidance():
     for phrase in [
         "playbook get <bundle>/<playbook>",
         "once per agent context",
+        "If context.required is true",
+        "proceed without a context load",
         "source.path",
         "unavailable approval UI is not approval",
         "External systems own",

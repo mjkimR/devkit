@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T04:33:02.452298Z'
+status: completed
+summary: 'AC-01 through AC-07 delivered: source-based context loading across root guidance, skills and playbook metadata; additive context.required preserves compatibility. Independent code and reconciliation reviews passed with no open findings.'
+findings: []
+assumptions:
+- 'User authorized plan acceptance and handoff; retained base dev-integration=auto authorizes local merge and exact cleanup. PR unnecessary: no platform review/CI requirement; no push requested.'
+checks:
+  tests: 'PASS just test-affected: 3214 passed 1 skipped at 291fac2a; only documentation/records changed afterward; reviewer focused tests 137 passed'
+  build: PASS uv build --package devkit-dist --wheel
+  lint: 'PASS just lint-check devkit-dist, just check devkit-dist and rules check --ci --base main: zero errors/warnings'
+  sync: PASS devkit sync --check
+diff_scope:
+  base: e40697e7d1948438e5bea7ed5cd4ef555abd07ce
+  head: 70b1c87d2154a5c1890a67760129b542155dbaac

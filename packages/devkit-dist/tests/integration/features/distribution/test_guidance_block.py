@@ -94,7 +94,7 @@ def test_block_follows_selection_changes(installed: list[InstalledBundle], targe
 def test_block_names_the_get_context_rule_only_with_a_selection(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     text = (target / AGENTS_FILE).read_text()
-    assert "Before using a bundle's assets, run `uv run devkit get-context <bundle>` once per agent context" in text
+    assert "Before using assets from the following bundles, run `uv run devkit get-context <bundle>`" in text
     assert "unselected source bundle" not in text  # bundle authors read it in the authoring instruction
 
 
@@ -276,3 +276,91 @@ def test_compose_and_strip(text: str | None, expected: str) -> None:
         assert stripped == "a\nb\n"
     else:
         assert stripped == "x\n"
+
+
+@pytest.mark.parametrize(
+    "source", ["none", "constitution", "constitution-template", "instruction", "instruction-template", "documents"]
+)
+def test_context_requirement_agrees_across_entry_paths(tmp_path: Path, source: str) -> None:
+    from devkit_dist.features.distribution.usecases.context import GetContext
+    from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook
+    from distsupport.distribution import instruction, write_bundle
+
+    manifest = 'schema = 1\nname = "team"\nversion = "0.1.0"\n'
+    files = {
+        "skills/release/SKILL.md": instruction("release"),
+        "run.md": "---\nname: run\ndescription: Run it.\naliases: [old-run]\n---\nRun.\n",
+    }
+    if source == "documents":
+        manifest += 'context_documents = "docs/context"\n'
+    if source.startswith("constitution"):
+        files["AGENTS.md.jinja" if source.endswith("template") else "AGENTS.md"] = "Shared context.\n"
+    manifest += '[[assets]]\nid = "release"\nkind = "skill"\nsource = "skills/release"\n'
+    manifest += '[[assets]]\nid = "run"\nkind = "playbook"\nsource = "run.md"\n'
+    if source.startswith("instruction"):
+        filename = "guide.md.jinja" if source.endswith("template") else "guide.md"
+        files[filename] = instruction("guide")
+        manifest += f'[[assets]]\nid = "guide"\nkind = "instruction"\nsource = "{filename}"\n'
+    manifest += '[presets.bare]\nassets = ["release", "run"]\n'
+    item = write_bundle(tmp_path / "source", manifest, files)
+    root = tmp_path / "consumer"
+    root.mkdir()
+    update_config(root, presets={"team": ["all"]}, agents=["codex"])
+
+    for preset in ["all", "bare", "all"]:
+        update_config(root, presets={"team": [preset]})
+        sync_project(root, [item])
+        required = source not in {"none", "instruction", "instruction-template"} or (
+            source.startswith("instruction") and preset == "all"
+        )
+        text = (root / AGENTS_FILE).read_text()
+        skill = (root / ".agents/skills/release/SKILL.md").read_text()
+        assert ("get-context <bundle>" in text) is required
+        assert ("<!-- DEVKIT:CONTEXT -->" in skill) is required
+        for selector in ["team/run", "team/old-run"]:
+            context = GetPlaybook().execute(root, selector).to_dict()["context"]
+            assert context == {
+                "bundle": "team",
+                "argv": ["uv", "run", "devkit", "get-context", "team"],
+                "policy": "once-per-agent-context",
+                "required": required,
+            }
+        if source == "documents":
+            assert GetContext().execute(root, "team").documents == []
+            directory = root / "docs/context"
+            directory.mkdir(parents=True, exist_ok=True)
+            assert GetContext().execute(root, "team").documents == []
+            doc = directory / "guide.md"
+            doc.write_text("---\ntitle: Runtime\nsummary: Runtime discovery.\n---\n")
+            assert len(GetContext().execute(root, "team").documents) == 1
+            doc.rename(directory / "README.md")
+
+
+def test_mixed_context_sources_and_manifest_validation(tmp_path: Path) -> None:
+    from devkit_dist.features.distribution.models.errors import NotSynchronizedError
+    from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook
+    from distsupport.distribution import write_bundle
+
+    items = []
+    for name, context in [("empty", ""), ("docs", 'context_documents = "missing"\n')]:
+        items.append(
+            write_bundle(
+                tmp_path / name,
+                f'schema = 1\nname = "{name}"\nversion = "0.1.0"\n{context}'
+                '[[assets]]\nid = "run"\nkind = "playbook"\nsource = "run.md"\n',
+                {"run.md": "---\nname: run\ndescription: Run.\n---\nRun.\n"},
+            )
+        )
+    root = tmp_path / "consumer"
+    root.mkdir()
+    update_config(root, presets={"empty": ["all"], "docs": ["all"]}, agents=[])
+    sync_project(root, items)
+    text = (root / AGENTS_FILE).read_text()
+    assert "Installed: `docs`, `empty`." in text
+    assert "after context loss: `docs`." in text
+    assert GetPlaybook().execute(root, "empty/run").context_required is False
+    assert GetPlaybook().execute(root, "docs/run").context_required is True
+    manifest = root / ".devkit/managed/empty/bundle.toml"
+    manifest.write_text(manifest.read_text() + "# modified\n")
+    with pytest.raises(NotSynchronizedError):
+        GetPlaybook().execute(root, "empty/run")

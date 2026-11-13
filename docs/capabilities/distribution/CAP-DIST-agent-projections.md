@@ -38,6 +38,12 @@ and are reached through `get-context`, playbook search or their paths.
   and no `source` gets no projection for an agent it has no variant for, reported like a subagent below
   (`ASSET_UNPROJECTED`). One skill directory has one owner: two bundles shipping a skill of the same id are a
   `BUNDLE_CONFLICT` even when their files agree.
+- **Skill context prerequisite**: WHEN the synchronized bundle has a constitution, selected instructions or a
+  declared `context_documents` directory, sync MUST prefix every deployed skill with its context-loading
+  prerequisite. A declared directory counts even when absent or empty. Without sources, skills receive no
+  generated prerequisite; source bytes remain unchanged. The shared source-presence criterion is defined by
+  `CAP-DIST-context-and-playbooks`
+  (`packages/devkit-dist/tests/integration/features/distribution/test_guidance_block.py`).
 - **Skill templates**: `.md.jinja` files, including `SKILL.md.jinja`, render with resolved bundle variables and the canonical execution environment to
   `.md` before context prerequisites and native invocation settings are inserted. Projections contain rendered
   files only; plain Markdown stays literal. Rendered entry frontmatter and project overrides follow

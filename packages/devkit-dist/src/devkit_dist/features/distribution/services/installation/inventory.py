@@ -12,7 +12,7 @@ from devkit_dist.features.distribution.models.settings import NATIVE_DIRS
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.models.unprojected import Unprojected
 from devkit_dist.features.distribution.services.bundles.fragments import read_fragment, references, render_fragment
-from devkit_dist.features.distribution.services.bundles.guidance import prepend_context
+from devkit_dist.features.distribution.services.bundles.guidance import prepend_context, requires_context
 from devkit_dist.features.distribution.services.bundles.instructions import read_instruction_header
 from devkit_dist.features.distribution.services.bundles.invocation import (
     check_skill_file,
@@ -87,6 +87,7 @@ class Inventory:
     # Seeded destinations -> origin; never part of ``files``.
     seeds: dict[str, Seed] = field(default_factory=dict)
     guidance: list[Fragment] = field(default_factory=list)
+    context_bundles: set[str] = field(default_factory=set)
     # Projected skill directory or subagent file -> its owner (``bundle:asset``, or a generated entry skill).
     projections: dict[str, str] = field(default_factory=dict)
     host_hooks: list[HostHookRecord] = field(default_factory=list)
@@ -172,8 +173,13 @@ class _BundleInventory:
             self.inventory.put(self.prefix + "AGENTS.md", Content(data, normal_mode(constitution.stat().st_mode)))
         self.selected = selected
         chosen = [asset for asset in bundle.assets if asset.id in selected]
-        # A bundle with a context (constitution or instructions) prefixes its skills with the load prerequisite.
-        if constitution is not None or any(asset.kind == "instruction" for asset in chosen):
+        # Declared documents count even when the workspace directory is absent.
+        if requires_context(
+            constitution=constitution is not None,
+            instructions=any(asset.kind == "instruction" for asset in chosen),
+            documents=bundle.context_documents,
+        ):
+            self.inventory.context_bundles.add(bundle.name)
             self.context_files = {
                 skill_entry(bundle.root / source, f"{asset.id}/{source}")
                 for asset in chosen
