@@ -5,8 +5,11 @@ summary: "Add a discovery entry with bounded interviewing, autonomous exploratio
 status: in-progress
 created: 2026-11-13
 related_capabilities:
+  - CAP-DLV-idea-discovery
   - CAP-DLV-deep-research
-related_usecases: []
+  - CAP-HARN-agent-guidance
+related_usecases:
+  - UC-discover-and-refine-an-idea
 workflow: sdd-spec-feature
 ---
 
