@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-13T05:46:05.787538Z'
+status: completed
+summary: Swept this low-effort Planning run and its proposal/evidence diff; no additional repository or upstream observation to record
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
