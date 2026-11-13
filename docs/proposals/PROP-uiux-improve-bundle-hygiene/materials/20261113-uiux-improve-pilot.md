@@ -65,3 +65,19 @@ the Impeccable track. Paths and identifiers of the consumer are masked.
   was clean.
 - Running direction synthesis before the consumer workflow's first step meant `spec.md` captured an already-approved
   direction.
+
+## 5. Later corrections and where the findings went
+
+- A2 (corrected after the run): the Claude Code documentation on subagents, skills and plugins says subagents can
+  discover and invoke plugin skills through the Skill tool wherever the plugin is enabled. In the consumer, the
+  Impeccable plugin was installed and enabled for a different project only, and the coordinator session did not list
+  it either. The failure was most likely enablement scope, not a host limit on children; this is not yet tested live.
+  Reading `SKILL.md` from the plugin cache is an observed workaround, not a documented loading mechanism. Codex
+  documentation does not say whether plugin skills reach subagents.
+- The findings are split across three proposals that each cite this material by ID:
+  `PROP-uiux-improve-bundle-hygiene` (A3, A4a to A4c, A5 neutral line, A7, the A2 troubleshooting note),
+  `PROP-uiux-improve-impeccable-routing` (A1, A2) and `PROP-uiux-improve-run-model` (section 2, with
+  `MAT-uiux-improve-second-pilot`).
+- A6 is recorded as `FB-projection-guard-after-mid-session-install`; A2b and A2c, with a missing `audit-storage write`
+  CLI command, are recorded as upstream feedback (`FB-impeccable-autonomy-probe-in-subagent`,
+  `FB-impeccable-context-target-no-visual-implementation`, `FB-impeccable-audit-storage-write-missing`).
