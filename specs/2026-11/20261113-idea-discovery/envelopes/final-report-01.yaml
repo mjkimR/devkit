@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T05:26:37.086561Z'
+status: completed
+summary: Added explicit conversation-first discovery with minimum interview, bounded optional roles, concrete proposals, uncertainty routing and requested retention; research compatibility preserved. Independent review passed; reconcile host wording finding resolved.
+findings: []
+assumptions:
+- feature/spec at medium effort; local integration under shared dev-integration=auto because no platform review or CI publication is needed; no remote push.
+unverified_areas:
+- Actual discovery role-team effectiveness, external retrieval and retained-material resume not executed; inline forward exercise is one scenario.
+checks:
+  tests: 'PASS just test-affected --base main: 1883 tests; installed wheel consumer E2E: 1; independent inline behavioral exercise observed'
+  build: PASS installed consumer built and installed seven wheels without devkit-spec; skill quick_validate and sync --check passed
+  lint: 'PASS just lint-check; just check; hygiene and exact-head rules --ci --base main: zero errors/warnings'
+diff_scope:
+  base: fc35dd50285cb20bef9e7541b7a547449583c04f
+  head: 46c67b6820534ce9e452bbfa022413153e15a544
