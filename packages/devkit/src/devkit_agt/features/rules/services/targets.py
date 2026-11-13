@@ -60,7 +60,7 @@ def _normalized_target(workspace_root: Path, target: str | Path) -> Path:
     path = Path(target)
     absolute = _on_disk(workspace_root, Path(os.path.normpath(path if path.is_absolute() else workspace_root / path)))
     if not absolute.is_relative_to(workspace_root):
-        absolute = absolute.resolve()
+        absolute = _on_disk(workspace_root, absolute.resolve())
     if not absolute.is_relative_to(workspace_root):
         raise TargetError(
             f"{target} is outside the workspace {workspace_root}",

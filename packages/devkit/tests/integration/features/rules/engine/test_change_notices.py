@@ -448,3 +448,23 @@ def test_directory_with_only_deletions_still_checks_change_rules(tmp_path: Path)
     assert "RULE-consider" in no_change.skipped
     ordinary_only = run_project_rules(root, targets=["empty"])
     assert ordinary_only.ok and ordinary_only.context is None and ordinary_only.result.violations == []
+
+
+@pytest.mark.parametrize("already_broad", [False, True])
+def test_combined_absolute_alias_case_keeps_original_blob(tmp_path: Path, already_broad: bool) -> None:
+    root = workspace(tmp_path)
+    before = AFTER if already_broad else BEFORE
+    (root / "Capital.py").write_text(before)
+    git(root, "add", ".")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-qm", "composed spelling baseline")
+    if not (root / "capital.py").is_file():
+        pytest.skip("filesystem keeps case spellings distinct")
+    (root / "Capital.py").write_text(AFTER.replace("return 1", "return 2"))
+    alias = tmp_path.parent / (tmp_path.name + "-case-alias")
+    alias.symlink_to(root, target_is_directory=True)
+    run = notices(root, targets=[str(alias / "capital.py")])
+    assert run.ok and len(run.result.violations) == (0 if already_broad else 1)
+    assert run.context is not None and set(run.context.changes) == {"Capital.py"}
+    assert run.context.before_text("Capital.py") == before
+    with pytest.raises(TargetError):
+        notices(root, targets=[str(tmp_path.parent / "outside-project.py")])
