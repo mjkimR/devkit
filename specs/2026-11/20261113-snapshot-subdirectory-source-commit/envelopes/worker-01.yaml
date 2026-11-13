@@ -1,0 +1,27 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-13T06:10:34.227304Z'
+status: completed
+summary: Implemented and committed the one-flag snapshot source identity repair with four retained subdirectory regressions, Red/Green evidence, low self-review, resolved no-impact reconciliation and final report; ready for Host integration
+findings: []
+assumptions:
+- 'Codex host projection is emulated: absolute worktree paths, separately approved mutations and committed-range inspection substitute for native role/path enforcement'
+- The one skipped affected test is reported as skipped; no test was disabled or weakened by this change
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0
+  snapshot_tests: PASS 43 passed
+  dist_only: PASS 1413 passed
+  affected: PASS 3327 passed, 1 skipped; --tier all partial188, full fallback retained
+  lint: PASS just lint-check
+  types: PASS just check zero errors/warnings
+  rules: PASS cumulative rules22 zero errors/warnings
+  envelopes: PASS blocked=false and no pending questions
+  review: PASS low self-review AC01-03 and no scope extensions
+  reconcile: PASS self-checked targets empty and no canonical contract impact
+diff_scope:
+  base: 1265a601388515b271ae6ec3fd357c72ffa481a5
+  head: 794ffd0122b2a2bcf88de6962e7bae60b65db007
+activity_effort: low
