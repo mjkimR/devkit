@@ -275,6 +275,13 @@ def _complete_bugfix_spec(wt: Path, slug: str = "fix", *, date: str = "2026-10-1
     return unit
 
 
+def _proposal_to_handoff(repo: Path) -> None:
+    """Seed committed proposal files that the development branch will remove in its handoff commit."""
+    write(repo, "docs/proposals/PROP-feat/decisions/note.txt", "planning material\n")
+    git(repo, "add", "docs/proposals/PROP-feat")
+    git(repo, "commit", "-q", "-m", "record proposal material")
+
+
 @pytest.mark.parametrize("auto", [False, True])
 def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     tmp_path: Path, synced_template: Path, monkeypatch: pytest.MonkeyPatch, auto: bool
@@ -282,8 +289,9 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     repo = _make_synced_repo(
         tmp_path, synced_template, extra_config='[workflow.approvals]\ndev-integration="auto"' if auto else ""
     )
-    (repo / "docs/proposals/PROP-feat/decisions").mkdir(parents=True)
+    _proposal_to_handoff(repo)
     wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
+    git(wt, "rm", "-q", "-r", "docs/proposals/PROP-feat")
     unit = _complete_feature_spec(wt, "feat")
     assert RegisterScopeUseCase().execute(open_session(wt), unit).record.task_id == "SPEC-feat"
 
@@ -299,7 +307,14 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     service = IntegrationService(repo)
 
     # 1. Preparing (the scope the Host presents) leaves worktree, branch, base, and scope record untouched.
-    digest = service.prepare("dev-feat").request.digest
+    request = service.prepare("dev-feat").request
+    digest = request.digest
+    assert [
+        (t.kind, t.identity, t.revision)
+        for scope in request.cleanup
+        for t in scope.targets
+        if t.kind == "proposal-prune"
+    ] == [("proposal-prune", "docs/proposals/PROP-feat", request.context.finish.source_sha)]
     assert wt.is_dir()
     assert "SPEC-feat" in _scope_tasks(repo)
 
@@ -315,6 +330,23 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     assert not wt.exists()
     assert not (repo / "docs/proposals/PROP-feat").exists()
     assert "SPEC-feat" not in _scope_tasks(repo)
+
+
+def test_spec_only_integration_scope_omits_proposal_cleanup(tmp_path: Path, synced_template: Path) -> None:
+    repo = _make_synced_repo(tmp_path, synced_template)
+    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
+    unit = _complete_feature_spec(wt, "feat")
+    assert RegisterScopeUseCase().execute(open_session(wt), unit).record.task_id == "SPEC-feat"
+    service = IntegrationService(repo)
+    request = service.prepare("dev-feat").request
+    targets = [target for scope in request.cleanup for target in scope.targets]
+    assert [target.kind for target in targets] == ["scope-record"]
+    completed = service.execute_cli("dev-feat", expected_digest=request.digest)
+    assert completed.status == "completed", completed.compact_dict()
+    assert completed.request.cleanup == request.cleanup
+    assert "SPEC-feat" not in _scope_tasks(repo)
+    assert not wt.exists()
+    assert all("proposal directory" not in notice.message for notice in completed.notices)
 
 
 def test_integration_service_respects_delete_branch_false_and_pull_request_required(
@@ -349,9 +381,11 @@ def test_integration_service_respects_delete_branch_false_and_pull_request_requi
 
 def test_integration_service_reports_partial_post_finish(tmp_path: Path, synced_template: Path) -> None:
     repo = _make_synced_repo(tmp_path, synced_template)
+    _proposal_to_handoff(repo)
     locked = repo / "docs/proposals/PROP-feat/decisions/locked"
     locked.mkdir(parents=True)
     wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
+    git(wt, "rm", "-q", "-r", "docs/proposals/PROP-feat")
     unit = _complete_feature_spec(wt, "feat")
     assert RegisterScopeUseCase().execute(open_session(wt), unit).record.task_id == "SPEC-feat"
 
