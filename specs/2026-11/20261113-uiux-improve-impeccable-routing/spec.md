@@ -2,7 +2,7 @@
 id: SPEC-uiux-improve-impeccable-routing
 title: Impeccable question and load routing for app-uiux-improve
 summary: "Allows a capability-gated Impeccable question relay with every answer user-confirmed, native skill loading and user-session fallback while preserving task route and file authority."
-status: in-progress
+status: completed
 created: 2026-11-13
 related_capabilities: [CAP-DLV-uiux-improvement]
 related_usecases: [UC-improve-an-interface-and-user-flow]

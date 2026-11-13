@@ -56,11 +56,18 @@ entrypoints:
 - **5a.** Review-only request: the agent returns findings without product edits; the use case ends with the requested review.
 - **5b.** A workflow approval or tool is missing: the agent preserves useful partial work and names the blocker;
   the use case ends pending that requirement.
-- **5c.** Impeccable is selected: the agent completes pre-implementation steps required by the selected route, writes the
-  brief and delegates one session, before or after its own inline changes (a fresh child for refinement commands, a
-  session the user operates for interactive commands or when the child cannot load Impeccable or meets an upstream
-  question), pausing its own product edits while the session runs; after the return it accepts listed product-file
-  changes and resumes at step 6.
+- **5c.** Impeccable is selected: the agent completes pre-implementation steps required by the selected route,
+  writes the brief and delegates one session before or after its inline changes. Answer-free refinement uses a
+  fresh child; interactive commands use confirmed question relay when the actual host/project capabilities support
+  it, or the user's session otherwise. The agent pauses its own product edits, then accepts listed changes and
+  resumes at step 6.
+- **5d.** A question, pre-fill or affected answer lacks confirmation, another question appears, or relevant source
+  facts change: dependent writes wait while the agent presents the complete packet or refreshes affected answers;
+  resumes at 5c only after the user confirms. One explicit confirmation can cover the whole visible packet.
+- **5e.** Native loading, same-child continuation or required nested roles are unavailable or unverified, or
+  continuation state is lost: the agent reports observed availability/current-project enablement and hands the
+  brief to the user's session. It loads no plugin-cache files, changes no enablement without a setup request and
+  reconstructs no writing child; resumes at 5c after the user's report.
 - **6a.** A check exposes a defect: the agent fixes it within scope and repeats the affected check; resumes at step 6.
 - **6b.** The session changed a file outside its edit list, wrote session output or created or changed consumer
   context files, or attribution is unverifiable: the agent reports each class, reverts and deletes nothing on its own
@@ -200,3 +207,31 @@ brief and routing, coordinator acceptance, consumer context files and user-reque
 - **When**: the coordinator reports the result.
 - **Then**: it names the document, affected statement and separate documentation task, edits none and creates no
   follow-up record without a separate request.
+
+### Scenario 15: Relay a complete confirmed question packet
+
+- **Covers**: 5c, 5d
+- **Given**: native skill loading and same-child continuation are observed and the packet includes source-cited pre-fills.
+- **When**: the user confirms the complete visible packet.
+- **Then**: the read-only question phase becomes the same child's brief-bounded writing phase without the coordinator changing answers.
+
+### Scenario 16: Wait for omitted answers and refreshed source facts
+
+- **Covers**: 5d
+- **Given**: only question gaps were answered, another question appeared or relevant brief facts changed.
+- **When**: the child would write.
+- **Then**: dependent writes wait for every missing or affected answer to be confirmed; source-cited suggestions never answer for the user.
+
+### Scenario 17: Fall back on missing native capabilities
+
+- **Covers**: 5e
+- **Given**: native loading or same-child continuation is unavailable, continuation state is lost, or shape/critique lacks required nested roles.
+- **When**: the agent routes the command.
+- **Then**: it reports observed capabilities and enablement, hands the brief to the user's session, and claims no cache-load or inline-role substitute.
+
+### Scenario 18: Preserve context permission and partial-write attribution
+
+- **Covers**: 5c, 6b
+- **Given**: a confirmed answer would change PRODUCT.md or DESIGN.md without explicit file/action permission, or a relay partially executed.
+- **When**: the coordinator continues or accepts the result.
+- **Then**: missing file authority still stops that write; partial output is compared to the recorded base and reported without blind replay, unsolicited reversion or deletion.

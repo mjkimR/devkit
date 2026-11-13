@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-uiux-improvement
 title: Software interface UI/UX improvement
-summary: "An opt-in UI/UX skill improves software interfaces with object framing, optional local perspectives or user-selected Impeccable, and task-approved outside-workflow or consumer-workflow implementation with checks and qualified reporting."
+summary: "An opt-in UI/UX skill improves software interfaces with object framing, local perspectives or capability-gated Impeccable sessions with user-confirmed questions. Task-approved outside-workflow or consumer-workflow implementation retains checks and qualified reporting."
 area: delivery
 status: active
 created_at: 2026-11-05
@@ -25,7 +25,8 @@ and obtains explicit task approval, or follows the consumer workflow the user ch
 constraints, host permissions and applicable checks.
 Alternatives, research and criticism are optional means, not a required final report.
 `ADR-uiux-improvement-workflow-boundary` records the local-role and delivery-authority decision, and
-`ADR-impeccable-session-authority` the bounded Impeccable session and user-requested setup and cleanup.
+`ADR-impeccable-session-authority` the bounded Impeccable session and user-requested setup and cleanup, and
+`ADR-impeccable-question-relay` the capability-gated question relay.
 `ADR-uiux-task-approved-run` records task route choice, verification and remaining authority.
 
 ## 2. Scope and Boundary
@@ -82,9 +83,11 @@ Alternatives, research and criticism are optional means, not a required final re
 10. **Host limits**: IF an interaction tool, fresh child or authorized operation is unavailable, THEN the coordinator
     MUST disclose actual coverage and the concrete blocker without claiming independent execution or native isolation.
     IF Impeccable is unavailable, THEN the coordinator MUST name the upstream install routes and continue inline when
-    the user wants; installation follows rule 19 (`ADR-impeccable-session-authority`).
-    Review: orchestration fallback, role return instructions and
-    `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
+    the user wants; installation follows rule 19 (`ADR-impeccable-session-authority`). IF a child cannot load it,
+    THEN the coordinator MUST report observed current-project plugin enablement, native availability and the
+    user-operated fallback without prescribing cache-file loading or an unauthorized enablement change
+    (`ADR-impeccable-question-relay`). Tests: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`
+    and `test_relay_failure_reporting_preserves_authority_and_honest_coverage`.
 11. **Verification**: WHEN reporting an improvement on either route, the coordinator MUST report before/after
     interface verification and applicable project-check outcomes separately from design inference and unavailable
     coverage. The bundle adds no mandatory independent review; every review required by the selected consumer
@@ -103,15 +106,27 @@ Alternatives, research and criticism are optional means, not a required final re
     and output of a hook the user installed is consumer check evidence (`ADR-impeccable-session-authority`).
     Review: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
 16. **Session brief and routing**: WHEN delegating to Impeccable, the coordinator MUST complete pre-implementation
-    workflow steps required by the selected route, pass a self-contained brief (goal, the framing result citing the OOUX documents
-    by path read-only or the conversation framing, consumer drafts or specifications by path read-only, absolute
-    working directory, recorded base, edit list, unchanged concerns, context-file permission with `PRODUCT.md` or
-    `DESIGN.md` only on the user's explicit direction, routed commands excluding `live`, stop condition, expected
-    return) and make no product edits until the session returns. A fresh child MUST run only refinement commands that
-    need no user answers, loading Impeccable through the host's skill mechanism, and MUST return any upstream question
-    or load failure as a blocker; new work, `init`, `shape`, `critique` and any blocked command run in a session the
-    user operates. The session leaves index, HEAD and files outside its permitted classes unchanged
-    (`ADR-impeccable-session-authority`). Review: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
+    workflow steps required by the selected route, pass a self-contained brief (goal, framing result with read-only
+    OOUX paths or conversation framing, read-only consumer drafts or specifications, absolute working directory,
+    recorded base, edit list, unchanged concerns, context-file permissions, commands excluding `live`, stop condition
+    and expected return), and make no product edits until the session returns. `PRODUCT.md` or `DESIGN.md` changes
+    require the user's explicit file/action direction. The session leaves index, HEAD and files outside its permitted
+    classes unchanged (`ADR-impeccable-session-authority`).
+    Answer-free refinement uses a fresh child loading Impeccable through the host's skill mechanism. Interactive
+    question relay MUST use native loading and same-child continuation observed for the actual host/project;
+    documentation, inherited skill names and cache reads do not establish them. `shape` and `critique` additionally
+    require the child's nested-role capabilities needed by the loaded command. Unavailable or unverified required
+    capabilities and lost continuation use the user-operated session, without reconstructed writing children or
+    claimed equivalent inline roles (`ADR-impeccable-question-relay`).
+    The relay's first phase MUST only inspect and draft the complete question packet, with no retained-file, product,
+    index or HEAD writes. Its packet names each question and supplies source paths/passages for document-derived
+    suggested answers. Before the same child writes, the coordinator MUST obtain confirmation of every answer,
+    including every pre-fill; one explicit confirmation of the complete visible packet is valid, while silence,
+    omitted answers and gaps-only confirmation are not. Confirmed answers stay unchanged. New questions or changed
+    relevant source facts, file state, answers or scope return for affected-answer confirmation before dependent
+    writes. Partial execution is reported against the recorded base without blind replay or unsolicited reversion.
+    Tests: `test_interactive_relay_requires_native_capabilities_and_every_user_answer` and
+    `test_relay_failure_reporting_preserves_authority_and_honest_coverage`; review only: live model/host behavior.
 17. **Coordinator acceptance**: WHEN a session returns, the coordinator MUST compare the working directory with the
     recorded base, take only listed product-file changes into verification, report session output and other changes
     without reverting or deleting them on its own initiative, and report a moved HEAD, missing base or unobservable
