@@ -133,11 +133,23 @@ def _scope_mode(base: Path, worktree: Path) -> str:
     return "base" if worktree.resolve() == base.resolve() else "worktree"
 
 
+def _proposal_targets(context: IntegrationContext) -> tuple[CleanupTarget, ...]:
+    """Use pinned Git history so handoff deletion and successful prune cannot change retry scope."""
+    plan = context.finish
+    slug = _prune_slug(slug_of(plan.branch))
+    if not slug:
+        return ()
+    identity = proposal_unit(slug)
+    history = run_git(
+        Path(plan.base), "log", "-1", "--full-history", "--format=%H", plan.source_sha, plan.target_sha, "--", identity
+    )
+    return (CleanupTarget(KIND_PROPOSAL, identity, plan.source_sha),) if history.strip() else ()
+
+
 def _parse_targets(
     context: IntegrationContext, targets: tuple[CleanupTarget, ...]
 ) -> tuple[tuple[CleanupTarget, ...], dict[str, tuple[str, str, int]]]:
-    slug = _prune_slug(slug_of(context.finish.branch))
-    expected_prune = (CleanupTarget(KIND_PROPOSAL, proposal_unit(slug), context.finish.source_sha),) if slug else ()
+    expected_prune = _proposal_targets(context)
     prune_targets: list[CleanupTarget] = []
     scope_targets: dict[str, tuple[str, str, int]] = {}
     for target in targets:
@@ -236,10 +248,7 @@ class _Cleanup:
         base = Path(context.finish.base)
         if not _has_spec_bundle(base):
             return ()
-        targets: list[CleanupTarget] = []
-        slug = _prune_slug(slug_of(context.finish.branch))
-        if slug:
-            targets.append(CleanupTarget(KIND_PROPOSAL, proposal_unit(slug), context.finish.source_sha))
+        targets = list(_proposal_targets(context))
         worktree = Path(context.finish.path)
         session = open_session(base)
         mode = _scope_mode(base, worktree)

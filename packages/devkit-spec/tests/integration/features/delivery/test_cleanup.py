@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 from devkit.advisory import Level
 from devkit_agt.features.integration import (
@@ -67,6 +69,15 @@ def _context(repo: Path, worktree: Path, *, branch: str = "dev-s") -> Integratio
         delete_branch=True,
     )
     return IntegrationContext(finish=plan)
+
+
+def _commit_handoff(repo: Path) -> None:
+    """Retain committed proposal provenance after its tracked files have been handed off."""
+    write(repo, "docs/proposals/PROP-s/proposal.md", "proposal\n")
+    git(repo, "add", "docs/proposals/PROP-s/proposal.md")
+    git(repo, "commit", "-q", "-m", "proposal")
+    git(repo, "rm", "-q", "docs/proposals/PROP-s/proposal.md")
+    git(repo, "commit", "-q", "-m", "handoff")
 
 
 def _finish_result(context: IntegrationContext) -> FinishResult:
@@ -179,6 +190,7 @@ def test_a_failed_prune_is_a_warning_and_the_sweep_still_runs(tmp_path: Path) ->
 def test_scoped_cleanup_plans_validates_and_runs_exact_targets(tmp_path: Path) -> None:
     assert integration_local_only is True and after_finish.integration_local_only is True
     repo = make_repo(tmp_path / "repo")
+    _commit_handoff(repo)
     finished, other = tmp_path / "wt-s", tmp_path / "wt-b"
     git(repo, "worktree", "add", "-q", "-b", "dev-s", str(finished))
     git(repo, "worktree", "add", "-q", "-b", "dev-b", str(other))
@@ -225,10 +237,7 @@ def test_scoped_cleanup_refuses_stale_scope_record_revision(tmp_path: Path) -> N
     targets = integration_plan(context)
 
     # Namespace drift in [tool.spec.scope] is also rejected as StaleRequestError.
-    drifted = (
-        targets[0],
-        CleanupTarget(KIND_SCOPE, "SPEC-s", "worktree:other-namespace:1"),
-    )
+    drifted = (CleanupTarget(KIND_SCOPE, "SPEC-s", "worktree:other-namespace:1"),)
     try:
         integration_validate(context, drifted)
     except StaleRequestError:
@@ -261,6 +270,7 @@ def test_scoped_cleanup_refuses_stale_scope_record_revision(tmp_path: Path) -> N
 
 def test_scoped_cleanup_partial_failure_and_idempotent_resume(tmp_path: Path) -> None:
     repo = make_repo(tmp_path / "repo")
+    _commit_handoff(repo)
     (repo / ".devkit/managed/spec").mkdir(parents=True)
     locked = repo / "docs/proposals/PROP-s/decisions/locked"
     locked.mkdir(parents=True)
@@ -294,10 +304,9 @@ def test_scoped_cleanup_base_checkout_releases_own_record_and_rejects_bad_target
     assert _register(repo, SPEC) == "SPEC-s"
     context = _context(repo, repo)
     targets = integration_plan(context)
-    assert len(targets) == 2
-    assert targets[0] == CleanupTarget(KIND_PROPOSAL, "docs/proposals/PROP-s", context.finish.source_sha)
-    assert targets[1].kind == KIND_SCOPE and targets[1].identity == "SPEC-s"
-    assert targets[1].revision.startswith("base:") and targets[1].revision.endswith(":1")
+    assert len(targets) == 1
+    assert targets[0].kind == KIND_SCOPE and targets[0].identity == "SPEC-s"
+    assert targets[0].revision.startswith("base:") and targets[0].revision.endswith(":1")
     outcome = integration_run(context, _finish_result(context), targets)
     assert outcome.done is True
     assert [n.message for n in outcome.notices] == ["released the scope record of SPEC-s"]
@@ -367,4 +376,79 @@ def test_a_base_checkout_token_without_its_record_plans_no_scope_target(tmp_path
     session = open_session(repo)
     (session.location.shared_path / session.location.namespace / "SPEC-s.json").unlink()  # released elsewhere
     targets = integration_plan(_context(repo, repo))
-    assert [target.kind for target in targets] == [KIND_PROPOSAL]
+    assert targets == ()
+
+
+@pytest.mark.parametrize("proposal_side", ["source", "target"])
+def test_pinned_proposal_history_survives_handoff_prune_and_revalidation(tmp_path: Path, proposal_side: str) -> None:
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".devkit/managed/spec").mkdir(parents=True)
+    finished = tmp_path / "wt-s"
+    git(repo, "worktree", "add", "-q", "-b", "dev-s", str(finished))
+    _commit_handoff(finished if proposal_side == "source" else repo)
+    context = _context(repo, finished)
+    context = replace(context, finish=replace(context.finish, source_sha=git(finished, "rev-parse", "HEAD")))
+    directory = repo / "docs/proposals/PROP-s/decisions"
+    directory.mkdir(parents=True)
+    expected = (CleanupTarget(KIND_PROPOSAL, "docs/proposals/PROP-s", context.finish.source_sha),)
+    assert integration_plan(context) == expected
+    integration_validate(context, expected)
+    first = integration_run(context, _finish_result(context), expected)
+    assert first.done and len(first.notices) == 1
+    assert not directory.parent.exists()
+    # The pinned history, rather than the mutable checkout, determines identity after cleanup.
+    assert integration_plan(context) == expected
+    integration_validate(context, expected)
+    assert integration_run(context, _finish_result(context), expected).notices == ()
+    for invalid in [
+        (),
+        (*expected, *expected),
+        (CleanupTarget(KIND_PROPOSAL, "docs/proposals/PROP-other", context.finish.source_sha),),
+        (CleanupTarget(KIND_PROPOSAL, expected[0].identity, "other-source"),),
+    ]:
+        with pytest.raises(StaleRequestError):
+            integration_validate(context, invalid)
+        with pytest.raises(StaleRequestError):
+            integration_run(context, _finish_result(context), invalid)
+
+
+def test_spec_only_cleanup_omits_proposal_even_if_an_untracked_directory_appears(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".devkit/managed/spec").mkdir(parents=True)
+    assert _register(repo, SPEC) == "SPEC-s"
+    context = _context(repo, repo)
+    targets = integration_plan(context)
+    assert [target.kind for target in targets] == [KIND_SCOPE]
+    (repo / "docs/proposals/PROP-s/decisions").mkdir(parents=True)
+    assert integration_plan(context) == targets
+    integration_validate(context, targets)
+    outcome = integration_run(context, _finish_result(context), targets)
+    assert outcome.done and [n.message for n in outcome.notices] == ["released the scope record of SPEC-s"]
+    assert (repo / "docs/proposals/PROP-s").is_dir()
+    extra = (*targets, CleanupTarget(KIND_PROPOSAL, "docs/proposals/PROP-s", context.finish.source_sha))
+    with pytest.raises(StaleRequestError):
+        integration_validate(context, extra)
+    with pytest.raises(StaleRequestError):
+        integration_run(context, _finish_result(context), extra)
+
+
+def test_proposal_history_merged_before_both_pins_still_plans_cleanup(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".devkit/managed/spec").mkdir(parents=True)
+    git(repo, "checkout", "-q", "-b", "handoff-s")
+    _commit_handoff(repo)
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--no-ff", "-m", "merge handed-off proposal", "handoff-s")
+    # Both pinned trees omit the proposal, and default path simplification would hide the side branch.
+    assert git(repo, "log", "-1", "--format=%H", "HEAD", "--", "docs/proposals/PROP-s") == ""
+    context = _context(repo, repo)
+    directory = repo / "docs/proposals/PROP-s/decisions"
+    directory.mkdir(parents=True)
+    expected = (CleanupTarget(KIND_PROPOSAL, "docs/proposals/PROP-s", context.finish.source_sha),)
+    assert integration_plan(context) == expected
+    integration_validate(context, expected)
+    assert integration_run(context, _finish_result(context), expected).done
+    assert not directory.parent.exists()
+    integration_validate(context, expected)
+    assert integration_plan(context) == expected
+    assert integration_run(context, _finish_result(context), expected).notices == ()

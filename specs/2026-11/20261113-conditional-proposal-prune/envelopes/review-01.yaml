@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:33:38.900956Z'
+status: completed
+summary: 'Independent medium review found one P2: default Git path simplification can hide reachable handoff history.'
+findings:
+- issue: Default Git path-history simplification can omit an applicable proposal-prune target.
+  evidence: 'cleanup.py:143; ignored review-01/test_merged_proposal_history.py failed 1 test: simplified_history empty, full_history_present true, integration_plan returned no proposal target.'
+  failure_condition: A side branch creates and deletes proposal files, then a no-ff merge is reachable from both pins; default TREESAME simplification hides that history despite remaining empty directories.
+  suggested_action: Add --full-history and retain a merged add-delete provenance regression covering cleanup and revalidation.
+  resolution: open
+  severity: P2
+assumptions:
+- 'Codex emulated: absolute read scope and per-operation permissions; before/after HEAD73a67748 and complete-tree b1667911055b5c6e356e54ccb297521643d31aac unchanged; no native confinement guarantee.'
+checks:
+  tests: PASS cleanup16, delivery E2E53, affected1820
+  lint: PASS lint311 and cumulative rules22
+  types: PASS pyright0
+diff_scope:
+  base: 8006563f2af4397048a9bd6871bc9a19bd8b3379
+  head: 73a67748f2c11999ce31e0df319aeb7253f2ccb8
