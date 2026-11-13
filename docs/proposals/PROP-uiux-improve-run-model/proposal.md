@@ -114,13 +114,14 @@ Planning recommendations below settle Q1 to Q6 for `plan-accept`; they are not a
   changing a user constraint. A new file or an in-goal implementation choice does not by itself expand the goal.
   Pause only dependent work; keep authorized independent work moving.
 - **Q5 — Checks**: on both routes, keep applicable project checks and before/after interface verification, fixing
-  in-scope defects and repeating the affected check. Keep independent UX and code review optional: recommend the
-  useful check with its purpose when structure or implementation risk warrants it, and report whether it ran.
+  in-scope defects and repeating the affected check. The bundle adds no mandatory independent UX or code review;
+  every review required by the selected consumer workflow remains required. Otherwise recommend the useful optional check with its purpose when structure or
+  implementation risk warrants it, and report whether it ran.
   Missing tools and declined optional checks remain explicit coverage limits. No role count, mandatory review
   round or defect-parity claim is introduced.
 - **Q6 — Decision scope**: partially supersede only unconditional consumer-workflow continuation and the corresponding
-  pre-implementation and user-requested-action clauses. Keep selection-neutral installation, product constraints,
-  host restrictions, explicit Impeccable selection, context-file ownership, local-role limits and no implicit Git
+  pre-implementation, user-requested-action and stale-document update-routing clauses. Keep selection-neutral
+  installation, product constraints, host restrictions, explicit Impeccable selection, context-file ownership, local-role limits and no implicit Git
   authority. Question/load routing stays with `PROP-uiux-improve-impeccable-routing`.
 
 ## 3. Proposed Design & Impact

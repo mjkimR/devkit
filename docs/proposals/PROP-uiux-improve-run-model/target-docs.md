@@ -48,8 +48,9 @@ workflow. Preserve rules 1–2, 4–10, 13–15 and 18 and selection-neutral ins
   MUST obtain it for the named remaining effects before acting; route choice alone grants no such authority.
   Test: authority scenarios and entry/authority assertions.
 
-Keep independent roles and reviews optional under rule 6. The skill recommends a useful independent UX or code
-check when the changed structure or implementation warrants it; the result names whether it ran. No equal-quality
+The bundle adds no mandatory independent roles or reviews under rule 6. Every review required by the selected
+consumer workflow remains required. Otherwise the skill recommends a useful optional independent UX or code check
+when the changed structure or implementation warrants it; the result names whether it ran. No equal-quality
 claim or mandatory review cast is added.
 
 ## 2. Use case: UC-improve-an-interface-and-user-flow

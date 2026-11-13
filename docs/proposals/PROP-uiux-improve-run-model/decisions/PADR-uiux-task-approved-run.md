@@ -60,7 +60,7 @@ workflow departure on its own.
 
 Supersedes in part `ADR-uiux-improvement-workflow-boundary`: Decision Outcome clause 2 unconditional continuation through the consumer development workflow. Selection-neutral workflow policy, no implicit Git authority and clauses 1, 3 and 4 remain in force.
 
-Supersedes in part `ADR-impeccable-session-authority`: Decision Outcome clauses requiring unconditional consumer-workflow pre-implementation steps and continuation for accepted implementation and user-requested setup or cleanup. Each now follows the user's per-task route choice; host approvals, no implicit Git authority, file ownership, brief, question/load routing and acceptance boundaries remain in force.
+Supersedes in part `ADR-impeccable-session-authority`: Decision Outcome clauses requiring unconditional consumer-workflow pre-implementation steps, continuation for accepted implementation and user-requested setup or cleanup, and stale-document updates through the consumer workflow's own step. Implementation and requested actions now follow the user's per-task route choice; stale documents are reported for the consumer's documentation process where present or a separate documentation task otherwise. Host approvals, no implicit Git authority, report-only document ownership, brief, question/load routing and acceptance boundaries remain in force.
 
 ## 5. Consequences
 
