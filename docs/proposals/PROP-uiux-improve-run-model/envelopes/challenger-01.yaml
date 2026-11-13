@@ -1,0 +1,28 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-13T00:38:26.038381Z'
+status: completed
+summary: round 1; Task-approved outside route is viable; two P2 specification fixes preserve direction without another user decision or live-trial gate.
+findings:
+- issue: Review optionality is stated broadly enough to waive a review required by the selected consumer workflow.
+  evidence: docs/proposals/PROP-uiux-improve-run-model/proposal.md:116-120,148-149; docs/proposals/PROP-uiux-improve-run-model/target-docs.md:51-53
+  failure_condition: The user chooses the workflow route and that workflow requires independent code review; Q5 calls it optional while the execution section requires workflow review steps.
+  suggested_action: In Q5 and target-docs section 1, state that the bundle adds no mandatory independent review, while every review required by the selected consumer workflow remains required.
+  resolution: open
+  severity: P2
+- issue: The precise partial-supersession statement omits the predecessor's stale-document update routing.
+  evidence: docs/proposals/PROP-uiux-improve-run-model/decisions/PADR-uiux-task-approved-run.md:54-63; docs/decisions/2026-11/20261110-impeccable-session-authority.md:111-113
+  failure_condition: An outside-route change makes an OOUX document stale in a consumer without a documentation workflow; the proposed separate follow-up leaves the accepted unconditional update-routing clause unaddressed.
+  suggested_action: Extend the PADR partial-supersession paragraph to replace unconditional stale-document update routing with process-where-present or separate-task follow-up; preserve report-only ownership and repeat the exact scope in the predecessor pointer.
+  resolution: open
+  severity: P2
+assumptions:
+- Owner route is an agreed input. Codex projection is emulated; unchanged tree snapshot d82311ef1ea897864d414c68edca6127333ab5bf and HEAD plus absolute scopes substitute for native enforcement.
+unverified_areas:
+- No live consumer or host trials, model-obedience tests or comparative-quality experiments; best effort limitations, not acceptance gates.
+checks: {}
+diff_scope:
+  base: bcea80cf85628445a0e3e99a4bb4fea13faaadbc
+  head: 5ec9881a27810e1521487f0f22a2ec37d54da515

@@ -1,0 +1,31 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-13T00:35:23.408922Z'
+status: completed
+summary: Read-only contract discovery compared current workflow, task-approved outside route and neutral choice; recommend preserving the owner route with explicit task approval and retained checks.
+findings:
+- issue: The owner-preferred task-approved outside route is viable only as an explicit user departure; no answer supplies no bypass authority.
+  evidence: docs/proposals/PROP-uiux-improve-run-model/proposal.md:47-50; docs/proposals/PROP-uiux-improve-run-model/materials/20261113-uiux-improve-second-pilot.md:52-74
+  failure_condition: A route is inferred from silence or the two confounded pilots are treated as proof of equivalent defect detection.
+  suggested_action: Preserve the announced owner option, explicit task approval and a non-editing no-answer boundary; state pilot limitations.
+  resolution: open
+- issue: Revise the unconditional consumer-workflow clauses while retaining host permissions and no implicit Git authority.
+  evidence: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md:50-52; docs/decisions/2026-11/20261105-uiux-improvement-workflow-boundary.md:38-44; docs/decisions/2026-11/20261110-impeccable-session-authority.md:114-127
+  failure_condition: An outside route is implemented without partial supersession or route choice is interpreted as commit, integration or publication authority.
+  suggested_action: Update capability, use case, source mirrors and a narrow superseding ADR; reuse authority or ask once for named remaining effects.
+  resolution: open
+- issue: Keep applicable checks, before/after verification, optional reviews, scope bounds and report-only stale-document follow-up on either route.
+  evidence: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md:85-89,108-114; packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md:61-68
+  failure_condition: Outside-workflow wording drops project verification or requires a documentation workflow that does not exist.
+  suggested_action: Preserve checks and coverage limits; report stale document and next action; ask before out-of-goal surface or behavior.
+  resolution: open
+assumptions:
+- Codex projection is emulated; absolute scope, separate operation permissions and equal pre/post tree snapshots plus unchanged HEAD substitute for native path enforcement.
+unverified_areas:
+- Internal document and instruction discovery only; no model-obedience, comparative quality or runtime experiment.
+checks: {}
+diff_scope:
+  base: bcea80cf85628445a0e3e99a4bb4fea13faaadbc
+  head: bcea80cf85628445a0e3e99a4bb4fea13faaadbc
