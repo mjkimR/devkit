@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-impeccable-context-links
 title: Link tracked Impeccable context through a bundled POSIX script
 summary: The app-uiux-improve bundle ships a POSIX sh script that links a project's tracked Impeccable context (PRODUCT.md, DESIGN.md, .impeccable/) into the repository root as git-excluded relative symlinks and checks them, so the context survives worktrees and clones without a second copy.
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
@@ -70,97 +70,157 @@ of scope by intent: `devkit-catalog` declares no runtime dependencies and `app-u
   and this proposal leaves them unchanged.
 - None of these specs defines where tracked Impeccable context lives or how it reaches the root.
 
-## 2. Technical Spike Questions
+## 2. Planning Decisions
 
-- **Q1 (authority)**: `ADR-impeccable-session-authority` lists the constraint "Add no runtime, installer or vendored
-  upstream text to devkit" and limits setup to user-requested actions. Does a consumer-side link script fall under
-  that constraint? Does running it need a new ADR that supersedes the setup clause in part? Can the coordinator run
-  the read-only check mode on its own initiative, for example before briefing a session, or only on the user's
-  request?
-- **Q2 (default source)**: should the default source be the fixed `docs/materials/impeccable`, a Git config key read
-  with `git config` (for example `impeccable.source`), or a devkit configuration value? A devkit value contradicts the
-  POSIX-sh-and-git dependency limit, because `sh` cannot read `.devkit/config.toml` without devkit. `docs/materials/`
-  is free-form only in devkit docs consumers, so a consumer without devkit docs needs the argument.
-- **Q3 (projection)**: does sync project a non-Markdown file under `skills/app-uiux-improve/scripts/` unchanged to
-  every host directory (`.claude/skills/`, `.agents/skills/`) and `.devkit/managed/`? `Content` records the file mode
-  and `normal_mode` keeps `0o755` when any execute bit is set, but no bundle ships a script today. Should the
-  documented invocation be `sh <path>`, so that it never depends on the execute bit?
-- **Q4 (portable link inspection)**: `readlink` and `test -ef` are absent from POSIX.1-2017. Which inspection
-  identifies a link's target on macOS, GNU and BusyBox `sh`? Candidates are `ls -ld` parsing and
-  `find <path> -prune -type l`.
-- **Q5 (`.impeccable/` output)**: with `.impeccable/` linked as a directory, session output (critique snapshots,
-  screenshots, `review/`) lands in the tracked source directory. Does upstream's `.impeccable/.gitignore` placement
-  keep it untracked there? Or should the script link only the shared files (`config.json`, `design.json`,
-  `surfaces/`)?
+Planning applies `medium` effort; Development remains `medium`. Evidence is in `materials/link-evidence.md`.
+No product screen changes are proposed, so there is no Screens draft or UX review.
+
+| Question | Decision | Rejected alternative and consequence |
+| --- | --- | --- |
+| Q1: authority | `PADR-impeccable-context-links` narrowly extends requested setup to links and exact root excludes; read-only `--check` is inspection the coordinator may run while gathering context. | Treating link creation as an automatic preflight would exceed consumer authority. No Python/runtime package is added. |
+| Q2: source | One optional argument, relative to the current worktree root; default `docs/materials/impeccable`. | No Git/devkit configuration key: another state source is unnecessary. A project with another layout passes the argument. |
+| Q3: projection | The script stays inside the existing skill asset; document `sh <deployed-skill>/scripts/link-impeccable-context.sh`. | No new asset kind or distribution change; `sh` avoids a dependency on executable-bit preservation. Existing subtree loading includes non-Markdown files. |
+| Q4: inspection | Use POSIX `test -L`, then capture `LC_ALL=C QUOTING_STYLE=literal ls -dn ./<fixed-entry>` with an appended non-newline sentinel, remove the sentinel and exactly one output record newline, then remove the exact ` ./<fixed-entry> -> ` prefix and compare the complete target string. | No `readlink`, `realpath`, `test -ef`, field splitting or generic filename parser. GNU's quoting override is harmless to other implementations; clear color-forcing variables. macOS and `dash` probes pass with spaces and ` -> ` in the source path. GNU utility target-capture probes also pass; BusyBox remains Development coverage. |
+| Q5: directory | Link `.impeccable` as one directory when present. Source-side upstream retention/ignore rules remain the consumer's responsibility; root-link exclusion does not ignore files reachable through the tracked source path. | Linking selected children would split shared/runtime layout and require upstream-specific inventory maintenance. The helper neither creates source content nor installs source-side ignores. |
+
+These are proposed technical choices within the feature request, pending Host/user plan acceptance.
+The PADR supersedes only the existing setup list's restriction on root link/exclude actions; content ownership,
+explicit request, task route, host permissions and no implicit Git authority remain unchanged.
 
 ## 3. Proposed Design & Impact
 
-Script: `skills/app-uiux-improve/scripts/link-impeccable-context.sh` in the bundle source. It is deployed with the
-skill and is not a separate asset kind (Q3).
+### 3.1 Interface and preflight
+
+Bundle source: `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/scripts/`.
+The directory will be created in Development; it is part of the existing skill asset.
 
 ```sh
-sh .claude/skills/app-uiux-improve/scripts/link-impeccable-context.sh [--check] [<source-dir>]
+sh .agents/skills/app-uiux-improve/scripts/link-impeccable-context.sh [--check] [--] [<source-dir>]
 ```
 
-Behavior to specify in Planning:
+`--check` is optional only before the source argument. `--` admits an argument beginning with `-`.
+Unknown options or more than one source argument return exit 2 with `LINK_ARGUMENT_INVALID`.
+All relative source paths are relative to the worktree root even when invoked from a subdirectory.
 
-1. Root: `git rev-parse --show-toplevel`, so a linked worktree links into its own root. Exclude file:
-   `git rev-parse --git-path info/exclude`, which resolves to the common directory. Outside a Git work tree, exit 2.
-2. Source: the argument, or the Q2 default, relative to the root. Refuse a source outside the work tree or missing,
-   exit 2.
-3. Link mode: for each of `PRODUCT.md`, `DESIGN.md` and `.impeccable` present in the source, create a relative
-   symlink at the root whose target is the repository-relative source path (`docs/materials/impeccable/PRODUCT.md`).
-   - A correct existing link is left as is, so a rerun changes nothing.
-   - A root regular file, directory or link to another target is never overwritten. The script reports it and
-     continues with the other entries.
-   - Add only missing exclude lines: `/PRODUCT.md`, `/DESIGN.md`, `/.impeccable`. Git treats a symlink to a
-     directory as a file, so a trailing-slash pattern such as `/.impeccable/` would not match the link.
-4. Check mode (`--check`): read-only. Report each entry as one of:
-   - missing: source present, no root entry;
-   - dangling: root link whose target is absent;
-   - wrong target;
-   - replaced: a regular file or directory where a link is expected, with whether its content still equals the
-     source;
-   - stale: root link with no source entry;
-   - missing exclude line.
-   Exit 0 when clean, 1 when any problem is found, 2 when the check could not run.
-5. Output follows the agent-first conventions in spirit: one stdout line per entry with a stable `UPPER_SNAKE` code
-   and a deterministic action, for example `LINK_REPLACED PRODUCT.md content=differs action=merge-into-source`.
-   Planning fixes the code set.
-6. Dependencies: POSIX `sh`, POSIX utilities and `git` only. No Bash features, no `readlink -f`, no `realpath`
-   (Q4).
+1. Resolve the root with `git rev-parse --show-toplevel`, then `cd -P`/`pwd -P`. Refuse no worktree or
+   `core.symlinks=false` with exit 2. Resolve `git rev-parse --git-path info/exclude` after entering the root;
+   linked worktrees share that file. Do not assume `.git` is a directory.
+2. Require an existing source directory, physically inside this worktree and different from its root, using
+   `cd -P`/`pwd -P` and a path-component containment check. Reject `.git`/Git metadata locations and source paths
+   containing control characters with exit 2. Spaces, punctuation and ` -> ` are supported.
+3. Derive a normalized relative source path from that physical location. Top-level source entries, when present,
+   are regular unlinked files for `PRODUCT.md`/`DESIGN.md` and an unlinked directory for `.impeccable`.
+   A source symlink, wrong type or unreadable input returns exit 2 before link/exclude mutation.
+4. Manage exactly `PRODUCT.md`, `DESIGN.md` and `.impeccable`; absent source entries are optional.
+   The helper neither stages files nor changes context bytes or root `.gitignore`.
 
-Bundle text impact:
+### 3.2 Link and exclude operations
 
-- `references/orchestration.md` "Project files and user requests" names the script as a user-requested convenience
-  (Q1).
-- The human guide `bundle/README.md` documents the tracked-source layout, first run, per-worktree and per-clone runs,
-  and recovery of a replaced link.
-- `CAP-DLV-uiux-improvement` rule 1 counts the deployed script; a business rule states the link and check guarantees
-  with tests. `UC-improve-an-interface-and-user-flow` gains a setup extension if Planning finds one warranted.
+Mutating setup requires quiescent managed root entries and source for the command duration. The guide tells the
+consumer to stop editors, context-writing sessions and other helpers before running link mode. This is a supported
+use precondition, not a concurrency lock against arbitrary writers. Check mode stays read-only.
 
-Tests (`packages/devkit-catalog/tests/`): run the script with `sh` against temporary Git repositories and cover:
+- For each present source entry, create a relative root symlink to `<normalized-source>/<entry>` only when no root
+  entry exists, including dangling links. Use `ln -s` without force under the quiescence precondition. Preserve all entries occupied at invocation start.
+  Concurrent noncooperating destination changes are unsupported: POSIX `ln` can treat a raced-in directory as a
+  destination directory, so this helper makes no competing-creation guarantee.
+- Preserve a correct existing link. Compare literal target spelling with the normalized relative target; an
+  equivalent absolute or differently spelled path is a wrong target, not something silently rewritten.
+- Preserve any other existing root file, directory or symlink, report its state, and continue inspecting/linking
+  the other entries. A root entry tracked by Git is reported `LINK_TRACKED`; excludes do not untrack it.
+- Add only missing exact lines `/PRODUCT.md`, `/DESIGN.md`, `/.impeccable` to the resolved local exclude file.
+  Show those exact lines in the setup instructions before a user requests the mutating command.
+  Use a final newline before appended entries when the file lacks one; preserve existing bytes and patterns.
+  The directory symlink needs `/.impeccable` without a trailing slash.
+- Sequential reruns add no links or lines. Link/exclude work may be partially complete when a later operation fails;
+  report completed entries and stop on an I/O failure with exit 2. Never remove already created links as rollback.
+  Do not claim transaction isolation from unrelated concurrent Git/configuration writers.
+- Serialize helper exclude edits with an exclusively created adjacent lock, refuse an existing lock with
+  `LINK_EXCLUDE_BUSY` exit 2, and remove only the lock this invocation created. Check mode creates no lock.
 
-- first link and idempotent rerun;
-- an occupied root;
-- a linked worktree created with `git worktree add` sharing the exclude file;
-- exclude deduplication;
-- each check-mode state, with replacement simulated by write-to-temp-and-`mv`;
-- a directory link for `.impeccable`.
+### 3.3 Read-only classification and result contract
 
-Projection assertions extend `test_app_uiux_improve.py`. Run the script under `dash` when available.
+`--check` creates no link, exclude line, lock or temporary file. It emits one state for each fixed root entry and
+one exclude state for each of the three exact lines. Classification order is tracked root, source absent, root
+absent, root nonlink, dangling root link, wrong target, correct link. Source preflight errors still return exit 2.
 
-Non-Goals:
+| Stable code | Condition | Deterministic action |
+| --- | --- | --- |
+| `LINK_CREATED`, `LINK_OK` | Created or literal target correct and resolves | `NONE` |
+| `LINK_ABSENT` | Source and root entry both absent | `NONE` |
+| `LINK_MISSING` | Source present, root absent in check mode | `RUN_LINK` |
+| `LINK_STALE` | Source entry absent, root link present | `INSPECT_LINK` |
+| `LINK_OCCUPIED` | Source absent, root nonlink present | `INSPECT_ROOT` |
+| `LINK_REPLACED` | Source present, root regular file/directory | `MERGE_INTO_SOURCE` |
+| `LINK_DANGLING` | Source present, root symlink target missing | `INSPECT_LINK` |
+| `LINK_WRONG_TARGET` | Source present, existing resolving link has a different literal target | `INSPECT_LINK` |
+| `LINK_TRACKED` | Git index already tracks a managed root entry | `UNTRACK_MANUALLY` |
+| `EXCLUDE_ADDED`, `EXCLUDE_OK` | Exact exclude line appended or already present | `NONE` |
+| `EXCLUDE_MISSING` | Exact exclude line absent in check mode | `RUN_LINK` |
+| `LINK_ARGUMENT_INVALID`, `LINK_NOT_WORKTREE`, `LINK_SYMLINKS_DISABLED`, `LINK_SOURCE_INVALID`, `LINK_INSPECTION_FAILED`, `LINK_IO_FAILED`, `LINK_EXCLUDE_BUSY` | Invalid invocation, unsupported checkout, source/preflight, inspection, I/O or lock failure | `FIX_INPUT`, `USE_WORKTREE`, `ENABLE_SYMLINKS`, `FIX_SOURCE`, `INSPECT_FILES`, `CHECK_PERMISSIONS`, `RETRY_AFTER_UNLOCK` respectively |
 
-- A devkit CLI command, Python code or a new asset kind in `devkit-dist`.
-- Automatic repair of a replaced link: report it and leave the content decision to the user.
-- Moving, creating or editing `PRODUCT.md`, `DESIGN.md` or `.impeccable/` content.
-- Tracking the root links, or editing the root `.gitignore`.
-- Windows or `core.symlinks=false` checkouts beyond a clear exit-2 report.
-- Changes to the run model, question and load routing, or upstream-fallback guidance.
+For `LINK_REPLACED`, report `content=equal|differs|type_mismatch`; compare regular file bytes with `cmp -s` and
+matching directory contents with Git's read-only `diff --no-index --quiet --no-ext-diff --no-textconv`, with file
+mode differences disabled. Capture diagnostic output: only empty-output exits 0/1 mean equal/different; any
+diagnostic or other exit is inspection failure, so unreadable nested content is not silently called different. A comparison failure returns `LINK_INSPECTION_FAILED` exit 2, not an equality claim.
+Never execute a configured external diff or textconv. No modification is proposed by check output.
 
-Size `M`: one shell script with integration tests, one reference section, the guide and capability updates in one
-feature spec, plus a possible ADR (Q1).
+Stdout uses one-line sentinels with fixed entry names, stable codes and actions, for example:
+
+```text
+[CONTEXT_LINK: PRODUCT.md code=LINK_REPLACED content=differs action=MERGE_INTO_SOURCE]
+[CONTEXT_EXCLUDE: PRODUCT.md code=EXCLUDE_OK action=NONE]
+[CONTEXT_LINK_RESULT: mode=check code=LINK_PROBLEMS exit=1 action=INSPECT_REPORTED]
+```
+
+A terminal result is always emitted: `LINK_CLEAN`/`NONE` exit 0, `LINK_PROBLEMS`/`INSPECT_REPORTED` exit 1, or the
+specific failure code/action exit 2. Exit 1 covers unresolved link states and missing excludes; successful repairs
+in link mode do not count as problems. Stderr carries bounded failure details without changing the stdout schema.
+No JSON mode or devkit Python dependency is introduced.
+
+### 3.4 Delivery scope and acceptance
+
+`target-docs.md` lists exact Living Spec, guide and source owners. Development adds one script, extends the existing
+projection test and adds subprocess integration coverage under `packages/devkit-catalog/tests/integration/bundles/`.
+No new Python feature, dependency edge, package or test tier is introduced.
+
+- **AC-01**: Given present optional source entries in an ordinary repository, when link mode runs twice, relative
+  links resolve to that source and the second run changes no links or exclude bytes.
+- **AC-02**: Given a root file, directory, foreign/dangling link or tracked root entry, when either mode runs, the
+  occupied entry is preserved and its stable state is reported; eligible other entries still progress in link mode.
+- **AC-03**: Given a linked worktree and source tracked on its branch, when invoked from its subdirectory, links point
+  inside that worktree and use the common exclude file; no link points into the main checkout.
+- **AC-04**: Given every classification above, including atomic-save replacement with equal/different content and a
+  replaced `.impeccable` directory, when `--check` runs, codes/actions and exit precedence match the contract and the
+  filesystem/index/HEAD remain unchanged. A resolving foreign link whose target is the expected path plus one or
+  more trailing newline bytes MUST be `LINK_WRONG_TARGET`; exact-target capture preserves those bytes without
+  printing them.
+- **AC-05**: Given spaces, ` -> `, leading-dash arguments after `--`, lexical `..`, source symlink escapes,
+  wrong source types, no repository and disabled symlinks, when run, containment/preflight behavior matches 3.1.
+- **AC-06**: Given an exclude file without final newline, existing exact patterns, unrelated patterns or a held
+  helper lock, when link mode runs, existing bytes survive, exact lines are deduplicated and a held lock fails
+  before exclude writes. Injected I/O failure reports exit 2 and retained partial effects without overwrite under the quiescence precondition. Tests preserve occupied
+  directory contents as well as root identity, and instruction assertions require the no-concurrent-writer limitation.
+- **AC-07**: Given selected bundle projection to supported hosts, when synchronized, the script is byte-identical
+  under managed/shared/Claude skill directories and runs via `sh`; it introduces no runtime dependency or asset kind.
+- **AC-08**: Given the guide and orchestration text, when reviewed against the PADR, mutating setup is requested and
+  shows exact excludes, check mode is read-only inspection, source-side ignore ownership is explicit, replacement
+  recovery preserves both versions until user direction, and the local-only absolute-path fallback remains available.
+
+Run POSIX syntax checks and subprocess tests with `sh` and with `dash` where available. GNU and BusyBox utility
+coverage is reported separately from macOS evidence, never inferred from `dash` alone. Required repository lint,
+type checks and `just test-affected` with full fallback run in Development.
+
+Non-Goals: a devkit CLI command, Python runtime feature, installer, asset kind, config key, context-file creation or
+content editing, automatic replacement repair, root `.gitignore` edits, staging/untracking, source-side ignore
+installation, Windows beyond an explicit unsupported result, run/question/load routing or upstream-fallback changes.
+
+Host technical decision: setup requires quiescence rather than adding non-POSIX link flags or a Git-apply
+implementation. The choice preserves the requested dependency boundary and reports its concurrency limitation.
+
+Size `M`: the script and its tests/guide/contracts remain one feature spec. No concrete deferred implementation is
+created by these exclusions. Source-side retention setup is existing consumer responsibility rather than a follow-up
+feature. The unseen consumer pilot and live upstream/editor save behavior remain unverified observations.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--

@@ -1,0 +1,30 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-13T05:53:28.651403Z'
+status: completed
+summary: 'Mandatory medium Planning pass: two material design failures in literal target capture and competing destination creation.'
+findings:
+- issue: Literal-target capture can misclassify a foreign link as LINK_OK.
+  evidence: docs/proposals/PROP-uiux-improve-impeccable-context-links/proposal.md:83 and 121-122; Challenger in-memory sh probe demonstrated command-substitution trailing-newline removal.
+  failure_condition: A resolving foreign root symlink targets the expected path followed by a newline; ordinary command substitution strips the target newline and can compare equal, violating AC-02 and AC-04.
+  suggested_action: Append a non-newline sentinel inside command substitution, remove it and exactly one ls record terminator, compare the complete target, and add a resolving foreign target ending in newline regression. Never print raw target bytes.
+  resolution: open
+  severity: P1
+- issue: Plain ln -s cannot preserve the stated competing-creation boundary.
+  evidence: docs/proposals/PROP-uiux-improve-impeccable-context-links/proposal.md:114-120 promises preservation on a race but POSIX ln treats a directory destination as a directory to receive a new nested link.
+  failure_condition: A concurrent writer creates a directory or directory symlink at the destination after the absence check; ln can create a nested link, possibly outside the worktree, violating the proposed mutation boundary and AC-02.
+  suggested_action: Require quiescent managed root entries and source during mutating setup, remove the competing-creation guarantee, and preserve entries occupied at invocation start. Document unsupported concurrent writers, test occupied content/identity, and retain partial effect reporting and exclude locking.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex isolation emulated; absolute read scope and before/after temporary-index tree comparison substitute for native enforcement.
+unverified_areas:
+- No implementation exists; consumer pilot/live editor behavior and BusyBox utilities were not tested.
+checks:
+  role_scope: PASS HEAD and temporary-index tree unchanged; tree 12e55dcefb4eaf725c7b549e691bd0021636ae78 before/after
+  role_probe: SKIP caller did not rerun; Challenger reports in-memory sh trailing-newline removal at 2c72d5b1404bd48507468780955970810f23dcde
+diff_scope:
+  base: 7161366d4c1908f13cea6e54c771c42244d9ad0d
+  head: 2c72d5b1404bd48507468780955970810f23dcde
