@@ -1,134 +1,83 @@
 ---
 id: SPEC-uiux-improve-bundle-hygiene
 title: app-uiux-improve pilot hygiene fixes
-summary: Fixes app-uiux-improve pilot instruction gaps in branch-build verification, brief scope, craft-rule precedence, change acceptance, computed contrast, local context paths and plugin-enablement troubleshooting.
+summary: "Clarifies branch-build verification, brief scope and precedence, goal-aware acceptance, measured contrast and local context paths in the UI/UX improvement bundle."
 status: planned
 created: 2026-11-13
-depends_on:
-  - SPEC-uiux-improve-impeccable-routing
+depends_on: [SPEC-uiux-improve-impeccable-routing]
 decomposed_from: PROP-uiux-improve-pilot-fit
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DLV-uiux-improvement]
+related_usecases: [UC-improve-an-interface-and-user-flow]
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-uiux-improve-bundle-hygiene] app-uiux-improve pilot hygiene fixes
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-uiux-improve-bundle-hygiene on 2026-11-13.
-- **Preserved Materials**: `docs/materials/2026-11/20261113-uiux-improve-bundle-hygiene`
-- Target Docs Blueprint: `PROP-uiux-improve-bundle-hygiene-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-`app-uiux-improve` 0.1.6 ran in a consumer repository for a whole-surface color-system refresh with the
-user-selected Impeccable track. `MAT-uiux-improve-pilot` (held in this bundle) records the run; finding IDs below
-refer to it. This proposal takes the findings that are instruction gaps inside the bundle's current contract: each
-one needs clearer wording, a missing step or a test, and none changes who holds authority. It needs no ADR.
-
-Split from ~~`PROP-uiux-improve-pilot-fit`~~ (drafted in `6902170e9`, deleted in this split) with
-`SPEC-uiux-improve-impeccable-routing` (question and load routing) and `SPEC-uiux-improve-run-model` (the run model).
-All three touch the bundle's `SKILL.md` and `CAP-DLV-uiux-improvement`. The user set the delivery order:
-`SPEC-uiux-improve-run-model` first, then `SPEC-uiux-improve-impeccable-routing`, then this proposal, which
-`depends_on` the routing proposal and builds on both.
-
-Hypothesis: with these gaps closed, a coordinator verifies the branch it changed, keeps a task focus from turning into
-a prohibition, tells an Impeccable session which rule wins, catches an in-list but out-of-scope change and measures
-contrast instead of estimating it.
+`MAT-uiux-improve-pilot` identifies instruction gaps in verification, scope handling, contrast measurement and
+local-only context. The accepted target draft `PROP-uiux-improve-bundle-hygiene-target` maps the fixes. The landed
+`SPEC-uiux-improve-run-model` and `SPEC-uiux-improve-impeccable-routing` already govern route approval and relay;
+this change preserves them and clarifies `CAP-DLV-uiux-improvement` and `UC-improve-an-interface-and-user-flow`.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement app-uiux-improve pilot hygiene fixes so that system capabilities are extended.
+- **US-1**: As a coordinator, I want actionable verification and brief instructions so that I check the branch and
+  accept only changes serving the approved goal.
+- **US-2**: As a designer, I want measured contrast and explicit context boundaries so that color advice is testable
+  and consumer-owned files stay under the user's control.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: new run modes, question/load routing, setup or file-write authority, runtime code, package or
+   feature edges, test tiers, distribution behavior or ADRs.
+2. **Scope Excluded**: automatic consumer document edits, native plugin/host certification or claims of model
+   obedience, visual quality or comparative effectiveness. Empirical trials remain best effort.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Verify the changed branch build
+- **Given** a deployed baseline and an executable local changed branch build.
+- **When** the coordinator inspects and verifies the improvement.
+- **Then** it checks that branch before and after with the same task/data; a repeatable mocked backend is allowed
+  when live service use is costly or shared, and the report names mocked coverage and missing live coverage.
 
-## 5. Carried Proposal Notes
+### [AC-02] Keep a focus distinct from a constraint
+- **Given** a focus such as color first.
+- **When** the coordinator writes a brief or chooses changes.
+- **Then** the focus orders work; only user-stated constraints or explicit deferrals become non-goals.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] State craft precedence
+- **Given** a craft default that conflicts with the authorized brief or consumer specification.
+- **When** the delegated session applies it.
+- **Then** the brief states that authorized sources control; conflicting authorized sources return for a decision.
 
-### 2. Technical Spike Questions
+### [AC-04] Accept against goal and edit list
+- **Given** a listed product-file edit outside the approved goal, such as an unrelated dependency bump.
+- **When** the coordinator accepts the session return.
+- **Then** it reports and excludes the edit from accepted work without unsolicited reversion or deletion.
 
-Planning settled wording and test placement against source HEAD `aa6c51dc3148efba121bc54c8e582a59aacd11d1`.
-No business question remains; acceptance and Development handoff stay with the Host.
+### [AC-05] Compute color contrast
+- **Given** color work by the coordinator or a designer role.
+- **When** key foreground/background pairs are checked or proposed.
+- **Then** the instructions require color-space conversion, effective colors accounting for opacity/compositing,
+  numeric ratios per pair/state, comparison with applicable consumer criteria and explicit missing coverage.
 
-- **Q1 resolved**: clarify `CAP-DLV-uiux-improvement` rules 4 (focus versus constraint), 11 (branch-build and
-  measured-color verification), 16 (brief precedence and read-only absolute context paths), 17 (goal-scope acceptance)
-  and 18 (retention report). Rule 13 remains unchanged. Computed contrast extends rule 11's verification obligation;
-  it needs no separate authority rule or ADR.
-- **Q2 resolved**: extend the existing integration instruction assertions and add focused assertions for measured
-  contrast and workflow-neutral wording. Use representative instruction walkthroughs for actual behavior; static
-  assertions establish only that the required instructions are present. Details are in `target-docs.md`.
+### [AC-06] Pass local-only context read-only
+- **Given** untracked or excluded PRODUCT.md or DESIGN.md and a session elsewhere.
+- **When** the coordinator briefs it.
+- **Then** the brief passes absolute read-only paths and preserves consumer ownership and upstream retention guidance;
+  it infers no copy, commit, ignore or removal action.
 
-### 3. Proposed Design & Impact
+### [AC-07] Keep load diagnosis and wording workflow-neutral
+- **Given** a plugin-load failure or an independently installed bundle.
+- **When** the guide and agent-read bodies describe the procedure.
+- **Then** the guide checks current-project plugin enablement, prescribes no cache-load route, and agent bodies
+  depend on no devkit-spec policy key, CLI gate or lifecycle record while retaining generic branch/worktree terms.
 
-1. Verification target (A3). SKILL step 2 and step 8 inspect and verify the branch build running locally. When the
-   backend is costly or shared, stub it (for example API mocking in the browser driver) and keep a re-runnable
-   before/after capture. A deployed environment is at most a baseline. Under rule 11, the report labels mocked
-   coverage as mocked, not as an end-to-end check.
-2. Brief and spec hygiene (A4a to A4c).
-   - Non-goals carry only user-stated constraints or explicit deferrals; a task focus ("color first") orders the
-     work and is not a prohibition.
-   - The brief states precedence when an Impeccable craft default conflicts with the brief or the spec.
-   - Acceptance compares the accepted change with the spec's or request's goal scope as well as the edit list, and
-     reports an in-list but out-of-scope change.
-3. Contrast (A7). `design-guidance.md` and the designer roles call for a computed contrast check (color-space
-   conversion, not an approximation) for color work and report the measured ratio for each key pair.
-4. Untracked context files (A5), neutral line only. When `PRODUCT.md` or `DESIGN.md` is untracked or excluded and the
-   session runs elsewhere, the brief passes their absolute paths read-only. The coordinator reports them under
-   rule 18 with upstream's retention guidance and does not override that guidance. Choosing an in-place branch or a
-   worktree stays with the consumer's own per-task settings.
-5. Workflow-neutral wording. The skill and its references name no `devkit-spec` policy key (for example `worktree`
-   or `pull_request` values), in line with rule 13; a test asserts the absence.
-6. Plugin visibility note (A2, corrected). The README troubleshooting table says a plugin skill is visible only
-   where the plugin is enabled, so a child or session in a project without that enablement cannot load it. Reading
-   `SKILL.md` from the plugin cache is recorded as an observed, undocumented workaround, not a route the skill names;
-   routing decisions belong to `SPEC-uiux-improve-impeccable-routing`.
+## 5. Verification and assumptions
 
-Impact: `CAP-DLV-uiux-improvement` rules 4, 11, 16, 17 and 18; `UC-improve-an-interface-and-user-flow` inspection,
-acceptance and coverage examples; the bundle's `SKILL.md`, `references/orchestration.md`,
-`references/design-guidance.md`, `roles/designer.md`, `roles/unconventional-designer.md`, human README and
-`test_app_uiux_improve.py`. `target-docs.md` maps the wording and acceptance checks. No ADR, workflow, runtime API,
-package dependency or distribution change is required.
-
-#### Planning decisions and constraints
-
-- Keep `planning_effort: low` because direction is settled; retain `dev_effort: medium` for instruction review and
-  bundle checks. No scout or challenger pass is required at this Planning effort.
-- Preserve delivery order: `SPEC-uiux-improve-run-model`, then `SPEC-uiux-improve-impeccable-routing`, then this
-  proposal. Rebase is not worker work: the Host refreshes this Planning branch or the Development input when those
-  predecessors land. Recheck the affected rule numbers and wording then; no sibling decision is treated as settled
-  by this plan.
-- Preserve the consumer's chosen workflow and Impeccable route as the predecessors settle them. This proposal adds
-  no run mode, question relay, plugin-load fallback, setup authority or context-file write authority.
-- Apply workflow neutrality to agent-read skill, reference and role bodies. General references to a branch,
-  worktree or the consumer workflow are allowed; concrete devkit-spec policy keys, values, CLI gates and lifecycle
-  records are not instruction dependencies. The human README keeps its installation command.
-- Apply brief precedence within existing authority: user-authorized goals, explicit constraints and the current
-  consumer specification control craft defaults. If those sources conflict with one another, return the conflict
-  for a decision instead of choosing new authority.
-- Compare the changed branch build before and after with the same representative task and data. If a live backend
-  is unsuitable, use a repeatable mock against that branch build and report mocked coverage. No performance or
-  real-user improvement claim follows from this instruction change.
-- No concrete work is deferred by this proposal beyond the policy and routing changes already owned by the two
-  named predecessor proposals.
-
-### 4. Lifecycle & Retirement Criteria
-
-- On Acceptance: the Host uses `devkit spec proposal accept-plan uiux-improve-bundle-hygiene` after reviewing the
-  committed Planning result and obtaining the required approval. Development handoff follows the predecessor order
-  on `dev-uiux-improve-bundle-hygiene` with `dev_effort: medium`. The proposal retires there and
-  `MAT-uiux-improve-pilot` moves to `docs/materials/`, retaining its ID and sibling citations.
-- On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal. Before that deletion, move `MAT-uiux-improve-pilot` to a live sibling.
-
+Instruction assertions in the existing catalog integration file prove authored directives, not model obedience.
+Review walks the seven accepted cases, including in-list/out-of-goal changes and opaque/translucent contrast.
+No live consumer build exists in this content-only unit; empirical behavior stays explicitly unverified.
+The entry, source ownership and predecessor authority remain unchanged. No screen draft or new runtime is needed.
