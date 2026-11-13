@@ -1,7 +1,7 @@
 ---
 id: UC-improve-an-interface-and-user-flow
 title: Improve an interface and user flow
-summary: "An AI coding agent uses an explicitly invoked UI/UX skill to improve a software interface task, framing affected objects, optionally delegating to a user-selected Impeccable session, and implements through a task-approved route with actual verification and limits."
+summary: "An AI coding agent improves a software interface through an approved task route, framed objects and optional Impeccable delegation, then verifies the changed branch against the goal and reports measured checks and limits."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional design and research subagents, Optional Impeccable session]
@@ -24,13 +24,13 @@ entrypoints:
 ## 2. Main Success Scenario
 
 1. The agent recovers the target, intended outcome, relevant artifacts, constraints and the user's task route choice (`CAP-DLV-uiux-improvement`).
-2. The agent inspects the representative task path and affected interface states (`CAP-DLV-uiux-improvement`).
+2. The agent captures the representative task and affected states in the local branch build before edits (`CAP-DLV-uiux-improvement`).
 3. The agent frames the affected objects when the request changes structure or flow, from the project's OOUX
    documents when present, then develops useful design perspectives for the requested improvement
    (`CAP-DLV-uiux-improvement`).
 4. The agent synthesizes a coherent direction and its relevant tradeoffs (`CAP-DLV-uiux-improvement`).
 5. The agent applies requested changes through the route the user authorized for the task (`CAP-DLV-uiux-improvement`).
-6. The agent checks the changed interface and representative interactions (`CAP-DLV-uiux-improvement`).
+6. The agent verifies the changed branch against the baseline task, interactions and applicable measured checks (`CAP-DLV-uiux-improvement`).
 7. The agent reports the actual improvement, selected route, verification, documentation follow-up and remaining authority (`CAP-DLV-uiux-improvement`).
 
 ## 3. Extensions
@@ -43,6 +43,8 @@ entrypoints:
   delivery steps; resumes at step 2. An exact prior route instruction is reused without another identical prompt.
 - **2a.** The running interface cannot be inspected: the agent uses available screenshot, code or text evidence and
   names its coverage; continues at step 3 without claiming actual interaction verification.
+- **2b.** A live backend is costly or shared: a repeatable mock drives the local branch build, and the report labels
+  mocked coverage and missing live coverage; continues at step 3 without claiming end-to-end live verification.
 - **3a.** A small request needs no team or research: the agent works inline; resumes at step 4.
 - **3b.** Fresh children are unavailable: the agent uses useful inline passes and discloses their shared context;
   resumes at step 4 without fabricated role findings.
@@ -53,6 +55,9 @@ entrypoints:
   step 4 without 5c).
 - **4a.** A product or scope decision exceeds existing authority: the agent presents the concrete choice and preserves
   independent useful work; dependent work waits and resumes at step 4 after the user's decision.
+- **4b.** A craft default conflicts with authorized brief/specification content: the agent follows the authorized
+  source; conflicting authorized sources wait for a decision, then resume at step 4. A focus orders work and
+  supplies no invented prohibition.
 - **5a.** Review-only request: the agent returns findings without product edits; the use case ends with the requested review.
 - **5b.** A workflow approval or tool is missing: the agent preserves useful partial work and names the blocker;
   the use case ends pending that requirement.
@@ -68,10 +73,14 @@ entrypoints:
   continuation state is lost: the agent reports observed availability/current-project enablement and hands the
   brief to the user's session. It loads no plugin-cache files, changes no enablement without a setup request and
   reconstructs no writing child; resumes at 5c after the user's report.
+- **5f.** Local-only context is untracked or excluded and the session runs elsewhere: the agent passes absolute
+  read-only context paths while preserving consumer ownership and retention choices; resumes at 5c without new
+  copy, commit, ignore or removal authority.
 - **6a.** A check exposes a defect: the agent fixes it within scope and repeats the affected check; resumes at step 6.
-- **6b.** The session changed a file outside its edit list, wrote session output or created or changed consumer
+- **6b.** The session changed a file outside its edit list or the approved goal, including an in-list change,
+  wrote session output or created or changed consumer
   context files, or attribution is unverifiable: the agent reports each class, reverts and deletes nothing on its own
-  initiative, and continues with the accepted changes; resumes at step 6.
+  initiative, excludes out-of-goal edits from accepted work, and continues with accepted changes; resumes at step 6.
 - **6c.** The accepted change made an OOUX document (glossary, object register or UX document) stale: the agent names
   it, its affected statement and the concrete follow-up through the documentation process where present or a
   separate documentation task otherwise. The run edits none and creates no follow-up record without a separate
@@ -93,7 +102,7 @@ entrypoints:
   workflow-specific records. Consumer-owned files, including Impeccable's project files and the OOUX documents, remain in place unless the user
   directed otherwise.
 - **Minimal guarantee**: unavailable work and checks remain explicit; no native isolation, workflow approval,
-  publication or real-user quality result is invented, and no change outside a session's edit list is delivered as
+  publication or real-user quality result is invented, and no change outside a session's edit list or approved goal is delivered as
   accepted work.
 
 ## 5. Acceptance Criteria
@@ -235,3 +244,38 @@ brief and routing, coordinator acceptance, consumer context files and user-reque
 - **Given**: a confirmed answer would change PRODUCT.md or DESIGN.md without explicit file/action permission, or a relay partially executed.
 - **When**: the coordinator continues or accepts the result.
 - **Then**: missing file authority still stops that write; partial output is compared to the recorded base and reported without blind replay, unsolicited reversion or deletion.
+
+### Scenario 19: Verify the changed local branch with a repeatable mock
+
+- **Covers**: steps 2 and 6, 2b
+- **Given**: a deployed baseline, an executable changed branch and a costly or shared backend.
+- **When**: the agent captures the branch before edits and repeats the same task/data with a repeatable mock after edits.
+- **Then**: it retains a re-runnable capture method, names mocked and missing live coverage, and makes no live end-to-end claim.
+
+### Scenario 20: Keep focus and craft defaults within authorized scope
+
+- **Covers**: 4b
+- **Given**: a color-first focus and a craft default conflicting with the authorized brief or specification.
+- **When**: the agent chooses work and writes the brief.
+- **Then**: focus orders work, only explicit constraints/deferrals become non-goals, authorized sources control craft defaults and conflicting authorized sources return for a decision.
+
+### Scenario 21: Reject an in-list but out-of-goal edit
+
+- **Covers**: 6b
+- **Given**: an unrelated dependency bump in a listed file.
+- **When**: the agent accepts the returned change.
+- **Then**: it reports and excludes that edit from accepted work without unsolicited reversion or deletion.
+
+### Scenario 22: Report computed contrast and its limits
+
+- **Covers**: step 6
+- **Given**: color work with opaque and translucent key foreground/background pairs.
+- **When**: the coordinator or designer role checks the pairs.
+- **Then**: it computes effective-color contrast with color-space conversion and opacity/compositing and reports numeric ratios, states, applicable criteria and missing measurement coverage.
+
+### Scenario 23: Preserve local-only context ownership
+
+- **Covers**: 5f
+- **Given**: untracked or excluded PRODUCT.md or DESIGN.md and a session elsewhere.
+- **When**: the coordinator supplies context.
+- **Then**: it passes absolute read-only paths and retains upstream retention guidance without inferring copy, commit, ignore or removal authority.

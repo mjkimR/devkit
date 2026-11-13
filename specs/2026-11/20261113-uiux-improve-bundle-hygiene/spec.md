@@ -2,7 +2,7 @@
 id: SPEC-uiux-improve-bundle-hygiene
 title: app-uiux-improve pilot hygiene fixes
 summary: "Clarifies branch-build verification, brief scope and precedence, goal-aware acceptance, measured contrast and local context paths in the UI/UX improvement bundle."
-status: in-progress
+status: completed
 created: 2026-11-13
 depends_on: [SPEC-uiux-improve-impeccable-routing]
 decomposed_from: PROP-uiux-improve-pilot-fit
