@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-uiux-improvement
 title: Software interface UI/UX improvement
-summary: "An opt-in UI/UX skill improves software interfaces with object framing, local perspectives or capability-gated Impeccable sessions with user-confirmed questions. Task-approved outside-workflow or consumer-workflow implementation retains checks and qualified reporting."
+summary: "An opt-in UI/UX skill improves software interfaces through user-approved routes and capability-gated Impeccable relay. It verifies changed branch builds, accepts changes against the approved goal and reports measured contrast and coverage."
 area: delivery
 status: active
 created_at: 2026-11-05
@@ -60,8 +60,9 @@ Alternatives, research and criticism are optional means, not a required final re
    CTAs and attributes before layout or styling; a local change proceeds without that pass. WHERE the consumer keeps a
    glossary, object register or UX documents, the framing SHOULD read them, and otherwise it frames in conversation;
    the skill names these paths as an optional convention and depends on no `devkit-docs` concept (rule 13).
-   Review: `test_framing_is_proportionate_and_reads_ooux_documents_only_where_present` and representative instruction
-   scenarios.
+   A task focus orders work; the coordinator MUST derive non-goals only from user-stated constraints or explicit
+   deferrals. Tests: `test_framing_is_proportionate_and_reads_ooux_documents_only_where_present` and
+   `test_brief_focus_precedence_and_acceptance_preserve_the_approved_goal`.
 5. **Narrower request**: WHERE the request is review-only, the coordinator MUST finish with findings and no product edits.
    Test: `test_entry_preserves_improvement_scope_and_consumer_authority`.
 6. **Optional perspectives**: WHEN selecting work, the coordinator MAY keep a small request inline or select useful
@@ -90,9 +91,17 @@ Alternatives, research and criticism are optional means, not a required final re
     and `test_relay_failure_reporting_preserves_authority_and_honest_coverage`.
 11. **Verification**: WHEN reporting an improvement on either route, the coordinator MUST report before/after
     interface verification and applicable project-check outcomes separately from design inference and unavailable
-    coverage. The bundle adds no mandatory independent review; every review required by the selected consumer
-    workflow remains required. Test: `test_task_route_approval_is_explicit_reused_and_bounded`; review only: actual
-    model behavior and representative instruction scenarios.
+    coverage. WHEN the local branch build is executable, the coordinator MUST inspect that build before edits and
+    verify it after edits with the same representative task/data and a re-runnable capture method; a deployed
+    environment supplies at most a baseline. WHERE a live backend is costly or shared, a repeatable mock MAY drive
+    that branch build; the report MUST label mocked coverage as mocked, not an end-to-end check, and name missing
+    live coverage. WHEN changing color, the coordinator and assigned designer roles MUST compute effective-color
+    contrast with color-space conversion and opacity/compositing, reporting numeric ratios per key pair/state,
+    applicable consumer criteria and missing measurement coverage. An estimate establishes no measured contrast.
+    The bundle adds no mandatory independent review; every review required by the selected consumer
+    workflow remains required. Tests: `test_task_route_approval_is_explicit_reused_and_bounded`,
+    `test_verification_targets_the_changed_branch_and_qualifies_mocks` and
+    `test_color_work_requires_computed_effective_color_contrast`; review only: model behavior and live outcomes.
 12. **Qualified completion**: WHEN a normal improvement request finishes, the coordinator SHOULD return the changed
     interface or flow and verification status, selected route, stale-document follow-up and remaining unauthorized
     Git effects, or preserve useful partial work with a concrete blocker.
@@ -111,7 +120,10 @@ Alternatives, research and criticism are optional means, not a required final re
     recorded base, edit list, unchanged concerns, context-file permissions, commands excluding `live`, stop condition
     and expected return), and make no product edits until the session returns. `PRODUCT.md` or `DESIGN.md` changes
     require the user's explicit file/action direction. The session leaves index, HEAD and files outside its permitted
-    classes unchanged (`ADR-impeccable-session-authority`).
+    classes unchanged (`ADR-impeccable-session-authority`). The brief MUST state that authorized brief and consumer
+    specification content controls craft defaults, returning conflicts between authorized sources for a decision.
+    WHEN local-only `PRODUCT.md` or `DESIGN.md` is untracked or excluded and the session runs elsewhere, the brief
+    MUST pass absolute read-only paths, without inferring copy, commit, ignore or removal authority.
     Answer-free refinement uses a fresh child loading Impeccable through the host's skill mechanism. Interactive
     question relay MUST use native loading and same-child continuation observed for the actual host/project;
     documentation, inherited skill names and cache reads do not establish them. `shape` and `critique` additionally
@@ -125,19 +137,26 @@ Alternatives, research and criticism are optional means, not a required final re
     omitted answers and gaps-only confirmation are not. Confirmed answers stay unchanged. New questions or changed
     relevant source facts, file state, answers or scope return for affected-answer confirmation before dependent
     writes. Partial execution is reported against the recorded base without blind replay or unsolicited reversion.
-    Tests: `test_interactive_relay_requires_native_capabilities_and_every_user_answer` and
-    `test_relay_failure_reporting_preserves_authority_and_honest_coverage`; review only: live model/host behavior.
+    Tests: `test_interactive_relay_requires_native_capabilities_and_every_user_answer`,
+    `test_relay_failure_reporting_preserves_authority_and_honest_coverage`,
+    `test_brief_focus_precedence_and_acceptance_preserve_the_approved_goal` and
+    `test_local_context_and_plugin_diagnosis_stay_workflow_neutral`; review only: live model/host behavior.
 17. **Coordinator acceptance**: WHEN a session returns, the coordinator MUST compare the working directory with the
-    recorded base, take only listed product-file changes into verification, report session output and other changes
+    recorded base, take only changes matching both the edit list and approved goal scope into verification, report
+    an in-list but out-of-scope change without accepting it, and report session output and other changes
     without reverting or deleting them on its own initiative, and report a moved HEAD, missing base or unobservable
     ignored path as unverifiable attribution or limited coverage. It MUST report each stale consumer OOUX or UX
     document, the affected statement and a concrete separate follow-up through the documentation process where
     present or a separate documentation task otherwise. The skill run MUST NOT edit those documents or create a
     follow-up record without a separate request (`ADR-uiux-task-approved-run`).
-    Review: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
+    Tests: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted` and
+    `test_brief_focus_precedence_and_acceptance_preserve_the_approved_goal`.
 18. **Consumer context files**: WHEN a session creates or changes `PRODUCT.md`, `DESIGN.md` or shared `.impeccable/`
     context files, the coordinator MUST report them as consumer-owned with upstream's retention guidance
-    (`ADR-impeccable-session-authority`). Review: `test_project_files_setup_and_cleanup_follow_the_users_request`.
+    (`ADR-impeccable-session-authority`). Local-only context reads MUST preserve that ownership and retention choice
+    without inferring a new copy, commit, ignore or removal action. Tests:
+    `test_project_files_setup_and_cleanup_follow_the_users_request` and
+    `test_local_context_and_plugin_diagnosis_stay_workflow_neutral`.
 19. **User-requested setup and cleanup**: WHERE the user requests it, the coordinator MAY install Impeccable through an
     upstream route that needs no prompt answers (otherwise it hands the user the exact command), add upstream's
     recommended ignore entries confined to `.impeccable/` paths after showing the exact lines, remove Impeccable

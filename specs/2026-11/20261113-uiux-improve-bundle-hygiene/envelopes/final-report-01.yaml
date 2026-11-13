@@ -1,0 +1,22 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:40:50.304932Z'
+status: completed
+summary: Implemented approved branch verification, brief/scope, computed contrast, local-context and workflow-neutral hygiene; independent code review zero findings and exact two-target self-reconciliation passed
+findings: []
+assumptions:
+- Host owns integration and landed runtime verification; worker performed no merge push or publication
+- Codex emulated with absolute cwd, per-operation escalation and unchanged reviewer complete-tree/HEAD comparison
+unverified_areas:
+- Live consumer, native plugin/host and model outcomes remain best effort; instruction assertions do not prove visual quality or contrast math execution
+checks:
+  tests: PASS focused15; final affected tier-all202 including selected installed-consumer E2E; partial selector preserves full fallback
+  build: PASS selected real wheel build/install tests without agent/docs/spec dependencies
+  lint: PASS catalog lint/format; cumulative CI22 errors0 warnings0; git diff check
+  types: PASS catalog source/tests errors0 warnings0
+  sync: PASS sync_start exit0; source sync output0 and final sync check matches
+diff_scope:
+  base: 4ab29425ab7ab69acbffe17a9304c00165be6bfd
+  head: b2ac9dc990c6ab8871734b713d1b60e914ce7072

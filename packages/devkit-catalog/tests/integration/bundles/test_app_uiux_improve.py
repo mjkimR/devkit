@@ -335,3 +335,63 @@ def test_usage_guide_stays_a_human_document_outside_agent_assets(tmp_path: Path)
     for projected in (".agents/skills/app-uiux-improve", ".claude/skills/app-uiux-improve"):
         assert (tmp_path / projected / "SKILL.md").is_file()
         assert not list((tmp_path / projected).rglob("README.md"))
+
+
+def test_verification_targets_the_changed_branch_and_qualifies_mocks() -> None:  # hygiene AC-01
+    for text in ((SKILL / "SKILL.md").read_text(), (SKILL / "references/design-guidance.md").read_text()):
+        assert_rule(text, "local branch build", "before and after", "same representative task", "data")
+        assert_rule(text, "deployed", "baseline", "repeatable mocked backend")
+        assert_rule(text, "re-runnable", "capture", "before and after")
+        assert_rule(text, "mocked coverage as mocked", "not an end-to-end check", "live coverage")
+    guide = (BUNDLE / "README.md").read_text()
+    assert_rule(guide, "changed local branch build", "before and after", "same representative task and data")
+    assert_rule(guide, "repeatable mocks", "not an end-to-end check")
+
+
+def test_brief_focus_precedence_and_acceptance_preserve_the_approved_goal() -> None:  # hygiene AC-02..04
+    skill = (SKILL / "SKILL.md").read_text()
+    assert_rule(skill, "focus such as color first orders work", "only user-stated constraints or explicit deferrals")
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert_rule(orchestration, "non-goals", "only user-stated constraints or explicit deferrals", "without prohibiting")
+    assert_rule(orchestration, "authorized brief and consumer specification control craft defaults")
+    assert_rule(orchestration, "conflicts between authorized sources", "decision")
+    assert_rule(orchestration, "both the edit list and approved goal scope", "in-list but out-of-scope")
+    assert_rule(
+        orchestration, "unrelated dependency bump", "exclude it from accepted work", "without reverting or deleting"
+    )
+
+
+def test_color_work_requires_computed_effective_color_contrast() -> None:  # hygiene AC-05
+    for path in (
+        SKILL / "references/design-guidance.md",
+        *(SKILL / f"roles/{role}.md" for role in ("designer", "unconventional-designer")),
+    ):
+        text = path.read_text()
+        assert_rule(text, "color work", "compute contrast", "color-space conversion", "effective colors")
+        assert_rule(text, "opacity/compositing", "numeric ratios", "consumer", "missing measurement coverage")
+        assert_rule(text, "estimate", "measurement" if path.parent.name == "roles" else "measured contrast")
+
+
+def test_local_context_and_plugin_diagnosis_stay_workflow_neutral() -> None:  # hygiene AC-06..07
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert_rule(orchestration, "`product.md` or `design.md`", "untracked or excluded", "session runs elsewhere")
+    assert_rule(
+        orchestration,
+        "absolute read-only",
+        "consumer ownership and retention choices",
+        "no copy, commit, ignore or removal",
+    )
+    guide = (BUNDLE / "README.md").read_text()
+    assert_rule(
+        guide, "plugin skills are visible only where their plugin is enabled", "current-project plugin enablement"
+    )
+    assert_rule(guide, "absolute read-only paths", "upstream retention guidance", "consumer ownership")
+    policy_dependency = re.compile(
+        r"devkit-spec|(?:worktree|pull_request)\s*=|(?:plan-accept|proposal-handoff|dev-integration)|"
+        r"devkit (?:spec|workflow)\b|\.devkit/config"
+    )
+    for path in SKILL.rglob("*.md"):
+        assert not policy_dependency.search(path.read_text()), path
+    # Generic checkout vocabulary remains valid; the policy syntax is the forbidden dependency.
+    assert "branch" in (SKILL / "SKILL.md").read_text()
+    assert "worktree" in (SKILL / "SKILL.md").read_text()

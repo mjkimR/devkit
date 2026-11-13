@@ -9,7 +9,11 @@ Explore a different mechanism serving the user goal in the assignment.
    adoption cost and the assumption that would invalidate the direction.
 4. Keep novelty separate from usefulness; preserve a useful element even when the whole concept is unsuitable.
 
+For color work, compute contrast with color-space conversion and effective colors accounting for opacity/compositing.
+Return key foreground/background pairs and states, numeric ratios, applicable consumer criteria and missing measurement
+coverage; an estimate is not a measurement.
+
 Return `status` (`completed`, `partial` or `failed`), inspected artifact identities, the mechanism and affected
 states, benefits, tradeoffs, assumptions and unverified areas. Stop at the assignment's bound. Leave product source,
-retained files, index and HEAD unchanged. The coordinator selects and implements through the project workflow.
+retained files, index and HEAD unchanged. The coordinator selects and implements through the selected route.
 Role text grants no permission or native isolation; stop a denied action and report it without another access route.

@@ -57,14 +57,22 @@ It does not:
    condition.
 4. Session: Impeccable runs through one of the two launch routes below. The coordinator edits no product files until
    the session returns.
-5. Acceptance: the coordinator compares the working tree with the recorded base, verifies the accepted changes,
+5. Acceptance: the coordinator compares the working tree with the recorded base and both the edit list and approved
+   goal scope, verifies the accepted changes,
    reports anything outside the brief and each stale OOUX document, and continues through your selected route.
 6. Cleanup, only if you ask.
 
 If you choose your workflow, its pre-implementation steps, required reviews and delivery approvals still apply.
 The outside route uses the improvement loop without workflow-specific records. Both retain product constraints,
 host permissions, applicable project checks and before/after verification. Independent reviews are optional only
-when your selected workflow does not require them.
+when your selected workflow does not require them. A focus such as color first orders work; only your stated
+constraints or explicit deferrals become non-goals. The brief states that authorized brief/specification content
+controls Impeccable craft defaults and returns conflicts between authorized sources for a decision.
+
+Verification uses the changed local branch build before and after with the same representative task and data. A
+deployed environment is at most a baseline. When a live backend is costly or shared, use repeatable mocks and retain
+a re-runnable capture method; report mocked coverage as mocked, not an end-to-end check, and name missing live
+coverage. Color work reports computed contrast ratios for key pairs/states using effective composited colors.
 
 If your selected workflow drafts new screens before code (for example in a planning document), the screen is drafted there
 first and Impeccable implements and refines that draft.
@@ -99,8 +107,8 @@ off.
 
 - It runs Impeccable only after you select it for the request. An installed Impeccable is offered, not used.
 - It pauses its own product edits while the session runs.
-- It accepts only changes to the files the brief lists; other changes are reported, not reverted, deleted or
-  delivered.
+- It accepts only changes matching both listed files and the approved goal. An in-list but out-of-scope change,
+  such as an unrelated dependency bump, is reported and excluded without unsolicited reversion or deletion.
 - It reports `PRODUCT.md`, `DESIGN.md` and shared `.impeccable/` files a session created or changed as your project
   files, with a pointer to Impeccable's "Project files and git" guidance.
 - It reuses your current task authority; if commit, integration or publication authority is missing, it presents
@@ -117,7 +125,9 @@ off.
 | Persistent anchor | The `PRODUCT.md` reference section (setup step 4) lets Impeccable commands that load `PRODUCT.md` see the same object model. |
 | Report-only write-back | After a change, the coordinator names each document the change made stale. It names the affected statement and a concrete follow-up through your documentation process, or a separate task if none exists. It edits none and creates no follow-up record without a separate request. |
 
-These paths are a convention. The bundle works without them and needs no document package.
+These paths are a convention. The bundle works without them and needs no document package. If untracked or excluded
+`PRODUCT.md` or `DESIGN.md` must be read by a session elsewhere, the brief passes absolute read-only paths; their
+consumer ownership and upstream retention guidance stay intact without inferred copy, commit, ignore or removal.
 
 ## 7. Opt-in setup and cleanup
 
@@ -136,7 +146,7 @@ name them, and they change only on your explicit direction.
 | Symptom | What to do |
 | --- | --- |
 | Impeccable asks another question in a child session | Dependent writes stop; confirm the complete returned question round through the same child, or use your own session when relay capabilities are missing. |
-| The child cannot load Impeccable | Check the observed current-project plugin enablement and native skill availability. Use your session if loading fails; do not load plugin-cache files or change enablement without a setup request. |
+| The child cannot load Impeccable | Plugin skills are visible only where their plugin is enabled. Check the observed current-project plugin enablement and native skill availability. Use your session if loading fails; do not load plugin-cache files or change enablement without a setup request. |
 | A change appears outside the edit list | The coordinator reports the file and does not deliver it. Keep, move or revert it yourself, or ask the coordinator to include it in a new brief. |
 | HEAD moved or attribution is unverifiable | A commit or checkout happened during the session. Review the reported changes yourself before accepting them. |
 | Impeccable is not installed | Install it through a route in section 2, ask the coordinator to, or continue on the inline track. |

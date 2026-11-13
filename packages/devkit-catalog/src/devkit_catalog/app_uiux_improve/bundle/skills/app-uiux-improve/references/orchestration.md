@@ -1,14 +1,12 @@
 # Delegation: local roles and Impeccable
 
-Local-role sections apply on both tracks; Impeccable sections apply only after the user selects Impeccable for
-this request.
+Use local roles on either track. Use Impeccable sections only after the user selects it.
 
 ## Local roles
 
-Resolve paths from the directory containing the invoked `SKILL.md`, not the working directory or this reference;
-if its location is unavailable, locate and verify the invoked skill first. Verify the selected role file exists and
-pass its absolute path to the subagent type below with the directive to read it before acting. Do not load every
-role into the coordinator.
+Resolve paths from the directory containing the invoked `SKILL.md`, not the working directory or this reference.
+If unavailable, locate and verify the skill. Verify the selected role file exists; pass its absolute path to the
+subagent type below with a directive to read it before acting. Load only selected roles.
 
 - If the assignment interacts with a running UI (operating it, inspecting it in a browser or capturing it), spawn the
   host's general subagent (`general-purpose` on Claude Code), because those tools are outside `role-worker`'s list.
@@ -25,8 +23,8 @@ role into the coordinator.
 | `roles/reference-researcher.md` | Find a precedent or evidence that changes a design choice. |
 | `roles/critic.md` | Find consequential breakdowns or unnecessary burdens in supplied artifacts or a proposed direction. |
 
-Prefer the smallest useful assignment; research and criticism are optional, and a critic can return zero findings.
-Use separate instances only for differing questions or design premises; require no role count or debate.
+Research and criticism are optional; a critic can return zero findings. Use separate instances only for differing
+questions or premises; require no role count or debate.
 
 ### Dispatch and receive
 
@@ -40,30 +38,25 @@ Use separate instances only for differing questions or design premises; require 
    critic only the material it needs. Make in-scope design choices without waiting for consensus.
 4. Roles return suggestions, sketches or evidence, leave the index and HEAD unchanged and write no retained
    artifacts; product source edits stay with the coordinator through the selected route.
-5. Validate that a return names its inspected artifacts, actual work, assumptions, limitations and any failed or
-   unavailable action. A failed or missing role contributes no findings; continue inline when useful and report
-   missing coverage. Reinvoke only after the input or cause changes.
-6. Check consequential claims or conflicts selectively, without repeating a well-supported investigation in full;
-   distinguish inspected evidence from analogy, taste and assumptions before synthesis.
-7. Keep one useful critique/refinement pass as the default. Stop when the requested outcome and applicable checks
-   are satisfied; never iterate to prove benefit, fill an issue quota or reach agreement.
+5. Validate inspected artifacts, actual work, assumptions, limits and failed/unavailable actions. A failed or missing role
+   contributes no findings; continue inline and report missing coverage. Reinvoke only after input or cause changes.
+6. Check consequential claims/conflicts selectively; distinguish evidence from analogy, taste and assumptions.
+7. Default to one useful critique/refinement pass. Stop when outcome and checks are satisfied; require no issue quota,
+   proof of benefit or agreement.
 
-Example assignment (illustrative; assign a different mechanism only when it serves the actual user task):
+Example assignment:
 
 ```text
 Read <absolute-skill-directory>/roles/unconventional-designer.md first.
-Goal: make conflicts in a mobile calendar understandable and recoverable.
-Artifacts: supplied conflict states; preserve attendees and event details.
-Assignment: explore a decision-inbox flow instead of a calendar-grid interaction.
-Actions: read the supplied artifacts; return suggestions only, no source or retained-file edits.
-Stop: return one concrete task sequence, affected states, expected benefit, tradeoff and weakest assumption.
+Goal: resolve mobile calendar conflicts; preserve supplied attendees and event details.
+Assignment: explore a decision-inbox flow. Read supplied states; return suggestions only, no edits.
+Stop: one task sequence, states, benefit, tradeoff and weakest assumption.
 ```
 
 ## Impeccable session
 
-Impeccable is a separately installed design skill with its own commands, detector and project files; this bundle
-ships none of it. A delegated session is not a local role: it may edit the product files its brief lists, and you
-accept its changes before they continue through the selected route.
+Impeccable is separately installed; this bundle ships none of it. Its session may edit brief-listed product files,
+unlike a local role. Accept its changes before continuing through the selected route.
 
 ### Select and set up
 
@@ -88,6 +81,9 @@ Write a self-contained brief with these fields:
 - Goal and the framing result for this request, citing the project's OOUX documents by path as read-only sources
   instead of restating them, or the conversation framing when none exist.
 - Consumer-supplied drafts or specifications for the change, by path, read-only.
+- Non-goals: only user-stated constraints or explicit deferrals; a focus orders work without prohibiting in-goal changes.
+- Precedence: authorized brief and consumer specification control craft defaults; return conflicts between authorized
+  sources for a decision.
 - Absolute working directory and the recorded base: HEAD, working-tree status and content hashes of the listed files
   under Git; the listed files' content hashes otherwise.
 - Edit list: the product files the session may edit.
@@ -95,6 +91,8 @@ Write a self-contained brief with these fields:
   uncommitted user edits unless the user includes them. The session leaves index, HEAD and commits unchanged.
 - Context-file permission: list `.impeccable/design.json`, `.impeccable/config.json` or `.impeccable/surfaces/` when
   the session may write them; list `PRODUCT.md` or `DESIGN.md` only on the user's explicit direction.
+- If `PRODUCT.md` or `DESIGN.md` is untracked or excluded and the session runs elsewhere, pass absolute read-only
+  paths. Keep consumer ownership and retention choices; infer no copy, commit, ignore or removal action.
 - Commands to run, the stop condition and the expected return: changed files, commands run, detector or audit
   results, session output, degraded coverage and blockers, including any upstream question.
 
@@ -127,7 +125,9 @@ Write a self-contained brief with these fields:
 ### Accept the return
 
 1. Compare the working directory with the recorded base.
-2. Take changes to listed product files into verification and continue them through the selected route.
+2. Accept only changes matching both the edit list and approved goal scope, then take listed product files into verification through the selected route.
+   Report an in-list but out-of-scope change, such as an unrelated dependency bump; exclude it from accepted work
+   without reverting or deleting it.
 3. Report session output (critique snapshots, mocks, hook and runtime state under `.impeccable/`) as session output.
    Report any other change outside the edit list without reverting or deleting it, and do not deliver it as
    accepted work.

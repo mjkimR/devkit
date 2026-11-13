@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:39:31.713003Z'
+status: completed
+summary: 'PASS exact two-target self-verification: CAP rules4/11/16/17/18 and UC steps2/6, extensions2b/4b/5f/6b and scenarios19-23 match reviewed AC-01..07 and preserve predecessor authority'
+findings: []
+assumptions:
+- 'Medium exact-target self-verification exception: one catalog bundle and capability area; every changed statement identified with no cross-component or interpretation gap'
+unverified_areas:
+- Live consumer/model/native host and contrast math execution remain unverified best-effort coverage; instruction assertions establish authored directives only
+checks:
+  semantic_reflection: PASS source and two exact targets agree; no required functionality deferred
+  entrypoints: PASS existing skill doorway retained; broad bundle root and integration-test candidates rejected
+  exception: PASS medium self-reconcile with explicit AC/source/rule/scenario comparison in reconcile.md
+diff_scope:
+  base: 0e78a78d9267c8129d97fb78f0897facfd84db24
+  head: bdbe692cb3351ed091a9d1b2d3661263905b04be
