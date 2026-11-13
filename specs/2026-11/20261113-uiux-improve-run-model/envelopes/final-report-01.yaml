@@ -1,0 +1,22 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:01:24.340845Z'
+status: completed
+summary: Implemented task-approved UI/UX routes with explicit authority reuse, scope/check boundaries and separate documentation follow-up; independent code and reconcile reviews passed with zero findings
+findings: []
+assumptions:
+- Host performs approved integration and landed-runtime verification; this worker neither integrates nor publishes
+- Codex route is emulated with absolute cwd, per-operation permissions and unchanged complete-tree reviewer snapshots
+unverified_areas:
+- Live host/model obedience and comparative UX quality remain best effort, not acceptance gates
+checks:
+  tests: PASS focused integration 9; isolated installed-consumer E2E 1; final affected selection 193 mode partial with full fallback preserved
+  build: PASS installed-consumer E2E built and installed real advisory/cli/core/dist/catalog wheels without agent/docs/spec packages
+  lint: PASS just lint-check; CI rules 22 zero errors/warnings; git diff --check
+  types: PASS just check all workspace packages
+  sync: PASS sync_start exit=0; after source sync create=0 update=0 remove=0; final sync check matches
+diff_scope:
+  base: fad216cee1ada8e31028d4bb97988692aa439238
+  head: b1a1500de65d1c15c7f6d943dec7f211b739bf2a
