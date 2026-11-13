@@ -1,7 +1,7 @@
 ---
 id: PROP-uiux-improve-run-model
 title: app-uiux-improve runs outside the repository workflow on per-task approval
-summary: Makes app-uiux-improve announce up front that it proceeds outside the repository's development workflow, whatever that workflow is, and continue only on the user's explicit per-task approval or follow the workflow when the user prefers.
+summary: "Offers an explicitly approved per-task UI/UX run outside the consumer workflow while retaining product constraints, host permissions and applicable checks. The user can instead keep the consumer workflow."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
@@ -13,7 +13,7 @@ boundaries:
   owns:
     - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
     - docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md
-    - docs/decisions/
+    - docs/decisions/2026-11/
     - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
     - packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py
     - packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/
@@ -92,47 +92,108 @@ wants.
 
 ## 2. Technical Spike Questions
 
-- **Q1 (main)**: Announcement and default. Settle the announcement's content and when it is shown (at entry, before
-  any product edit). Must it state explicitly that it proceeds outside an established methodology even when one is
-  configured? The bundle owner leans yes: tell the user and get approval. Settle the alternative of asking for the
-  user's preference with no default, and what happens without an approval channel (non-interactive host).
-- **Q2**: Git and delivery authority. When the repository workflow no longer supplies commit, integration and
-  publication authority, the skill asks the user. Settle the granularity without being stricter than needed: one
-  question covering the run's Git effects at the start or at the end (as the second run did), rather than one per
-  effect.
-- **Q3**: Documentation impact. Rule 17 stays report-only: the run reports each consumer OOUX or UX document the
-  change made stale and never edits it. Settle whether the report names a concrete follow-up hand-off to the
-  repository's own process and how it is worded neutrally.
-- **Q4**: Scope growth. If the scope grows mid-run (new surfaces, behavior beyond the approved goal), the coordinator
-  asks again before continuing. Settle the trigger.
-- **Q5**: Checks in the loop. Which independent checks the loop keeps or offers (independent UX review, independent
-  code review, project checks, before/after verification), given that the first run's defects came from them.
-- **Q6**: Decision record. A new ADR superseding `ADR-uiux-improvement-workflow-boundary` clause 2 and the
-  consumer-authority clauses of `ADR-impeccable-session-authority`; rule 3 rewritten for both modes.
+Planning recommendations below settle Q1 to Q6 for `plan-accept`; they are not an acceptance record.
+`MAT-uiux-run-model-planning` records the option comparison, source SHA, incoming-reference inventory and limitations.
+`PADR-uiux-task-approved-run` records the lasting decision and precise partial supersession.
+
+- **Q1 — Entry and approval**: retain the owner's announced outside-workflow option. At entry, identify the task and
+  say that this procedure runs outside the repository's development workflow and its process guidelines. Ask
+  whether to continue for this task or follow that workflow instead, before product edits or a write-capable
+  delegation. Reuse an explicit instruction already given for this task; do not ask twice. Without an answer or an
+  approval channel, preserve useful read-only inspection and wait before dependent edits. Silence never selects a
+  route. A review-only request still ends with findings and no product edits.
+- **Q2 — Git authority**: reuse any current authorization for the task's exact effects. Otherwise present the verified
+  changes and ask once for the remaining concrete Git effects before performing them. A question can cover a named
+  commit and local integration together; include publication only if the user requests it. An outside-workflow
+  choice alone grants none of them. Host permission checks still apply separately.
+- **Q3 — Stale documents**: retain the report-only boundary. Name each consumer OOUX or UX document made stale, the
+  affected statement and a concrete next action through the consumer's documentation process, where one exists.
+  With no such process, propose a separate documentation task. Create no task or record and edit no such document
+  during this run without a separate user request.
+- **Q4 — Scope growth**: ask again before implementing a new surface or behavior beyond the approved goal, or
+  changing a user constraint. A new file or an in-goal implementation choice does not by itself expand the goal.
+  Pause only dependent work; keep authorized independent work moving.
+- **Q5 — Checks**: on both routes, keep applicable project checks and before/after interface verification, fixing
+  in-scope defects and repeating the affected check. Keep independent UX and code review optional: recommend the
+  useful check with its purpose when structure or implementation risk warrants it, and report whether it ran.
+  Missing tools and declined optional checks remain explicit coverage limits. No role count, mandatory review
+  round or defect-parity claim is introduced.
+- **Q6 — Decision scope**: partially supersede only unconditional consumer-workflow continuation and the corresponding
+  pre-implementation and user-requested-action clauses. Keep selection-neutral installation, product constraints,
+  host restrictions, explicit Impeccable selection, context-file ownership, local-role limits and no implicit Git
+  authority. Question/load routing stays with `PROP-uiux-improve-impeccable-routing`.
 
 ## 3. Proposed Design & Impact
 
-Directions, not final wording; Planning settles each.
+### Options and recommendation
 
-1. At entry, one announcement: this procedure proceeds outside the repository's development workflow and
-   guidelines; continue, or follow the repository workflow instead? Proceed only on the user's explicit approval
-   for this task.
-2. Outside the workflow: run the skill's own loop (inspect, independent role passes, user picks, implement inline or
-   through Impeccable, project checks, before/after verification), offer the independent checks Planning keeps, ask
-   for Git authority as Q2 settles, re-ask on scope growth and end with the stale-document report.
-3. Following the workflow: rule 3 as today.
-4. A superseding ADR and rule 3 rewritten; `UC-improve-an-interface-and-user-flow` gains acceptance examples for both
-   modes; a test asserts the announcement and approval step and that the wording names no workflow-specific policy
-   key.
+| Option | Benefit | Cost or risk | Disposition |
+| --- | --- | --- | --- |
+| Keep the consumer workflow for every run | Reuses existing checks, records and approval steps | Retains the reported bookkeeping cost | Supported user choice |
+| Announce an outside-workflow run and obtain explicit task approval | Preserves the owner's preferred light route and makes the departure attributable | Independent review remains optional; stale documents need a follow-up | Recommended |
+| Ask neutrally for either route with no announced preference | Gives both routes equal presentation | Does not express the owner's requested default; still requires a no-answer rule | Not selected |
 
-Impact: `CAP-DLV-uiux-improvement` (rules 3, 17, possibly 12), `UC-improve-an-interface-and-user-flow`, one ADR, the
-bundle's `SKILL.md`, `references/orchestration.md` and README, and the bundle tests. No change to `devkit-spec`,
-delivery workflows, `CAP-HARN-agent-guidance` or distribution.
+The proposed announcement is: “This procedure runs outside the repository's development workflow and its process
+guidelines. Continue for this task, or follow that workflow instead? Product constraints, host permissions and
+applicable project checks still apply.” This is illustrative wording; the content and approval boundary are the
+contract. “Outside” concerns workflow steps and workflow-specific records, not host controls, secrets, product
+constraints or permission to publish.
+
+### Execution and authority
+
+- Outside the workflow, the coordinator uses the existing improvement loop: inspect, proportionate framing, useful
+  independent perspectives, user choices, inline implementation or a selected Impeccable session, applicable
+  project checks, before/after verification and a qualified result. It creates no competing workflow or new
+  required retained record.
+- Following the workflow, complete its pre-implementation, review and delivery steps as before. The chosen route
+  applies equally to inline changes, accepted Impeccable changes and explicitly requested setup or cleanup.
+- Choosing a route changes no configured approach or policy file. Selecting or invoking the bundle alone changes
+  neither approach nor authority. Host refusals stop the operation without another access route.
+- Product and design-system constraints remain in force. A departure from a constraint needs the user's explicit
+  change to that constraint; a generic route approval does not supply it.
+- Keep the Impeccable brief's recorded base, edit list, no concurrent coordinator edits, unchanged index/HEAD and
+  acceptance checks. This proposal changes no interactive-command or skill-load route.
+
+### Target documents and implementation
+
+`PROP-uiux-improve-run-model-target` contains prospective capability rules, use-case branches and acceptance cases.
+Development updates the capability summary and rules 3, 11, 12, 16, 17 and 19 as needed, adds bounded entry, scope and
+Git-authority rules, promotes the PADR and adds exact partial-supersession pointers to the two existing ADRs. Keep
+both old ADRs accepted because their other clauses remain in force.
+
+Update the bundle's `SKILL.md`, `references/orchestration.md` and human README coherently. Apply `agent-asset-writing`
+after loading authoring context before those edits. Keep all agent wording workflow-neutral: name no
+`devkit-spec` policy key, workflow command or required delivery record. Extend the existing integration tests for
+entry/authority, delegation and requested setup, and the installed-consumer test for independent installation.
+No new runtime, package, feature dependency edge, distribution behavior or global workflow policy is in scope.
+
+### Verification plan
+
+| Check | Observable outcome |
+| --- | --- |
+| Entry contract assertions | Announcement, both choices, explicit per-task approval and prior-authorization reuse appear before product edits and write-capable delegation |
+| Authority scenarios | No answer/non-interactive without prior approval causes no dependent edit; a route choice grants no Git/publication authority |
+| Both-mode scenarios | Workflow choice retains its steps; outside choice keeps project checks, before/after verification and host restrictions |
+| Scope and documentation scenarios | Out-of-goal surface/behavior requires a new decision; stale consumer documents are named with a follow-up and remain unedited |
+| Delegation and setup assertions | Selected route applies to Impeccable and requested setup/cleanup without changing question/load routing or file permissions |
+| Installed-consumer E2E | Bundle still installs without delivery packages, selection leaves the configured approach unchanged and no delivery records are created |
+| Repository verification | Relevant lint/type checks and `just test-affected` with full fallback; include the existing app-uiux-improve installed-consumer E2E |
+
+Empirical consumer and host trials are best effort for this personal project. Unavailable live runs are reported
+as unverified coverage rather than an acceptance gate; deterministic document/rule checks and the required review
+procedure still apply.
+
+These are instruction and distribution checks. They do not prove model obedience, design quality, lower latency or
+equal defect detection. The two recorded pilots are confounded; no comparative performance gate is proposed.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to `sdd-spec-feature` on
-  `dev-uiux-improve-run-model`. The proposal is deleted there, its decision becomes the superseding ADR, and
-  `MAT-uiux-improve-second-pilot` moves to `docs/materials/`.
-- On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal.
+- Before acceptance: present this committed proposal, its PADR, target draft, Scout/Challenger findings and unverified
+  areas. Existing Living Spec contracts stay in force throughout Planning.
+- On acceptance: the Host uses `devkit spec proposal accept-plan` under the exact current approval policy. Development
+  handoff and integration remain separate effects with their own authority. On handoff the decision becomes an ADR,
+  this proposal retires and `MAT-uiux-improve-second-pilot` plus `MAT-uiux-run-model-planning` move with their IDs.
+- Delivery order remains this proposal, `PROP-uiux-improve-impeccable-routing`, then
+  `PROP-uiux-improve-bundle-hygiene`. Overlapping Development and handoff run sequentially.
+- On rejection: retain `status: rejected` with the user's reason in the commit message; follow the normal rejection
+  and feedback-retirement procedure before deletion.
