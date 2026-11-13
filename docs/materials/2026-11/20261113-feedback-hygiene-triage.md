@@ -36,15 +36,33 @@ the observation occurred.
 The selected outcomes form three independent feature/spec work units at medium Development effort: guidance,
 conditional cleanup, and UI/UX upstream limitations. No unresolved direction requires proposal Planning.
 
+## Completed disposition
+
+The fourteen selected records have six `resolved`, five `dismissed` and three `promoted` outcomes. None remains
+open. The promoted records received completed local mitigation; they represent no pending upstream submission.
+
+| Completed work | Source count | Destination |
+| --- | --- | --- |
+| Guidance clarifications | 5 resolved | `SPEC-feedback-guidance-clarifications` |
+| Conditional proposal cleanup | 1 resolved | `SPEC-conditional-proposal-prune` |
+| Local Impeccable limitations guidance | 3 promoted | `SPEC-uiux-upstream-fallbacks` |
+| Declined expansion and historical invocation investigation | 5 dismissed | The source records retain their disposition reasons |
+
+All three Units were independently code-reviewed, reconciled and integrated locally. Their source checks passed;
+the Unit envelopes retain commands, exact source identities and review outcomes. The Host delivery report supplies
+the tested landed identity and combined check outcomes. The source branches and worktrees were removed.
+No live upstream trial, upstream runtime correction or external submission is claimed. The inline triage used no
+native `triage` role, because its Codex route was emulated.
+
 ## Initial recommended batch
 
 | Group | Count | Proposed action | Result after authorized work |
 | --- | --- | --- | --- |
-| Guidance clarification | 5 | Use existing envelope fields/procedures and explain timing, provenance and missing style sources | Resolve only after the changes and review verify each source |
-| Cleanup-plan improvement | 1 | Omit inapplicable proposal-prune targets without weakening digest/recovery checks | Resolve only after implementation and regression verification |
+| Guidance clarification | 5 | Use existing envelope fields/procedures and explain timing, provenance and missing style sources | Resolved through `SPEC-feedback-guidance-clarifications` |
+| Cleanup-plan improvement | 1 | Omit inapplicable proposal-prune targets without weakening digest/recovery checks | Resolved through `SPEC-conditional-proposal-prune` |
 | Normal behavior or unsupported mechanism expansion | 4 | Dismiss with the specific reasons below | Dismissed |
-| Mid-session host invocation | 1 | Retain pending host discovery/invocation evidence | Open |
-| Upstream Impeccable observations | 3 | Retain with the unsubmitted drafts below; no devkit runtime workaround | Open until independently resolved, dismissed or explicitly submitted |
+| Mid-session host invocation | 1 | Initially retain pending host discovery/invocation evidence | Dismissed after the historical report was acknowledged; no host-fix claim |
+| Upstream Impeccable observations | 3 | Initially retain with the unsubmitted drafts below | Promoted to completed local guidance in `SPEC-uiux-upstream-fallbacks`; no external task |
 
 The five guidance items form a bounded guidance change. The cleanup-plan item is a separate, settled-direction
 feature change at spec depth because its observable cleanup contract changes. No rule, cache, extension point,
@@ -105,17 +123,17 @@ direction with implementation choices, not a request for a general cleanup mecha
 | `FB-envelope-round-reviewer-identity` | The current round-prefix convention is explicit and was usable in the completed multi-round linter delivery. The record supplies a worker's question but no failed round count or lost provenance. Additional structured fields/flags would create competing sources of truth without demonstrated necessity. |
 | `FB-feedback-record-no-scaffold-command` | The suggested command is a hypothesis. The evidence reports successful template-based records, with no demonstrated invalid record, blocking failure or measured cost. Keep the existing template plus validation rather than add another CLI surface. |
 
-### Retained host question
+### Initial host question, subsequently dismissed
 
-`FB-projection-guard-after-mid-session-install` remains open. The repo owns the native user-invocation projection,
+The initial triage retained `FB-projection-guard-after-mid-session-install`. The repo owns the native user-invocation projection,
 but host skill-list refresh and the consumer's exact invocation route remain unverified. Current projection source
 still writes the native explicit-invocation setting described by `CAP-DIST-agent-projections`; that alone neither
 proves a host defect nor defines a reload procedure.
 
 Missing evidence: the host/version, visibility of the newly installed slash command, whether discovery refreshes
 in that same session, and whether a fresh session changes the result. Do not authorize cache reads, remove the
-invocation setting or mandate a speculative reload mechanism. Retain the observation for best-effort confirmation
-when this installation situation next occurs.
+invocation setting or mandate a speculative reload mechanism. The selected disposition dismissed the historical
+observation after acknowledgment, without requiring further host investigation or claiming a reproduced fix.
 
 ## Historical unsubmitted upstream report drafts
 
@@ -154,11 +172,13 @@ them. No external submission is authorized or performed. Drafting is not a forwa
   CLI naming agree. A --help transcript or a minimal reproduction is needed before asserting a current bug.
 - Current devkit action: do not add a runtime workaround or invent an audit-storage interface.
 
-## Check results and limits
+## Initial triage check results and limits
 
-- All fourteen records and their current repo targets were read. No source feedback status has changed.
+- At the initial snapshot, all fourteen records and their current repo targets were read and no source feedback
+  status had changed. The completed disposition above records the subsequent authorized changes.
 - The hygiene rule run exited 0. It reported one existing archival material length warning and
   WORKTREE_STALE_SKIPPED because gh authentication failed; remote branch staleness was not checked. No rejected
   proposal cleanup was reported. No unrelated material, branch, host registration or authentication was changed.
 - The starting checkout was clean. No implementation, upstream probe or external send was performed in this triage.
-- Proposed future fixes require their own appropriate source review, rules/sync checks and implementation checks.
+- The selected fixes subsequently received their own source review, rules/sync checks and implementation checks
+  in the three completed Units above.
