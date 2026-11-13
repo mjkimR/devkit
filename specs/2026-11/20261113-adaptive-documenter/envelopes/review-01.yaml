@@ -1,0 +1,15 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T11:31:29.128109Z'
+status: completed
+summary: 'Low-effort self-review: installed projection passes; source-bound documentation, conflicts and Host boundaries match the contract. No findings.'
+findings: []
+checks:
+  tests: PASS 186 affected tests and 35 bundle tests
+  lint: PASS package ruff, pyright and CI rules
+  build: PASS wheel and sdist; overlay bytes checked
+diff_scope:
+  base: 614d58f1e1f66232982fc43d9d9cc58a130ba3fd
+  head: d31be266ce241dfdd548198b391424ef7dd9ac8a
