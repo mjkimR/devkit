@@ -36,13 +36,13 @@ through `.git/info/exclude`. An SDD worktree did not contain them, so the pilot 
 passed main-checkout absolute paths read-only. `SPEC-uiux-improve-bundle-hygiene` AC-06 made that fallback the
 instruction. Untracked root files are also lost on a fresh clone.
 
-Consumer pilot on 2026-11-13 (a SvelteKit/FastAPI consumer repository, commits `dc7ffb4` and `644e821` on its
-`impeccable-context` branch):
+Consumer pilot on 2026-11-13 (a SvelteKit/FastAPI consumer repository, commits `dc7ffb4` and `644e821`, merged to
+its `main` as `e1a50a8`):
 
 - The tracked source moved to `docs/materials/impeccable/` (`PRODUCT.md` plus a `README.md`; `DESIGN.md` is
   deliberately absent because a steering document owns the visual style).
 - devkit docs rules treat `docs/materials/` as free-form, so a non-devkit-format file passes lint there.
-- The root `PRODUCT.md` is a relative symlink to `docs/materials/impeccable/PRODUCT.md`, created by hand with
+- On that `main`, the root `PRODUCT.md` is a relative symlink to `docs/materials/impeccable/PRODUCT.md`, made by hand with
   `ln -s docs/materials/impeccable/PRODUCT.md PRODUCT.md`.
 - `/PRODUCT.md` and `/DESIGN.md` stay in `.git/info/exclude`. That file lives in the Git common directory, so every
   linked worktree shares the entries, while each worktree still needs its own link.
