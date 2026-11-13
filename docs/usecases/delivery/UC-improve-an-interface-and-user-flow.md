@@ -1,7 +1,7 @@
 ---
 id: UC-improve-an-interface-and-user-flow
 title: Improve an interface and user flow
-summary: "An AI coding agent improves a software interface through an approved task route, framed objects and optional Impeccable delegation, then verifies the changed branch against the goal and reports measured checks and limits."
+summary: "An AI coding agent improves a software interface through an approved task route, framed objects and optional Impeccable delegation, then verifies the changed branch. It handles detector, probe and persistence limits through evidence, authorized continuation and qualified reporting."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional design and research subagents, Optional Impeccable session]
@@ -76,6 +76,16 @@ entrypoints:
 - **5f.** Local-only context is untracked or excluded and the session runs elsewhere: the agent passes absolute
   read-only context paths while preserving consumer ownership and retention choices; resumes at 5c without new
   copy, commit, ignore or removal authority.
+- **5g.** The visual detector misses the target: the agent inspects the actual target, UI code and executable
+  local branch build, reports detector limits separately from evidence and promises no detection fix; resumes at
+  5c with observed evidence rather than treating the signal as absent UI.
+- **5h.** A child cannot run a required autonomy probe: its capability/stop-condition brief does not satisfy or
+  override that requirement. Dependent Impeccable work stops and reports the unavailable probe; the user-operated
+  session resumes at 5c after its report, or already authorized/user-chosen inline work resumes at step 5 without
+  claiming Impeccable or its probe ran. Applicable loading, answer confirmation and host permissions remain.
+- **5i.** Installed supported help/interface offers no audit persistence operation: the agent returns findings and
+  coverage in the session report with persistence unavailable, invents/retries no command and creates no
+  unrequested file or installation change; resumes at step 6.
 - **6a.** A check exposes a defect: the agent fixes it within scope and repeats the affected check; resumes at step 6.
 - **6b.** The session changed a file outside its edit list or the approved goal, including an in-list change,
   wrote session output or created or changed consumer
@@ -109,7 +119,9 @@ entrypoints:
 
 Rules: explicit invocation, consumer authority, goal-driven improvement, narrower request, optional perspectives,
 role packet, independent context, host limits, verification, qualified completion, user-selected delegation, session
-brief and routing, coordinator acceptance, consumer context files and user-requested setup and cleanup, task route choice, scope growth and Git effects.
+brief and routing, coordinator acceptance, consumer context files and user-requested setup and cleanup, task route
+choice, scope growth, Git effects, detector evidence, capability brief, unavailable autonomy probe and supported
+audit persistence.
 
 ### Scenario 1: Carry a flow and visual improvement through delivery
 
@@ -279,3 +291,27 @@ brief and routing, coordinator acceptance, consumer context files and user-reque
 - **Given**: untracked or excluded PRODUCT.md or DESIGN.md and a session elsewhere.
 - **When**: the coordinator supplies context.
 - **Then**: it passes absolute read-only paths and retains upstream retention guidance without inferring copy, commit, ignore or removal authority.
+
+### Scenario 24: Inspect evidence after a negative detector result
+
+- **Covers**: 5g
+- **Given**: an existing interface target and a negative visual detection result.
+- **When**: the agent evaluates the target.
+- **Then**: it inspects actual target/code and the executable branch build, reports evidence and coverage separately
+  from the detector result and promises neither absent UI nor a detection correction.
+
+### Scenario 25: Preserve an unsatisfied delegated autonomy requirement
+
+- **Covers**: 5h
+- **Given**: a brief with actual capabilities/stop conditions and a live probe the child cannot run.
+- **When**: the upstream command requires that probe.
+- **Then**: dependent work stops and reports the unavailable probe without treating the brief as a pass or override;
+  continuation uses the user-operated session or authorized inline work with applicable gates and permissions.
+
+### Scenario 26: Return an audit without unsupported persistence
+
+- **Covers**: 5i
+- **Given**: installed supported help/interface with no audit persistence operation.
+- **When**: the agent would persist the audit.
+- **Then**: findings and coverage remain in the session report with persistence unavailable, no invented/retried
+  command and no unrequested file or installation change.
