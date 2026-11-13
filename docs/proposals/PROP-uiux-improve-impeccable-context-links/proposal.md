@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-impeccable-context-links
 title: Link tracked Impeccable context through a bundled POSIX script
 summary: The app-uiux-improve bundle ships a POSIX sh script that links a project's tracked Impeccable context (PRODUCT.md, DESIGN.md, .impeccable/) into the repository root as git-excluded relative symlinks and checks them, so the context survives worktrees and clones without a second copy.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
