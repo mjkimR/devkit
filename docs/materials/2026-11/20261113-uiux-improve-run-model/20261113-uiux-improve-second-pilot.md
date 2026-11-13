@@ -44,7 +44,7 @@ Summary:
 - Finding-driven: re-verification, reconcile fixes and the second reconcile check followed real findings.
 - Scope creep: build-time amendments (a label preamble, an out-of-scope overflow fix pulled into a listed file,
   branding cleanup) were scope growth that the contract correctly surfaced; the added authority record followed.
-- Coordinator error: a task focus turned into a non-goal (A4a), fixed in `PROP-uiux-improve-bundle-hygiene`.
+- Coordinator error: a task focus turned into a non-goal (A4a), fixed in `SPEC-uiux-improve-bundle-hygiene`.
 - SDD structure alone: contract authoring (1), three lifecycle commits (7, 16, part of 12) and the mandatory check
   envelopes. This residue is the part a different run model would remove.
 - Value: semantic defect (UX review), test gap (code review), stale UX documents kept in step (reconcile).

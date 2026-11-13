@@ -1,33 +1,27 @@
 ---
-id: PROP-uiux-improve-bundle-hygiene
+id: SPEC-uiux-improve-bundle-hygiene
 title: app-uiux-improve pilot hygiene fixes
-summary: "Fixes app-uiux-improve pilot instruction gaps in branch-build verification, brief scope, craft-rule precedence, change acceptance, computed contrast, local context paths and plugin-enablement troubleshooting."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-13
-target_area: capabilities/delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-depends_on: [SPEC-uiux-improve-impeccable-routing]
-boundaries:
-  owns:
-    - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
-    - docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md
-    - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
-    - packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py
-  excludes:
-    - docs/decisions/
-    - packages/devkit-dist/
-    - packages/devkit-spec/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
+summary: Fixes app-uiux-improve pilot instruction gaps in branch-build verification, brief scope, craft-rule precedence, change acceptance, computed contrast, local context paths and plugin-enablement troubleshooting.
+status: planned
+created: 2026-11-13
+depends_on:
+  - SPEC-uiux-improve-impeccable-routing
 decomposed_from: PROP-uiux-improve-pilot-fit
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-uiux-improve-bundle-hygiene] app-uiux-improve pilot hygiene fixes
+# [SPEC-uiux-improve-bundle-hygiene] app-uiux-improve pilot hygiene fixes
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-uiux-improve-bundle-hygiene on 2026-11-13.
+- **Preserved Materials**: `docs/materials/2026-11/20261113-uiux-improve-bundle-hygiene`
+- Target Docs Blueprint: `PROP-uiux-improve-bundle-hygiene-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `app-uiux-improve` 0.1.6 ran in a consumer repository for a whole-surface color-system refresh with the
 user-selected Impeccable track. `MAT-uiux-improve-pilot` (held in this bundle) records the run; finding IDs below
@@ -44,7 +38,26 @@ Hypothesis: with these gaps closed, a coordinator verifies the branch it changed
 a prohibition, tells an Impeccable session which rule wins, catches an in-list but out-of-scope change and measures
 contrast instead of estimating it.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement app-uiux-improve pilot hygiene fixes so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 Planning settled wording and test placement against source HEAD `aa6c51dc3148efba121bc54c8e582a59aacd11d1`.
 No business question remains; acceptance and Development handoff stay with the Host.
@@ -57,7 +70,7 @@ No business question remains; acceptance and Development handoff stay with the H
   contrast and workflow-neutral wording. Use representative instruction walkthroughs for actual behavior; static
   assertions establish only that the required instructions are present. Details are in `target-docs.md`.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 1. Verification target (A3). SKILL step 2 and step 8 inspect and verify the branch build running locally. When the
    backend is costly or shared, stub it (for example API mocking in the browser driver) and keep a re-runnable
@@ -88,7 +101,7 @@ acceptance and coverage examples; the bundle's `SKILL.md`, `references/orchestra
 `test_app_uiux_improve.py`. `target-docs.md` maps the wording and acceptance checks. No ADR, workflow, runtime API,
 package dependency or distribution change is required.
 
-### Planning decisions and constraints
+#### Planning decisions and constraints
 
 - Keep `planning_effort: low` because direction is settled; retain `dev_effort: medium` for instruction review and
   bundle checks. No scout or challenger pass is required at this Planning effort.
@@ -110,7 +123,7 @@ package dependency or distribution change is required.
 - No concrete work is deferred by this proposal beyond the policy and routing changes already owned by the two
   named predecessor proposals.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: the Host uses `devkit spec proposal accept-plan uiux-improve-bundle-hygiene` after reviewing the
   committed Planning result and obtaining the required approval. Development handoff follows the predecessor order
@@ -118,3 +131,4 @@ package dependency or distribution change is required.
   `MAT-uiux-improve-pilot` moves to `docs/materials/`, retaining its ID and sibling citations.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal. Before that deletion, move `MAT-uiux-improve-pilot` to a live sibling.
+
