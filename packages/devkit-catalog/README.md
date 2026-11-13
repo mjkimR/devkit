@@ -26,7 +26,9 @@ Adaptive development ships in [devkit-adaptive](../devkit-adaptive/README.md).
 
 `uv run devkit add deep-research` explicitly selects the research bundle. It installs with devkit-docs and catalog,
 needs no devkit-spec and runs under either development approach without reading or changing it. Its entry declares
-`invocation = "user"` and runs only when the user invokes it; no other skill, pointer or guide suggests it. The
+`invocation = "user"` and runs only when the user invokes it; no other skill, pointer or guide suggests or starts
+the research entry. Installation guides strongly recommend selecting the bundle with `uv run devkit add deep-research`
+as an optional addition; selection starts no research and adds no always-loaded guidance or registered research subagents. The
 invoking agent coordinates optional direction-explorer, discovery-critic, discovery-planner and
 research-investigator assignments in ignored transient run directories and retains each investigation as one
 indexed material under `docs/materials/`, which proposals, specs, decisions and current context cite by its

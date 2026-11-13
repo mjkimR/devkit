@@ -4,7 +4,8 @@ How to choose opt-in bundles after the base installation. Entry point: [Installa
 
 A bundle is a set of assets; a preset selects part of it. `devkit` and `advisory` (and `harness` with `devkit-agt`,
 `docs` with `devkit-docs`, `docs` and `spec` with `devkit-spec`) are deployed automatically; every other bundle deploys nothing until `uv run devkit add <bundle>[:<preset>]` selects
-it. Recommend a bundle only on evidence from the repository or the user's answers, and select only what the user
+it. Strongly recommend `uv run devkit add deep-research` as an optional addition during installation.
+Recommend other bundles only on evidence from the repository or the user's answers, and select only what the user
 approves.
 
 ## 1. See what is available
@@ -20,6 +21,12 @@ recommend comes from it.
 
 ## 2. Match the repository
 
+Recommend selecting `uv run devkit add deep-research` during installation without waiting for a research request.
+It provides explicit discovery and research entries without always-loaded guidance or registered research subagents.
+Explain that it requires devkit-catalog and devkit-docs, which brings the harness even to a distribution-only installation.
+Selection starts no research; each entry still requires explicit user invocation.
+If the user declines the packages or bundle, continue installation without it.
+
 | Bundle (package) | Recommend when | Preset |
 | --- | --- | --- |
 | `docs` (`devkit-docs`) | The user wants document formats and validation without mandatory SDD. | Auto-selected `core`: writing instructions, document rules, shared templates and steering context. Optional `docs:docs-skeleton` seeds absent files. Install devkit-docs instead of devkit-agt. |
@@ -34,7 +41,7 @@ recommend comes from it.
 | `cli-tool` (`devkit-catalog`) | The repository builds, or the user plans, a Python command-line tool that agents run. | Default `all`: the `cli-tool-structure` instruction (click, `devkit-cli`, the required feature layout, import budget) and five structure rules run by `devkit-agt`; `guide`: the instruction only (the preset to take with `devkit-dist` alone). |
 | `adaptive-dev` (`devkit-adaptive`) | The user wants to discover and build an idea without per-change SDD records, with resumable current product context. | Explicit `core`: `/adaptive-dev`, three optional support roles, three reusable swarm archetypes, the current-context template and the user-invoked `/adaptive-import` entry with its conversion playbook. Install devkit-adaptive, which brings devkit-docs and the harness, choose shared adaptive-development policy ([Installation Guide, adaptive development](../INSTALL_GUIDE.md#adaptive-development)), then `uv run devkit add adaptive-dev`. No devkit-spec dependency. |
 | `adaptive-dev:agents`, `adaptive-dev:import` (`devkit-adaptive`) | The user wants the reusable swarm archetypes under the project's own workflow, or asks to import selected third-party subagents or skills as project-owned assets. Repository evidence alone never recommends `import`. | `agents`: `swarm-planner`, `swarm-worker` and `swarm-verifier` alone. `import`: `/adaptive-import` and the `agent-asset-conversion` playbook alone; the entry runs only on the user's invocation, executes nothing from the source and converts only the selected items into the project's own bundle. Neither preset changes the development approach; installing devkit-adaptive alone provides the commands, document system and harness. |
-| `deep-research` (`devkit-catalog`) | The user asks for an explicit research entry or idea discovery. Repository evidence alone never recommends it. | Explicit `core`: discovery interviews, explores and pressure-tests half-formed ideas in conversation; research retains one indexed material per investigation under `docs/materials/`. Both entries are user-invoked with optional local roles. Install devkit-docs plus devkit-catalog, then `uv run devkit add deep-research`; it works under either development approach and needs no devkit-spec. |
+| `deep-research` (`devkit-catalog`) | Strongly recommend during installation as an optional addition for idea discovery and bounded research; no prior research request is needed. | Explicit `core`: discovery interviews, explores and pressure-tests half-formed ideas in conversation; research retains one indexed material per investigation under `docs/materials/`. Both entries require explicit user invocation, with optional local roles and no always-loaded guidance or registered research subagents. Install devkit-docs plus devkit-catalog, then `uv run devkit add deep-research`; devkit-docs brings the harness. It works under either development approach and needs no devkit-spec. |
 | `app-uiux-improve` (`devkit-catalog`) | The user asks for an explicitly invoked UI/UX improvement entry for a software interface (web or desktop application, dashboard, admin tool, settings or responsive views). | Explicit `core`: proportionate object framing from the project's OOUX documents when present, local optional design/research/critique roles and, on the user's selection, a briefed session of a separately installed Impeccable; requested implementation and checks follow the consumer workflow. Dist and catalog suffice; `uv run devkit add app-uiux-improve` selects assets without starting work, installing Impeccable or changing development approach. |
 | `design-explore` (`devkit-catalog`) | The user asks for an explicit general solution design entry for architecture, models, module boundaries or workflows. | Explicit `core`: optional local premise explorers, researcher and critic; useful mechanisms and tradeoffs in conversation unless another destination is requested. Dist and catalog suffice; `uv run devkit add design-explore` starts no work, changes no policy and grants no implementation authority. |
 | `response-style` (`devkit-catalog`) | The user wants answer-first replies that keep decision-critical facts, or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line; `[presentation] language = "ko"` supplies an inherited Korean default; an explicit `[bundles.response-style.variables] language` value wins. Run sync after edits. |
@@ -42,7 +49,7 @@ recommend comes from it.
 
 With `devkit-dist` alone, recommend no `devkit-agt` bundle, no `spec` and no rule asset (`advisory:python`, `cli-tool` other than
 `cli-tool:guide`): nothing runs them.
-Do not recommend a bundle without evidence for it. When a signal is weak (for example a few Conventional Commits
+For other bundles, do not recommend one without evidence for it. When a signal is weak (for example a few Conventional Commits
 among many free-form messages), mention it as optional.
 
 ## 3. Present and select

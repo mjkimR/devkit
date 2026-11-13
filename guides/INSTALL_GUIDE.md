@@ -149,12 +149,17 @@ synchronized landed runtime before completion. Retain project checks and use a s
 [baseline procedure](install/adaptive-dev-sdd-adoption.md) for voluntary SDD adoption; installing assets or changing
 the approach establishes no verified SDD baseline.
 
-Select discovery and research with `uv run devkit add deep-research` only when the user asks for those explicit entries.
+Recommend selecting discovery and research with `uv run devkit add deep-research` during installation; follow
+[Bundle Recommendations](install/bundle-recommendations.md) for its optional packages and selection approval.
 
 ## Step 4: Recommend bundles
 
 After the base installation, follow [Bundle Recommendations](install/bundle-recommendations.md): match the repository
 against each opt-in bundle, present the recommendations with their evidence, and select the approved ones.
+Strongly recommend selecting `uv run devkit add deep-research` as an optional addition, even before the user asks
+for research or idea discovery. Explain that it requires devkit-catalog and devkit-docs, which brings the harness.
+Its two entries require explicit user invocation; selection starts no research and adds no always-loaded guidance
+or registered research subagents. Declining it does not block installation.
 
 ## Optional: MCP connection
 

@@ -236,7 +236,8 @@ def test_guides_name_the_add_command() -> None:  # AC-11
     for path in (install, existing, recommendations, PACKAGE / "README.md"):
         assert "uv run devkit add deep-research" in path.read_text(), path
     row = next(line for line in recommendations.read_text().splitlines() if line.startswith("| `deep-research`"))
-    assert "the user asks for an explicit research entry" in row.lower()
+    assert "strongly recommend during installation as an optional addition" in row.lower()
+    assert "require explicit user invocation" in row.lower()
 
 
 def test_upgrade_removes_registered_roles(tmp_path: Path) -> None:
