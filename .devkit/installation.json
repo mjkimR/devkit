@@ -2509,7 +2509,7 @@
       "sha256": "918ff775e776b5fb5def06456a6235f3cf740b987592c4fbd59ce4bf3e37d242"
     }
   },
-  "guidance_block": "af07ed8f43a293fa14ee2171ce9e90ad2b33ceceb5edd3de7db773a994910c47",
+  "guidance_block": "6cfd879e00229b4d2328c18526cb92cc5323a8701f98a6171f2581c3ac4f9d59",
   "packages": [
     {
       "bundle": "advisory",

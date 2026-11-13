@@ -67,7 +67,7 @@ def test_block_is_created_with_the_selection(installed: list[InstalledBundle], t
     assert {"path": AGENTS_FILE, "action": "create"} in result["actions"]
     text = (target / AGENTS_FILE).read_text()
     assert text.startswith(START + "\n") and text.endswith(END + "\n")
-    assert "Installed bundles: `team`." in text
+    assert "Installed: `team`." in text
     assert "Entry skill" not in text  # the host lists skill descriptions itself
     assert "Managed by `devkit sync`" in text
     assert len(text.encode()) < 1024
@@ -356,7 +356,7 @@ def test_mixed_context_sources_and_manifest_validation(tmp_path: Path) -> None:
     update_config(root, presets={"empty": ["all"], "docs": ["all"]}, agents=[])
     sync_project(root, items)
     text = (root / AGENTS_FILE).read_text()
-    assert "Installed bundles: `docs`, `empty`." in text
+    assert "Installed: `docs`, `empty`." in text
     assert "after context loss: `docs`." in text
     assert GetPlaybook().execute(root, "empty/run").context_required is False
     assert GetPlaybook().execute(root, "docs/run").context_required is True

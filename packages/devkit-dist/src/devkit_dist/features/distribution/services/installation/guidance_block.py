@@ -39,7 +39,7 @@ def render(
     assets, placed after devkit's own lines in the order the caller fixes (bundle, then asset ID).
     """
     if bundles:
-        context = "- Installed bundles: " + ", ".join(f"`{b}`" for b in bundles) + "."
+        context = "- Installed: " + ", ".join(f"`{b}`" for b in bundles) + "."
         if context_bundles:
             context += (
                 " Before using assets from the following bundles, run `uv run devkit get-context <bundle>`"
