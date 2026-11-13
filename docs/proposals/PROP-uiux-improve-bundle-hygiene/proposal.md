@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-bundle-hygiene
 title: app-uiux-improve pilot hygiene fixes
 summary: 'Fixes app-uiux-improve instruction gaps a consumer pilot exposed: branch-build verification, brief and non-goal hygiene, craft-rule precedence, scope-aware acceptance, computed contrast, workflow-neutral wording and a plugin-enablement note.'
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
