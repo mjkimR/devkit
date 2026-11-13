@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-impeccable-routing
 title: Impeccable question and load routing for app-uiux-improve
 summary: Decides whether app-uiux-improve may relay an Impeccable command's question round through the coordinator with the user confirming every answer, and how a child loads a plugin-installed Impeccable, partially superseding ADR-impeccable-session-authority.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
 priority: medium                      # critical | high | medium | low
