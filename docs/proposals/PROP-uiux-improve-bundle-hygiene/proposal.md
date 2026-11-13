@@ -1,8 +1,8 @@
 ---
 id: PROP-uiux-improve-bundle-hygiene
 title: app-uiux-improve pilot hygiene fixes
-summary: 'Fixes app-uiux-improve instruction gaps a consumer pilot exposed: branch-build verification, brief and non-goal hygiene, craft-rule precedence, scope-aware acceptance, computed contrast, workflow-neutral wording and a plugin-enablement note.'
-status: draft                         # draft | reviewing | accepted | rejected
+summary: "Fixes app-uiux-improve pilot instruction gaps in branch-build verification, brief scope, craft-rule precedence, change acceptance, computed contrast, local context paths and plugin-enablement troubleshooting."
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
@@ -46,11 +46,16 @@ contrast instead of estimating it.
 
 ## 2. Technical Spike Questions
 
-The direction is settled; Planning confirms wording and test placement only.
+Planning settled wording and test placement against source HEAD `aa6c51dc3148efba121bc54c8e582a59aacd11d1`.
+No business question remains; acceptance and Development handoff stay with the Host.
 
-- **Q1**: Which `CAP-DLV-uiux-improvement` rules change (expected: 11 verification, 16 brief, 17 acceptance, 18
-  context files) and which statements need a new rule, for example a computed contrast check?
-- **Q2**: Which statements get a test assertion in `test_app_uiux_improve.py` and which stay review-only?
+- **Q1 resolved**: clarify `CAP-DLV-uiux-improvement` rules 4 (focus versus constraint), 11 (branch-build and
+  measured-color verification), 16 (brief precedence and read-only absolute context paths), 17 (goal-scope acceptance)
+  and 18 (retention report). Rule 13 remains unchanged. Computed contrast extends rule 11's verification obligation;
+  it needs no separate authority rule or ADR.
+- **Q2 resolved**: extend the existing integration instruction assertions and add focused assertions for measured
+  contrast and workflow-neutral wording. Use representative instruction walkthroughs for actual behavior; static
+  assertions establish only that the required instructions are present. Details are in `target-docs.md`.
 
 ## 3. Proposed Design & Impact
 
@@ -77,14 +82,39 @@ The direction is settled; Planning confirms wording and test placement only.
    `SKILL.md` from the plugin cache is recorded as an observed, undocumented workaround, not a route the skill names;
    routing decisions belong to `PROP-uiux-improve-impeccable-routing`.
 
-Impact: `CAP-DLV-uiux-improvement`, possibly `UC-improve-an-interface-and-user-flow` acceptance examples, the bundle's
-`SKILL.md`, `references/orchestration.md`, `references/design-guidance.md`, designer roles, README and
-`test_app_uiux_improve.py`. No ADR, no workflow or distribution change.
+Impact: `CAP-DLV-uiux-improvement` rules 4, 11, 16, 17 and 18; `UC-improve-an-interface-and-user-flow` inspection,
+acceptance and coverage examples; the bundle's `SKILL.md`, `references/orchestration.md`,
+`references/design-guidance.md`, `roles/designer.md`, `roles/unconventional-designer.md`, human README and
+`test_app_uiux_improve.py`. `target-docs.md` maps the wording and acceptance checks. No ADR, workflow, runtime API,
+package dependency or distribution change is required.
+
+### Planning decisions and constraints
+
+- Keep `planning_effort: low` because direction is settled; retain `dev_effort: medium` for instruction review and
+  bundle checks. No scout or challenger pass is required at this Planning effort.
+- Preserve delivery order: `PROP-uiux-improve-run-model`, then `PROP-uiux-improve-impeccable-routing`, then this
+  proposal. Rebase is not worker work: the Host refreshes this Planning branch or the Development input when those
+  predecessors land. Recheck the affected rule numbers and wording then; no sibling decision is treated as settled
+  by this plan.
+- Preserve the consumer's chosen workflow and Impeccable route as the predecessors settle them. This proposal adds
+  no run mode, question relay, plugin-load fallback, setup authority or context-file write authority.
+- Apply workflow neutrality to agent-read skill, reference and role bodies. General references to a branch,
+  worktree or the consumer workflow are allowed; concrete devkit-spec policy keys, values, CLI gates and lifecycle
+  records are not instruction dependencies. The human README keeps its installation command.
+- Apply brief precedence within existing authority: user-authorized goals, explicit constraints and the current
+  consumer specification control craft defaults. If those sources conflict with one another, return the conflict
+  for a decision instead of choosing new authority.
+- Compare the changed branch build before and after with the same representative task and data. If a live backend
+  is unsuitable, use a repeatable mock against that branch build and report mocked coverage. No performance or
+  real-user improvement claim follows from this instruction change.
+- No concrete work is deferred by this proposal beyond the policy and routing changes already owned by the two
+  named predecessor proposals.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- On Acceptance: recorded with `devkit spec proposal accept` (after Planning, or `--direct` if the direction is
-  confirmed settled); handed off to `sdd-spec-feature` on `dev-uiux-improve-bundle-hygiene`. The proposal is deleted
-  there and `MAT-uiux-improve-pilot` moves to `docs/materials/`, where the sibling proposals keep citing it by ID.
+- On Acceptance: the Host uses `devkit spec proposal accept-plan uiux-improve-bundle-hygiene` after reviewing the
+  committed Planning result and obtaining the required approval. Development handoff follows the predecessor order
+  on `dev-uiux-improve-bundle-hygiene` with `dev_effort: medium`. The proposal retires there and
+  `MAT-uiux-improve-pilot` moves to `docs/materials/`, retaining its ID and sibling citations.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal. Before that deletion, move `MAT-uiux-improve-pilot` to a live sibling.
