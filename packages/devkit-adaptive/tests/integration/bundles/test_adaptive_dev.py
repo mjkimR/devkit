@@ -86,6 +86,48 @@ def test_adaptive_dev_projects_roles_and_entry_without_seeding_product_state(tmp
     assert not (tmp_path / ".devkit/managed/spec").exists()
 
 
+def test_coordinator_delegates_without_fixed_child_depth_or_budget() -> None:
+    skill = BUNDLE / "skills/adaptive-dev"
+    assert_rule(
+        (BUNDLE / "AGENTS.md").read_text(),
+        "main agent",
+        "decomposition",
+        "delegation",
+        "integration",
+        "final validation",
+        "actively delegate",
+        "useful separable work",
+    )
+    assert_rule(
+        (skill / "SKILL.md").read_text(),
+        "actively delegate",
+        "planning",
+        "research",
+        "implementation",
+        "verification",
+        "`references/delegation.md`",
+        "before assigning",
+        "main agent",
+    )
+    paths = [skill / "references/delegation.md", skill / "references/orchestration.md"]
+    for role in SWARM:
+        path = BUNDLE / f"subagents/{role}.md"
+        assert_rule(
+            path.read_text(), "delegate useful separable work", "narrower authority", "ownership", "return fields"
+        )
+        paths.append(path)
+    for path in paths:
+        text = path.read_text()
+        for removed_clause in (
+            "at most two child levels",
+            "remaining depth",
+            "Host-wide allowance",
+            "leaf delegates no further",
+            "depth, allowance",
+        ):
+            assert removed_clause not in text, path
+
+
 def test_reselection_preserves_project_owned_context_and_settings(tmp_path: Path) -> None:
     update_config(tmp_path, agents=["codex"], presets={"adaptive-dev": ["core"]})
     config = tmp_path / ".devkit/config.toml"

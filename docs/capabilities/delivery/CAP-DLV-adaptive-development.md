@@ -3,7 +3,7 @@ id: CAP-DLV-adaptive-development
 aliases:
   - CAP-DLV-idea-incubation
 title: Adaptive Development
-summary: "An opt-in content bundle supports adaptive product iteration linked to current-state project documents, reusable execution agents with caller-owned authority and isolated writers, and a user-invoked import that converts selected third-party subagents or skills into project-owned assets."
+summary: "An opt-in content bundle supports coordinator-led adaptive product iteration with active delegation, current-state project documents and isolated writers, plus user-selected imports of third-party agents or skills."
 area: delivery
 status: active
 usecases:
@@ -21,7 +21,7 @@ entrypoints:
 ## 1. Summary
 
 The opt-in `adaptive-dev` bundle of `devkit-adaptive` supplies `/adaptive-dev` for adaptive product iteration, three optional
-support roles, three reusable execution archetypes and a current-context template. The invoking agent is the coordinator (master). A product can remain
+support roles, three reusable execution archetypes and a current-context template. The invoking agent coordinates decomposition, delegation, integration and final validation. A product can remain
 in adaptive development; no amount of work implies eventual SDD adoption. Explicit research teams are a separate bundle
 (`CAP-DLV-deep-research`); this bundle neither invokes nor suggests them and links their retained material by ID.
 
@@ -34,6 +34,7 @@ development approach, and no other asset of the bundle names or suggests it.
 and current context, linking a research material by its ID, and the approach, bundle, entry and context-file names.
 `ADR-adaptive-assignment-commands` owns the command group and recording steps; `ADR-adaptive-requires-document-system` owns the dependency and document defaults in rules 2, 26 and 27. The import entry with its playbook (rules 28 to 39) keeps this capability as its contract.
 `ADR-skill-local-swarm-roles` owns reusable execution agents and optional role leads;
+`ADR-coordinator-led-adaptive-delegation` owns active delegation without fixed nesting or child-budget rules;
 `ADR-worktree-isolated-parallel-workers` owns isolated writers and aggregate verification.
 
 `ADR-adaptive-dev-distribution` owns the bundle distribution.
@@ -84,16 +85,13 @@ and current context, linking a research material by its ID, and the approach, bu
     tests and documents without per-change SDD Units, approvals, envelopes or immutable experiment history.
 11. **Changed direction**: IF the goal or constraints change, THEN the coordinator MUST obtain user direction before
     dependent work.
-12. **Optional support**: WHERE a separable question or usage scope warrants delegation, the coordinator MAY invoke
-    the corresponding support or execution agent directly, in flat delegation or through an optional role lead;
+12. **Coordinator-led delegation**: WHERE useful work is separable, the coordinator SHOULD delegate research,
+    implementation and verification while retaining decomposition, coordination, integration and final validation;
     no action requires all roles or a fixed team count.
 13. **Role boundaries**: WHEN a role is invoked, the coordinator MUST supply one goal, absolute boundaries,
     source/base identity, governing documents by ID or absolute path or `none`, permitted actions and Git operations,
-    checks, stop condition and expected output before
-    verifying the actual return. Child authority MUST narrow the parent assignment; nesting MUST stop at
-    Host → lead → child and fit the Host-wide allowance including waiting leads. Unknown/exhausted capacity or
-    unavailable nesting requires direct, flat or sequential fallback without settings changes. The role reports
-    native/emulated availability truthfully.
+    checks, stop condition and expected output before verifying the actual return. Child authority MUST narrow the
+    parent assignment. The role reports native/emulated availability truthfully.
 13a. **Assignment handoff**: WHEN delegating a deliverable, the coordinator MUST name one owner, dependency or
     none, completion evidence and expected integration handoff alongside the existing assignment fields. It SHOULD record the assignment before dispatch and verify its return with `CAP-DLV-adaptive-assignments`; if a command cannot record, the existing manual obligations apply and the assignment is reported as unrecorded.
 13b. **Shared interface**: WHEN concurrent writers depend on an unsettled shared interface, the coordinator MUST
@@ -251,7 +249,7 @@ supply their own verified absolute role file without loading adaptive orchestrat
 Use the registered-role mechanism when available; label generic role-file emulation or direct fallback explicitly.
 
 Assignments and returns identify goal/result, source/base/final SHA where committed, actual paths, permitted actions,
-checks/commands/outcomes, stop condition, remaining depth/allowance, defects and unverified areas. Leads verify their
+checks/commands/outcomes, stop condition, defects and unverified areas. Leads verify their
 aggregate scope; the Host verifies combined and applicable landed-target results under the consuming project's
 required checks. Product-support no-commit rules remain separate from expressly assigned worker commits.
 

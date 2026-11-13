@@ -30,7 +30,6 @@ Verification exit 1 means a failed result or a warning under strict; inspect `re
 - `ADAPTIVE_LEDGER_FRAGMENT_IGNORED`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_LEDGER_UNREADABLE`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_LEDGER_UNWRITABLE`: see the code table in `CAP-DLV-adaptive-assignments`.
-- `ADAPTIVE_NESTING_DEPTH`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_PREEXISTING_DIRTY`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_REPOSITORY_UNSUPPORTED`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_RETURN_NOT_COMPLETED`: see the code table in `CAP-DLV-adaptive-assignments`.

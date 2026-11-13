@@ -11,7 +11,6 @@ from devkit_adaptive.base.errors import (
     AssignmentClosed,
     AssignmentUnknown,
     AuthorityNotNarrowed,
-    NestingDepth,
     ScopeOverlap,
 )
 from devkit_adaptive.features.assignment.models.values import Assignment
@@ -65,16 +64,19 @@ def authority(
 ) -> None:
     for dependency in depends:
         assignment(values, dependency)
+    ancestors: set[str] = set()
     if parent:
         lead = assignment(values, parent, mutable=True)
-        if lead["parent"]:
-            raise NestingDepth("a child cannot delegate another level")
         if (commit and not lead["commit"]) or any(
             not any(covers(entry, path) for entry in lead["write"]) for path in write
         ):
             raise AuthorityNotNarrowed("child write scope and commit grant must fit the parent")
+        ancestor = parent
+        while ancestor:
+            ancestors.add(ancestor)
+            ancestor = assignment(values, ancestor)["parent"]
     for other in values.values():
-        if other["status"] == "closed" or other["id"] == parent or other["id"] in depends:
+        if other["status"] == "closed" or other["id"] in ancestors or other["id"] in depends:
             continue
         for mine in write:
             for theirs in other["write"]:

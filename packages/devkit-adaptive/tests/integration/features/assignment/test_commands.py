@@ -114,21 +114,62 @@ def test_commit_grant_and_strict_uncommitted(repo, call):
     assert result["notices"][0]["code"] == "ADAPTIVE_UNCOMMITTED_CHANGES"
 
 
-def test_nesting_children_and_scope(repo, call):
+def test_deep_nesting_preserves_authority_and_bottom_up_completion(repo, call):
     assigned(call, "--write", "src", "--commit")
-    error = call("new", "--owner", "o", "--goal", "g", "--parent", "a1", "--write", "docs", expected=2)
-    assert error["error"]["code"] == "ADAPTIVE_AUTHORITY_NOT_NARROWED"
+    assigned(call, "--parent", "a1", "--write", "src/a", "--commit")
+    assigned(call, "--parent", "a2", "--write", "src/a")
+    assigned(call, "--parent", "a3", "--write", "src/a")
+    for parent, scope, commit in (("a1", "docs", False), ("a3", "src/ab", False), ("a3", "src/a", True)):
+        before = Ledger(repo).path.read_bytes()
+        error = call(
+            "new",
+            "--owner",
+            "o",
+            "--goal",
+            "g",
+            "--parent",
+            parent,
+            "--write",
+            scope,
+            *(["--commit"] if commit else []),
+            expected=2,
+        )
+        assert error["error"]["code"] == "ADAPTIVE_AUTHORITY_NOT_NARROWED"
+        assert Ledger(repo).path.read_bytes() == before
+    for identifier in ("a1", "a2", "a3"):
+        returned(call, identifier)
+        assert call("verify", identifier, expected=1)["checks"]["children"]["status"] == "fail"
+        assert (
+            call("close", identifier, "--outcome", "abandoned", "--reason", "stop", expected=2)["error"]["code"]
+            == "ADAPTIVE_CHILDREN_OUTSTANDING"
+        )
+    for identifier in ("a4", "a3", "a2", "a1"):
+        returned(call, identifier)
+        assert call("verify", identifier)["result"] == "pass"
+        call("close", identifier, "--outcome", "integrated")
+    assert call("list")["assignments"] == []
+
+
+def test_deep_nesting_exempts_ancestors_but_not_siblings_or_unrelated_assignments(repo, call):
+    assigned(call, "--write", "src")
     assigned(call, "--parent", "a1", "--write", "src/a")
-    error = call("new", "--owner", "o", "--goal", "g", "--parent", "a2", expected=2)
-    assert error["error"]["code"] == "ADAPTIVE_NESTING_DEPTH"
-    returned(call)
-    assert call("verify", "a1", expected=1)["checks"]["children"]["status"] == "fail"
-    assert (
-        call("close", "a1", "--outcome", "abandoned", "--reason", "stop", expected=2)["error"]["code"]
-        == "ADAPTIVE_CHILDREN_OUTSTANDING"
-    )
-    call("close", "a2", "--outcome", "abandoned", "--reason", "stop")
-    call("verify", "a1")
+    assigned(call, "--parent", "a2", "--write", "src/a")
+    assigned(call, "--parent", "a2", "--write", "src/a", "--depends-on", "a3")
+    for parent in ("a2", "a4", None):
+        before = Ledger(repo).path.read_bytes()
+        error = call(
+            "new",
+            "--owner",
+            "o",
+            "--goal",
+            "g",
+            "--write",
+            "src/a",
+            *(["--parent", parent] if parent else []),
+            expected=2,
+        )
+        assert error["error"]["code"] == "ADAPTIVE_SCOPE_OVERLAP"
+        assert Ledger(repo).path.read_bytes() == before
 
 
 def test_retry_return_close_and_history(repo, call):
