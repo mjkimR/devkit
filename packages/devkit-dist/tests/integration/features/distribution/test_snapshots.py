@@ -309,11 +309,12 @@ def subdirectory_checkout(tmp_path: Path) -> tuple[Path, Path, Path]:
     return root, source, root / "tools/team-copy"
 
 
-def test_subdirectory_commit_and_source_path_spelling(subdirectory_checkout) -> None:
+def test_subdirectory_commit_and_source_path_spelling(subdirectory_checkout, monkeypatch: pytest.MonkeyPatch) -> None:
     root, source, destination = subdirectory_checkout
     head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
     initial = create(subdirectory_checkout)
     assert load_provenance(read_tree(destination))["source"]["commit"] == head
+    monkeypatch.chdir(root)
     relative_source = Path("../repository/tools/content")
     preview = RefreshBundleSnapshot().execute(root, destination, relative_source)
     assert preview.candidate_digest == initial.candidate_digest

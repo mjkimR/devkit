@@ -2,7 +2,7 @@
 id: SPEC-snapshot-subdirectory-source-commit
 title: Record the source commit for snapshots of subdirectory providers
 summary: "Restore verified snapshot source commits for providers below a Git repository root while preserving copied-input verification and explicit metadata refresh."
-status: planned
+status: in-progress
 created: 2026-11-13
 related_capabilities: [CAP-DIST-in-repo-bundles]
 related_usecases: [UC-snapshot-bundle-sources]
