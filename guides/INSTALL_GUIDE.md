@@ -149,7 +149,7 @@ synchronized landed runtime before completion. Retain project checks and use a s
 [baseline procedure](install/adaptive-dev-sdd-adoption.md) for voluntary SDD adoption; installing assets or changing
 the approach establishes no verified SDD baseline.
 
-Select the research bundle with `uv run devkit add deep-research` only when the user asks for that entry.
+Select discovery and research with `uv run devkit add deep-research` only when the user asks for those explicit entries.
 
 ## Step 4: Recommend bundles
 

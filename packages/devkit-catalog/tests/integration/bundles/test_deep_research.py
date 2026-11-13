@@ -23,6 +23,7 @@ ADAPTIVE_DEV = Path(devkit_adaptive.bundles.__file__).parent / "adaptive_dev/bun
 SKILL = BUNDLE / "skills/deep-research/SKILL.md"
 MOVED = ("direction-explorer", "discovery-critic", "discovery-planner")
 ROLES = {*MOVED, "research-investigator"}
+DISCOVERY_ROLES = {"idea-explorer", "evidence-researcher", "idea-challenger"}
 GUARD = "Run only when the user explicitly invokes this entry; never suggest or start it otherwise."
 HOSTS = ["codex", "claude-code", "antigravity"]
 
@@ -40,7 +41,7 @@ def test_requires_explicit_selection_and_deploys_exactly_its_preset(tmp_path: Pa
     bundle = load_bundle(BUNDLE)
     assert not bundle.auto_select
     assert bundle.default_preset == "core"
-    assert set(bundle.presets["core"]) == {"deep-research"}
+    assert set(bundle.presets["core"]) == {"deep-research", "discovery"}
     update_config(tmp_path, agents=HOSTS)
     sync_project(tmp_path, _installed())
     assert not (tmp_path / ".devkit/managed/deep-research").exists()
@@ -49,6 +50,10 @@ def test_requires_explicit_selection_and_deploys_exactly_its_preset(tmp_path: Pa
     managed = tmp_path / ".devkit/managed/deep-research"
     assert {path.as_posix() for path in _files(managed)} == {
         "bundle.toml",
+        "skills/discovery/SKILL.md",
+        "skills/discovery/references/orchestration.md",
+        "skills/discovery/references/retention.md",
+        *(f"skills/discovery/roles/{role}.md" for role in DISCOVERY_ROLES),
         "skills/deep-research/SKILL.md",
         "skills/deep-research/references/orchestration.md",
         "skills/deep-research/references/workspace.md",
@@ -65,10 +70,11 @@ def test_requires_explicit_selection_and_deploys_exactly_its_preset(tmp_path: Pa
         assert not (tmp_path / absent).exists(), absent
 
 
-def test_entry_projects_explicit_invocation_for_each_host(tmp_path: Path) -> None:  # AC-02
+@pytest.mark.parametrize("entry", ["deep-research", "discovery"])
+def test_entry_projects_explicit_invocation_for_each_host(tmp_path: Path, entry: str) -> None:  # AC-02
     update_config(tmp_path, agents=HOSTS, presets={"deep-research": ["core"]})
     sync_project(tmp_path, _installed())
-    relative = "skills/deep-research"
+    relative = f"skills/{entry}"
     managed = tmp_path / ".devkit/managed/deep-research" / relative
     shared = tmp_path / ".agents" / relative
     claude = tmp_path / ".claude" / relative
@@ -80,7 +86,12 @@ def test_entry_projects_explicit_invocation_for_each_host(tmp_path: Path) -> Non
     assert not (managed / "agents/openai.yaml").exists()
     for projected in (shared / "SKILL.md", claude / "SKILL.md"):
         body = [line for line in projected.read_text().split("---", 2)[2].splitlines() if line.strip()]
-        assert body[:2] == ["# Deep research", GUARD], projected
+        title, guard = (
+            ("# Deep research", GUARD)
+            if entry == "deep-research"
+            else ("# Idea discovery", "Run only when the user explicitly invokes this entry.")
+        )
+        assert body[:2] == [title, guard], projected
     description = yaml.safe_load(SKILL.read_text().split("---", 2)[1])["description"]
     assert not re.search(r"\b(use|when|suggest|trigger)\b", description, re.IGNORECASE), description
 
@@ -233,8 +244,8 @@ def test_upgrade_removes_registered_roles(tmp_path: Path) -> None:
     shutil.copytree(BUNDLE, legacy)
     manifest = legacy / "bundle.toml"
     content = manifest.read_text().replace(
-        'assets = ["deep-research"]',
-        'assets = ["deep-research", ' + ", ".join(f'"{role}"' for role in sorted(ROLES)) + "]",
+        'assets = ["deep-research", "discovery"]',
+        'assets = ["deep-research", "discovery", ' + ", ".join(f'"{role}"' for role in sorted(ROLES)) + "]",
     )
     (legacy / "subagents").mkdir()
     for role in sorted(ROLES):
@@ -297,3 +308,54 @@ def test_cloud_handoff_resume_requires_only_retained_partial_evidence() -> None:
         assert_rule(
             text, "cloud", "exact safe", "partial material", "scratch" if name == "workspace" else "transient-only"
         )
+
+
+def test_discovery_upgrade_preserves_research_override_and_material(tmp_path: Path) -> None:
+    legacy = tmp_path / "research-only"
+    shutil.copytree(BUNDLE, legacy)
+    manifest = legacy / "bundle.toml"
+    manifest.write_text(
+        manifest.read_text()
+        .replace(
+            '\n[[assets]]\nid = "discovery"\nkind = "skill"\nsource = "skills/discovery"\ninvocation = "user"\n', ""
+        )
+        .replace('assets = ["deep-research", "discovery"]', 'assets = ["deep-research"]')
+    )
+    shutil.rmtree(legacy / "skills/discovery")
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    update_config(consumer, agents=HOSTS, presets={"deep-research": ["core"]})
+    override = consumer / ".devkit/overrides/deep-research/skills/deep-research"
+    shutil.copytree(SKILL.parent, override)
+    custom = override / "roles/research-investigator.md"
+    custom.write_text(custom.read_text() + "\nPreserve this consumer's evidence vocabulary.\n")
+    material = consumer / "docs/materials/retained.md"
+    material.parent.mkdir(parents=True)
+    material.write_text("Retained consumer evidence.\n")
+    sync_project(consumer, _installed(legacy))
+    research = consumer / ".agents/skills/deep-research"
+    before = _files(research)
+    sync_project(consumer, _installed())
+    assert _files(research) == before
+    assert material.read_text() == "Retained consumer evidence.\n"
+    discovery = consumer / ".agents/skills/discovery"
+    assert (discovery / "SKILL.md").is_file()
+    for role in DISCOVERY_ROLES:
+        assert (discovery / f"roles/{role}.md").is_file()
+        assert not (consumer / f".codex/agents/{role}.toml").exists()
+    for entry in ("discovery", "deep-research"):
+        projected = consumer / f".agents/skills/{entry}"
+        for source in projected.rglob("*.md"):
+            for target in re.findall(r"`((?:references|roles)/[a-z-]+\.md)`", source.read_text()):
+                if "<" not in target:
+                    assert (projected / target).is_file(), (source, target)
+    update_config(consumer, opt_out=["deep-research"])
+    sync_project(consumer, _installed())
+    assert not discovery.exists()
+    assert not research.exists()
+    assert custom.is_file()
+    assert material.read_text() == "Retained consumer evidence.\n"
+    update_config(consumer, presets={"deep-research": ["core"]})
+    sync_project(consumer, _installed())
+    assert (discovery / "SKILL.md").is_file()
+    assert _files(research) == before

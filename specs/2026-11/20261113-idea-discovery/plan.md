@@ -53,3 +53,13 @@ successful discovery result. Tests cover an upgrade from the research-only prese
 - AC-02, AC-03, AC-04, AC-05, AC-06: isolated realistic forward exercise and independent semantic review.
 - Run `just lint-check`, `just check`, `just test-affected --base main` with its full fallback intact, selective
   catalog wheel E2E, `devkit sync`, skill validation and `uv run devkit rules check --ci --base main`.
+
+## Behavioral exercise evidence
+
+An independent role-worker used only the authored skill and a realistic private-reading request with a supplied
+individual audience, local-file constraint, no daily sorting/summarizing, no implementation, no retained result and
+no web research. The observed result asked no redundant initial question, returned two concrete usage proposals
+with costs and rejection conditions, kept user statements distinct from hypotheses, and selected validation-needed
+with the discriminator “could not find the material versus found it but could not apply it.” It proposed a bounded
+10-minute future check without executing it or writing a file. This was an inline-path exercise, not a benchmark or
+a test of actual discovery role delegation, web retrieval, retained-material resume or multi-agent effectiveness.
