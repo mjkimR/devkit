@@ -143,7 +143,7 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     result.skipped = skipped
     result.omissions = []
     if any(getattr(r, "change_scope", False) for r in active):
-        refresh_context_changes(ctx)
+        refresh_context_changes(ctx, modified=modified, all_changes=bool(result.errors))
     rechecked = _applicable(ctx, rechecked, result)
     recheck = _check_rules(ctx, rechecked, "recheck", result.errors)
     ran = {rule.id for rule in rechecked}

@@ -309,3 +309,43 @@ def test_gate_and_workflow_lint_clean_keep_considerations_nonblocking(
     gate = RulesCheckGate().run(gate_ctx(root))
     assert [(n.code, n.level) for n in gate.notices] == [("GATE_RULES_NOTICES", Level.NOTICE)]
     assert lint_with_rules(root, ["a.py"]) == []
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_autofix_refresh_admits_output_outside_original_targets(tmp_path: Path, fails: bool) -> None:
+    root = workspace(tmp_path)
+    (root / "focus.txt").write_text("target")
+    (root / "b.py").write_text(BEFORE)
+    git(root, "add", ".")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-qm", "other input baseline")
+    fixer = root / "rules/fixer"
+    fixer.mkdir()
+    ending = "raise RuntimeError('partial')" if fails else "return ['b.py']"
+    fixer.joinpath("__init__.py").write_text(
+        "from devkit_agt.features.rules.services.builtins import BaseRule\n"
+        "class Repair(BaseRule):\n"
+        "    def __init__(self): super().__init__('RULE-repair', 'repair', 'fixture')\n"
+        "    def check(self, ctx): return []\n"
+        f"    def fix(self, ctx):\n        ctx.cache.write_text('b.py', {AFTER!r})\n        {ending}\n"
+    )
+    run = notices(root, targets=["focus.txt"], fix=True)
+    assert bool(run.errors) is fails
+    considerations = [v for v in run.result.violations if v.severity is Severity.NOTICE]
+    assert [v.file for v in considerations] == ["b.py"]
+    assert run.context is not None and run.context.before_text("b.py") == BEFORE
+
+
+def test_nested_workspace_untargeted_capture_uses_workspace_paths(tmp_path: Path) -> None:
+    root = workspace(tmp_path)
+    inner = root / "inner"
+    (inner / "rules/notice").mkdir(parents=True)
+    (inner / "rules/notice/__init__.py").write_text(NOTICE)
+    (inner / "a.py").write_text(BEFORE)
+    git(root, "add", ".")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-qm", "nested baseline")
+    (inner / "a.py").write_text(AFTER)
+    (root / "outside.py").write_text(AFTER)
+    run = notices(inner)
+    assert run.ok and [(v.file, v.line) for v in run.result.violations] == [("a.py", 4)]
+    assert run.context is not None and set(run.context.changes) == {"a.py"}
+    assert run.context.before_text("a.py") == BEFORE

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import difflib
 import hashlib
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -58,24 +59,26 @@ def excerpts(change: FileChange) -> tuple[list[dict[str, Any]], dict[str, int]]:
     return result, omitted
 
 
-def refresh_context_changes(ctx: RuleContext) -> None:
+def refresh_context_changes(ctx: RuleContext, *, modified: Iterable[str] = (), all_changes: bool = False) -> None:
     """Capture a new immutable pass against the original before-side identity."""
     from types import MappingProxyType
 
     from devkit_agt.features.rules.repositories.workspace.changes import capture_changes
 
+    outputs = tuple(relative for path in modified if (relative := ctx.relative_path(path)) is not None)
     captured = capture_changes(
         ctx.workspace_root,
         ctx.cache,
         snapshot=ctx.snapshot,
         base=ctx.change_base or None,
-        explicit=tuple(ctx.changed_files),
+        explicit=tuple(dict.fromkeys((*ctx.changed_files, *outputs))),
     )
     evidence: dict[str, FileChange] = {}
     for raw in captured.files:
-        selected = ctx.change_targets
+        selected = (*ctx.change_targets, *outputs)
         if (
             ctx.has_targets
+            and not all_changes
             and not (ctx.snapshot is not None and raw.path in ctx.snapshot.deleted)
             and not any(t == "." or raw.path == t or raw.path.startswith(t.rstrip("/") + "/") for t in selected)
         ):

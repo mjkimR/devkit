@@ -30,7 +30,7 @@ class CapturedChanges:
 
 def _tree(root: Path, ref: str) -> dict[str, str]:
     entries: dict[str, str] = {}
-    for line in run_git(root, "ls-tree", "-r", "-z", ref).split(b"\0"):
+    for line in run_git(root, "ls-tree", "-r", "--full-tree", "-z", ref).split(b"\0"):
         if not line:
             continue
         meta, name = line.split(b"\t", 1)
@@ -56,6 +56,9 @@ def capture_changes(
     mode = snapshot.mode if snapshot is not None else "working"
     git_root = snapshot.root if snapshot is not None else root
     try:
+        repository = Path(run_git(git_root, "rev-parse", "--show-toplevel").decode().strip()).resolve()
+        prefix = "" if git_root.resolve() == repository else git_root.resolve().relative_to(repository).as_posix() + "/"
+        git_root = repository
         if snapshot is not None:
             base = snapshot.base
         elif base is None:
@@ -68,7 +71,7 @@ def capture_changes(
                 if run_git(git_root, "for-each-ref", "--format=%(refname)", ref).strip():
                     raise
                 base = run_git(git_root, "hash-object", "-t", "tree", "--stdin", input=b"").decode().strip()
-        prior = _tree(git_root, base)
+        prior = {name[len(prefix) :]: sha for name, sha in _tree(git_root, base).items() if name.startswith(prefix)}
         if snapshot is not None:
             current = {p: sha for p, sha, m in snapshot.files if m in ("100644", "100755")}
             touched = set(snapshot.changed) | set(snapshot.deleted)
@@ -78,7 +81,10 @@ def capture_changes(
                 git_root, "diff", "--no-ext-diff", "--no-textconv", "--no-renames", "--name-only", "-z", base, "--"
             )
             extra = run_git(git_root, "ls-files", "--others", "--exclude-standard", "-z")
-            names = {p.decode("utf-8", errors="surrogateescape") for p in (changed + extra).split(b"\0") if p}
+            repository_names = (
+                p.decode("utf-8", errors="surrogateescape") for p in (changed + extra).split(b"\0") if p
+            )
+            names = {name[len(prefix) :] for name in repository_names if name.startswith(prefix)}
             touched = set(names)
             names.update(explicit)
             current = {}
