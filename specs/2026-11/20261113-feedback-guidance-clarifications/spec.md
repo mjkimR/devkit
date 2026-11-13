@@ -2,7 +2,7 @@
 id: SPEC-feedback-guidance-clarifications
 title: Clarify feedback-driven authoring guidance
 summary: "Clarify existing review evidence, commit timing, UX closure and project style-source procedures without adding verdicts or CLI mechanisms."
-status: planned
+status: in-progress
 created: 2026-11-13
 related_capabilities: [CAP-DLV-delivery-workflows, CAP-DLV-workflow-envelopes]
 related_usecases: []

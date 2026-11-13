@@ -57,4 +57,5 @@ for `sdd-spec-bugfix`.
   and any findings folded in before the plan.
 - [ ] `devkit rules check <dir>` reports no violation except task coverage not yet written; next is `spec-plan`. Do
   not commit yet: the `specify` stage boundary is committed only once `plan.md` and `tasks.md` satisfy
-  `RULE-task-coverage`.
+  `RULE-task-coverage`. When Screens are reviewed, follow the combined-commit sequence in
+  [screens](references/screens.md#feature-specify-commit-sequence).

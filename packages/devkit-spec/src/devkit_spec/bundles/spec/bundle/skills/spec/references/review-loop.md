@@ -14,6 +14,34 @@ For code review (`code-reviewer`), reconcile verification (`reconcile-reviewer`)
 
 Round 1 is never replaced by a self-check. A finding whose `evidence` path is outside the round's diff is fixed with the batch and never counts as a recurrence.
 
+### Reconcile finding closure
+
+For reconcile closure at any effort, verify the whole reflection again and write a new `reconcile-check` at
+`living-spec-draft`; `reverify --from` does not accept a reconcile-check. Name the earlier record in the summary
+and repeat each earlier finding with its outcome. Keep any newly discovered finding open in the same check.
+A required contract mismatch cannot be waived; fix it before closure. Preserve the effort's reviewer and round
+rules above; the example's self-verification applies only when those rules permit it.
+
+```bash
+devkit workflow envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft \
+  --summary "round 1; closes reconcile-check-01; implementer rechecked the whole reflection after wording fixes" \
+  --base <base-sha> --head <checked-sha> --findings-file - <<'YAML'
+- issue: "The capability omits the documented empty result"
+  evidence: "docs/capabilities/<area>/CAP-<AREA>-<slug>.md:42"
+  failure_condition: "The reader follows the empty-result path"
+  suggested_action: "Restate the existing empty-result contract"
+  severity: P2
+  resolution: resolved
+- issue: "The example could also show a second optional arrangement"
+  evidence: "docs/capabilities/<area>/CAP-<AREA>-<slug>.md:55"
+  failure_condition: "The reader seeks another illustrative arrangement"
+  suggested_action: "Add another non-normative example"
+  severity: P3
+  resolution: waived
+  waiver: "The existing example covers the contract; a second arrangement is optional illustration."
+YAML
+```
+
 ## 2. Minor-fix self-verification
 
 A batch MAY skip the next round only when every fix meets all four conditions:

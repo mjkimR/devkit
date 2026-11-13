@@ -26,6 +26,18 @@ diff_scope: { base: "<ref>", head: "<sha>" }
 - `needs_input` names the missing input or the decision only the human can make. `failed` (timeout, cancellation, tool failure, unsupported host feature, stale `diff_scope`) is never completion evidence.
 - Docs impact has no key: it goes into `reconcile.md`, verified by a `reconcile-check` envelope.
 
+### Check provenance
+
+- Record `PASS` or `FAIL` only for checks the recording role executed; use `SKIP` when it did not rerun a check.
+- Keep caller-supplied results as input evidence, naming the source envelope and its exact source SHA in the
+  `SKIP` detail; compare that SHA with the reviewed source before relying on it.
+- If the source differs or cannot be confirmed, state that limit in `unverified_areas`; a supplied pass is not the
+  reviewer's executed check and does not satisfy a required rerun.
+
+```bash
+--check "tests=SKIP not rerun; caller reports PASS in envelopes/green-01.yaml at 0123456789abcdef0123456789abcdef01234567"
+```
+
 ## 2. Final change report (before `dev-integration`)
 
 The `final-change-report` stage needs `checks.tests`, `checks.build` and `checks.lint` starting with `PASS`:
@@ -59,6 +71,8 @@ docs/proposals/PROP-<slug>/envelopes/<kind>-<NN>.yaml
 
 - `kind` is `scout | challenger | review | reverify | reconcile-check | worker | answer | resolution | final-report`, or a kind a workflow check names (`red`, `green`, `feedback`). `NN` is a per-kind sequence: the highest is current, and every write takes the next number.
 - `review-NN` and `challenger-NN` record a round as found (every finding `open`); a `reverify-NN` closes it with `resolution: resolved | waived` per finding (a waiver states its reason). The latest round of each kind, or the reverify closing it, decides; a `challenger` reverify never counts for the review state.
+- Close reconcile findings with a new full `reconcile-check`, repeating each finding's `resolved` or `waived`
+  outcome and waiver reason; use the example in [review loop](review-loop.md#reconcile-finding-closure).
 - Write envelopes with `devkit workflow envelope new --unit <dir> --kind <kind> [--stage <id>]` or `devkit workflow envelope <kind>`, never by editing YAML (`--help` lists the flags). Check them with `devkit workflow envelope check --unit <dir>`.
 - In the conversation, cite an envelope by its summary and path, never its whole content.
 

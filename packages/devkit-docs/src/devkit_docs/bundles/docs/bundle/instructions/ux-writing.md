@@ -83,7 +83,15 @@ status display fits it by these criteria, not by an exception to the rules.
 
 ## What stays with the project
 
-- **Visual style**: cite the project's steering style files; never restate colors, type, spacing or tokens.
+- **Visual style**: cite the project's steering style files or existing project-owned style/token source; never
+  restate colors, type, spacing or tokens in each UX document.
+- If no style source exists and the change decides visual style, draft one shared project-owned style source
+  within the agreed task/document scope and cite it from the Screens drafts and UX documents.
+- If that source is steering background, follow `living-spec-writing` for its location, title and summary;
+  for example, a project may choose `docs/steering/visual-style.md` when that path is authorized.
+- Use the project's existing style-source convention; no fixed filename or seeded file is required.
+- If the needed style-source path is outside the authorized write scope, record the needed path for the scope
+  owner before writing it; the fallback grants no additional write authority.
 - **Medium**: the wireframe, mock-up or screenshot tool is the project's. Link its artifact from the optional
   Evidence section; the reviewer reads it when present.
 
