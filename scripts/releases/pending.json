@@ -355,7 +355,7 @@
       "payload"
     ]
   },
-  "digest": "ac7f35c1750fb40a514dfbd3eff81e0db9229b52afd859b573ae64ebdbd9a148",
+  "digest": "c6d4b5f8903c37ba068f2901caf544ebfe5d293f9cb2f7c142a39097f225a30b",
   "edits": [
     {
       "after": "0.1.6",
@@ -745,13 +745,13 @@
     "devkit-dev": {
       "bundles": {
         "devkit-dev": {
-          "fingerprint": "6d69b1b00fbd2f56d24902954d927375cf486a292bdc8b8da192a600a23d5fdf",
+          "fingerprint": "e95a1d89d9c5b0f73e7b515f282cd7f03f1e855d723443cb6fd094cbd6cc6f8a",
           "manifest": "src/devkit_dev/bundle/bundle.toml",
           "version": "0.1.6"
         }
       },
       "disposition": "changed",
-      "fingerprint": "f2dbb10961690f2385233586167d812f8d113ef4e59e5a0cc1952783d3476456",
+      "fingerprint": "931e5ee19740adc24d1f335f1bf58e2b2433259908e43197e1f277a0991542bb",
       "path": "tools/devkit-dev",
       "requires": [],
       "version": "0.1.6"
