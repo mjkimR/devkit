@@ -124,4 +124,3 @@ The implementation remains within the existing distribution feature. These local
 PADR; the capability changes are limited to the three declared targets. Before editing source bundle guidance,
 Development loads `authoring` and applies `agent-asset-writing`. Sync-generated tracked projections and receipt
 changes are derived outputs; review them alongside the source changes.
-
