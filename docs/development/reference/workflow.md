@@ -44,6 +44,7 @@ just workflow list --exclude-status completed         # active units; --status <
 just workflow envelope review --unit <dir>            # needs_input skeleton to fill in
 just workflow envelope review --unit <dir> --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
 just workflow envelope reverify --unit <dir> --from latest --resolve 1 --waive "2=accepted cost"  # open findings only
+just workflow envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft --summary "closes reconcile-check-01; whole reflection rechecked" --findings-file findings.yaml
 just workflow envelope worker --unit <dir> --stage <stage> --summary "..." --questions-file questions.yaml
 just workflow envelope answer --unit <dir> --summary "..." --answers-to worker-01.yaml --answers-file answers.yaml  # each answer may name by: user|host|policy
 just workflow envelope worker --unit <dir> --stage <stage> --summary "..." --problem "<cause>" --tried "<attempt>" --recovery "<step>"
@@ -51,6 +52,11 @@ just workflow envelope resolution --unit <dir> --summary "<what was done>" --res
 just workflow envelope new --unit <dir> --kind final-report --check tests="PASS 3/3"  # any other kind
 just workflow envelope check --unit <dir>             # every envelope file and any contract violation
 ```
+
+A reviewer records a supplied check it did not rerun as `SKIP`, naming the source envelope and exact source SHA in
+the detail. `PASS` and `FAIL` describe checks the recording role executed. Reconcile closure uses a new full
+`reconcile-check` with per-finding `resolved` or `waived` outcomes and waiver reasons; it names the earlier check,
+rechecks the whole reflection and cannot waive a required contract mismatch (`CAP-DLV-workflow-envelopes`).
 
 Every command takes `-w/--workspace-root` (default: the devkit project containing the current directory). To install directly in another project:
 

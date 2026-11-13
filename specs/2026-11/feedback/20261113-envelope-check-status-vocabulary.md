@@ -8,7 +8,7 @@ target: devkit workflow envelope new --check
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-13
 ---
 
@@ -45,3 +45,12 @@ created_at: 2026-11-13
 review-01.yaml (consumer): build: SKIP NOT RERUN just check / just lint; implementer reported PASS at same head <sha>
 devkit workflow envelope new --help: --check TEXT  Check result name=PASS|FAIL|SKIP[ detail] (repeatable)
 ```
+
+## Disposition
+
+Resolved through `SPEC-feedback-guidance-clarifications`. Reviewer checks not rerun use SKIP with source envelope and exact SHA; supplied input is distinct from executed checks. PASS/FAIL/SKIP remain unchanged.
+
+Verification: AC-02; test_feedback_guidance.py check provenance scenario; spec bundle 685 passed, docs bundle 9 passed, affected all-tier 2664 passed
+and independent code review with no findings at f356771f1224f847d459c39e339a0b8c31480030, retained in the Unit's
+build-check-01 and review-01 envelopes. This resolves the authorized guidance scope; live consumer/model behavior
+remains best effort and unverified.
