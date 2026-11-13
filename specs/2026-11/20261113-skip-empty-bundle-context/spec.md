@@ -1,34 +1,23 @@
 ---
-id: PROP-skip-empty-bundle-context
+id: SPEC-skip-empty-bundle-context
 title: Skip Context Loading for Bundles Without Context Sources
-summary: "Skip automatic get-context calls for bundles without declared context sources. Keep required loading for constitutions, selected instructions and declared context documents consistent across guidance, skills and playbooks."
-status: accepted
-created_at: 2026-11-13
-target_area: distribution/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/
-    - packages/devkit-dist/tests/
-    - packages/devkit-dist/README.md
-    - docs/capabilities/distribution/
-    - docs/proposals/PROP-skip-empty-bundle-context/
-  excludes:
-    - packages/devkit-spec/
-    - packages/devkit-catalog/
-    - docs/architecture/
-    - docs/decisions/
-task_kind: feature
-workflow: sdd-proposal
+summary: Skip automatic get-context calls for bundles without declared context sources. Keep required loading for constitutions, selected instructions and declared context documents consistent across guidance, skills and playbooks.
+status: planned
+created: 2026-11-13
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-skip-empty-bundle-context] Skip Context Loading for Bundles Without Context Sources
+# [SPEC-skip-empty-bundle-context] Skip Context Loading for Bundles Without Context Sources
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-skip-empty-bundle-context on 2026-11-13.
+- Target Docs Blueprint: `PROP-skip-empty-bundle-context-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 A bundle is a distribution unit; shipping a skill through devkit-dist does not require that bundle to provide
 shared execution context. `CAP-DIST-context-and-playbooks` defines bundle context as a constitution, selected
@@ -51,7 +40,26 @@ Hypothesis: determine the loading requirement from the synchronized bundle's dec
 that requirement consistently before execution. Agents can then skip empty context loads without a preliminary
 `get-context` call. Bundles retain separate contexts.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Skip Context Loading for Bundles Without Context Sources so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1:** How should `playbook get` expose that no context load is required while preserving compatibility for
   consumers of its existing `context` object, `argv` and `policy` fields? Evaluate an additive signal before
@@ -61,9 +69,9 @@ that requirement consistently before execution. Agents can then skip empty conte
 - **Q3:** How should mixed selections and bundles with only `context_documents` appear in root guidance so an
   agent can identify required loads without inspecting manifests or probing context results?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Loading requirement
+#### Loading requirement
 
 A synchronized bundle requires context loading when at least one source exists:
 
@@ -78,7 +86,7 @@ provider results are resolved at execution time. Do not infer emptiness from one
 Compute the requirement from synchronized metadata. Changing presets affects the requirement after sync, using the
 same deployed selection that context retrieval reads.
 
-### Agent-facing behavior
+#### Agent-facing behavior
 
 - Root guidance names the bundles that require context loading instead of requiring it for every selected bundle.
   A selection containing only bundles without context sources requires no context loads.
@@ -90,7 +98,7 @@ same deployed selection that context retrieval reads.
   behavior remain unchanged.
 - Existing per-agent-context reuse and reload-after-context-loss behavior applies to bundles that require loading.
 
-### Acceptance checks
+#### Acceptance checks
 
 - **AC-01 — No sources:** Given a synchronized bundle without a constitution, selected instructions or declared
   context documents, when an agent follows generated root guidance and a deployed skill, then neither requires a
@@ -116,7 +124,7 @@ same deployed selection that context retrieval reads.
 Validate these checks with focused distribution integration tests for guidance generation, skill deployment,
 playbook retrieval and context documents. Preserve receipt validation, override handling and synchronization checks.
 
-### Non-Goals
+#### Non-Goals
 
 - **Scope Excluded:** Combining contexts across bundles, introducing context dependencies or loading all installed
   bundles at startup.
@@ -128,9 +136,9 @@ playbook retrieval and context documents. Preserve receipt validation, override 
 - **Scope Excluded:** Suppressing explicit context commands authored inside an individual bundle's own procedure.
   This work changes devkit-generated requirements and devkit's generic consumption instructions.
 
-## 4. Planning Decisions
+### 4. Planning Decisions
 
-### Q1 — Additive playbook metadata
+#### Q1 — Additive playbook metadata
 
 Add boolean `context.required` to `playbook get` output. Retain `context.bundle`, `context.argv` and
 `context.policy` with their existing values, including `once-per-agent-context` for policy. Policy describes reuse
@@ -142,7 +150,7 @@ Existing consumers that ignore the additive field retain their previous behavior
 Generated consumption guidance uses the field before executing the procedure. For discovery, retrieve the selected
 playbook by exact ID before execution and apply the same metadata rule; do not use `get-context` as a probe.
 
-### Q2 — One source-presence predicate
+#### Q2 — One source-presence predicate
 
 Keep the predicate in the existing distribution `services/bundles/` layer. It accepts source facts: constitution
 presence, selected instruction presence and a declared context document directory. It returns their logical OR.
@@ -158,7 +166,7 @@ No receipt schema change or cross-feature dependency is needed. Do not serialize
 the receipt: its existing facts are sufficient. A content-free constitution or selected instruction remains a
 source. Rendered templates count through their deployed outputs; instruction overrides cannot deselect a source.
 
-### Q3 — Root guidance and verification
+#### Q3 — Root guidance and verification
 
 Root guidance retains the selected bundle inventory and separately names only bundles requiring context loads.
 When selected bundles have no sources, state that no automatic bundle context load is required. An empty selection
@@ -177,7 +185,7 @@ PADR; the capability changes are limited to the three declared targets. Before e
 Development loads `authoring` and applies `agent-asset-writing`. Sync-generated tracked projections and receipt
 changes are derived outputs; review them alongside the source changes.
 
-## 5. Lifecycle & Retirement Criteria
+### 5. Lifecycle & Retirement Criteria
 
 Planning prepares this proposal for plan-accept; Development starts only after acceptance and handoff. The size is M because one change must
 align generated guidance, skill prerequisites and playbook metadata while preserving runtime document discovery.
@@ -185,3 +193,4 @@ align generated guidance, skill prerequisites and playbook metadata while preser
 The Planning decisions settle playbook metadata compatibility and identify focused verification cases.
 Acceptance and handoff follow the proposal lifecycle; the handed-off spec owns implementation and the Living Spec
 updates listed in the target blueprint. Delivery requires AC-01 through AC-07 and the repository's affected checks.
+

@@ -2,7 +2,7 @@
 id: PROP-skip-empty-bundle-context-target
 title: Target Living Spec for Skipping Empty Bundle Context Loads
 status: draft
-proposal: PROP-skip-empty-bundle-context
+proposal: SPEC-skip-empty-bundle-context
 created_at: 2026-11-13
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md
