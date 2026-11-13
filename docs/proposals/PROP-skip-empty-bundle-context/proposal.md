@@ -128,11 +128,60 @@ playbook retrieval and context documents. Preserve receipt validation, override 
 - **Scope Excluded:** Suppressing explicit context commands authored inside an individual bundle's own procedure.
   This work changes devkit-generated requirements and devkit's generic consumption instructions.
 
-## 4. Lifecycle & Retirement Criteria
+## 4. Planning Decisions
 
-This is a Backlog draft; creating it starts neither Planning nor Development. The size is M because one change must
+### Q1 — Additive playbook metadata
+
+Add boolean `context.required` to `playbook get` output. Retain `context.bundle`, `context.argv` and
+`context.policy` with their existing values, including `once-per-agent-context` for policy. Policy describes reuse
+when a load is required; `required` determines whether the generated procedure calls the argv. For a bundle
+without sources, return `required: false` while retaining the executable argv for explicit inspection. For a bundle
+with sources, return `required: true`. Exact IDs and aliases return the same requirement.
+
+Existing consumers that ignore the additive field retain their previous behavior and may issue an empty load.
+Generated consumption guidance uses the field before executing the procedure. For discovery, retrieve the selected
+playbook by exact ID before execution and apply the same metadata rule; do not use `get-context` as a probe.
+
+### Q2 — One source-presence predicate
+
+Keep the predicate in the existing distribution `services/bundles/` layer. It accepts source facts: constitution
+presence, selected instruction presence and a declared context document directory. It returns their logical OR.
+The sync inventory supplies facts from `Bundle.constitution`, the selected assets and `Bundle.context_documents`.
+It retains the required bundle names for guidance generation and uses the result for skill prefixes.
+
+Receipt-backed retrieval supplies the same facts from the recorded managed `AGENTS.md`, instruction assets of the
+bundle and `declared_directory(read_owned(... bundle.toml ...))`. Read under the existing shared lock and validate
+the managed manifest through `read_owned`; do not discover installed sources, infer sources from guidance text or
+call document providers to decide presence. Preserve existing override and personal-render validation paths.
+
+No receipt schema change or cross-feature dependency is needed. Do not serialize a second cached requirement in
+the receipt: its existing facts are sufficient. A content-free constitution or selected instruction remains a
+source. Rendered templates count through their deployed outputs; instruction overrides cannot deselect a source.
+
+### Q3 — Root guidance and verification
+
+Root guidance retains the selected bundle inventory and separately names only bundles requiring context loads.
+When selected bundles have no sources, state that no automatic bundle context load is required. An empty selection
+retains the existing selection guidance. Keep stable bundle ordering and the reload-after-context-loss rule.
+
+Use the existing integration test owners: `test_guidance_block.py`, `test_context.py`, `test_context_documents.py`,
+`test_playbook_get.py` and `test_skill_invocation.py`. Extend the fixture matrix for no sources, constitution-only
+and templated constitution, instruction-only and templated instruction, document-only with missing and empty
+directories, mixed selections, and preset deselection followed by resync. Include exact and alias retrieval,
+manifest tampering rejection and effective overridden instructions/playbooks. Assert preserved argv/policy fields
+beside the boolean and unchanged explicit empty `get-context` output. Create a document or provide a provider
+result after sync to verify runtime discovery without resync.
+
+The implementation remains within the existing distribution feature. These local implementation choices need no
+PADR; the capability changes are limited to the three declared targets. Before editing source bundle guidance,
+Development loads `authoring` and applies `agent-asset-writing`. Sync-generated tracked projections and receipt
+changes are derived outputs; review them alongside the source changes.
+
+## 5. Lifecycle & Retirement Criteria
+
+Planning prepares this proposal for plan-accept; Development starts only after acceptance and handoff. The size is M because one change must
 align generated guidance, skill prerequisites and playbook metadata while preserving runtime document discovery.
 
-Before acceptance, settle the playbook metadata compatibility question and identify the focused verification cases.
+The Planning decisions settle playbook metadata compatibility and identify focused verification cases.
 Acceptance and handoff follow the proposal lifecycle; the handed-off spec owns implementation and the Living Spec
 updates listed in the target blueprint. Delivery requires AC-01 through AC-07 and the repository's affected checks.
