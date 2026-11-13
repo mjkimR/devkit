@@ -8,7 +8,7 @@ target: Impeccable skill (AUTONOMY_DIRECTIVE_CHECK)
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-13
 ---
 
@@ -41,3 +41,11 @@ created_at: 2026-11-13
 Pilot finding A2b: AUTONOMY_DIRECTIVE_CHECK asks for a live probe a subagent cannot perform; the child proceeded
 under the brief's stop conditions.
 ```
+
+## Disposition
+
+Promoted to `SPEC-uiux-upstream-fallbacks` as completed local mitigation. The local skill briefs actual capabilities and stop conditions, reports an unavailable required probe, stops dependent Impeccable work and uses the user-operated session or authorized inline work without treating the brief as a passed or overridden check.
+
+Verification: focused UI/UX bundle integration 16 passed; installed-consumer E2E 1 passed; catalog lint/format and type checks passed; `just test-affected --base 5cab6156a60de1a2a2845e38fc19bda92961c90e --tier all` passed 182 tests. These checks verify shipped instructions and distribution, not upstream runtime or model obedience.
+
+The upstream runtime was not fixed. Native upstream trials were not required or performed. The user selected local compensation and no external submission or retained upstream follow-up; this disposition records no upstream resolution.

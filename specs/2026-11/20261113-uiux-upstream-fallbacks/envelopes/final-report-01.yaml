@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:37:22.171323Z'
+status: completed
+summary: Completed all three authorized local Impeccable mitigations with conditional shipped guidance, preserved authority, verified catalog distribution and terminal local-mitigation source dispositions; upstream runtime is unchanged.
+findings: []
+assumptions:
+- Instruction/distribution checks do not establish upstream correctness, native path enforcement or model obedience; native package/test inputs are unchanged from reviewed commit7b18b6f51.
+unverified_areas:
+- Native Impeccable loading and live upstream detector/probe/storage behavior were not tested; empirical trials were explicitly best effort, not a completion gate. Integration and landed-runtime checks belong to the Host.
+checks:
+  tests: PASS focused integration16; selected installed-consumer1; just test-affected --base 5cab6156a60de1a2a2845e38fc19bda92961c90e --tier all mode=partial16paths182tests
+  build: PASS installed-consumer built five local wheels and deployed the conditional reference without agt/docs/spec; catalog pyright0
+  lint: PASS catalog ruff/format74; exact committed reconciliation cumulative CI22rules errors0 warnings0; bundle hygiene0; sync-check0 outputs
+  review: PASS fresh independent medium code-reviewer0findings; caller full-tree/HEAD unchanged; single-area reconcile self-verification0findings; feedback sweep0new; critical-open0
+diff_scope:
+  base: 5cab6156a60de1a2a2845e38fc19bda92961c90e
+  head: 23fa4a5e55e5d8e9048044f6ee866cafa5ac8290

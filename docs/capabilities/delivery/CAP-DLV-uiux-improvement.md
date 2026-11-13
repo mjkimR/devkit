@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-uiux-improvement
 title: Software interface UI/UX improvement
-summary: "An opt-in UI/UX skill improves software interfaces through user-approved routes and capability-gated Impeccable relay. It verifies changed branch builds, accepts changes against the approved goal and reports measured contrast and coverage."
+summary: "An opt-in UI/UX skill improves software interfaces through user-approved routes and capability-gated Impeccable relay. It verifies changed branch builds and handles detector, autonomy-probe and persistence limits while preserving consumer authority and reporting actual coverage."
 area: delivery
 status: active
 created_at: 2026-11-05
@@ -177,6 +177,26 @@ Alternatives, research and criticism are optional means, not a required final re
     present the verified result and obtain authority once for the named remaining effects before acting. Route
     choice alone grants none; exact prior authority is reused. Test: `test_task_route_approval_is_explicit_reused_and_bounded`.
 
+23. **Detector evidence**: IF Impeccable reports `hasVisualImplementation=false`, THEN the coordinator MUST treat
+    detection as advisory and inspect the actual target path, UI code and executable local branch build, reporting
+    detector limits separately from inspected evidence without inferring absent UI or promising that `--target`
+    guarantees discovery. Test: `test_impeccable_limits_require_evidence_and_authorized_continuation`.
+24. **Capability brief**: WHEN preparing an Impeccable brief, the coordinator MUST name actual observed capabilities,
+    unavailable or unverified capabilities and stop conditions for missing required probes/capabilities, questions,
+    conflicts and denied operations. The brief supplies task boundaries, not a passed upstream check or authority
+    to override one. Test: `test_impeccable_limits_require_evidence_and_authorized_continuation`.
+25. **Unavailable autonomy probe**: IF a child cannot run a live probe required by `AUTONOMY_DIRECTIVE_CHECK`, THEN
+    the coordinator MUST report the unavailable probe and stop dependent Impeccable work, without claiming a pass
+    or substituting brief stop conditions for the requirement. Continuation uses the user-operated session or
+    already authorized/user-chosen inline work, preserving native loading, every-answer confirmation and host
+    permissions on their applicable routes; inline work claims no Impeccable execution or probe result.
+    Test: `test_impeccable_limits_require_evidence_and_authorized_continuation`.
+26. **Supported audit persistence**: WHEN attempting audit persistence, the coordinator MUST inspect installed
+    supported help/interface first and use only a supported operation within existing permissions. IF
+    `audit-storage write` is unsupported, THEN the session MUST return audit findings and coverage in its report
+    with persistence marked unavailable, without invented/retried commands, guessed replacements, unrequested
+    files or installation changes. Test: `test_impeccable_limits_require_evidence_and_authorized_continuation`.
+
 Instruction review verifies stated behavior, not model obedience, aesthetic quality or superiority over one agent.
 Selection changes neither the development approach nor the consumer's execution authority. The distribution-owned
 root bundle inventory can name the selection; the bundle supplies no design guidance fragment or constitution.
@@ -189,7 +209,9 @@ The bundle needs no devkit-spec or devkit-docs installation; consuming projects 
 
 The entry routes optional reads to `references/design-guidance.md` (object framing, its conditional sources, design
 lenses and baseline craft checks) and `references/orchestration.md` (local roles and the Impeccable brief, routing,
-acceptance and user-requested setup and cleanup). Local roles are designer, unconventional-designer,
+acceptance and user-requested setup and cleanup), and to `references/impeccable-limits.md` when preparing an
+Impeccable brief or handling detector, autonomy-probe or audit-persistence limits. That reference mitigates local
+handling; it fixes no upstream runtime behavior. Local roles are designer, unconventional-designer,
 reference-researcher and critic. Only selected bodies are loaded. Each role return contains status (completed,
 partial or failed), inspected identities, concrete work, assumptions and unverified areas; research includes source
 provenance, and critique includes evidence, failure conditions and repairs. A failed or absent role supplies no

@@ -8,7 +8,7 @@ target: impeccable audit-storage write
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-13
 ---
 
@@ -38,3 +38,11 @@ created_at: 2026-11-13
 ```text
 Coordinator report from the consumer run: `audit-storage write` is missing in the 4.8.2 CLI.
 ```
+
+## Disposition
+
+Promoted to `SPEC-uiux-upstream-fallbacks` as completed local mitigation. The local skill checks installed supported help/interface before persistence and returns audit findings in the session report when unsupported, without invented retries, unrequested files or installation changes.
+
+Verification: focused UI/UX bundle integration 16 passed; installed-consumer E2E 1 passed; catalog lint/format and type checks passed; `just test-affected --base 5cab6156a60de1a2a2845e38fc19bda92961c90e --tier all` passed 182 tests. These checks verify shipped instructions and distribution, not upstream runtime or model obedience.
+
+The upstream runtime was not fixed. Native upstream trials were not required or performed. The user selected local compensation and no external submission or retained upstream follow-up; this disposition records no upstream resolution.
