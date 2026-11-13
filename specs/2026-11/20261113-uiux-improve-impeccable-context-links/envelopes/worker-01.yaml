@@ -1,0 +1,26 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T06:30:41.782088Z'
+status: completed
+summary: Implemented and verified approved context-link helper and its21 regressions, projected bytes, conditional helper guidance and eight-target Living Spec reflection. Host explicitly admitted router-only SKILL.md plus context-links.md; no Tier B extensions or sync outputs. Initial code-review P2s resolved; independent reconcile passed; ready for Host integration.
+findings: []
+assumptions:
+- Codex boundary emulated by absolute cwd/paths, per-operation approval, read-only role HEAD/tree checks and committed-range audit; no native guarantee
+- Mutating setup requires quiescent managed entries and source; no guarantee against noncooperating concurrent writers
+unverified_areas:
+- BusyBox, Windows, live editor/Impeccable behavior unverified; integration and landed verification belong to Host
+checks:
+  sync_start: PASS exit=0
+  tests: PASS affected all-tier227 at82926d70; helper21 and projection/authority coverage included
+  lint: PASS full lint-check at7b550e494 source; rules CI22 and whitespace pass at82926d70
+  types: PASS full just check at7b550e494 source, 0 errors/warnings all packages
+  build: PASS sh/dash syntax; managed/shared/Claude script bytes tested
+  review: PASS mandatory medium code-review2 P2s resolved by implementer regressions/reverify
+  reconcile: PASS independent eight-target verification, no findings
+  feedback: PASS recorded=0 duplicates=0
+diff_scope:
+  base: 1d075fc805413c1657fbb69b08638d0ede5078ed
+  head: d2790b38fc402ebf43cfad45a74f666f3b1ba3dc
+activity_effort: medium
