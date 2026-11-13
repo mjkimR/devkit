@@ -1,13 +1,13 @@
 ---
-id: PADR-change-scoped-rule-notices
+id: ADR-change-scoped-rule-notices
 title: Change-scoped rule notices and explicit read context
 summary: "For contextual rule guidance, we add a nonblocking notice severity and snapshot-bound change evidence with an explicit read surface, to preserve warning meaning, accepting opt-in read-time delivery."
-proposal: PROP-linter-change-notices
-status: draft
+proposal: SPEC-linter-change-notices
+status: accepted
 created_at: 2026-11-13
 ---
 
-# [PADR-change-scoped-rule-notices] Change-scoped rule notices and explicit read context
+# [ADR-change-scoped-rule-notices] Change-scoped rule notices and explicit read context
 
 ## 1. Context & Problem Statement
 
@@ -65,6 +65,6 @@ coverage becomes a requirement, revisit the host-specific scope in a later direc
 
 ## 6. Confirmation
 
-AC-N1 to AC-N10 of `PROP-linter-change-notices` map to rule/evaluator, snapshot, CLI, gate, workflow and memo tests in
+AC-N1 to AC-N10 of `SPEC-linter-change-notices` map to rule/evaluator, snapshot, CLI, gate, workflow and memo tests in
 `packages/devkit/tests/`. Document rules validate structure; Development code review checks semantic-span relevance.
 Planning has not run the future implementation tests.

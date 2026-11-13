@@ -1,45 +1,24 @@
 ---
-id: PROP-linter-change-notices
+id: SPEC-linter-change-notices
 title: Non-blocking rule notices for changed code
-summary: "Introduce a distinct notice severity for change-scoped linter guidance while preserving warning semantics. Define changed-block targeting and read-time context so agents can review relevant considerations without remediation or approval records."
-status: accepted
-created_at: 2026-11-11
-target_area: governance/
-priority: low
-size: M
-planning_effort: medium
-dev_effort: high
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/rules/
-    - packages/devkit/src/devkit_agt/features/gate/usecases/gates/rules.py
-    - packages/devkit/src/devkit_agt/features/gate/models/errors.py
-    - packages/devkit/tests/unit/features/rules/
-    - packages/devkit/tests/integration/features/rules/
-    - packages/devkit/tests/integration/features/gate/
-    - packages/devkit/tests/integration/features/workflow/
-    - packages/devkit/tests/e2e/features/gate/
-    - packages/devkit/README.md
-    - docs/capabilities/governance/CAP-GOV-rules-engine.md
-    - docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md
-    - docs/capabilities/governance/CAP-GOV-rule-authoring.md
-    - docs/capabilities/gate/CAP-GATE-commit-gates.md
-    - docs/development/reference/rules.md
-    - docs/decisions/
-  excludes:
-    - packages/devkit-dist/
-    - packages/devkit-mcp/
-    - packages/devkit-spec/
-    - packages/devkit/src/devkit_agt/features/workflow/
-    - packages/devkit/src/devkit_agt/features/rules/services/builtins/secret_leak/
-    - .devkit/architecture.toml
-task_kind: feature
-workflow: sdd-proposal
+summary: Introduce a distinct notice severity for change-scoped linter guidance while preserving warning semantics. Define changed-block targeting and read-time context so agents can review relevant considerations without remediation or approval records.
+status: planned
+created: 2026-11-13
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-linter-change-notices] Non-blocking rule notices for changed code
+# [SPEC-linter-change-notices] Non-blocking rule notices for changed code
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-linter-change-notices on 2026-11-13.
+- **Preserved Materials**: `docs/materials/2026-11/20261113-linter-change-notices`
+- Target Docs Blueprint: `PROP-linter-change-notices-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Some edits deserve a contextual reminder even when the result is valid. Adding a broad exception handler can
 justify checking whether failure becomes indistinguishable from success; changing a public signature can justify
@@ -58,9 +37,28 @@ snapshot metadata. They do not expose a shared changed-hunk API. The Agent Advis
 Related contracts: `CAP-GOV-rules-engine`, `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`,
 `CAP-ADV-agent-advisory-protocol` and `CAP-HOST-lifecycle-observation`.
 
-## 2. Planning Decisions
+## 2. User Stories
 
-The recommendation is one cohesive `sdd-spec-feature` at size `M`. `PADR-change-scoped-rule-notices` records the lasting
+- **US-1**: As a developer/agent, I want to implement Non-blocking rule notices for changed code so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
+
+The recommendation is one cohesive `sdd-spec-feature` at size `M`. `ADR-change-scoped-rule-notices` records the lasting
 contract choice. Implementation remains subject to `plan-accept` and `proposal-handoff`.
 `MAT-linter-notice-planning` records the source inspection at `aa6c51dc3148efba121bc54c8e582a59aacd11d1`.
 
@@ -75,7 +73,7 @@ contract choice. Implementation remains subject to `plan-accept` and `proposal-h
 Development effort is `high`: this adds an exported rule API and machine-readable CLI contract used by external
 bundles. Planning effort remains `medium`; one isolated challenger reviews this recommendation.
 
-### Alternatives considered
+#### Alternatives considered
 
 1. Treat reminders as warnings. Rejected: strict rule checks can become negative and warnings lose their suspected-defect meaning.
 2. Rename or alias INFO to NOTICE. Rejected: existing rule imports, configured severity values and consumers would silently change meaning.
@@ -83,9 +81,9 @@ bundles. Planning effort remains `medium`; one isolated challenger reviews this 
 4. Inject context into every host's native file reads. Rejected: `CAP-HOST-lifecycle-observation` exposes advisory Codex
    lifecycle hooks, not a universal typed file-read event. This exceeds the stated excluded scope.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Severity and output
+#### 3.1 Severity and output
 
 - `Severity.NOTICE` is a rule finding severity, separate from the result's `notices` advisory array.
 - Existing `Violation` and `EvaluationResult.violations` remain the rule-finding API, including NOTICE findings.
@@ -102,7 +100,7 @@ bundles. Planning effort remains `medium`; one isolated challenger reviews this 
   the consideration; it never folds them into `GATE_RULES_WARNINGS`. Existing strict-warning exemptions remain unchanged.
   Workflow `lint-clean` continues testing blocking findings only; it creates no notice acknowledgement check.
 
-### 3.2 Change evidence independent of severity
+#### 3.2 Change evidence independent of severity
 
 `BaseRule` gains optional `change_scope = True` (default false, read optionally for existing rule classes).
 A change-scoped warning remains possible. A change-scoped rule is a linter rule, is omitted in hygiene even though
@@ -150,7 +148,7 @@ content or a content race), omit only the affected change-scoped evaluation with
 Independent rules still run. Snapshot capture/materialization failures retain their existing failure/exit-2 behavior.
 A changed file whose captured bytes change again is unavailable for that run; never combine mismatched text/ranges.
 
-### 3.3 Explicit read-time context
+#### 3.3 Explicit read-time context
 
 Proposed synopsis: `devkit rules context FILE [--session TOKEN] [--format text|json]`. It is a read companion,
 not a general file-reading command. It always returns working-tree versus HEAD change status and old/new hunk
@@ -186,7 +184,7 @@ with `RULE_READ_SESSION_UNAVAILABLE` (NOTICE), without a retry loop. A crash bet
 can suppress a notice on retry; exactly-once delivery to the model is not claimed. Session files are derived,
 ignored, safely prunable state, never a suppression/approval database.
 
-### 3.4 Scope and verification
+#### 3.4 Scope and verification
 
 The implementation changes only the rules feature, its gate adapter and their documented public contracts.
 `target-docs.md` names the Living Spec targets and candidate code paths. `CAP-ADV-agent-advisory-protocol` and
@@ -222,12 +220,13 @@ No runtime or timing improvement is claimed. Development validates with reposito
 `just test-affected --base <unit-base>` preserving full fallback, plus targeted source-specific checks and installed
 CLI/gate coverage. These are future checks; Planning runs document and envelope validation only.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Keep `priority: low`; this batch explicitly selects Planning. Acceptance settles the additive severity, exact
 source evidence and explicit read companion together. `plan-accept` integrates only the Planning documents.
-`proposal-handoff` then creates the spec worktree and promotes `PADR-change-scoped-rule-notices`; Development
+`proposal-handoff` then creates the spec worktree and promotes `ADR-change-scoped-rule-notices`; Development
 implements AC-N1 to AC-N10 and reconciles the named Living Spec contracts. No criterion is silently deferred.
 
 If the owner requires automatic context on native reads rather than the explicit companion, retain this proposal
 in review and revisit scope before handoff; the current design makes no universal-host delivery claim.
+

@@ -2,7 +2,7 @@
 id: PROP-linter-change-notices-target
 title: Target Living Spec Structure for PROP-linter-change-notices
 status: draft
-proposal: PROP-linter-change-notices
+proposal: SPEC-linter-change-notices
 created_at: 2026-11-13
 targets:
   - file: docs/capabilities/governance/CAP-GOV-rules-engine.md
@@ -34,7 +34,7 @@ approval boundaries do not change.
 
 ## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)
 
-Promote `PADR-change-scoped-rule-notices` to ADR-change-scoped-rule-notices. No accepted ADR is superseded:
+Promote `ADR-change-scoped-rule-notices` to ADR-change-scoped-rule-notices. No accepted ADR is superseded:
 the choice extends the rule contract without changing existing INFO/warning/snapshot meanings. Current host and
 advisory contracts are read authorities, not modified targets. Existing `rules -> project` and `gate -> rules`
 edges suffice; no change to `.devkit/architecture.toml`, dist or MCP.
