@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-13T06:04:13.451598Z'
+status: completed
+summary: Real Git subdirectory provider reproduces missing verified commit and absent metadata refresh before the fix
+findings: []
+assumptions:
+- Reproduction ran on uncommitted regression tests; production source remains unchanged
+checks:
+  reproduced: PASS 4 subdirectory_commit cases fail as characterized; 39 deselected
+diff_scope:
+  base: 1265a601388515b271ae6ec3fd357c72ffa481a5
+  head: ''

@@ -294,6 +294,76 @@ def test_optional_commit_matches_only_copied_committed_inputs(checkout) -> None:
     assert record["source"]["commit"] is None
 
 
+@pytest.fixture
+def subdirectory_checkout(tmp_path: Path) -> tuple[Path, Path, Path]:
+    repository = tmp_path / "repository"
+    source = content_source(repository / "tools/content", rule=True)
+    root = tmp_path / "consumer"
+    root.mkdir()
+    for args in (
+        ("init", "-q"),
+        ("add", "."),
+        ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "content"),
+    ):
+        subprocess.run(["git", "-C", str(repository), *args], check=True, capture_output=True)
+    return root, source, root / "tools/team-copy"
+
+
+def test_subdirectory_commit_and_source_path_spelling(subdirectory_checkout) -> None:
+    root, source, destination = subdirectory_checkout
+    head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
+    initial = create(subdirectory_checkout)
+    assert load_provenance(read_tree(destination))["source"]["commit"] == head
+    relative_source = Path("../repository/tools/content")
+    preview = RefreshBundleSnapshot().execute(root, destination, relative_source)
+    assert preview.candidate_digest == initial.candidate_digest
+    assert preview.changes == {"added": [], "modified": [], "removed": []}
+
+
+@pytest.mark.parametrize("change", ["bytes", "mode"])
+def test_subdirectory_commit_rejects_dirty_copied_inputs(subdirectory_checkout, change: str) -> None:
+    _, source, destination = subdirectory_checkout
+    create(subdirectory_checkout)
+    assert load_provenance(read_tree(destination))["source"]["commit"] is not None
+    if change == "bytes":
+        guide = source / "src/private_content/alpha/bundle/guide.md.jinja"
+        guide.write_text(guide.read_text().replace("alpha body.", "uncommitted copied bytes."))
+    else:
+        (source / "src/private_content/alpha/bundle/check.sh").chmod(0o644)
+    assert refresh(subdirectory_checkout, apply=True).status == "updated"
+    assert load_provenance(read_tree(destination))["source"]["commit"] is None
+
+
+def test_subdirectory_commit_metadata_only_refresh(subdirectory_checkout, monkeypatch: pytest.MonkeyPatch) -> None:
+    from devkit_dist.features.distribution.services.snapshots import source as source_service
+
+    root, source, destination = subdirectory_checkout
+    head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
+    with monkeypatch.context() as legacy:
+        legacy.setattr(source_service, "source_commit", lambda *_: None)
+        initial = create(subdirectory_checkout)
+    before = read_tree(destination)
+    assert load_provenance(before)["source"]["commit"] is None
+    before_times = {rel: (destination / rel).stat().st_mtime_ns for rel in before}
+    preview = refresh(subdirectory_checkout)
+    assert preview.changes == {"added": [], "modified": ["snapshot.json"], "removed": []}
+    assert preview.current_digest == initial.candidate_digest != preview.candidate_digest
+    assert preview.packaging_changed is False
+    assert read_tree(destination) == before
+    assert before_times == {rel: (destination / rel).stat().st_mtime_ns for rel in before}
+    updated = RefreshBundleSnapshot().execute(
+        root, destination, source, expect=preview.current_digest, candidate=preview.candidate_digest
+    )
+    assert updated.code == "BUNDLE_SNAPSHOT_UPDATED"
+    assert load_provenance(read_tree(destination))["source"]["commit"] == head
+    adopted = read_tree(destination)
+    adopted_times = {rel: (destination / rel).stat().st_mtime_ns for rel in adopted}
+    repeated = refresh(subdirectory_checkout, apply=True)
+    assert repeated.code == "BUNDLE_SNAPSHOT_UNCHANGED"
+    assert read_tree(destination) == adopted
+    assert adopted_times == {rel: (destination / rel).stat().st_mtime_ns for rel in adopted}
+
+
 def test_edit_during_candidate_preparation_is_preserved(checkout, monkeypatch: pytest.MonkeyPatch) -> None:
     root, source, destination = checkout
     create(checkout)
