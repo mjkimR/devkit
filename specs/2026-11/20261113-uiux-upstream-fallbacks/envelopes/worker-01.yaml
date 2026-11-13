@@ -1,0 +1,28 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:37:52.747337Z'
+status: completed
+summary: 'Completed specified local handling for all three Impeccable observations, source/test verification, independent review, single-area reconciliation and final report. All three sources are promoted as completed local mitigation with upstream runtime explicitly not fixed; sync outputs: none. Stopped before Host integration.'
+findings: []
+assumptions:
+- 'Codex host projection emulated: substitute absolute worktree paths/cwd, explicit scope, per-operation sibling/shared-Git approvals, literal staging/diff audit and pre/post complete-tree/HEAD comparison; no native path guarantee. No TierB extension or feature/dependency edge.'
+- Native checks ran on d89c6c4b290708aabe502738e235bb801de53ced plus pending package/test diff committed unchanged as7b18b6f51e79f494dd8f321b34936f45a9133439; later edits only Living Spec and records. Initial test grouping/fixture setup errors were fixed before passing runs.
+unverified_areas:
+- Native Impeccable loading, actual upstream detector/probe/persistence behavior and model obedience were not tested or claimed fixed; empirical trials best effort, not gates. Host integration and landed-runtime checks remain.
+checks:
+  sync_start: PASS exit=0
+  sync_end: PASS create0 update0 remove0 seed0; tracked sync outputs none
+  tests: PASS focused integration16; installed-consumer1; affected182 mode=partial16paths with full fallback retained
+  build: PASS installed-consumer built devkit-advisory/devkit-cli/devkit-core/devkit-dist/devkit-catalog wheels; reference deployed without agt/docs/spec
+  lint: PASS just lint-check devkit-catalog ruff+format74; bundle hygiene0; cumulative CI --base a6872bf5ef7d99a10e8bc3799f88b615c03fd47e rules22 errors0 warnings0
+  types: PASS just check devkit-catalog pyright0
+  review: PASS fresh nested code-reviewer0findings; complete-tree203afcb1ab977fc137c467b159f7d5ee8d868b4a and HEAD7b18b6f51e79f494dd8f321b34936f45a9133439 unchanged
+  reconcile: 'PASS medium exception self-verification: one catalog bundle/one delivery area, two exact targets with AC01-05 semantic mapping, no mismatch or waiver'
+  outcome: PASS git-show baseline5cab6156 explicit failure guidance0of3 versus changed3of3; orchestration12280bytes unchanged; reference3303bytes
+  feedback: PASS three exact source dispositions promoted completed-local-mitigation with verification/upstream-not-fixed; sweep0new; no external/deferred task; critical-open0
+diff_scope:
+  base: 5cab6156a60de1a2a2845e38fc19bda92961c90e
+  head: 73fc6590c6c9271de9e9f39c33006c5daa9bbfe3
+activity_effort: medium
