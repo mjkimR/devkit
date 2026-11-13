@@ -8,7 +8,7 @@ agent asset: sync never deploys it and no skill file links it.
 `/app-uiux-improve <goal>` improves the interface and user flows of software: web and desktop applications,
 dashboards, admin tools, settings and responsive views. The coordinator (the agent you invoke) frames the domain
 objects a change touches, improves the screens inline or through an Impeccable session you select, and carries the
-changes through your project's own workflow and checks.
+changes through an explicitly approved outside-workflow run or your chosen project workflow, with applicable checks.
 
 It does not:
 
@@ -41,8 +41,10 @@ It does not:
 
 ## 3. Per-task flow
 
-1. Start: invoke `/app-uiux-improve <goal>` in your devkit session. The coordinator recovers the goal and completes
-   your workflow's steps that come before implementation (branch, worktree, required records).
+1. Start: invoke `/app-uiux-improve <goal>` in your session. Before product edits or write-capable delegation, the
+   coordinator announces that this procedure runs outside your repository's development workflow and process
+   guidelines, and asks for explicit task approval or your choice to follow that workflow. An exact choice already
+   supplied is reused; without an answer, dependent edits wait. Review-only work needs no route choice.
 2. Framing, in proportion to the request:
    - a local change (one component, one state, copy or spacing) proceeds without framing;
    - a change that adds, merges or reorders views or flows first names the affected objects, their relationships,
@@ -55,10 +57,15 @@ It does not:
 4. Session: Impeccable runs through one of the two launch routes below. The coordinator edits no product files until
    the session returns.
 5. Acceptance: the coordinator compares the working tree with the recorded base, verifies the accepted changes,
-   reports anything outside the brief and each OOUX document the change made stale, and continues your workflow.
+   reports anything outside the brief and each stale OOUX document, and continues through your selected route.
 6. Cleanup, only if you ask.
 
-If your workflow drafts new screens before code (for example in a planning document), the screen is drafted there
+If you choose your workflow, its pre-implementation steps, required reviews and delivery approvals still apply.
+The outside route uses the improvement loop without workflow-specific records. Both retain product constraints,
+host permissions, applicable project checks and before/after verification. Independent reviews are optional only
+when your selected workflow does not require them.
+
+If your selected workflow drafts new screens before code (for example in a planning document), the screen is drafted there
 first and Impeccable implements and refines that draft.
 
 Example request:
@@ -68,7 +75,7 @@ Example request:
 ```
 
 The coordinator frames Customer and Invoice from your glossary and object register, implements the merged view
-through your workflow, then briefs a fresh child to run `polish` and `audit` on the two changed files.
+through your selected route, then briefs a fresh child to run `polish` and `audit` on the two changed files.
 
 ## 4. Launch routes
 
@@ -88,7 +95,10 @@ off.
   delivered.
 - It reports `PRODUCT.md`, `DESIGN.md` and shared `.impeccable/` files a session created or changed as your project
   files, with a pointer to Impeccable's "Project files and git" guidance.
-- It has no commit, integration or publication authority beyond what your workflow already grants.
+- It reuses your current task authority; if commit, integration or publication authority is missing, it presents
+  the verified result and asks once for the named remaining effects. Choosing a route alone grants none.
+- It asks before adding surfaces or behavior beyond your approved goal or changing a constraint; an in-goal file
+  addition alone does not require another decision.
 - It installs nothing, adds no ignore entries and removes no files unless you ask.
 
 ## 6. OOUX document linkage
@@ -97,7 +107,7 @@ off.
 | --- | --- |
 | Framing source | The coordinator reads `docs/steering/glossary.md`, `docs/steering/ux-objects.md` and the UX documents under `docs/ux/` where they exist, and passes their paths to Impeccable as read-only references. Without them it frames in conversation. |
 | Persistent anchor | The `PRODUCT.md` reference section (setup step 4) lets Impeccable commands that load `PRODUCT.md` see the same object model. |
-| Report-only write-back | After a change, the coordinator names each document the change made stale. It edits none of them; your workflow's own documentation step updates them. |
+| Report-only write-back | After a change, the coordinator names each document the change made stale. It names the affected statement and a concrete follow-up through your documentation process, or a separate task if none exists. It edits none and creates no follow-up record without a separate request. |
 
 These paths are a convention. The bundle works without them and needs no document package.
 
@@ -122,4 +132,4 @@ name them, and they change only on your explicit direction.
 | A change appears outside the edit list | The coordinator reports the file and does not deliver it. Keep, move or revert it yourself, or ask the coordinator to include it in a new brief. |
 | HEAD moved or attribution is unverifiable | A commit or checkout happened during the session. Review the reported changes yourself before accepting them. |
 | Impeccable is not installed | Install it through a route in section 2, ask the coordinator to, or continue on the inline track. |
-| A UX document is stale | Update it through your workflow's documentation step; the coordinator only reports it. |
+| A UX document is stale | Use the reported document and affected statement for your documentation process or a separate task; the coordinator reports rather than edits it. |

@@ -39,7 +39,7 @@ Use separate instances only for differing questions or design premises; require 
 3. Keep peer conclusions out of independent first-pass payloads; after returns arrive, give a selected refinement or
    critic only the material it needs. Make in-scope design choices without waiting for consensus.
 4. Roles return suggestions, sketches or evidence, leave the index and HEAD unchanged and write no retained
-   artifacts; product source edits stay with the coordinator through the existing workflow.
+   artifacts; product source edits stay with the coordinator through the selected route.
 5. Validate that a return names its inspected artifacts, actual work, assumptions, limitations and any failed or
    unavailable action. A failed or missing role contributes no findings; continue inline when useful and report
    missing coverage. Reinvoke only after the input or cause changes.
@@ -63,7 +63,7 @@ Stop: return one concrete task sequence, affected states, expected benefit, trad
 
 Impeccable is a separately installed design skill with its own commands, detector and project files; this bundle
 ships none of it. A delegated session is not a local role: it may edit the product files its brief lists, and you
-accept its changes before they continue through the consumer workflow.
+accept its changes before they continue through the selected route.
 
 ### Select and set up
 
@@ -77,7 +77,9 @@ accept its changes before they continue through the consumer workflow.
    installer with non-interactive options whose values (scope, hook) the user stated, where upstream documents such
    options. Otherwise hand the user the exact command; the user runs interactive installers and the `/plugin` route
    and answers their prompts. The user can continue inline instead.
-3. Complete the consumer workflow's steps that precede implementation before delegating.
+3. If the user selected the consumer workflow, complete its steps that precede implementation before delegating.
+   Otherwise use the outside-workflow route already explicitly approved for this task; retain host permissions,
+   product constraints and the same brief and acceptance boundaries.
 
 ### Brief
 
@@ -112,14 +114,15 @@ Write a self-contained brief with these fields:
 ### Accept the return
 
 1. Compare the working directory with the recorded base.
-2. Take changes to listed product files into verification and continue them through the consumer workflow.
+2. Take changes to listed product files into verification and continue them through the selected route.
 3. Report session output (critique snapshots, mocks, hook and runtime state under `.impeccable/`) as session output.
    Report any other change outside the edit list without reverting or deleting it, and do not deliver it as
    accepted work.
 4. If HEAD moved, the base is missing or an ignored path cannot be observed, report attribution as unverifiable or
    coverage as limited.
-5. Report each OOUX document (glossary, object register or UX document) the accepted change made stale. Edit none
-   of them in this run; the consumer workflow's own step updates them.
+5. Report each OOUX document (glossary, object register or UX document) the accepted change made stale, its affected
+   statement and a concrete separate follow-up through the documentation process where present or a separate
+   documentation task otherwise. Edit none in this run and create no follow-up record without a separate request.
 
 ### Project files and user requests
 
@@ -136,7 +139,8 @@ Write a self-contained brief with these fields:
   - add the OOUX reference section to `PRODUCT.md`.
 - Leave `PRODUCT.md` and `DESIGN.md` out of any cleanup the user does not name them in. Change them, or let a session
   change them, only on the user's explicit direction.
-- Carry every user-requested change through the consumer workflow and the host's approvals like any product change.
+- Carry every user-requested change through the selected route and the host's approvals like any product change;
+  reuse the task's route choice and exact Git authority, or obtain the missing authority before acting.
 
 Example brief:
 

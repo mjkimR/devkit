@@ -1,6 +1,6 @@
 ---
 name: app-uiux-improve
-description: "Explicitly invoked UI/UX improvement for software interfaces: frame the affected domain objects, improve screens and user flows inline or through a user-selected Impeccable session, and carry requested changes through the existing project workflow and actual verification."
+description: "Explicitly invoked UI/UX improvement for software interfaces: frame the affected domain objects, improve screens and user flows inline or through a user-selected Impeccable session, and implement through a task-approved outside-workflow run or the user-selected project workflow with actual verification."
 ---
 
 # Software interface UI/UX improvement
@@ -13,9 +13,9 @@ request. A review-only request ends with findings and no product edits.
 
 ## Boundaries
 
-- Follow the consumer's existing development workflow for implementation, records, checks and approvals.
-- Keep the current development approach and authority; this skill, its local roles and a delegated Impeccable
-  session grant no commit, integration or publication permission.
+- Follow the route the user approved for this task: the outside-workflow procedure or the consumer workflow.
+- Keep the configured development approach unchanged; selection or invocation alone changes no workflow policy.
+- This skill, its local roles and a delegated Impeccable session grant no commit, integration or publication permission.
 - Preserve supplied product and design-system constraints unless the user authorizes changing them.
 - Use available tools within their access restrictions; a denied operation stops without another access route.
 - Keep roles optional and local; load only selected role bodies for concrete assignments. Role instructions are
@@ -32,7 +32,11 @@ request. A review-only request ends with findings and no product edits.
 
 1. Recover the target, intended user outcome, relevant artifacts and hard constraints from context; ask only for
    missing information that changes the work. For a broad request, choose a bounded initial focus and explain how
-   it serves the goal.
+   it serves the goal. For implementation or requested setup/cleanup, announce: this procedure runs outside the
+   repository's development workflow and its process guidelines. Obtain explicit approval for this task or follow
+   the consumer workflow the user chooses, before product edits or write-capable delegation. Reuse an exact route
+   instruction already given; do not ask twice. Without an answer or approval channel, preserve useful read-only
+   inspection and wait before dependent edits. Silence selects no route. A review-only request needs no route approval.
 2. Inspect the current interface and representative task path, using the running UI when available; name
    screenshot-, code- or text-only coverage when actual interaction cannot be checked.
 3. Frame in proportion to the request. Read `references/design-guidance.md` when framing or choosing the design
@@ -49,30 +53,44 @@ request. A review-only request ends with findings and no product edits.
 5. Synthesize a coherent direction from the inspected artifacts and actual returns, with alternatives when the
    choice matters. Preserve a useful unusual mechanism and its tradeoff instead of averaging suggestions into a
    feature list. Resolve routine design choices within scope; raise product or scope choices to the user.
-6. Before product edits or delegation, complete the consumer workflow's steps that precede implementation (a
-   branch, worktree or required record). If that workflow drafts new screens before code, draft the screen there
-   first; implementation follows that draft.
-7. Once the workflow permits implementation, apply requested changes through it.
+6. If the user chose the consumer workflow, complete its steps that precede implementation before product edits
+   or delegation (a branch, worktree or required record). If that workflow drafts new screens before code, draft the
+   screen there first; implementation follows that draft. On the approved outside-workflow route, use this
+   improvement loop without creating workflow-specific records or another delivery procedure.
+7. Apply requested changes through the selected route.
    - Inline: implement the changes yourself.
    - Impeccable: write the brief, route the command and make no product edits until the session returns; then accept
      its changes against the recorded base as `references/orchestration.md` directs.
-   - Continue through implementation, required checks and delivery approvals. When an approval or tool is missing,
-     preserve useful work and name that blocker.
+   - Keep product constraints and host permissions on both routes. If a host denies an operation, stop it without
+     another access route. If an approval or tool is missing, preserve useful work and name that blocker.
+   - Before a new surface or behavior beyond the approved goal, or a change to a user constraint, obtain a new user
+     decision. An in-goal file addition or implementation choice alone is not scope growth; pause only dependent work.
 8. Inspect the changed interface and representative interactions: relevant layout states, feedback and recovery,
    keyboard/focus and responsive behavior as the change requires. Apply the baseline craft checks in
    `references/design-guidance.md` and run the project's applicable checks; fix exposed defects and recheck. If
    critique can improve the result, use one bounded critique/refinement pass; stop without a score or consensus quota.
-9. Report the applied improvement, why it serves the user goal, what was actually checked and material limits.
+   The bundle adds no mandatory independent UX or code review; keep every review required by the selected consumer
+   workflow. Otherwise recommend a useful optional check when structure or implementation warrants it and report
+   whether it ran.
+9. Report the selected route, applied improvement, why it serves the user goal, before/after interface verification,
+   applicable project checks, what was actually checked and material limits, including missing or declined optional
+   checks. Name each stale consumer OOUX or UX document, its affected statement and a concrete separate follow-up
+   through the documentation process where present, or a separate documentation task otherwise; edit none and
+   create no follow-up record without a separate request.
    On the Impeccable track, also make the reports that `references/orchestration.md` "Accept the return" and
    "Project files and user requests" require.
-   Honor a requested output destination; otherwise report in conversation. Product artifacts follow project ownership.
+   Before Git effects, reuse current authority for the exact task effects. If authority is missing, present the
+   verified result and ask once for the named remaining commit, integration or publication effects before acting;
+   route approval alone grants none. Honor a requested output destination; otherwise report in conversation.
+   Product artifacts follow project ownership.
 10. If the user asks you to install Impeccable, add ignore entries, remove Impeccable output or add the `PRODUCT.md`
     reference section, read `references/orchestration.md` before acting and follow its project-file rules; carry the
-    change through the consumer workflow like any product change.
+    change through the selected route and host approvals like any product change.
 
 ## Completion
 
-- A normal improvement request finishes with the changed interface or flow and its verification status.
+- A normal improvement request finishes with the changed interface or flow and its verification status, selected route,
+  stale-document follow-up and any remaining unauthorized Git effects.
 - A narrower request finishes with its requested findings or design artifact.
 - A blocked request names the unresolved choice, artifact, workflow requirement or tool and keeps useful partial work.
 - A delegated request finishes after you accepted or reported every change the session made.

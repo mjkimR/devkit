@@ -2,7 +2,7 @@
 id: SPEC-uiux-improve-run-model
 title: Task-approved UI/UX runs outside the consumer workflow
 summary: "Offers explicitly approved per-task UI/UX work outside the consumer workflow while retaining constraints, host permissions, project checks and separate Git authority."
-status: planned
+status: in-progress
 created: 2026-11-13
 related_capabilities: [CAP-DLV-uiux-improvement]
 related_usecases: [UC-improve-an-interface-and-user-flow]

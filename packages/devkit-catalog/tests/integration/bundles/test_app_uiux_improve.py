@@ -100,8 +100,10 @@ def test_installed_text_is_self_contained_and_links_only_conditional_references(
 def test_entry_preserves_improvement_scope_and_consumer_authority() -> None:  # AC-01, AC-09
     skill = (SKILL / "SKILL.md").read_text()
     assert_rule(skill, "review-only", "findings", "no product edits")
-    assert_rule(skill, "existing development workflow", "implementation", "approvals")
-    assert_rule(skill, "normal improvement request", "changed interface or flow", "verification status")
+    assert_rule(skill, "consumer workflow", "steps that precede implementation", "before product edits")
+    assert_rule(
+        skill, "normal improvement request", "changed interface or flow", "verification status", "selected route"
+    )
     assert_rule(skill, "actually checked", "material limits")
     assert_rule(skill, "no commit", "integration", "publication permission")
     assert_rule(skill, "do not require", "fixed cast", "alternative count", "comparative-effectiveness experiment")
@@ -125,6 +127,47 @@ def test_entry_preserves_improvement_scope_and_consumer_authority() -> None:  # 
         text = (SKILL / f"roles/{role}.md").read_text()
         assert_rule(text, "index", "HEAD unchanged")
         assert "retained files" in text
+
+
+def test_task_route_approval_is_explicit_reused_and_bounded() -> None:  # SPEC-uiux-improve-run-model AC-01..08
+    skill = (SKILL / "SKILL.md").read_text()
+    assert_rule(
+        skill, "runs outside", "development workflow", "process guidelines", "explicit approval", "before product edits"
+    )
+    assert_rule(skill, "reuse an exact route", "do not ask twice", "without an answer", "wait before dependent edits")
+    assert_rule(skill, "silence selects no route", "review-only", "no route approval")
+    assert_rule(skill, "configured development approach unchanged", "selection or invocation", "no workflow policy")
+    assert_rule(skill, "outside-workflow route", "without creating workflow-specific records")
+    assert_rule(skill, "both routes", "product constraints", "host permissions", "without another access route")
+    assert_rule(skill, "beyond the approved goal", "user constraint", "new user decision", "in-goal file addition")
+    assert_rule(
+        skill, "no mandatory independent", "review required by the selected consumer workflow", "whether it ran"
+    )
+    assert_rule(
+        skill, "selected route", "before/after interface verification", "applicable project checks", "material limits"
+    )
+    assert_rule(
+        skill, "stale consumer", "affected statement", "separate documentation task", "edit none", "separate request"
+    )
+    assert_rule(
+        skill,
+        "reuse current authority",
+        "ask once",
+        "named remaining commit, integration or publication",
+        "before acting",
+    )
+    assert_rule(skill, "route approval alone grants none")
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert_rule(
+        orchestration, "outside-workflow route already explicitly approved", "same brief and acceptance boundaries"
+    )
+    assert_rule(orchestration, "listed product files", "selected route")
+    assert_rule(orchestration, "user-requested change", "selected route", "exact Git authority")
+    guide = (BUNDLE / "README.md").read_text()
+    assert_rule(
+        guide, "explicit task approval", "choice to follow that workflow", "without an answer", "dependent edits wait"
+    )
+    assert_rule(guide, "required reviews", "outside route", "applicable project checks", "before/after verification")
 
 
 def test_framing_is_proportionate_and_reads_ooux_documents_only_where_present() -> None:  # AC-01, AC-10
@@ -156,7 +199,7 @@ def test_framing_is_proportionate_and_reads_ooux_documents_only_where_present() 
 def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None:  # AC-02, AC-03, AC-04, AC-06, AC-09
     skill = (SKILL / "SKILL.md").read_text()
     assert_rule(skill, "impeccable only after the user selects it", "without that selection, work inline")
-    assert_rule(skill, "before product edits or delegation", "steps that precede implementation")
+    assert_rule(skill, "user chose the consumer workflow", "before product edits", "steps that precede implementation")
     assert_rule(skill, "make no product edits until the session returns", "recorded base")
     assert_rule(skill, "delegated impeccable session", "no commit, integration or publication permission")
     orchestration = (SKILL / "references/orchestration.md").read_text()
@@ -175,7 +218,7 @@ def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None
         "continue inline",
     )
     # Workflow first and the brief (AC-02).
-    assert_rule(orchestration, "steps that precede implementation before delegating")
+    assert_rule(orchestration, "selected the consumer workflow", "steps that precede implementation before delegating")
     assert_rule(orchestration, "framing result", "ooux documents by path", "read-only", "conversation framing")
     assert_rule(orchestration, "drafts or specifications", "by path, read-only")
     assert_rule(orchestration, "absolute working directory", "recorded base", "head", "content hashes")
@@ -194,7 +237,7 @@ def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None
     assert_rule(orchestration, "compare the working directory with the recorded base")
     assert_rule(orchestration, "outside the edit list", "without reverting or deleting", "accepted work")
     assert_rule(orchestration, "head moved", "base is missing", "unverifiable", "limited")
-    assert_rule(orchestration, "ooux document", "made stale", "edit none", "consumer workflow's own step")
+    assert_rule(orchestration, "ooux document", "made stale", "edit none", "documentation process", "separate request")
 
 
 def test_project_files_setup_and_cleanup_follow_the_users_request() -> None:  # AC-05
@@ -205,7 +248,7 @@ def test_project_files_setup_and_cleanup_follow_the_users_request() -> None:  # 
     assert_rule(orchestration, "ignore entries", "confined to `.impeccable/` paths", "after showing the user the exact")
     assert_rule(orchestration, "remove impeccable runtime or session output the user names")
     assert_rule(orchestration, "out of any cleanup", "only on the user's explicit direction")
-    assert_rule(orchestration, "user-requested change", "consumer workflow", "host's approvals")
+    assert_rule(orchestration, "user-requested change", "selected route", "host's approvals")
     skill = (SKILL / "SKILL.md").read_text()
     assert_rule(skill, "install impeccable", "ignore entries", "`product.md` or `design.md`", "user's request")
     assert_rule(
