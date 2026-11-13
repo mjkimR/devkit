@@ -1,7 +1,7 @@
 ---
 id: UC-improve-an-interface-and-user-flow
 title: Improve an interface and user flow
-summary: "An AI coding agent improves a software interface through an approved task route, framed objects and optional Impeccable delegation, then verifies the changed branch. It handles detector, probe and persistence limits through evidence, authorized continuation and qualified reporting."
+summary: "An AI agent improves an interface through an approved route and optional bounded Impeccable session, verifies the changed branch and reports actual coverage. Optional tracked-context linking and read-only checks preserve consumer ownership."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional design and research subagents, Optional Impeccable session]
@@ -10,6 +10,7 @@ capabilities:
   - CAP-DLV-uiux-improvement
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/scripts/link-impeccable-context.sh
 ---
 
 # [UC-improve-an-interface-and-user-flow] Improve an interface and user flow

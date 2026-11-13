@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-uiux-improvement
 title: Software interface UI/UX improvement
-summary: "An opt-in UI/UX skill improves software interfaces through user-approved routes and capability-gated Impeccable relay. It verifies changed branch builds and handles detector, autonomy-probe and persistence limits while preserving consumer authority and reporting actual coverage."
+summary: "An opt-in UI/UX skill improves interfaces through approved routes and capability-gated Impeccable relay. Its POSIX helper links tracked context per worktree and checks drift while preserving consumer content and setup authority."
 area: delivery
 status: active
 created_at: 2026-11-05
@@ -9,6 +9,7 @@ usecases:
   - UC-improve-an-interface-and-user-flow
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/scripts/link-impeccable-context.sh
 ---
 
 # [CAP-DLV-uiux-improvement] Software interface UI/UX improvement
