@@ -2,7 +2,7 @@
 id: PROP-snapshot-subdirectory-source-commit
 title: Record the source commit for snapshots of subdirectory providers
 summary: "Restore verified snapshot source commits for content providers below a Git repository root by making ls-tree resolve repository-relative paths. Preserve existing content verification and explicit refresh behavior."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/distribution/
 priority: medium                      # critical | high | medium | low
