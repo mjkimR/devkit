@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-adaptive-assignments
 title: Adaptive assignment ledger and return verification
-summary: "Commands record delegated assignments in a shared Git ledger and verify returned work against literal scope, commit authority and reported checks, without dispatching agents or running checks."
+summary: "Commands record parent-linked assignments in a shared Git ledger, enforce inherited scope and commit authority, and verify returned work without dispatching agents or running checks."
 status: active
 area: delivery
 usecases: [UC-advance-an-idea]
@@ -28,8 +28,8 @@ MCP, glob scopes and migrations; the Host owns dispatch, integration and judgmen
 1. **Shared ledger**: Every mutation MUST append one schema-1 event under the shared Git directory while holding the exclusive 10-second lock. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
 2. **Fragment recovery**: IF a ledger ends without a newline, THEN readers MUST ignore the fragment with `ADAPTIVE_LEDGER_FRAGMENT_IGNORED` and the next writer MUST truncate it under lock before appending. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
 3. **Literal scope**: The feature MUST compare normalized literal path prefixes, with `.` covering the worktree and each other entry covering itself and its subtree. Test: `packages/devkit-adaptive/tests/unit/features/assignment/test_values.py`.
-4. **Overlap**: IF a new write scope overlaps another assignment that is not closed, THEN `new` MUST refuse with `ADAPTIVE_SCOPE_OVERLAP`, except for its parent or explicitly named dependencies. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
-5. **Narrowed children**: WHEN recording a child, the feature MUST require scope and commit authority inside its parent's and at most Host → lead → child depth. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
+4. **Overlap**: IF a new write scope overlaps another assignment that is not closed, THEN `new` MUST refuse with `ADAPTIVE_SCOPE_OVERLAP`, except for its ancestors or explicitly named dependencies. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
+5. **Narrowed children**: WHEN recording a child, the feature MUST require scope and commit authority inside its parent's. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
 6. **Governing constraints**: WHEN recording an assignment, the feature MUST resolve governing IDs in its worktree and refuse all unresolved values together with `ADAPTIVE_GOVERNING_UNRESOLVED`. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_governing.py`.
 7. **Returned work**: `verify` MUST recompute the seven checks of the interface contract and record verified only when none fail or remain not-run. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
 8. **Changed paths**: Verification MUST include committed paths without rename detection and uncommitted/untracked status paths minus dirty-at-assignment paths. Test: `packages/devkit-adaptive/tests/integration/features/assignment/test_commands.py`.
@@ -94,8 +94,8 @@ devkit adaptive assignment new --owner <text> --goal <text>
   - The index is loaded once per command and only when a value is an ID.
 - `--evidence`, `--handoff` and `--stop` are recorded text for resume and are not verified.
 - `new` also records `dirty_at_assign`: the uncommitted and untracked paths of the worktree at that moment.
-- Refusals, each exit `2`: an existing ID, an unknown `--parent` or `--depends-on` ID, a closed parent, a parent that
-  itself has a parent, authority not inside the parent's, a write scope that overlaps another assignment (the recorded assignment schema) and
+- Refusals, each exit `2`: an existing ID, an unknown `--parent` or `--depends-on` ID, a closed parent,
+  authority not inside the parent's, a write scope that overlaps another assignment (the recorded assignment schema) and
   an unresolved governing document.
 
 **`return`** records what the assignee returned and sets status `returned`.
@@ -209,13 +209,12 @@ Write-scope rules:
   path.
 - Two entries overlap when one covers the other.
 - `new` refuses a scope with an entry that overlaps an entry of another assignment that is not `closed`
-  (`ADAPTIVE_SCOPE_OVERLAP`), whatever their worktrees. Two assignments are exempt: the parent, and each assignment
+  (`ADAPTIVE_SCOPE_OVERLAP`), whatever their worktrees. Exempt assignments are all ancestors, and each assignment
   named in `--depends-on`, because a dependent assignment is sequenced after it. The advisory names the other
   assignment and both entries, and its `[FIX]` lists the three routes: narrow the scope, close the other
   assignment when its work is finished, or name it in `--depends-on` when this work is sequenced after it.
 - With `--parent`, each write entry must be covered by an entry of the parent, and `--commit` requires the parent's
-  commit grant (`ADAPTIVE_AUTHORITY_NOT_NARROWED`). The parent must have no parent (`ADAPTIVE_NESTING_DEPTH`), which
-  keeps the depth at Host, lead, child.
+  commit grant (`ADAPTIVE_AUTHORITY_NOT_NARROWED`).
 
 ### Verification
 
@@ -287,7 +286,6 @@ class sets the fields that derive it (`input_error = True` for `INPUT_ERROR`, `a
 | `ADAPTIVE_GOVERNING_UNRESOLVED` | error, `2`, `INPUT_ERROR` | `new`: a `--governing` ID resolves to no document or to several, or a path does not exist (the command interfaces) |
 | `ADAPTIVE_SCOPE_OVERLAP` | error, `2`, `INPUT_ERROR` | `new`: a write entry overlaps another open assignment (the recorded assignment schema) |
 | `ADAPTIVE_AUTHORITY_NOT_NARROWED` | error, `2`, `INPUT_ERROR` | `new --parent`: a write entry or the commit grant exceeds the parent's |
-| `ADAPTIVE_NESTING_DEPTH` | error, `2`, `INPUT_ERROR` | `new --parent`: the parent has a parent |
 | `ADAPTIVE_CHILDREN_OUTSTANDING` | error, `1` from `verify`, `2` from `close`, `INPUT_ERROR` | A child is not closed |
 | `ADAPTIVE_RETURN_NOT_COMPLETED`, `ADAPTIVE_BASE_NOT_ANCESTOR`, `ADAPTIVE_HEAD_MOVED`, `ADAPTIVE_COMMIT_NOT_GRANTED`, `ADAPTIVE_SCOPE_VIOLATION`, `ADAPTIVE_CHECK_OUTCOME_MISSING`, `ADAPTIVE_CHECK_NOT_PASSED` | error, `1`, `INPUT_ERROR`, collected by `verify` | The check of the verification contract failed; `ADAPTIVE_SCOPE_VIOLATION` names at most 20 paths and the count of the rest |
 | `ADAPTIVE_UNCOMMITTED_CHANGES` | warning | `verify`: the assignment grants commits and in-scope uncommitted paths exist |

@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Agent guidance routes explicit task instructions through SDD without duplicate intent records, and covers adaptive development, deep research, milestones and local-orchestrated verification."
+summary: "Agent guidance routes task instructions through SDD and coordinator-led adaptive development with active delegation, and covers deep research, milestones and local-orchestrated verification."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -486,8 +486,9 @@ optional support contracts and a current-context template (`CAP-DLV-adaptive-dev
 approach implicitly. Independent document/project checks and retained SDD artifact protections remain applicable.
 
 The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action with optional product-clarifier, product-researcher and usage-reviewer assignments; no action requires all
-roles. Their role contracts preserve source/index/HEAD authority and distinguish emulated boundaries from native
+action, actively delegates useful separable work and retains coordination, integration and final validation.
+Product-clarifier, product-researcher and usage-reviewer provide support where useful; no action requires all roles.
+Their role contracts preserve source/index/HEAD authority and distinguish emulated boundaries from native
 confinement. `/adaptive-dev` neither invokes nor suggests a research entry and links a retained research material by its
 `MAT-<slug>` ID. The coordinator owns mutable project context at
 `.devkit/adaptive-dev.md`, including current goal/choices, source-specific run/check evidence, uncertainty and next

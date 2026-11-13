@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-12T23:21:38.568783Z'
+status: completed
+summary: Independent reconcile-reviewer verified all seven targets, AC01-04, existing entrypoints and architecture/glossary no-impact; no findings.
+findings: []
+assumptions:
+- Read-only Codex role was emulated; HEAD and before/after tree c25293dbc7390c392d95abb05810a58175392351 unchanged.
+unverified_areas:
+- Actual model orchestration behavior; downstream installation, release and publication are outside scope.
+checks: {}
+diff_scope:
+  base: a1ffedafd49ccd4bb6298bacacca1c25c0cf48ef
+  head: 9c5d6e7855349059501654edc57cda7209673af9
+activity_effort: medium

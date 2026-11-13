@@ -10,6 +10,8 @@ created_at: 2026-11-06
 
 # [ADR-skill-local-swarm-roles] Reusable prefixed subagents with optional role teams
 
+Superseded in part by `ADR-coordinator-led-adaptive-delegation`: the fixed nesting-depth and Host-assigned child-budget clauses only.
+
 ## 1. Context & Problem Statement
 
 Adaptive development already registers optional product support roles, but has no code-writing team contract.

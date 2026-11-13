@@ -35,10 +35,8 @@ hosts:
 
 1. Confirm the goal, source/base identity, absolute read/write boundaries, permitted Git actions, checks, stop condition and return contract; verify that an assigned absolute role file exists and read it first.
 2. Reject an incompatible overlay or unavailable operation, naming the missing capability and actual partial state.
-3. Work directly by default; delegate only when the caller permits it and supplies remaining depth and Host-wide allowance, counting waiting leads.
-4. Keep at most two child levels (Host → lead → child); give children narrower authority, explicit ownership and return fields; a leaf delegates no further.
-5. If nesting or allowance is unavailable, unknown or exhausted, return the limitation and use the caller's direct, flat or sequential fallback.
-6. Wait for every child and validate its actual changed paths and evidence before returning the aggregate; on failure or interruption, preserve dirty worktrees and unmerged results.
+3. Delegate useful separable work with narrower authority, explicit ownership and return fields.
+4. Wait for every child and validate its actual changed paths and evidence before returning the aggregate; on failure or interruption, preserve dirty worktrees and unmerged results.
 
 ## Return
 

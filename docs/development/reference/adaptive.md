@@ -30,7 +30,6 @@ Verification exit 1 means a failed result or a warning under strict; inspect `re
 - `ADAPTIVE_LEDGER_FRAGMENT_IGNORED`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_LEDGER_UNREADABLE`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_LEDGER_UNWRITABLE`: see the code table in `CAP-DLV-adaptive-assignments`.
-- `ADAPTIVE_NESTING_DEPTH`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_PREEXISTING_DIRTY`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_REPOSITORY_UNSUPPORTED`: see the code table in `CAP-DLV-adaptive-assignments`.
 - `ADAPTIVE_RETURN_NOT_COMPLETED`: see the code table in `CAP-DLV-adaptive-assignments`.
@@ -41,6 +40,8 @@ Verification exit 1 means a failed result or a warning under strict; inspect `re
 - `ADAPTIVE_WORKTREE_UNAVAILABLE`: see the code table in `CAP-DLV-adaptive-assignments`.
 
 ## Library
+
+The legacy `NestingDepth` class (`ADAPTIVE_NESTING_DEPTH`) remains importable but is no longer emitted.
 
 `devkit_adaptive.features.assignment.usecases.listing.ListAssignmentsUseCase.execute(root, options)` returns a
 result with assignments, observations, summary and notices. The ledger format is private. This command executes

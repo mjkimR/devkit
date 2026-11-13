@@ -1,0 +1,25 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-12T23:18:47.972774Z'
+status: completed
+summary: AC01-04 satisfied; legacy error-code documentation needs correction.
+findings:
+- issue: The retained legacy error code is no longer documented.
+  evidence: packages/devkit-adaptive/src/devkit_adaptive/base/errors.py:94 retains NestingDepth with ADAPTIVE_NESTING_DEPTH; test_documented_codes.py requires every declared code in docs.
+  failure_condition: Run just test-affected against the reviewed head; 184 pass and the documented-code check fails.
+  suggested_action: Document NestingDepth and ADAPTIVE_NESTING_DEPTH as importable legacy compatibility symbols that are no longer emitted, then rerun affected checks.
+  resolution: open
+  severity: P2
+assumptions:
+- Emulated read-only code-reviewer; before/after source tree 26d1422fd4e4ea31c74895b34d495f458e8dd8e1 and HEAD unchanged.
+unverified_areas:
+- Actual model delegation behavior.
+checks:
+  tests: FAIL 184 passed, 1 missing legacy code documentation
+  lint: PASS just lint-check and just check
+diff_scope:
+  base: a1ffedafd49ccd4bb6298bacacca1c25c0cf48ef
+  head: 983a183e665afcc6f73fe0495deb2f2705eb565a
+activity_effort: medium

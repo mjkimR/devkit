@@ -3,7 +3,7 @@ id: UC-advance-an-idea
 aliases:
   - UC-incubate-an-idea
 title: Advance an idea and leave resumable current context
-summary: "An AI coding agent advances one useful product action through adaptive-development guidance and leaves current facts, executable instructions and honest evidence for the next action or session."
+summary: "An AI coding agent coordinates a useful adaptive-development action, delegates separable work and retains current facts, executable instructions and honest evidence for the next action or session."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional support and reusable execution agents]
@@ -33,7 +33,7 @@ entrypoints:
 2. The agent verifies that the effective development approach permits adaptive-development work (`CAP-DLV-adaptive-development`).
 3. The agent recovers current goals, choices and execution evidence from available context and implementation (`CAP-DLV-adaptive-development`).
 4. The agent selects the next useful action from the remaining decision or evidence need (`CAP-DLV-adaptive-development`).
-5. The agent performs that bounded product action inside the agreed goal and constraints (`CAP-DLV-adaptive-development`).
+5. The agent coordinates that bounded product action inside the agreed goal and constraints, delegating useful separable work (`CAP-DLV-adaptive-development`).
 6. The agent verifies the retained result against intended usage and applicable project checks (`CAP-DLV-adaptive-development`).
 7. The agent updates current resume facts and reports observed outcomes, limitations and the next action (`CAP-DLV-adaptive-development`).
 
@@ -45,10 +45,9 @@ entrypoints:
 - **3b.** A retained research material exists: the agent reads it by the `MAT-<slug>` ID the user supplies or the current context links, never starting or suggesting a research entry; resumes at step 4.
 - **4a.** Missing product decision: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
 - **5a.** Goal or constraint change: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
-- **5b.** Optional support: the agent delegates a separable question or usage or implementation scope with source/base identity, absolute ownership, permitted actions/Git, checks, stop condition and return fields, records the assignment before dispatch and verifies the return with `CAP-DLV-adaptive-assignments`, checks actual paths and evidence and folds it into current choices; resumes at step 6.
+- **5b.** Delegated work: the agent delegates a separable question or usage or implementation scope with source/base identity, absolute ownership, permitted actions/Git, checks, stop condition and return fields, records the assignment before dispatch and verifies the return with `CAP-DLV-adaptive-assignments`, checks actual paths and evidence and folds it into current choices; resumes at step 6.
 - **5b5.** Shared interface: if delegated deliverables depend on an unsettled interface, the coordinator assigns its owner and resolves it before concurrent dependent writes or sequences them. It supplies the agreed identity to dependent assignments and reassesses them if it changes. An interface that outlives its assignment is first recorded in its current-state document, marked as agreed until its implementation is integrated; that document's ID and source identity then identify it; resumes at step 5.
-- **5b1.** Optional role lead: if useful and supported within the Host-wide allowance, the lead delegates narrowed children at depth at most Host → lead → child, counts waiting leads and verifies its aggregate scope; a swarm-worker lead records children with its parent ID and closes them before returning; the Host records children of planner or verifier leads or leaves them unrecorded; resumes at step 6.
-- **5b2.** Missing nesting or unknown/exhausted capacity: the Host uses direct, flat or sequential execution with the same result/check contract and no host-setting change; resumes at step 5.
+- **5b1.** Role lead: if useful, the lead delegates narrowed children and verifies its aggregate scope; a swarm-worker lead records children with its parent ID and closes them before returning; the Host records children of planner or verifier leads or leaves them unrecorded; resumes at step 6.
 - **5b3.** Concurrent writers: the Host creates each writer's separate worktree through `uv run devkit worktree start|status|finish`, or through the project's documented Git procedure where that lifecycle cannot be used, and assigns exclusive ownership; parents wait before writing in child-owned checkouts. If isolation is unavailable, writers run serially; resumes at step 6.
 - **5b4.** Incompatible overlay or unavailable registered invocation: the Host reports the gap, rejects expanded permissions and selects compatible direct execution or explicitly labelled emulation; resumes at step 5.
 - **5b6.** Governing documents: before partitioning a multi-writer build, the coordinator finds the documents that govern the goal and names them in each assignment by ID or absolute path, or `none`. Recording passes them as `--governing` and refuses unresolved values. An assignee treats them as constraints and returns a conflict to the Host instead of resolving it; resumes at step 5.
@@ -69,7 +68,7 @@ entrypoints:
 
 ## 5. Acceptance Criteria (Given / When / Then)
 
-Rules: approach-gated entry; adaptive next action; bounded evidence; goal-bound iteration; optional role boundaries;
+Rules: approach-gated entry; adaptive next action; bounded evidence; goal-bound iteration; coordinator-led delegation and role boundaries;
 truthful verification; mutable coordinator-owned resume facts; useful alternatives; voluntary adoption;
 current-state project documents.
 
@@ -131,7 +130,7 @@ current-state project documents.
 
 ### Scenario 9: Isolate writers and check their aggregate
 
-- **Covers**: 5b1, 5b2, 5b3, 5b4, 6a, 7b
+- **Covers**: 5b1, 5b3, 5b4, 6a, 7b
 - **Given**: two separable writing assignments and a shared product constraint.
 - **When**: isolated workers pass locally but their combined result fails or work is interrupted.
 - **Then**: the Host retains exact source-specific outcomes, routes bounded repair and preserves dirty/unmerged checkpoints; no worker pass substitutes for combined or applicable landed-target verification.
