@@ -1,89 +1,87 @@
 ---
 id: SPEC-linter-change-notices
 title: Non-blocking rule notices for changed code
-summary: Introduce a distinct notice severity for change-scoped linter guidance while preserving warning semantics. Define changed-block targeting and read-time context so agents can review relevant considerations without remediation or approval records.
+summary: "Adds nonblocking NOTICE findings, exact change evidence and an explicit bounded read-context companion while preserving INFO, warnings and snapshot semantics."
 status: planned
 created: 2026-11-13
-related_capabilities: []
+related_capabilities: [CAP-GOV-rules-engine, CAP-GOV-evaluation-lifecycle, CAP-GOV-rule-authoring, CAP-GATE-commit-gates]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-linter-change-notices] Non-blocking rule notices for changed code
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-linter-change-notices on 2026-11-13.
-- **Preserved Materials**: `docs/materials/2026-11/20261113-linter-change-notices`
-- Target Docs Blueprint: `PROP-linter-change-notices-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-Some edits deserve a contextual reminder even when the result is valid. Adding a broad exception handler can
-justify checking whether failure becomes indistinguishable from success; changing a public signature can justify
-checking callers. Neither trigger alone proves a defect or requires a fix.
-
-Warnings should retain their meaning as suspected problems that warrant review and possible correction.
-Reporting these reminders as warnings dilutes that signal. Including them in hygiene creates recurring work for
-conditions that only need consideration when they change.
-
-Hypothesis: a distinct linter notice severity, scoped to relevant changed blocks, can supply timely guidance
-without creating unresolved violations, approval requests or maintenance obligations. This remains a low-priority improvement. Planning prepares the direction for explicit acceptance and does not start implementation.
-
-Current rule contracts expose `Severity.ERROR`, `Severity.WARNING` and `Severity.INFO`, file targets and Git
-snapshot metadata. They do not expose a shared changed-hunk API. The Agent Advisory Protocol already distinguishes
-`NOTICE` from `WARNING`; its notice level does not affect exit status, including under `--strict`.
-Related contracts: `CAP-GOV-rules-engine`, `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`,
-`CAP-ADV-agent-advisory-protocol` and `CAP-HOST-lifecycle-observation`.
+Contextual guidance about changed constructs needs a nonblocking severity without weakening warnings or INFO compatibility. `ADR-change-scoped-rule-notices` selects additive NOTICE, exact source evidence and an explicit read companion. `MAT-linter-notice-planning` contains the source baseline.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Non-blocking rule notices for changed code so that system capabilities are extended.
+- **US-1**: As a rule author, I can express a change-scoped consideration without creating repair obligations.
+- **US-2**: As an agent, I can request bounded changed-file context and avoid repeated identical session reminders.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded**: Native read interception, host/MCP adapters, production reminder catalogs, migrations of existing rules, acknowledgements and permanent suppressions, new feature edges and workflow implementation changes.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Relevant semantic edits
+- **Given** a change-scoped representative broad-exception rule and changed source.
+- **When** the linter evaluates the source.
+- **Then** a relevant construct yields one NOTICE and unchanged or unrelated constructs yield none.
 
-## 5. Carried Proposal Notes
+### [AC-02] Deletion evidence
+- **Given** a changed construct with relevant deleted text.
+- **When** the rule reports its before-side semantic span.
+- **Then** the engine accepts a notice at the old path/header even outside added lines.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Nonblocking notices
+- **Given** notice-only, warning and error findings.
+- **When** ordinary, strict, gate and workflow lint-clean evaluation run.
+- **Then** NOTICE alone passes each boundary; legacy warning and error semantics remain unchanged.
 
-### 2. Planning Decisions
+### [AC-04] Change scope and hygiene
+- **Given** a rule declares change_scope.
+- **When** phase selection or policy validation runs.
+- **Then** hygiene omits the rule and an incompatible phase or promotion declaration is an explicit policy error.
 
-The recommendation is one cohesive `sdd-spec-feature` at size `M`. `ADR-change-scoped-rule-notices` records the lasting
-contract choice. Implementation remains subject to `plan-accept` and `proposal-handoff`.
-`MAT-linter-notice-planning` records the source inspection at `aa6c51dc3148efba121bc54c8e582a59aacd11d1`.
+### [AC-05] Exact source snapshots
+- **Given** staged or CI snapshots with different unstaged rule/config/product bytes.
+- **When** change evidence and rules are evaluated.
+- **Then** both sides depend only on the captured Git source pair, including initial trees, partial/alternate indexes, deletion and rename-as-delete/add.
 
-| Question | Recommended resolution | Consequence |
-| --- | --- | --- |
-| Q1, severity | Add `Severity.NOTICE = "notice"`; keep `Severity.INFO = "info"` distinct, with its wire value and settings valid. | Additive API and summary count; no silent migration or alias. |
-| Q2, evidence | Build immutable before/after changes from the exact evaluated source pair; expose old and new ranges. | Staged/CI rules never read unstaged bytes for either side. |
-| Q3, semantic scope | Require a rule's emitted finding to carry affected construct evidence intersecting an old or new changed range. | A finding may point to a construct header outside added lines, and deletion can trigger it. |
-| Q4, read surface | Add explicit host-neutral `devkit rules context FILE` returning change status, ranges, bounded excerpts and matching notices. | Works without native-read interception, hooks, MCP or a host feature edge; agents call it alongside their file read. |
-| Q5, repetition | Only `rules context --session TOKEN` suppresses already-delivered identical notice fingerprints in transient state. | Ordinary rule checks remain deterministic and unsuppressed. |
+### [AC-06] Finding output
+- **Given** mixed ERROR, WARNING, INFO and NOTICE findings.
+- **When** text and JSON render.
+- **Then** the additive notice count and severity are distinct and notice status is consider with no repair obligation.
 
-Development effort is `high`: this adds an exported rule API and machine-readable CLI contract used by external
-bundles. Planning effort remains `medium`; one isolated challenger reviews this recommendation.
+### [AC-07] Read companion and dedupe
+- **Given** a FILE and optionally one session token.
+- **When** rules context is called repeatedly or the relevant construct changes.
+- **Then** hunk evidence always returns; identical notices suppress only with the token and relevant changes reissue within bounded state.
 
-#### Alternatives considered
+### [AC-08] Legacy INFO compatibility
+- **Given** a legacy rule imports INFO and uses existing settings.
+- **When** it is installed with the additive API.
+- **Then** the info wire value, settings, counts and exit behavior remain unchanged.
 
-1. Treat reminders as warnings. Rejected: strict rule checks can become negative and warnings lose their suspected-defect meaning.
-2. Rename or alias INFO to NOTICE. Rejected: existing rule imports, configured severity values and consumers would silently change meaning.
-3. Add NOTICE plus explicit change evidence and read context. Recommended: keeps the new behavior additive and bounded to a supported surface.
-4. Inject context into every host's native file reads. Rejected: `CAP-HOST-lifecycle-observation` exposes advisory Codex
-   lifecycle hooks, not a universal typed file-read event. This exceeds the stated excluded scope.
+### [AC-09] Unavailable evidence
+- **Given** unavailable working-tree Git/text evidence or failed snapshot capture.
+- **When** evaluation runs.
+- **Then** affected change rules omit with RULE_CHANGE_EVIDENCE_UNAVAILABLE while snapshot failures retain exit 2 and independent rules still run.
 
-### 3. Proposed Design & Impact
+### [AC-10] Autofix freshness
+- **Given** another fixer adds or removes a representative notice trigger.
+- **When** the single convergence recheck runs.
+- **Then** fresh immutable after-evidence is compared to the original base; successful paths refresh and unknown writes refresh all evidence.
 
-#### 3.1 Severity and output
+## 5. Contract Details
+
+The accepted Planning AC-N1 through AC-N10 map in order to AC-01 through AC-10 above. The following source-pair, output and state bounds remain part of the agreed scope.
+
+
+### 3.1 Severity and output
 
 - `Severity.NOTICE` is a rule finding severity, separate from the result's `notices` advisory array.
 - Existing `Violation` and `EvaluationResult.violations` remain the rule-finding API, including NOTICE findings.
@@ -100,7 +98,7 @@ bundles. Planning effort remains `medium`; one isolated challenger reviews this 
   the consideration; it never folds them into `GATE_RULES_WARNINGS`. Existing strict-warning exemptions remain unchanged.
   Workflow `lint-clean` continues testing blocking findings only; it creates no notice acknowledgement check.
 
-#### 3.2 Change evidence independent of severity
+### 3.2 Change evidence independent of severity
 
 `BaseRule` gains optional `change_scope = True` (default false, read optionally for existing rule classes).
 A change-scoped warning remains possible. A change-scoped rule is a linter rule, is omitted in hygiene even though
@@ -148,9 +146,9 @@ content or a content race), omit only the affected change-scoped evaluation with
 Independent rules still run. Snapshot capture/materialization failures retain their existing failure/exit-2 behavior.
 A changed file whose captured bytes change again is unavailable for that run; never combine mismatched text/ranges.
 
-#### 3.3 Explicit read-time context
+### 3.3 Explicit read-time context
 
-Proposed synopsis: `devkit rules context FILE [--session TOKEN] [--format text|json]`. It is a read companion,
+Synopsis: `devkit rules context FILE [--session TOKEN] [--format text|json]`. It is a read companion,
 not a general file-reading command. It always returns working-tree versus HEAD change status and old/new hunk
 ranges, even when no rule matches, the file is unchanged, or the file has been deleted. A deleted tracked FILE is
 valid for this command; an unknown or outside-workspace path is `RULES_TARGET_INVALID`. Untracked nonignored files
@@ -184,7 +182,7 @@ with `RULE_READ_SESSION_UNAVAILABLE` (NOTICE), without a retry loop. A crash bet
 can suppress a notice on retry; exactly-once delivery to the model is not claimed. Session files are derived,
 ignored, safely prunable state, never a suppression/approval database.
 
-#### 3.4 Scope and verification
+### 3.4 Scope and verification
 
 The implementation changes only the rules feature, its gate adapter and their documented public contracts.
 `target-docs.md` names the Living Spec targets and candidate code paths. `CAP-ADV-agent-advisory-protocol` and
@@ -218,15 +216,5 @@ Acceptance and planned checks (each original criterion is retained):
 
 No runtime or timing improvement is claimed. Development validates with repository lint, types and
 `just test-affected --base <unit-base>` preserving full fallback, plus targeted source-specific checks and installed
-CLI/gate coverage. These are future checks; Planning runs document and envelope validation only.
-
-### 4. Lifecycle & Retirement Criteria
-
-Keep `priority: low`; this batch explicitly selects Planning. Acceptance settles the additive severity, exact
-source evidence and explicit read companion together. `plan-accept` integrates only the Planning documents.
-`proposal-handoff` then creates the spec worktree and promotes `ADR-change-scoped-rule-notices`; Development
-implements AC-N1 to AC-N10 and reconciles the named Living Spec contracts. No criterion is silently deferred.
-
-If the owner requires automatic context on native reads rather than the explicit companion, retain this proposal
-in review and revisit scope before handoff; the current design makes no universal-host delivery claim.
+CLI/gate coverage. Empirical host/model trials are best effort and are not an implementation gate.
 
