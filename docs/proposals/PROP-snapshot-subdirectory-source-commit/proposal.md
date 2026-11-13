@@ -2,7 +2,7 @@
 id: PROP-snapshot-subdirectory-source-commit
 title: Record the source commit for snapshots of subdirectory providers
 summary: devkit bundle snapshot records a null source commit whenever the content provider lives in a subdirectory of its Git repository, because ls-tree runs from that subdirectory with repository-root paths. Resolve paths from the repository root so verified commits are recorded.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-13
 target_area: capabilities/distribution/
 priority: medium                      # critical | high | medium | low
