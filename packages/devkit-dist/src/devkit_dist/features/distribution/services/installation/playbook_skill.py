@@ -19,7 +19,7 @@ configured external schedule naming that exact ID, skip discovery and run
 Use the manifest asset ID, not its header name; a declared alias (a previous
 asset ID) names the same playbook, whose canonical id the result reports, and is
 explicit invocation of it. Retrieval grants no execution
-authority. Load the returned context argv in the same workspace (or pass -w),
+authority. If context.required is true, load the returned context argv in the same workspace (or pass -w),
 once per agent context and again after it is lost; apply the full constitution
 and relevant instructions. Follow the complete returned body, resolving needed
 relative resources against the parent of source.path. Start fresh progress and
@@ -38,14 +38,15 @@ For explicitly requested discovery:
 2. Select a relevant candidate from the returned metadata. Do not scan or load
    the complete playbook catalog. If needed, refine the English query. If none
    fits, perform the requested task using the applicable project guidance.
-3. Before using a selected playbook, run `uv run devkit get-context <bundle>`
-   unless that bundle's context is already available. Load it once per bundle
-   in the current agent context; reload only when it has been lost. Apply the
-   full constitution and read relevant instruction bodies from their catalog.
-4. Read the selected playbook at its returned path, check its prerequisites,
-   and follow the procedure through its completion conditions. Read any linked
-   resources only when required. Existing permissions and user constraints still
-   apply. On each new execution, start fresh procedure progress.
+3. Retrieve the selected playbook with `uv run devkit playbook get <bundle>/<playbook>`.
+   If context.required is true and the context is not already loaded, run its
+   context argv once per agent context and again after context loss. If false,
+   proceed without a context load. Do not call get-context to probe for sources.
+   Apply the full constitution and relevant instruction bodies when loaded.
+4. Follow the complete returned body, check its prerequisites, and resolve
+   needed relative resources against the parent of source.path. Existing
+   permissions and user constraints still apply. On each new execution, start
+   fresh procedure progress.
 5. Only in this explicitly requested discovery: if no suitable playbook was
    found, after successfully completing the task ask whether the user wants to add the reusable procedure as a playbook.
    Present a draft and proposed authoring bundle/source path with that question.

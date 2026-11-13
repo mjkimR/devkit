@@ -69,8 +69,8 @@ uv run devkit override remove <bundle>:<asset>   # use upstream again
 ## Playbooks
 
 If a failing rule's remediation names a playbook, run the `uv run devkit playbook search`
-it names, load the playbook's bundle context if needed, then read and apply the
-procedure at the returned path.
+it names, retrieve the selected playbook by exact ID, then apply its context
+requirement and returned procedure as below.
 
 If the user names an exact playbook for this task, or configures an external
 schedule with its ID:
@@ -79,7 +79,9 @@ schedule with its ID:
    manifest asset ID or a declared alias (a previous asset ID in its header);
    the result reports the canonical `id` and the `alias` used. On
    `PLAYBOOK_ALIAS_AMBIGUOUS`, name the playbook by its exact asset ID.
-2. Unless already loaded in this agent context, run the context argv it returns.
+2. If `context.required` is true and context is not already loaded in this agent
+   context, run the returned context argv; reload after context loss. If false,
+   proceed without a load. Do not call `get-context` to discover this requirement.
 3. Apply the constitution, then the body; read relative resources from the
    parent of `source.path`.
 

@@ -7,6 +7,8 @@ from pathlib import Path
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.content import signature
 from devkit_dist.features.distribution.models.errors import NotSynchronizedError
+from devkit_dist.features.distribution.services.bundles.context_documents import declared_directory
+from devkit_dist.features.distribution.services.bundles.guidance import requires_context
 from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader, read_playbook_header
 from devkit_dist.features.distribution.services.installation.local_render import runtime_receipt
 from devkit_dist.features.distribution.services.installation.overrides import override_rel
@@ -70,3 +72,15 @@ def read_playbook(root: Path, receipt: Receipt, asset: AssetRecord, name: str) -
         raise ReceiptError(f"{RECEIPT_PATH}: invalid playbook entrypoint: {name}")
     data = read_owned(root, receipt, name)
     return read_playbook_header(data, name), data
+
+
+def bundle_requires_context(root: Path, receipt: Receipt, bundle: str) -> bool:
+    """Read synchronized source facts without listing documents or discovering installed bundles."""
+    prefix = f"{MANAGED_PATH}/{bundle}/"
+    manifest = prefix + "bundle.toml"
+    directory = declared_directory(read_owned(root, receipt, manifest), manifest)
+    return requires_context(
+        constitution=receipt.file(prefix + "AGENTS.md") is not None,
+        instructions=any(asset.bundle == bundle for asset in receipt.assets("instruction")),
+        documents=directory,
+    )

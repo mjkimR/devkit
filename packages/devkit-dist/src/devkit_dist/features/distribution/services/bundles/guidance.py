@@ -10,6 +10,11 @@ CONTEXT_START = "<!-- DEVKIT:CONTEXT -->"
 CONTEXT_END = "<!-- /DEVKIT:CONTEXT -->"
 
 
+def requires_context(*, constitution: bool, instructions: bool, documents: str | None) -> bool:
+    """Whether synchronized sources require a load, independent of runtime document listings."""
+    return constitution or instructions or documents is not None
+
+
 def context_prerequisite(bundle: str) -> str:
     return (
         f"{CONTEXT_START}\n"

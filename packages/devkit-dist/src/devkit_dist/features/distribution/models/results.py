@@ -383,6 +383,7 @@ class PlaybookResult:
     path: str
     sha256: str
     alias: str | None = None
+    context_required: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -398,5 +399,6 @@ class PlaybookResult:
                 "bundle": self.bundle,
                 "argv": [*AGENT_INVOCATION.split(), "get-context", self.bundle],
                 "policy": "once-per-agent-context",
+                "required": self.context_required,
             },
         }

@@ -1106,7 +1106,7 @@
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "e16a1d53e1c49821f6ebc5c241a71239ddc22319c647d3fb33ae32a4d90b64b1"
+      "sha256": "a5a4479c7ff30b5d99f6d49e086a7032622cac9f9aa3769ba9faea5b6b649d6e"
     },
     ".agents/skills/devkit-playbook/agents/openai.yaml": {
       "mode": 420,
@@ -1426,7 +1426,7 @@
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "e33a1dc607a6a090db579285a0824fba11d61ba46e44e850546eae15da7c63e0"
+      "sha256": "79f9b8037a7e920858807ebbfc1a38231c2e85f5cd41636ac22bdf306b29f421"
     },
     ".claude/skills/devkit-workflow/SKILL.md": {
       "mode": 420,
@@ -1698,7 +1698,7 @@
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "e16a1d53e1c49821f6ebc5c241a71239ddc22319c647d3fb33ae32a4d90b64b1"
+      "sha256": "a5a4479c7ff30b5d99f6d49e086a7032622cac9f9aa3769ba9faea5b6b649d6e"
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/agents/openai.yaml": {
       "mode": 420,
@@ -1886,7 +1886,7 @@
     },
     ".devkit/managed/devkit/instructions/consumption.md": {
       "mode": 420,
-      "sha256": "63f134d35a00c30f8b88c49e8cce1f16ee5a875c6112a1d492389f87eb5b9a40"
+      "sha256": "d63d63ab2efa46db076d413a2129de5e5d52fb0d2e551019cccd085ae2a390d5"
     },
     ".devkit/managed/devkit/instructions/content-snapshot.md": {
       "mode": 420,
@@ -2509,7 +2509,7 @@
       "sha256": "918ff775e776b5fb5def06456a6235f3cf740b987592c4fbd59ce4bf3e37d242"
     }
   },
-  "guidance_block": "b39187269a8f7afda5c3f327f455c53be9364cdb85b02cde77314563397f41db",
+  "guidance_block": "af07ed8f43a293fa14ee2171ce9e90ad2b33ceceb5edd3de7db773a994910c47",
   "packages": [
     {
       "bundle": "advisory",
