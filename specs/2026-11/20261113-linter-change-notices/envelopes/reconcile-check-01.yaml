@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:46:22.723936Z'
+status: completed
+summary: round 1; seven targets match implementation; one carried ADR warning strict rationale contradicts preserved contract
+findings:
+- issue: ADR option 1 retains the incorrect warning-finding strict-failure premise.
+  evidence: docs/decisions/2026-11/20261113-change-scoped-rule-notices.md:27; docs/capabilities/governance/CAP-GOV-rules-engine.md:133; packages/devkit/tests/integration/features/rules/engine/test_change_notices.py:157
+  failure_condition: A reader is told warning-only strict checks can fail while the approved contract and regression preserve exit 0 for stdout findings.
+  suggested_action: 'Replace ADR line 27 with: 1. Reuse warning: smaller API, but weakens warning meaning; existing warning findings remain nonblocking under strict CLI checks. Keep the selected decision unchanged.'
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated; read-only absolute scope and equal complete-tree b3a752dc21a1dd9fcd6c0f3859348ba0cbbda0d7 plus HEAD substitute for native guarantees
+unverified_areas:
+- Live model receipt and comparative quality remain best effort
+checks:
+  reflection: PASS all7 targets and AC01..10 mapped; one wording correction required
+  tests: PASS caller4557 affected including E2E; whole lint/type passed
+diff_scope:
+  base: fe54e1f8603e437869917792313ee899e138f1bb
+  head: 50659df092bb83ed492d9ecd14bfb28221349e5f

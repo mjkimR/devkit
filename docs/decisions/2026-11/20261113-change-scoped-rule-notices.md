@@ -24,7 +24,7 @@ from an unchanged handler in the same file; native host hooks supply no cross-ho
 
 ## 3. Considered Options
 
-1. Reuse warning: smaller API but a notice-only strict check can fail and warning meaning weakens.
+1. Reuse warning: smaller API, but weakens warning meaning; existing warning findings remain nonblocking under strict CLI checks.
 2. Alias INFO to notice: fewer severity names but changes wire/configuration semantics for existing consumers.
 3. Add NOTICE, independent change evidence and an explicit read companion: additive, with opt-in delivery cost.
 4. Intercept every native read: automatic delivery but requires unsupported host-specific integration and exceeds scope.
