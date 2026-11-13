@@ -8,7 +8,7 @@ target: devkit docs list --status
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-13
 ---
 
@@ -46,3 +46,5 @@ created_at: 2026-11-13
 browse.py: "DOCS_LIST_STATUS_UNKNOWN for the requested statuses that no indexed document of the wanted kinds ...
 shows"; fix: "Pass one of the statuses these documents carry: ..."
 ```
+
+- **Disposition**: Dismissed on the user's hygiene decision. `CAP-DOCS-document-lookup` section 3.4 deliberately uses open-ended status values and reports values absent from the index while still applying the filter. Template examples are not a closed status registry; no new registry is requested.

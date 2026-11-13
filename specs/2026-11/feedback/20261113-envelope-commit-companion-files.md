@@ -8,7 +8,7 @@ target: devkit workflow envelope commit
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-13
 ---
 
@@ -45,3 +45,5 @@ Category other: commit ergonomics of workflow records.
 devkit workflow envelope commit --help: "Commit exactly one authored new envelope ... Other dirty paths require a
 manual combined commit."
 ```
+
+- **Disposition**: Dismissed on the user's hygiene decision. The existing combined manual commit supports accompanying changes, and the single-envelope command intentionally keeps its narrow mutation scope. The observed fallback does not require a new --with option.

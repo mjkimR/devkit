@@ -8,7 +8,7 @@ target: the spec-feedback skill (Recording procedure)
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-13
 ---
 
@@ -42,3 +42,5 @@ created_at: 2026-11-13
 spec-feedback step 3: "Write the file where the work is ..."; step 4: "Fill it from the feedback template".
 No feedback subcommand under `devkit spec`.
 ```
+
+- **Disposition**: Dismissed on the user's hygiene decision. The template and validation produced valid records, and no blocking failure or measured cost establishes a need for another CLI surface.

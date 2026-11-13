@@ -8,7 +8,7 @@ target: devkit workflow envelope new
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-13
 ---
 
@@ -44,3 +44,5 @@ review-loop.md Count: "Each round's summary starts with `round <N>;` ... a recon
 envelope new options: --kind --unit --anchor --stage --summary --assume --unverified --status --check --base ...
 (no round or reviewer option)
 ```
+
+- **Disposition**: Dismissed on the user's hygiene decision. The documented round prefix and role evidence remain sufficient; no failed round count or lost provenance was demonstrated. Additional fields and flags are not requested.

@@ -8,7 +8,7 @@ target: CAP-DIST-agent-projections
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-13
 ---
 
@@ -47,3 +47,5 @@ CAP-DIST-agent-projections: user-invocation skills project `disable-model-invoca
 frontmatter key. Pilot finding A6: after the mid-session install the coordinator could not invoke the skill and
 followed the projected SKILL.md text manually.
 ```
+
+- **Disposition**: Dismissed on the user's hygiene decision after the historical report was acknowledged. The host/version and discovery refresh behavior were not reproduced, so this does not claim a verified host fix. No further investigation or projection-policy change is requested.
