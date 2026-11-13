@@ -226,11 +226,10 @@ def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None
     assert_rule(orchestration, "data schema", "business logic", "dependencies", "the ooux documents", "uncommitted")
     assert_rule(orchestration, "`product.md` or `design.md` only on the user's explicit direction")
     assert_rule(orchestration, "stop condition", "expected return", "detector", "degraded coverage", "blockers")
-    # Routing (AC-03).
+    # Original routing restriction is partially superseded by the confirmed relay contract.
     assert_rule(orchestration, "fresh child", "refine existing surfaces without user answers", "`polish`", "`audit`")
-    assert_rule(orchestration, "cannot load impeccable", "upstream question", "blocker", "never answers")
+    assert_rule(orchestration, "never answers an upstream question on the user's behalf")
     assert_rule(orchestration, "move the command to a session the user operates")
-    assert_rule(orchestration, "new work", "`init`", "`shape`", "`critique`", "their own impeccable session")
     assert_rule(orchestration, "exclude `live`", "sandbox or approvals")
     assert_rule(orchestration, "make no product edits until the session returns")
     # Acceptance (AC-06, AC-10).
@@ -238,6 +237,47 @@ def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None
     assert_rule(orchestration, "outside the edit list", "without reverting or deleting", "accepted work")
     assert_rule(orchestration, "head moved", "base is missing", "unverifiable", "limited")
     assert_rule(orchestration, "ooux document", "made stale", "edit none", "documentation process", "separate request")
+
+
+def test_interactive_relay_requires_native_capabilities_and_every_user_answer() -> None:  # AC-01..06
+    skill = (SKILL / "SKILL.md").read_text()
+    assert_rule(skill, "interactive work", "every user-confirmed answer", "same child", "user-operated session")
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert_rule(orchestration, "native loading and same-child continuation", "actual host/project")
+    assert_rule(orchestration, "documentation", "inherited skill names", "cache reads prove neither")
+    assert_rule(orchestration, "unavailable or unverified", "their own impeccable session")
+    assert_rule(orchestration, "phase 1", "only inspects and drafts", "no retained-file, product, index or head writes")
+    assert_rule(orchestration, "complete", "question packet", "identifiers", "source path/passage", "pre-fill")
+    assert_rule(orchestration, "confirm every answer", "every pre-fill", "explicit whole-packet")
+    assert_rule(orchestration, "silence, omitted answers and gaps-only confirmation are not")
+    assert_rule(orchestration, "preserve confirmed answers")
+    assert_rule(orchestration, "resume the same child", "confirmed packet", "same brief/base")
+    assert_rule(orchestration, "recheck relevant source facts", "refresh the packet", "confirm affected answers")
+    assert_rule(orchestration, "additional questions before dependent writes", "lost continuation", "never reconstruct")
+    assert_rule(orchestration, "`shape` and `critique`", "nested-role capabilities", "inline work cannot claim")
+    # Existing context-file and writer permissions remain authoritative after answer confirmation.
+    assert_rule(orchestration, "`product.md` or `design.md` only on the user's explicit direction")
+    assert_rule(orchestration, "index, head and commits unchanged")
+    assert_rule(orchestration, "make no product edits until the session returns")
+
+
+def test_relay_failure_reporting_preserves_authority_and_honest_coverage() -> None:  # AC-03, AC-07..08
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert_rule(orchestration, "observed current-project plugin enablement", "native availability", "blocker")
+    assert_rule(
+        orchestration, "plugin cache reads are not a loading route", "enablement only on the user's setup request"
+    )
+    assert_rule(orchestration, "answer-free child meeting a question stops dependent writes")
+    assert_rule(
+        orchestration, "partial execution", "recorded base", "without blindly replaying", "reverting consumer files"
+    )
+    guide = (BUNDLE / "README.md").read_text()
+    assert_rule(guide, "every answer", "whole visible packet")
+    assert_rule(guide, "omitted answers", "lost continuation")
+    assert_rule(
+        guide, "current-project plugin enablement", "native skill availability", "do not load plugin-cache files"
+    )
+    assert_rule(guide, "native plugin loading", "claude code and codex remain unverified", "per-run observations")
 
 
 def test_project_files_setup_and_cleanup_follow_the_users_request() -> None:  # AC-05

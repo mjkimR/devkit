@@ -100,16 +100,29 @@ Write a self-contained brief with these fields:
 
 ### Route the command
 
-- Fresh child: run only commands that refine existing surfaces without user answers, such as `polish`, `audit` or
-  narrow refinement commands like `distill`, `typeset` or `layout`. The child loads Impeccable through the host's
-  skill mechanism and reads `PRODUCT.md` and the brief.
-- If the child cannot load Impeccable or meets an upstream question, it returns that as a blocker and never answers
-  the question; move the command to a session the user operates.
-- User-operated session: new work, `init`, `shape` and `critique` ask the user questions (`critique` also needs two
-  isolated sub-agents), so hand the user the brief to run in their own Impeccable session and wait for their report.
-  The user may start `shape` from the brief; for a fresh child, your framing covers its structural role.
-- Exclude `live` and any other route that turns off the host's sandbox or approvals.
-- Make no product edits until the session returns.
+1. A fresh child can refine existing surfaces without user answers (`polish`, `audit` and narrow refinements),
+   loading Impeccable through the host's skill mechanism and reading `PRODUCT.md` and the brief.
+2. For new work, `init`, `shape` or `critique`, relay questions only after native loading and same-child continuation
+   are observed for the actual host/project. Documentation, inherited skill names and cache reads prove neither.
+   If unavailable or unverified, hand the user the brief for their own Impeccable session and wait for their report.
+3. For `shape` and `critique`, also check the child's nested-role capabilities required by the loaded command.
+   If unavailable or unverified, use the user-operated session; inline work cannot claim those roles ran.
+4. Phase 1 only inspects and drafts questions: no retained-file, product, index or HEAD writes. Return the complete
+   question packet with identifiers, suggested answers and source path/passage for each document-derived pre-fill.
+   A child never answers an upstream question on the user's behalf.
+5. Show the complete visible packet and confirm every answer, including every pre-fill. One explicit whole-packet
+   confirmation is valid; silence, omitted answers and gaps-only confirmation are not. Preserve confirmed answers.
+6. Resume the same child with the confirmed packet and same brief/base. Before writes, recheck relevant source facts and
+   file state; if questions, answers or scope are affected, refresh the packet and confirm affected answers.
+   Return additional questions before dependent writes. Lost continuation uses the user-operated session; never
+   reconstruct a writing child from an assumed transcript.
+7. If native loading fails, report observed current-project plugin enablement, native availability and the blocker;
+   move the command to a session the user operates. Plugin cache reads are not a loading route; install or change
+   enablement only on the user's setup request. An answer-free child meeting a question stops dependent writes
+   and uses this confirmation route or the user-operated fallback.
+8. Exclude `live` and any other route that turns off the host's sandbox or approvals.
+9. Make no product edits until the session returns. Report partial execution against the recorded base without
+   blindly replaying the command or reverting consumer files.
 
 ### Accept the return
 
@@ -145,12 +158,11 @@ Write a self-contained brief with these fields:
 Example brief:
 
 ```text
-Goal: make overdue invoices recoverable from the customer view.
-Framing: objects Customer and Invoice per docs/steering/glossary.md and docs/steering/ux-objects.md (read-only);
-  states per docs/ux/billing/ (read-only); "Send reminder" sits on an overdue Invoice.
-Drafts: none. Working directory: /abs/project. Base: HEAD a1b2c3d, clean status, hashes of the listed files.
+Goal: recover invoices.
+Framing: Customer/Invoice per docs/steering/glossary.md (read-only).
+Drafts: none. Working directory: /abs/project. Base: HEAD a1b2c3d, clean status, listed-file hashes.
 Edit list: src/views/CustomerDetail.tsx, src/components/InvoiceRow.tsx.
 Unchanged: data schema, business logic, dependencies, OOUX documents, PRODUCT.md, DESIGN.md, index and HEAD.
-Commands: polish, then audit. Stop: both finish or a blocker occurs.
-Return: changed files, commands run, audit and detector results, session output, degraded coverage, blockers.
+Commands: polish, audit. Stop: finished or blocked.
+Return: files, commands, audit/detector results, output, limits, blockers.
 ```
