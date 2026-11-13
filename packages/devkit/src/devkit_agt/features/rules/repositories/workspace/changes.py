@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -75,7 +76,7 @@ def capture_changes(
         if snapshot is not None:
             current = {p: sha for p, sha, m in snapshot.files if m in ("100644", "100755")}
             touched = set(snapshot.changed) | set(snapshot.deleted)
-            names = touched | set(explicit)
+            names = set(touched)
         else:
             changed = run_git(
                 git_root, "diff", "--no-ext-diff", "--no-textconv", "--no-renames", "--name-only", "-z", base, "--"
@@ -86,8 +87,19 @@ def capture_changes(
             )
             names = {name[len(prefix) :] for name in repository_names if name.startswith(prefix)}
             touched = set(names)
-            names.update(explicit)
             current = {}
+        # Git and macOS may expose canonically equivalent Unicode spellings. Keep
+        # each existing Git logical name and its before object; never synthesize a
+        # second added path from an explicitly targeted filesystem spelling.
+        known = set(prior) | set(current) | names
+        for name in explicit:
+            equivalent = [
+                candidate
+                for candidate in known
+                if unicodedata.normalize("NFC", candidate) == unicodedata.normalize("NFC", name)
+            ]
+            canonical = name if name in known or len(equivalent) != 1 else equivalent[0]
+            names.add(canonical)
         files: list[CapturedChange] = []
         for name in sorted(names):
             try:

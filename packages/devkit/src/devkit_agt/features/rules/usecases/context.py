@@ -16,6 +16,7 @@ from devkit_agt.features.rules.models.errors import ChangeEvidenceNotice, RulesR
 from devkit_agt.features.rules.repositories.read_sessions import source_fingerprint, suppress
 from devkit_agt.features.rules.services.changes import excerpts, refresh_context_changes
 from devkit_agt.features.rules.services.evaluator import evaluate_rules
+from devkit_agt.features.rules.services.targets import normalized_change_targets
 from devkit_agt.features.rules.usecases.project import load_project_rules
 
 
@@ -51,7 +52,7 @@ class ReadRuleContextUseCase(BaseUseCase):
         resolved = absolute.resolve()
         if not resolved.is_relative_to(root) or resolved == root:
             raise TargetError("read context target must be a file inside the workspace", target_files=[file])
-        relative = resolved.relative_to(root).as_posix()
+        relative = normalized_change_targets(root, [resolved])[0]
         if relative.startswith((".devkit/managed/", ".devkit/overrides/")) or resolved.is_dir():
             raise TargetError("read context target is not a project-owned file", target_files=[file])
         project = load_project_rules(root, rules_dir)

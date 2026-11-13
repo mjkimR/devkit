@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import difflib
 import hashlib
+import unicodedata
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
@@ -75,12 +76,13 @@ def refresh_context_changes(ctx: RuleContext, *, modified: Iterable[str] = (), a
     )
     evidence: dict[str, FileChange] = {}
     for raw in captured.files:
-        selected = (*ctx.change_targets, *outputs)
+        selected = tuple(unicodedata.normalize("NFC", t) for t in (*ctx.change_targets, *outputs))
+        logical = unicodedata.normalize("NFC", raw.path)
         if (
             ctx.has_targets
             and not all_changes
             and not (ctx.snapshot is not None and raw.path in ctx.snapshot.deleted)
-            and not any(t == "." or raw.path == t or raw.path.startswith(t.rstrip("/") + "/") for t in selected)
+            and not any(t == "." or logical == t or logical.startswith(t.rstrip("/") + "/") for t in selected)
         ):
             continue
         if ctx._excluded(raw.path):

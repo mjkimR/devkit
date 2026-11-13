@@ -349,3 +349,102 @@ def test_nested_workspace_untargeted_capture_uses_workspace_paths(tmp_path: Path
     assert run.ok and [(v.file, v.line) for v in run.result.violations] == [("a.py", 4)]
     assert run.context is not None and set(run.context.changes) == {"a.py"}
     assert run.context.before_text("a.py") == BEFORE
+
+
+@pytest.mark.parametrize(
+    "kind",
+    [
+        "file",
+        "dot_file",
+        "parent_file",
+        "abs_file",
+        "abs_parent_file",
+        "dir",
+        "dot_dir",
+        "abs_dir",
+        "parent_root",
+        "dot_root",
+        "abs_root",
+        "abs_parent_root",
+        "alias_file",
+        "alias_root",
+    ],
+)
+def test_original_target_equivalent_spellings(tmp_path: Path, kind: str) -> None:
+    root = workspace(tmp_path)
+    (root / "sub").mkdir()
+    (root / "sub/b.py").write_text(BEFORE)
+    git(root, "add", ".")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-qm", "directory baseline")
+    (root / "a.py").write_text(AFTER)
+    (root / "sub/b.py").write_text(AFTER)
+    alias = tmp_path.parent / (tmp_path.name + "-alias")
+    alias.symlink_to(root, target_is_directory=True)
+    choices = {
+        "file": ("a.py", ["a.py"]),
+        "dot_file": ("./a.py", ["a.py"]),
+        "parent_file": ("sub/../a.py", ["a.py"]),
+        "abs_file": (str(root / "a.py"), ["a.py"]),
+        "abs_parent_file": (str(root / "sub/../a.py"), ["a.py"]),
+        "dir": ("sub", ["sub/b.py"]),
+        "dot_dir": ("./sub", ["sub/b.py"]),
+        "abs_dir": (str(root / "sub"), ["sub/b.py"]),
+        "parent_root": ("sub/..", ["a.py", "sub/b.py"]),
+        "dot_root": (".", ["a.py", "sub/b.py"]),
+        "abs_root": (str(root), ["a.py", "sub/b.py"]),
+        "abs_parent_root": (str(root / "sub/.."), ["a.py", "sub/b.py"]),
+        "alias_file": (str(alias / "a.py"), ["a.py"]),
+        "alias_root": (str(alias), ["a.py", "sub/b.py"]),
+    }
+    target, expected = choices[kind]
+    run = notices(root, targets=[target])
+    assert run.ok and sorted(v.file for v in run.result.violations) == expected
+    if kind in ("file", "dot_file", "parent_file", "abs_file", "abs_parent_file", "alias_file"):
+        read = ReadRuleContextUseCase().execute(root, target, rules_dir=root / "rules")
+        assert read.file == "a.py" and len(read.findings) == 1
+
+
+@pytest.mark.parametrize("kind", ["case", "unicode"])
+def test_original_target_actual_filesystem_spelling_keeps_before_identity(tmp_path: Path, kind: str) -> None:
+    import unicodedata
+
+    root = workspace(tmp_path)
+    original = "Capital.py" if kind == "case" else "café.py"
+    target = "capital.py" if kind == "case" else unicodedata.normalize("NFD", original)
+    (root / original).write_text(BEFORE)
+    git(root, "add", ".")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-qm", "name baseline")
+    if not (root / target).is_file():
+        pytest.skip("filesystem keeps alternate spellings distinct")
+    (root / original).write_text(AFTER)
+    run = notices(root, targets=[target])
+    assert run.ok and len(run.result.violations) == 1
+    finding = run.result.violations[0]
+    assert run.context is not None and run.context.before_text(finding.file) == BEFORE
+    read = ReadRuleContextUseCase().execute(root, target, rules_dir=root / "rules")
+    assert len(read.findings) == 1 and read.change["before_id"] == run.context.changes[finding.file].before_id
+
+
+def test_directory_with_only_deletions_still_checks_change_rules(tmp_path: Path) -> None:
+    root = workspace(tmp_path)
+    (root / "sub").mkdir()
+    (root / "sub/only.py").write_text(AFTER)
+    git(root, "add", ".")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-qm", "deletion baseline")
+    (root / "sub/only.py").unlink()
+    normal = root / "rules/ordinary"
+    normal.mkdir()
+    normal.joinpath("__init__.py").write_text(
+        "from devkit_agt.features.rules.services.builtins import BaseRule\n"
+        "class Ordinary(BaseRule):\n"
+        "    def __init__(self): super().__init__('RULE-ordinary', 'ordinary', 'fixture')\n"
+        "    def check(self, ctx): raise AssertionError('empty present targets must not run ordinary rules')\n"
+    )
+    run = notices(root, targets=["sub/../sub"])
+    assert run.ok and [v.file for v in run.result.violations] == ["sub/only.py"]
+    (root / "empty").mkdir()
+    no_change = notices(root, targets=["empty"])
+    assert no_change.ok and no_change.result.violations == []
+    assert "RULE-consider" in no_change.skipped
+    ordinary_only = run_project_rules(root, targets=["empty"])
+    assert ordinary_only.ok and ordinary_only.context is None and ordinary_only.result.violations == []

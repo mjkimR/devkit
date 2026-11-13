@@ -84,7 +84,8 @@ def scope_rules(ctx: RuleContext, rules: Sequence[Rule], modified: Iterable[str]
     skipped: list[str] = []
     for rule in rules:
         inputs: tuple[str, ...] | None = getattr(rule, "inputs", None)
-        if inputs is None or any(match_path(pattern, name) for pattern in inputs for name in names):
+        candidates = [*names, *ctx.changes] if getattr(rule, "change_scope", False) else names
+        if inputs is None or any(match_path(pattern, name) for pattern in inputs for name in candidates):
             selected.append(rule)
         else:
             skipped.append(rule.id)
