@@ -1,0 +1,21 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T01:38:26.741883Z'
+status: completed
+summary: round 3; prior20 regressions pass; one newly reachable absolute-alias plus case spelling loses exact before-source
+findings:
+- issue: Absolute symlink-prefix resolution skips filesystem-spelling normalization.
+  evidence: packages/devkit/src/devkit_agt/features/rules/services/targets.py:59-64; .pytest_cache/dev-probe/review-03/test_composed_spelling.py:29
+  failure_condition: On a case-insensitive filesystem an accepted absolute alias/capital.py targeting tracked Capital.py executes but captures empty before text as added, so unchanged constructs can appear newly changed.
+  suggested_action: In _normalized_target outside-prefix branch apply existing _on_disk normalization to absolute.resolve() before continuing validation. Add combined absolute-alias/case regression asserting original before text and retain outside-workspace rejection.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated; unchanged HEAD and complete tree60a195a93df5317ec901d41802f46ae4aada15b2 plus probe-only writes substitute for native guarantees
+checks:
+  tests: PASS prior20 regressions and caller4555 affected; composed spelling1 failed1 passed as expected
+diff_scope:
+  base: 27ac4a11aa25d28b114f08462486fc3d92331c62
+  head: ab4c6ad3427e5b2b1eae644c7f487de364e1338f
