@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-lifecycle
 title: Proposal lifecycle commands and handoff
-summary: "Proposal lifecycle operations validate and carry approved scope into a spec, preserving decisions, feedback and references. CLI, library, output and recovery contracts separate confirmed Git effects from pending final verification."
+summary: "Proposal lifecycle operations validate and carry approved scope into a spec, preserving decisions, feedback and references. CLI, library, output and recovery contracts separate confirmed Git effects from pending final verification and bind proposal cleanup to pinned Git history."
 area: delivery
 status: active
 created_at: 2026-11-10
@@ -216,8 +216,25 @@ A handoff deletes the proposal in the worktree it runs in; merging that branch r
 base checkout but leaves their directories. `devkit spec proposal prune [<slug>]` removes `docs/proposals/PROP-<slug>/` (every `PROP-*` directory without a slug) when it
 holds no file at any depth (a symbolic link counts as a file; devkit's `remove_empty_tree`). A directory holding any
 file is kept, and one that cannot be listed fails the prune before anything is removed. devkit-spec's
-`devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
-(`ADR-worktrees-and-scope`) and, on the guarded integration path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension is retried after inspecting current Git state and rerunning the appropriate CLI operation.
+`devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) prunes the finished
+slug after a successful `devkit worktree finish` (`ADR-worktrees-and-scope`).
+
+WHEN preparing guarded integration (`SPEC-hook-driven-integration-cleanup`), the extension MUST include the exact
+`CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` only when a valid
+finished slug's proposal path appears in the full committed history reachable from the request's pinned source or
+target revision. Spec-only activity without that history has no proposal-prune target; an uncommitted directory
+alone does not establish applicability. A historical proposal with the same slug remains applicable.
+
+WHEN validating or executing cleanup, the extension MUST require that same proposal target tuple, including its
+absence, derived from the pinned revisions. Landing, directory removal and repeated execution do not change the
+approved identity. Missing, additional, duplicate or changed proposal targets retain `INTEGRATION_REQUEST_STALE`;
+scope-record checks and unknown-kind refusal remain unchanged. A history read failure propagates through the existing
+integration provider failure boundary rather than silently omitting cleanup. Tests:
+`packages/devkit-spec/tests/integration/features/delivery/test_cleanup.py` and
+`packages/devkit-spec/tests/e2e/features/delivery/test_integration.py` (`SPEC-conditional-proposal-prune`).
+
+Cleanup emits `SPEC_POST_FINISH_CLEANUP` notices for changes. The prune command remains for other checkouts; a failed
+extension is retried after inspecting current Git state and rerunning the appropriate CLI operation.
 
 ### 4.5 Commands and Options
 

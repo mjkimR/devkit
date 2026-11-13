@@ -8,7 +8,7 @@ target: devkit integration integrate
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-13
 ---
 
@@ -44,3 +44,8 @@ Category other: cleanup-plan noise in integration output.
 cleanup.py: slug = _prune_slug(slug_of(context.finish.branch))
             expected_prune = (CleanupTarget(KIND_PROPOSAL, proposal_unit(slug), context.finish.source_sha),) if slug else ()
 ```
+
+
+## Disposition
+
+Resolved by `SPEC-conditional-proposal-prune`. Scoped integration omits proposal-prune for a spec-only slug with no committed proposal history, while source/target history retains handoff cleanup and retry identity. Verification: 17 cleanup integration tests, including merged add/delete history, exact-target tampering and partial-failure recovery; 53 delivery integration/plan-accept E2E tests; independent review finding fixed and self-reverified. The before/after probe reduced spec-only targets from 1 to 0, preserved handoff targets at 1, and retained the same identity after prune.
