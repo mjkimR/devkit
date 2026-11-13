@@ -1,0 +1,19 @@
+kind: build-check
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-13T02:31:37.231495Z'
+status: completed
+summary: 'Native verification on source f356771f1: spec 685, docs 9 and affected 2664 tests pass; deterministic guidance coverage baseline 0/5 to head 5/5.'
+findings: []
+unverified_areas:
+- Live consumer/model behavior and empirical improvement are best effort and unverified.
+checks:
+  tests: PASS just test devkit-spec integration/bundles/spec 685; just test devkit-docs integration/bundles/docs 9; just test-affected --base 021ad3c06c5ac0b3fffd8dad2fe931c2687db48e --tier all 2664, 163 paths partial, selected E2E included
+  lint: PASS just lint-check devkit-spec and devkit-docs; changed asset hygiene 0 errors/warnings
+  build: PASS just check devkit-spec and devkit-docs, 0 errors/warnings
+  guidance_probe: PASS git-show baseline 0/5, final source 5/5; explicit instruction coverage only
+  sync: PASS sync --check; sole tracked sync output .devkit/installation.json
+diff_scope:
+  base: 021ad3c06c5ac0b3fffd8dad2fe931c2687db48e
+  head: f356771f1224f847d459c39e339a0b8c31480030
