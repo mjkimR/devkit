@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-uiux-improvement
 title: Software interface UI/UX improvement
-summary: "An opt-in user-invoked skill improves software interfaces and user flows through proportionate object framing, optional local perspectives or one user-selected Impeccable session under coordinator acceptance, and requested implementation under the consumer workflow."
+summary: "An opt-in UI/UX skill improves software interfaces with object framing, optional local perspectives or user-selected Impeccable, and task-approved outside-workflow or consumer-workflow implementation with checks and qualified reporting."
 area: delivery
 status: active
 created_at: 2026-11-05
@@ -20,11 +20,13 @@ user flows: web and desktop applications, dashboards, admin tools, settings and 
 restructures views or flows, the coordinator frames the affected domain objects (OOUX: objects, relationships, CTAs,
 attributes), from the consumer's glossary, object register and UX documents when they exist. It implements inline,
 optionally with local design perspectives, and, when the user selects it, delegates craft work to one session of the
-separately installed Impeccable skill, before or after its own changes; it carries accepted changes through the
-consumer's existing workflow.
+separately installed Impeccable skill, before or after its own changes. It announces an outside-workflow procedure
+and obtains explicit task approval, or follows the consumer workflow the user chooses. Both retain product
+constraints, host permissions and applicable checks.
 Alternatives, research and criticism are optional means, not a required final report.
 `ADR-uiux-improvement-workflow-boundary` records the local-role and delivery-authority decision, and
 `ADR-impeccable-session-authority` the bounded Impeccable session and user-requested setup and cleanup.
+`ADR-uiux-task-approved-run` records task route choice, verification and remaining authority.
 
 ## 2. Scope and Boundary
 
@@ -47,9 +49,10 @@ Alternatives, research and criticism are optional means, not a required final re
    deployed. Test: `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`.
 2. **Explicit invocation**: The bundle MUST declare `invocation = "user"` and an explicit-only entry guard.
    Tests: `test_explicit_selection_projects_local_roles_and_user_only_entry` and `CAP-DIST-agent-projections`.
-3. **Consumer authority**: WHEN requested changes are implemented, including changes accepted from a delegated
-   session, the coordinator MUST follow the consumer's existing workflow, permissions and approvals
-   (`ADR-impeccable-session-authority`). Review: `test_entry_preserves_improvement_scope_and_consumer_authority`.
+3. **Consumer authority**: WHEN requested changes are implemented, including accepted delegated changes and
+   requested setup/cleanup, the coordinator MUST follow the route the user approved for this task while preserving
+   product constraints and host permissions (`ADR-uiux-task-approved-run`). The selected consumer workflow retains
+   its required steps, reviews and approvals. Test: `test_task_route_approval_is_explicit_reused_and_bounded`.
 4. **Goal-driven improvement**: WHEN the entry runs, the coordinator SHOULD select flow, interaction and visual work
    serving the supplied goal, constraints and inspected artifacts rather than require an exhaustive audit. WHEN a
    request adds, merges or reorders views or flows, the coordinator SHOULD name the affected objects, relationships,
@@ -82,10 +85,14 @@ Alternatives, research and criticism are optional means, not a required final re
     the user wants; installation follows rule 19 (`ADR-impeccable-session-authority`).
     Review: orchestration fallback, role return instructions and
     `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
-11. **Verification**: WHEN reporting an improvement, the coordinator MUST distinguish actual changed states and checks
-    from design inference and unavailable coverage. Review only: completion and representative instruction scenarios.
+11. **Verification**: WHEN reporting an improvement on either route, the coordinator MUST report before/after
+    interface verification and applicable project-check outcomes separately from design inference and unavailable
+    coverage. The bundle adds no mandatory independent review; every review required by the selected consumer
+    workflow remains required. Test: `test_task_route_approval_is_explicit_reused_and_bounded`; review only: actual
+    model behavior and representative instruction scenarios.
 12. **Qualified completion**: WHEN a normal improvement request finishes, the coordinator SHOULD return the changed
-    interface or flow and verification status, or preserve useful partial work with a concrete blocker.
+    interface or flow and verification status, selected route, stale-document follow-up and remaining unauthorized
+    Git effects, or preserve useful partial work with a concrete blocker.
     Review: `test_entry_preserves_improvement_scope_and_consumer_authority`.
 13. **Independent installation**: The bundle MUST install through dist/catalog without agt, docs or spec packages.
     Test: `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/test_installed_consumer.py`.
@@ -95,8 +102,8 @@ Alternatives, research and criticism are optional means, not a required final re
     an Impeccable session or load or invoke Impeccable in its own context; an installed Impeccable permits an offer,
     and output of a hook the user installed is consumer check evidence (`ADR-impeccable-session-authority`).
     Review: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
-16. **Session brief and routing**: WHEN delegating to Impeccable, the coordinator MUST complete the consumer's
-    pre-implementation workflow steps, pass a self-contained brief (goal, the framing result citing the OOUX documents
+16. **Session brief and routing**: WHEN delegating to Impeccable, the coordinator MUST complete pre-implementation
+    workflow steps required by the selected route, pass a self-contained brief (goal, the framing result citing the OOUX documents
     by path read-only or the conversation framing, consumer drafts or specifications by path read-only, absolute
     working directory, recorded base, edit list, unchanged concerns, context-file permission with `PRODUCT.md` or
     `DESIGN.md` only on the user's explicit direction, routed commands excluding `live`, stop condition, expected
@@ -108,9 +115,10 @@ Alternatives, research and criticism are optional means, not a required final re
 17. **Coordinator acceptance**: WHEN a session returns, the coordinator MUST compare the working directory with the
     recorded base, take only listed product-file changes into verification, report session output and other changes
     without reverting or deleting them on its own initiative, and report a moved HEAD, missing base or unobservable
-    ignored path as unverifiable attribution or limited coverage. It MUST report each consumer OOUX document
-    (glossary, object register or UX document) the accepted change made stale; the skill run MUST NOT edit them, and
-    their update follows the consumer workflow's own step (`ADR-impeccable-session-authority`).
+    ignored path as unverifiable attribution or limited coverage. It MUST report each stale consumer OOUX or UX
+    document, the affected statement and a concrete separate follow-up through the documentation process where
+    present or a separate documentation task otherwise. The skill run MUST NOT edit those documents or create a
+    follow-up record without a separate request (`ADR-uiux-task-approved-run`).
     Review: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
 18. **Consumer context files**: WHEN a session creates or changes `PRODUCT.md`, `DESIGN.md` or shared `.impeccable/`
     context files, the coordinator MUST report them as consumer-owned with upstream's retention guidance
@@ -123,6 +131,17 @@ Alternatives, research and criticism are optional means, not a required final re
     `DESIGN.md` MUST change, by the coordinator or a permitted session, only on the user's explicit direction. The
     action follows rule 3 (`ADR-impeccable-session-authority`).
     Review: `test_project_files_setup_and_cleanup_follow_the_users_request`.
+20. **Task route choice**: WHEN implementation or requested setup/cleanup enters the skill, the coordinator MUST
+    announce the outside-workflow procedure and obtain explicit task approval or follow the consumer workflow the
+    user chooses, before product edits or write-capable delegation. An exact prior route instruction is reused;
+    without an answer or approval channel dependent edits wait. Review-only work needs no route choice.
+    Test: `test_task_route_approval_is_explicit_reused_and_bounded`.
+21. **Scope growth**: WHEN work adds a surface or behavior beyond the approved goal or changes a user constraint,
+    the coordinator MUST obtain a new user decision before the dependent edit. An in-goal file addition or
+    implementation choice alone is not scope growth. Test: `test_task_route_approval_is_explicit_reused_and_bounded`.
+22. **Git effects**: WHEN commit, integration or publication lacks current task authority, the coordinator MUST
+    present the verified result and obtain authority once for the named remaining effects before acting. Route
+    choice alone grants none; exact prior authority is reused. Test: `test_task_route_approval_is_explicit_reused_and_bounded`.
 
 Instruction review verifies stated behavior, not model obedience, aesthetic quality or superiority over one agent.
 Selection changes neither the development approach nor the consumer's execution authority. The distribution-owned
@@ -142,7 +161,7 @@ partial or failed), inspected identities, concrete work, assumptions and unverif
 provenance, and critique includes evidence, failure conditions and repairs. A failed or absent role supplies no
 findings. An Impeccable session return lists changed files, commands run, detector or audit results, session output,
 degraded coverage and blockers. The coordinator owns synthesis, acceptance and retained output; product changes follow
-rules 3, 16, 17 and 19.
+rules 3, 16, 17 and 19–22.
 
 Without a requested destination, the result stays in conversation. Product artifacts follow consumer ownership;
 no retained document kind, mandatory design brief or persistent memory is introduced. The bundle's human usage guide
