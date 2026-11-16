@@ -2,6 +2,7 @@
 id: DOMAIN-bundle-selection-and-installation
 title: "Bundle selection and installation"
 status: active
+area: distribution
 summary: "Relates available bundles, requested selection, conceptual assets, projected paths and receipt evidence."
 ---
 

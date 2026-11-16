@@ -11,7 +11,7 @@ plan: PLAN-design-bundle-layout
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-06_
   - **Verification**: devkit-docs unit, rule and integration tests; `just test-affected`; lint and type checks.
 
-- [ ] **Task 2**: Living Spec contracts, ADR, document migration and viewer follow-up
+- [x] **Task 2**: Living Spec contracts, ADR, document migration and viewer follow-up
   - **_Boundary**: `docs/capabilities/documents/`, `docs/capabilities/traceability/`, `docs/capabilities/governance/CAP-GOV-spec-rules.md`, `docs/designs/`, `docs/domain/`, `docs/decisions/`, `docs/README.md`, `specs/2026-11/20261116-design-bundle-layout/`
   - _Requirements: AC-05, AC-06, AC-07_
   - **Verification**: `uv run devkit rules check`; `devkit docs resolve` and `refs` for the four moved IDs; the AC-06 search.

@@ -2,6 +2,7 @@
 id: DESIGN-distribution-transactions
 title: "Journaled replacement of a file and directory"
 status: active
+area: distribution
 summary: "Explains journaled file and directory replacement, its independent mechanism detail and authoritative distribution boundaries."
 related_designs: [DESIGN-distribution-file-directory-replacement]
 ---

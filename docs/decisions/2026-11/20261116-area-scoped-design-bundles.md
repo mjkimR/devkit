@@ -58,8 +58,8 @@ Chosen option 2.
 - **Kind table.** The kind table records each kind's layout (`flat`, `area` or `area-bundle` with its anchor file
   name), from which `area_scoped` derives, and identity, support, frontmatter, entrypoint and search rules read it.
 
-Supersedes in part `ADR-formal-role-document-identities`: the flat canonical path clause and the
-`<ID>/artifacts/` support clause for design and domain documents. Its identity, prefix, status, relation,
+Supersedes in part `ADR-formal-role-document-identities`: the flat canonical path clause for design and
+domain documents and the `<ID>/artifacts/` support clause for design documents. Its identity, prefix, status, relation,
 ownership and entrypoint clauses stay in force.
 
 ## 5. Consequences
