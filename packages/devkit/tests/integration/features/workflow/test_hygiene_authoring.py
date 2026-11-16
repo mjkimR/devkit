@@ -86,7 +86,7 @@ def test_finding_severity_survives_review_and_reverify(
     assert review is not None and review.open_findings() == 2
     assert review.to_dict()["findings"][0]["severity"] == severity
     assert "severity" not in review.to_dict()["findings"][1]
-    again = compose(unit, loaded, "reverify", source="latest", resolve=("all",))
+    again = compose(unit, loaded, "reverify", summary="r", source="latest", resolve=("all",))
     assert again.open_findings() == 0
     assert yaml.safe_load(render_envelope(again, "2026-10-17T00:00:01Z"))["findings"][0]["severity"] == severity
 

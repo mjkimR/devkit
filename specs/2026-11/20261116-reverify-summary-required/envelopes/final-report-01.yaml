@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T10:42:48.552988Z'
+status: completed
+summary: envelope reverify refuses a missing or blank --summary (ENVELOPE_FLAG_INVALID, [TARGET] --summary) before writing; envelope commit names each failing field and the writer flag that fills it, keeping committed records; reverify hints and skill examples pass --summary; CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output and the workflow reference updated; FB-reverify-writes-envelope-commit-refuses resolved
+findings: []
+checks:
+  tests: 'PASS just test-affected --base 22b28c936: 2519 passed (partial selection)'
+  build: PASS uv sync environment imports; devkit sync --check clean
+  lint: PASS ruff check/format clean all modules; pyright 0 errors all modules; rules check --ci --base main clean
+diff_scope:
+  base: 22b28c936c4d4b05d8465178ac6175fb6dfa8b2b
+  head: 8c07f67f5f8b917d3aeab242c78129c9c47ebc2f

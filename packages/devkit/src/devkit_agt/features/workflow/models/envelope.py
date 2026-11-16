@@ -14,6 +14,9 @@ WORKER, ANSWER, RESOLUTION = "worker", "answer", "resolution"
 
 CLOSABLE = ("review", "challenger")
 
+# Kinds written by a command of their own (``envelope <kind>``); ``envelope new`` refuses them.
+KIND_COMMANDS = (WORKER, ANSWER, RESOLUTION, "review", "reverify")
+
 # Who decided an answer: the user, the Host within approved scope, or a policy.
 DECIDERS = ("user", "host", "policy")
 

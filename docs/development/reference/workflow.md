@@ -43,7 +43,7 @@ just workflow list                                    # units across every layou
 just workflow list --exclude-status completed         # active units; --status <value> keeps exact matches
 just workflow envelope review --unit <dir>            # needs_input skeleton to fill in
 just workflow envelope review --unit <dir> --summary "..." --findings-file findings.yaml --check tests="PASS 3/3"
-just workflow envelope reverify --unit <dir> --from latest --resolve 1 --waive "2=accepted cost"  # open findings only
+just workflow envelope reverify --unit <dir> --from latest --resolve 1 --waive "2=accepted cost" --summary "..."  # open findings only; --summary required
 just workflow envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft --summary "closes reconcile-check-01; whole reflection rechecked" --findings-file findings.yaml
 just workflow envelope worker --unit <dir> --stage <stage> --summary "..." --questions-file questions.yaml
 just workflow envelope answer --unit <dir> --summary "..." --answers-to worker-01.yaml --answers-file answers.yaml  # each answer may name by: user|host|policy

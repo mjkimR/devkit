@@ -257,7 +257,7 @@ def test_compose_review_and_reverify_round_trip(tmp_path: Path, compose: Callabl
     assert loaded.unverified_areas == ("perf",) and loaded.to_dict()["findings"][1]["suggested_action"] == "cache"
 
     reverify = yaml.safe_load(
-        _draft(compose, unit, "reverify", source="latest", resolve=["1"], waive=["2=accepted cost"])
+        _draft(compose, unit, "reverify", summary="r", source="latest", resolve=["1"], waive=["2=accepted cost"])
     )
     assert reverify["review"] == "review-01.yaml"
     assert [f["resolution"] for f in reverify["findings"]] == ["resolved", "waived"]
@@ -272,9 +272,9 @@ def test_compose_review_and_reverify_round_trip(tmp_path: Path, compose: Callabl
     (unit / "envelopes/review-02.yaml").write_text(
         "kind: review\nstatus: completed\nfindings:\n  - {issue: c, evidence: d}\n"
     )
-    again = yaml.safe_load(_draft(compose, unit, "reverify", source="latest", resolve=["all"]))
+    again = yaml.safe_load(_draft(compose, unit, "reverify", summary="r", source="latest", resolve=["all"]))
     assert again["review"] == "review-02.yaml" and again["findings"][0]["resolution"] == "resolved"
-    from_file = yaml.safe_load(_draft(compose, unit, "reverify", source="envelopes/review-01.yaml"))
+    from_file = yaml.safe_load(_draft(compose, unit, "reverify", summary="r", source="envelopes/review-01.yaml"))
     assert from_file["review"] == "review-01.yaml" and len(from_file["findings"]) == 2
 
 
@@ -382,6 +382,8 @@ def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -
         "latest",
         "--resolve",
         "1",
+        "--summary",
+        "fixed",
     )
     assert (
         reverify.exit_code == 0

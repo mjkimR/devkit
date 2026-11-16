@@ -419,3 +419,99 @@ def test_cli_text_quotes_fields(repo: Path) -> None:
     result = run_cli("envelope", "commit", "--workspace-root", str(repo), "--unit", spaced, "--file", FILE)
     assert result.exit_code == 0, result.output
     assert f"unit={field_value(spaced)} " in result.stdout
+
+
+# -- SPEC-reverify-summary-required ---------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("summary", [None, "", "   "])
+def test_reverify_without_summary_is_refused_before_writing(repo: Path, summary: str | None) -> None:
+    """AC-01: an authored reverify needs a nonempty --summary, so every reverify written is committable."""
+    commit(repo)
+    extra = () if summary is None else ("--summary", summary)
+    result = run_cli(
+        "envelope", "reverify", "--workspace-root", str(repo), "--unit", UNIT,
+        "--stage", "s", "--from", "latest", "--resolve", "all", *extra,
+    )  # fmt: skip
+    assert result.exit_code == 2, result.output
+    assert "(ENVELOPE_FLAG_INVALID)" in result.stderr
+    assert "[TARGET] --summary" in result.stderr
+    fix = next(line for line in result.stderr.splitlines() if line.startswith("[FIX]"))
+    assert "--summary" in fix
+    assert not (repo / UNIT / "envelopes/reverify-01.yaml").exists()
+
+
+def test_reverify_other_refusals_and_skeleton_keep_their_behavior(repo: Path) -> None:
+    """AC-05: --from and --resolve refusals keep precedence and codes; a bare reverify is still a skeleton."""
+    commit(repo)
+    common = ("envelope", "reverify", "--workspace-root", str(repo), "--unit", UNIT)
+    no_from = run_cli(*common, "--summary", "x")
+    assert no_from.exit_code == 2 and "(ENVELOPE_FROM_INVALID)" in no_from.stderr
+    out_of_range = run_cli(*common, "--from", "latest", "--resolve", "9")
+    assert out_of_range.exit_code == 2 and "(ENVELOPE_FLAG_INVALID)" in out_of_range.stderr
+    assert "[TARGET] --resolve" in out_of_range.stderr
+    bare = run_cli(*common, "--stage", "s")
+    assert bare.exit_code == 0, bare.output
+    assert bare.stdout.rstrip().endswith("skeleton=yes]")
+
+
+def test_commit_refusal_names_the_empty_summary_and_its_flag(repo: Path) -> None:
+    """AC-02: the refusal names the empty field, the writer flag that fills it and the same-file retry."""
+    commit(repo)
+    p = repo / UNIT / "envelopes/reverify-01.yaml"
+    p.write_text(
+        "kind: reverify\nstage: s\nworkflow: w\nsegment: 0\nstatus: completed\nreview: review-01.yaml\nsummary: ''\n"
+    )
+    error = refusal(repo, "ENVELOPE_COMMIT_INVALID", "envelopes/reverify-01.yaml")
+    assert "summary is empty" in error.message
+    assert error.target_files == (f"{UNIT}/envelopes/reverify-01.yaml",)
+    assert "--summary" in (error.fix or "")
+    assert f"envelope reverify --unit {UNIT}" in (error.fix or "")
+    assert f"envelope commit --unit {UNIT} --file envelopes/reverify-01.yaml" in (error.fix or "")
+    assert "--stage" not in (error.fix or "")
+
+
+def test_commit_refusal_names_an_undeclared_stage_and_its_flag(repo: Path) -> None:
+    """AC-03: an undeclared stage is named with its workflow, and the fix names --stage."""
+    p = repo / UNIT / FILE
+    p.write_text(p.read_text().replace("stage: s", "stage: absent"))
+    error = refusal(repo, "ENVELOPE_COMMIT_INVALID")
+    assert "stage 'absent' is not a stage of workflow w" in error.message
+    assert "summary" not in error.message
+    assert "--stage" in (error.fix or "") and "--summary" not in (error.fix or "")
+    assert f"envelope review --unit {UNIT}" in (error.fix or "")
+
+
+def test_commit_refusal_names_a_stale_segment_without_a_flag(repo: Path) -> None:
+    """A stale workflow/segment is named; the fix rewrites in the current segment and names no flag."""
+    p = repo / UNIT / FILE
+    p.write_text(p.read_text().replace("segment: 0", "segment: 1"))
+    error = refusal(repo, "ENVELOPE_COMMIT_INVALID")
+    assert "workflow/segment w/1 is not the current w/0" in error.message
+    fix = error.fix or ""
+    assert "Remove the uncommitted [TARGET] and write it again in the current segment" in fix
+    assert "--summary" not in fix and "--stage" not in fix
+
+
+def test_commit_refusal_never_removes_a_committed_record(repo: Path) -> None:
+    """A committed record that no longer passes (its stage was undeclared later) gets a non-destructive fix."""
+    commit(repo)
+    definition = repo / ".devkit/workflows/w.md"
+    definition.write_text(definition.read_text().replace("id: s", "id: t"))
+    git(repo, "commit", "-qam", "rename stage")
+    error = refusal(repo, "ENVELOPE_COMMIT_INVALID")
+    fix = error.fix or ""
+    assert "Remove" not in fix
+    assert "Keep [TARGET]: it is committed history. Write a new envelope" in fix
+    assert "--stage" in fix
+
+
+def test_fixes_suggesting_a_reverify_pass_summary(repo: Path, tmp_path: Path) -> None:
+    """Fixes that suggest closing a round name a reverify command that is not itself refused for --summary."""
+    common = ("envelope", "review", "--workspace-root", str(repo), "--unit", UNIT, "--summary", "x")
+    findings = tmp_path / "findings.yaml"
+    findings.write_text("- {issue: a, evidence: b, resolution: resolved}\n")
+    result = run_cli(*common, "--findings-file", str(findings))
+    assert result.exit_code == 2 and "(ENVELOPE_FLAG_INVALID)" in result.stderr
+    fix = next(line for line in result.stderr.splitlines() if line.startswith("[FIX]"))
+    assert f"envelope reverify --unit {UNIT} --from latest --summary" in fix

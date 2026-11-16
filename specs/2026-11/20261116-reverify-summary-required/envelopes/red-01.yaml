@@ -1,0 +1,13 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T10:28:57.095066Z'
+status: completed
+summary: envelope reverify without --summary writes summary '' and exits 0; envelope commit then refuses with a generic message naming neither the empty field nor its flag, as characterized
+findings: []
+checks:
+  reproduced: 'PASS test_envelope_commit.py: 5 new regression tests fail (reverify exits 0 and writes reverify-01.yaml; commit message is the generic ''envelope needs a nonempty summary ...''); 2 preservation tests pass'
+diff_scope:
+  base: 22b28c936c4d4b05d8465178ac6175fb6dfa8b2b
+  head: db61432c70ce5bce58c0cfc6fe48eae60537d6f9

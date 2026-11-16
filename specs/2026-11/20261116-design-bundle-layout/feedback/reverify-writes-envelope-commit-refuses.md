@@ -8,7 +8,7 @@ target: devkit workflow envelope reverify
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -44,3 +44,13 @@ created_at: 2026-11-16
 summary: ''
 [ERROR]  (ENVELOPE_COMMIT_INVALID) envelope needs a nonempty summary, a declared stage and the current workflow/segment
 ```
+
+## Disposition
+
+- **Outcome**: resolved by `SPEC-reverify-summary-required`.
+- **Change**: `devkit workflow envelope reverify` refuses an authored envelope without a nonempty `--summary`
+  (`ENVELOPE_FLAG_INVALID`, `[TARGET] --summary`) before writing; `devkit workflow envelope commit` names each failing
+  field (`summary is empty`, an undeclared stage, a stale workflow/segment) and its `[FIX]` names the writer command
+  with `--summary`/`--stage`.
+- **Verification**: regression tests in `packages/devkit/tests/integration/features/workflow/test_envelope_commit.py`
+  (red before the fix, green after), `just test-affected` and an isolated code review of the range.

@@ -13,13 +13,10 @@ from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, exit_on
 
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit_agt.features.workflow.cli.render import render_hold
-from devkit_agt.features.workflow.models.envelope import ANSWER, RESOLUTION, WORKER, EnvelopeFlags
+from devkit_agt.features.workflow.models.envelope import ANSWER, KIND_COMMANDS, RESOLUTION, WORKER, EnvelopeFlags
 from devkit_agt.features.workflow.models.errors import EnvelopeFlagError, workflow_command
 from devkit_agt.features.workflow.usecases.commit_envelope import CommitEnvelopeUseCase
 from devkit_agt.features.workflow.usecases.envelopes import CheckEnvelopesUseCase, WriteEnvelopeUseCase
-
-# Kinds whose fields need options of their own; ``envelope new`` refuses them.
-KIND_COMMANDS = (WORKER, ANSWER, RESOLUTION, "review", "reverify")
 
 
 @cli.group(name="envelope")
@@ -299,7 +296,8 @@ def envelope_reverify_cmd(**options: Any) -> None:
     challenger-NN.yaml of Planning) and close them. A named round starts from its last reverify, so earlier
     resolutions and waivers persist; --resolve or --waive naming a finding already closed is refused.
 
-    --findings-file adds findings found while reverifying.
+    --findings-file adds findings found while reverifying; authoring needs a
+    nonempty --summary, the judgment that closes the round.
     """
     _write("reverify", **options)
 

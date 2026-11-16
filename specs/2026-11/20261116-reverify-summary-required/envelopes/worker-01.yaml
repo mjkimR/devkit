@@ -1,0 +1,27 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T10:43:06.049714Z'
+status: completed
+summary: 'Development turn complete through the final change report; integration pending for the Host. reverify refuses a missing/blank --summary (ENVELOPE_FLAG_INVALID, [TARGET] --summary); envelope commit names each failing field and its writer flag, never telling the agent to remove a committed record; review-01 (P2, P3) fixed and reverified; reconcile-check-01 (two P3) fixed in reconcile-check-02; FB-reverify-writes-envelope-commit-refuses resolved. Sync output: .devkit/installation.json (named in Task 3 boundary). Baseline: the red envelope records the 5 regression tests failing on db61432 before the fix; they pass on the fix head.'
+findings: []
+assumptions:
+- sync --check ran after the spec.md rewrite but before any source or bundle edit; spec.md is not a sync input
+- Reconcile-check-01 finding 1 was a small authoring.py hint fix applied after review-01 closed; self-verified by a new test at low effort without a fresh code review
+checks:
+  sync_start: PASS exit=0
+  tests: 'PASS just test-affected --base 22b28c936: 2519 passed'
+  lint: PASS ruff and pyright clean; rules check --ci --base main clean
+  envelopes: 'PASS envelope check: 7 envelopes, no errors'
+diff_scope:
+  base: ''
+  head: d841a8d61e6a1a3e4be1d3f4e2a1f3670921e2c8
+scope_extensions:
+- path: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
+  task: 3
+  reason: restates the reverify authoring flags and the explicit-commit refusal of CAP-DLV-workflow-envelopes that AC-01 and AC-02 change
+  requirements:
+  - AC-01
+  - AC-02
+activity_effort: low

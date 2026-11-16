@@ -66,7 +66,8 @@ EOF
 
 - Commit the authored review/reverify envelope with `devkit workflow envelope commit` by section 5 of the `spec` skill's `references/envelope.md`.
 - For a pass, omit `--findings-file`. After fixes, close the round with
-  `devkit workflow envelope reverify --unit <dir> --stage review-refine --from latest --resolve <N|all> --waive <N>=<reason>`.
+  `devkit workflow envelope reverify --unit <dir> --stage review-refine --from latest --resolve <N|all> --waive <N>=<reason> --summary "<judgment>"`;
+  `--summary` is required.
 - A `session`-depth task gives the same content in the final response or PR body.
 - Feedback after a passed review that changes the implementation returns to build/reverify; a direction change is a
   close.
