@@ -4,20 +4,22 @@ title: 'Formal documentation checkpoints: route facts, review reimplementability
 summary: Make formal documentation get filled during ordinary delivery by adding fact-type routing, a reconcile formal-docs assessment field, reimplementability questions for the reconcile reviewer, a capability observable-contract rule and a reference template.
 status: planned
 created: 2026-11-16
-related_capabilities: []
+related_capabilities:
+  - CAP-DOCS-documentation-ownership
+  - CAP-DOCS-document-model
+  - CAP-GOV-spec-rules
+  - CAP-DLV-delivery-workflows
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-formal-doc-authoring-checkpoints] Formal documentation checkpoints: route facts, review reimplementability, record assessments
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-formal-doc-authoring-checkpoints on 2026-11-16.
-- **Preserved Materials**: `docs/materials/2026-11/20261116-formal-doc-authoring-checkpoints`
-
-### 1. Background & Hypothesis
+Handed off from proposal PROP-formal-doc-authoring-checkpoints on 2026-11-16. Planning evidence is preserved at
+`docs/materials/2026-11/20261116-formal-doc-authoring-checkpoints/planning-evidence.md`; the record-field decision is
+`ADR-recorded-formal-docs-assessment`.
 
 A reimplementability review of 17 capability areas found that the documentation layers are sufficient. The gaps are
 content nobody wrote, not missing layers:
@@ -36,222 +38,132 @@ only reliably present content is what something checks:
 
 - the reconcile record schema has `targets` only;
 - `reconcile-reviewer` checks behavior, capability and constraint changes, never formal documents;
-- 10 of 260 `reconcile.md` files mention a formal document, all from the 2026-11-16 formal-document specs
-  ([evidence](../../../docs/materials/2026-11/20261116-formal-doc-authoring-checkpoints/planning-evidence.md));
+- 10 of 260 `reconcile.md` files mention a formal document, all from the 2026-11-16 formal-document specs;
 - routing exists per responsibility (`CAP-DOCS-documentation-ownership` §3.1 rule 5), not per fact type;
 - nothing says what stays out of a capability;
 - reference pages have no template.
 
 Hypothesis: guidance that routes each fact type to its owner, plus two checkpoints that make a skipped assessment
 visible, gets formal documents written during ordinary delivery without a periodic sweep. The checkpoints are a
-recorded assessment and an independent reviewer question.
-
-The formal-document steps in plan, review and sync landed on 2026-11-16, so no ordinary spec has run under them yet.
-Planning should keep the change proportionate to that.
+recorded assessment in `reconcile.md` and an independent reviewer question.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Formal documentation checkpoints: route facts, review reimplementability, record assessments so that system capabilities are extended.
+- **US-1**: As a developer agent writing documentation, I want each fact type routed to one owner so that formats,
+  identity derivations, orderings and code conditions land in the document that owns them.
+- **US-2**: As a Host or reviewer, I want a newly resolved reconcile record to show a design, domain and operations
+  assessment so that a skipped assessment fails the commit gate instead of passing silently.
+- **US-3**: As a reconcile reviewer, I want named reimplementability finding classes so that new persisted formats,
+  identity derivations, orderings and codes without a documented owner statement are reported.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: migrating existing reference pages, capability text or formal documents, or sweeping older
+   gaps. Existing `docs/development/reference/` pages keep their tables.
+2. **Scope Excluded**: a rule that every declared code has a documented condition. It is handed to Backlog as
+   deferred work (§5).
+   - **When to Reconsider**: once the reference code table shape has landed and five ordinary specs have completed
+     under these checkpoints.
+3. **Scope Excluded**: a required DESIGN datasheet section; no check can tell a datasheet from prose.
+4. **Scope Excluded**: requiring the coverage on a record the commit does not newly resolve, or in a plain
+   (non-snapshot) run. Existing records stay valid without migration, date cutoff or setting.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-One spec, `sdd-spec-feature`, size M, `dev_effort: medium`. No split: the guidance, the record field and the
-reviewer classes describe one fact-type model and land together; four tasks fit one spec:
+### Scenario 1 [AC-01]: Fact-type routing and capability guidance in the docs bundle
+- **Given** the docs bundle sources
+- **When** `living-spec-writing`, `capability-writing`, `design-writing`, `document-writing` and the `capability` and
+  `design` templates are read
+- **Then** `living-spec-writing` carries the nine-row fact-type routing table, `capability-writing` has a "What stays
+  out" section, the capability template §3 comment names the observable-contract-only clause, `design-writing` and the
+  design template say a design SHOULD carry a datasheet WHEN its mechanism writes data a later run, another process or
+  another tool reads back, and `document-writing` has a "Reference pages" section
+- **And** no new docs bundle text cites a document ID of this repository (agent-asset self-containment).
 
-### Scenario 1 [AC-01]: Carried from proposal
-1. Docs bundle guidance and templates (Q1, Q4, Q5, Q6) with the template-list pins.
+### Scenario 2 [AC-02]: Reference template and its pins
+- **Given** the docs bundle
+- **When** `devkit sync` projects it
+- **Then** `.devkit/managed/docs/templates/reference.md` exists, has no frontmatter, and holds a code table with the
+  header `| Code | Level | Condition | Fix |`
+- **And** both bundle constitutions list
+  `templates/{capability,usecase,ux,decision,milestone,design,domain,operations,reference}.md`, and
+  `packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py` and
+  `packages/devkit-spec/tests/integration/bundles/spec/test_ux_guidance.py` assert that list and pass.
 
-### Scenario 2 [AC-02]: Carried from proposal
-2. `RULE-reconcile-contract`: role coverage, `formal_docs` form and the newly-resolved requirement, guide, tests
-   and the two existing fixtures that resolve records in snapshot runs.
+### Scenario 3 [AC-03]: `formal_docs` form is checked in every run
+- **Given** a targeted `reconcile.md` of a current bundle with a `formal_docs` value
+- **When** `devkit rules check` runs (plain, `--staged` or `--ci`)
+- **Then** `RULE-reconcile-contract` reports one violation at line 1 for each of: `formal_docs` not a mapping; a key
+  other than `design`, `domain` or `operations`; a value that is not a string starting `none: `; a reason with fewer
+  than 20 non-whitespace characters; a role with both a nonempty `related_designs`, `related_domains` or
+  `related_operations` list and a `none:` reason
+- **And** a record without `formal_docs` passes the form check.
 
-### Scenario 3 [AC-03]: Carried from proposal
-3. Spec bundle: `spec-sync`, `reconcile-reviewer`, `spec-plan`, `spec-review` wording.
+### Scenario 4 [AC-04]: Coverage is required on a newly resolved record in a snapshot run
+- **Given** a staged or ci snapshot whose diff changes a `reconcile.md` with `status: resolved`
+- **When** no parent of the commit has that record `resolved` (the snapshot base; in a staged run also each commit in
+  `MERGE_HEAD`, `CHERRY_PICK_HEAD` or `REVERT_HEAD` when present)
+- **Then** `RULE-reconcile-contract` reports each role covered neither by a nonempty `related_*` list nor by a
+  `formal_docs.<role>` reason, and the check exits `1`
+- **And** full coverage through `related_*` lists, `none:` reasons or a mix passes.
 
-### Scenario 4 [AC-04]: Carried from proposal
-4. Living Spec capabilities and the promoted ADR; the spec's own `reconcile.md` covers every role.
+### Scenario 5 [AC-05]: Coverage is not required elsewhere
+- **Given** a record without coverage
+- **When** it is `pending`; or it is `resolved` at the base and edited; or a `MERGE_HEAD` commit has it `resolved` in
+  a staged run; or it is a completed bundle's record named as an explicit target in a plain run
+- **Then** `RULE-reconcile-contract` reports no coverage violation for it.
 
-Acceptance evidence:
+### Scenario 6 [AC-06]: Existing records stay valid
+- **Given** the 260 existing `reconcile.md` records
+- **When** `uv run devkit rules check specs/` runs (every record an explicit target)
+- **Then** it reports no `RULE-reconcile-contract` violation that the accepted base did not report
+- **And** this spec's own `reconcile.md` covers every role and passes
+  `uv run devkit rules check --ci --base a7d96154e`.
 
-### Scenario 5 [AC-05]: Carried from proposal
-- Rule tests: in `--staged` and `--ci` snapshot runs, a new or newly resolved record with a role uncovered is
-  reported; a record `resolved` at the base and edited, a `pending` record, a record resolved in a merge parent
-  (`MERGE_HEAD`) and a plain explicitly targeted completed record without coverage are not; each malformed form (not a
-  mapping, unknown key, missing `none: ` prefix, short reason, a role with both IDs and a reason) is reported; full
-  coverage through `related_*` lists, `none:` reasons or a mix passes.
+### Scenario 7 [AC-07]: Spec bundle wording
+- **Given** the spec bundle sources
+- **When** `spec-sync`, `reconcile-reviewer`, `spec-plan` and `spec-review` are read
+- **Then** `spec-sync` step 2's schema shows `related_designs` and `formal_docs` with `none:` reasons and step 1 says
+  the frontmatter indexes the body assessment; `reconcile-reviewer` step 2 names the four classes with severities P1,
+  P2, P2 and P3, limited to what `diff_scope` adds or changes; `spec-plan` step 3 and `spec-review` step 4 each name
+  the persisted formats, identity derivations, orderings and codes the change introduces, routed by the fact-type
+  table.
 
-### Scenario 6 [AC-06]: Carried from proposal
-- `uv run devkit rules check specs/` (every record an explicit target) reports no new `RULE-reconcile-contract`
-  violation over the 260 existing records, and the spec's own record passes `--ci` with every role covered.
+### Scenario 8 [AC-08]: Living Spec agreement
+- **Given** the Living Spec after this change
+- **When** `CAP-DOCS-documentation-ownership`, `CAP-DOCS-document-model`, `CAP-GOV-spec-rules` and
+  `CAP-DLV-delivery-workflows` are read
+- **Then** `CAP-DOCS-documentation-ownership` §3.1 has the fact-type table with the same nine rows as
+  `living-spec-writing` and an "Observable contract" SHOULD rule; `CAP-DOCS-document-model` counts the reference
+  template beside eight formal templates; `CAP-GOV-spec-rules` §3.10 states the coverage check; and
+  `CAP-DLV-delivery-workflows` rules 9 and 15 state the frontmatter index and the reviewer classes, citing
+  `ADR-recorded-formal-docs-assessment`.
 
-### Scenario 7 [AC-07]: Carried from proposal
-- The template distribution and constitution tests list `reference`; `devkit sync` projects `templates/reference.md`.
+## 5. Design Notes
 
-### Scenario 8 [AC-08]: Carried from proposal
-- Reviewed text: `reconcile-reviewer` names the four classes with severities and the `diff_scope` limit; the
-  fact-type rows in `CAP-DOCS-documentation-ownership` and `living-spec-writing` agree.
+Planning settled these choices; the reasons are in the preserved Planning evidence and
+`ADR-recorded-formal-docs-assessment`.
 
-## 5. Carried Proposal Notes
+- **Routing owner**: `CAP-DOCS-documentation-ownership` §3.1 stays canonical with a fact-type table beside the
+  responsibility table; `living-spec-writing` carries the same rows without citing the capability, because the bundle
+  ships to projects that lack it. An order a consumer sees is a capability rule; internal order is design.
+- **Record shape**: role coverage reuses the typed `related_designs`, `related_domains` and `related_operations`
+  lists, which already get existence checks and alias repair from `RULE-document-reference`; `formal_docs` holds only
+  the per-role `none: <reason>`. The detailed assessment stays in the record body.
+- **Merge parents**: the commit gate runs when a conflicted merge is concluded with the HEAD tree as its base;
+  checking each in-progress operation head keeps a record resolved on the base branch from refusing that merge.
+- **Reviewer severity** reuses the reconcile meanings: contradicted recorded coverage P1, a new persisted format,
+  identity derivation or ordering without an owner statement P2, a new code without a documented trigger condition
+  P2, new capability text restating mechanism P3. Severity changes no check.
+- **Reference template**: `templates/reference.md` has no frontmatter or ID; reference pages are not formal
+  documents. It applies to new reference pages and new code tables; a row added to an existing table states its
+  condition.
+- **Deferred work**: the deterministic code-condition rule goes to Backlog as feedback recorded in this bundle and
+  cited from `reconcile.md`.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### Assumptions
 
-### 2. Technical Spike Questions
-
-Each question is settled; the reasons are under Planning decisions.
-
-- **Q1**: Where does the fact-type routing table live? **Answer**: `CAP-DOCS-documentation-ownership` §3.1 stays
-  canonical and gains a fact-type table beside the responsibility table; `living-spec-writing` carries the same rows
-  as its agent-facing projection without citing the capability, because the bundle ships to projects that lack it.
-- **Q2**: What shape does a `formal_docs` assessment take, what checks it, and how do existing records stay valid?
-  **Answer**: each of the design, domain and operations roles is covered either by affected IDs in the record's
-  existing typed `related_designs`, `related_domains` or `related_operations` list, or by
-  `formal_docs.<role>: "none: <reason>"`; never both. `RULE-reconcile-contract` checks the coverage and the reason
-  form; `RULE-document-reference` already checks that the listed IDs exist, and `devkit rules fix` repairs them on a
-  rename. Coverage is required only in a snapshot run, for a record that the commit newly resolves (no parent of the
-  commit has it `resolved`); anywhere else a present `formal_docs` is checked for form and absence is accepted, so
-  the 260 existing records stay valid.
-- **Q3**: Which reviewer finding classes carry severity, and do they block `resolved`? **Answer**: four classes on
-  what `diff_scope` adds or changes, never on older gaps: a role's recorded coverage (IDs or `none:` reason) the diff
-  contradicts (P1, the existing
-  contradicted no-impact class); a new persisted format, identity derivation or ordering without a statement in its
-  owner (P2); a new code without a documented trigger condition (P2); new capability text that restates mechanism
-  (P3). Severity changes no check: like every reconcile finding they hold the `living-spec-draft` exit until fixed,
-  and P2 or P3 may be waived with a reason.
-- **Q4**: What does the capability observable-contract rule say? **Answer**: a capability states what a consumer can
-  observe or rely on, and leaves out implementation pseudocode, internal algorithm steps, formats only the
-  implementation reads back and paragraphs another document owns. It is guidance only: a SHOULD rule in
-  `CAP-DOCS-documentation-ownership`, a section in `capability-writing` and one clause in the template comment.
-- **Q5**: Add a reference page template? **Answer**: yes, `templates/reference.md`, with no frontmatter or ID (reference
-  pages are not formal documents) and a code table `Code | Level | Condition | Fix`, plus a reference section in
-  `document-writing`. It applies to new reference pages and new code tables; a row added to an existing table states
-  its condition. Existing pages are not migrated.
-- **Q6**: Should the DESIGN datasheet section become required when a mechanism persists data? **Answer**: no required
-  section, because no check can recognize one. `design-writing` and the template comment say that a design SHOULD carry
-  a datasheet WHEN its mechanism writes data that a later run, another process or another tool reads back; the
-  reviewer's P2 class applies when such data is new.
-- **Q7**: Is the deterministic code-condition rule deferred? **Answer**: yes. The spec hands it to Backlog as deferred
-  work, to be evaluated once the reference code table shape has landed and five ordinary specs have completed under
-  the checkpoints.
-
-### 3. Proposed Design & Impact
-
-#### Docs bundle (`packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`)
-
-- `instructions/living-spec-writing.md`, "Responsibility and design navigation": add the fact-type routing table:
-
-  | Fact type | Owner |
-  | --- | --- |
-  | Behavior, limit, output order or tie-break a consumer can observe | Capability |
-  | That a code is raised, and when, as a guarantee | Capability rule; trigger condition, level and fix in a reference code table |
-  | Command, flag, configuration key or payload field syntax | Reference; the capability lists the interface |
-  | Data that a later run, another process or another tool reads back: location pattern, encoding, fields, example | Design datasheet; a format consumers author or parse is also a capability interface |
-  | How an ID, key, hash, token or name is derived | Design; what the identity means belongs to the domain model |
-  | Internal processing order, algorithm or pseudocode | Design, or the source alone |
-  | Concept meaning, identity and lifecycle | Domain model; glossary for terms |
-  | Rationale and rejected options | ADR |
-  | Measurement or experiment | Materials |
-
-- `instructions/capability-writing.md`: a section "What stays out" with the Q4 rule, routing excluded content by the
-  table above.
-- `templates/capability.md`: one clause in the §3 comment ("observable contract only; route mechanism by
-  `living-spec-writing`").
-- `instructions/design-writing.md` item 6 and `templates/design.md` datasheet comment: the Q6 condition and the
-  datasheet contents (location pattern, encoding, fields or layout, identity derivation, ordering, one example).
-- `templates/reference.md` (new) and a "Reference pages" section in `instructions/document-writing.md`: purpose line
-  naming the owning capability, usage, configuration and the code table; Condition states the observable trigger,
-  Fix the next action.
-- `AGENTS.md` template list gains `reference`.
-
-#### Spec bundle (`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/`)
-
-- `skills/spec-sync/SKILL.md`: step 1 records the design/domain/operations coverage in the record's frontmatter;
-  step 2's schema shows it:
-
-  ```yaml
-  related_designs: [DESIGN-<slug>]   # affected IDs created, changed or retired by the change
-  formal_docs:
-    domain: "none: <bounded source-based reason>"
-    operations: "none: <bounded source-based reason>"
-  ```
-
-  The body keeps the detailed assessment (statements, source identity, owner, action, evidence); the frontmatter is
-  its index.
-- `rules/reconcile_contract/guide.md` and the implementation
-  (`features/governance/usecases/reconcile_contract.py`): new causes, in every run for a present value: `formal_docs`
-  not a mapping; an unknown key; a value that is not a string starting `none: ` with a reason of at least 20
-  non-whitespace characters; a role with both a nonempty `related_*` list and a `none:` reason. In a snapshot run,
-  a `resolved` record that the diff changes and that no parent of the commit has `resolved` (the base, and in a
-  staged run also `MERGE_HEAD`, `CHERRY_PICK_HEAD` or `REVERT_HEAD` when present, as
-  `devkit_agt.features.generated` already detects) MUST cover every role. A merge that brings in a record resolved on
-  the base branch therefore never requires the field of a record the branch did not author.
-- `subagents/reconcile-reviewer.md` step 2: the four Q3 classes with their severities, scoped to `diff_scope`.
-- `skills/spec-plan/SKILL.md` step 3 and `skills/spec-review/SKILL.md` step 4: one sentence each naming the persisted
-  formats, identity derivations, orderings and codes the change introduces, routed by the fact-type table.
-- `AGENTS.md.jinja` template list gains `reference`.
-
-#### Living Spec
-
-- `CAP-DOCS-documentation-ownership` §3.1: the fact-type table (Q1) and an "Observable contract" SHOULD rule (Q4).
-- `CAP-DOCS-document-model`: the template inventory names the reference template beside the eight formal templates.
-- `CAP-GOV-spec-rules`: the `RULE-reconcile-contract` row names the role-coverage check.
-- `CAP-DLV-delivery-workflows` rule 9 (the assessment is indexed in `reconcile.md` by `related_*` IDs or
-  `formal_docs` reasons) and rule 15 (the reviewer's reimplementability classes).
-- New ADR from `ADR-recorded-formal-docs-assessment`.
-
-#### Out of scope
-
-- Migrating existing reference pages, capability text or formal documents; a sweep of older gaps.
-- A rule that every declared code has a documented condition (Q7).
-- `docs/development/reference/`: existing pages are not migrated (Q5). `.devkit/managed/` is regenerated by
-  `devkit sync`, never edited.
-
-### Planning decisions
-
-- **Q1, canonical owner**: the capability holds the contract and the instruction is what agents read; keeping the
-  capability canonical matches §3.1 rule 1, and the instruction stays self-contained because consumer projects do not
-  have devkit's capability. Ordering is split by observability: an order a consumer sees is a capability rule (the
-  rule violation order, search ties, a generated order consumers diff), internal order is design.
-- **Q2, check owner and validity of old records**: `RULE-reconcile-contract` owns the record form; `RULE-spec-progress`
-  is a warning-level progress hint on another file. Requiring coverage only for a record the commit newly resolves
-  reuses the rule's snapshot comparison with the base, so no date cutoff, setting or migration is needed. A historical
-  record edited by a link or path repair keeps `resolved` at its base and stays exempt; an explicitly targeted plain
-  run of a completed record checks form only. All 260 existing bundles are completed, so no in-flight record is
-  affected.
-- **Q2, shape**: reusing the typed `related_*` fields gives the IDs existence checks, alias repair and incoming
-  references in `devkit docs refs` and the viewer, which IDs inside a new field would lack; `formal_docs` then holds
-  only what no existing field can, the per-role `none:` reason, and keeps the "bounded unaffected reason" model
-  without requiring an empty document. The detailed assessment stays in the body, as `CAP-DLV-delivery-workflows`
-  rule 9 already requires.
-- **Q2, merges**: the commit gate runs when a conflicted merge is concluded, with the HEAD tree as its base; checking
-  every parent keeps a record resolved on the base branch from refusing that merge.
-- **Q2, relation to `ADR-formal-document-delivery-integration`**: compatible. That decision keeps the assessment in
-  existing records under semantic review and rejected a separate impact manifest as a second registry. The coverage
-  lives in the existing record and existing relation fields, and it only makes a skipped role visible; semantic
-  agreement stays with the author and `reconcile-reviewer`.
-- **Q3, severity**: the classes reuse the existing reconcile severity meanings (contradiction P1, incomplete
-  reflection P2, improvement P3), so no new blocking mechanism is added; the formal-document steps are new and a P1
-  for an omission would make them a hard gate before any ordinary spec has run under them.
-- **Q5, template file**: a separate template keeps the shape copyable and shipped with the other templates; it costs
-  three pinned lists and one count, updated in the same change.
-- **Q6**: a required section would need a check that cannot tell a datasheet from prose; the reviewer class covers new
-  persisted data at P2.
-- **Q7**: the deferred rule depends on a uniform table shape that only new pages will have; five ordinary specs give a
-  first measure of whether the reviewer class alone keeps conditions written.
-- **PADR**: `ADR-recorded-formal-docs-assessment` records the record field, its check and the reviewer classes,
-  because it changes an existing rule contract and spans the spec and docs bundles. The guidance changes (Q1, Q4, Q5,
-  Q6) change no contract or check and stay here.
-- **Concurrent work**: `PROP-handoff-rewrite-overlap-scheduling` (draft) owns `packages/devkit-spec/tests/`, which
-  contains this proposal's owned test paths, including `test_worker_inspect.py` and
-  `test_formal_document_lifecycle_scenarios.py`, whose fixtures resolve records in snapshot runs and gain coverage; no sequencing decision is needed while it is a draft.
-
-### 4. Lifecycle & Retirement Criteria
-
-- Planning settles Q1-Q7 and the spec boundaries; acceptance hands off to Development and integrates locally under
-  `dev-integration=auto`.
-- Retire when the guidance and checkpoints land. After five ordinary specs complete under them, evaluate the effect
-  before proposing the deferred code-condition rule.
-
+- The handoff rewrote the proposal's own ID references to this spec's ID; the ADR's `proposal:` field naming this
+  spec is the promoted-ADR form other ADRs use and needs no rewording.
+- `PROP-handoff-rewrite-overlap-scheduling` (draft) owns `packages/devkit-spec/tests/`; this spec changes only the
+  named test files there, and no sequencing decision is needed while that proposal is a draft.
