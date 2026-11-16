@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:22:01.676491Z'
+status: completed
+summary: round 2; fresh independent verification confirms all44 targets, every earlier wording fix and complete parser identity-field artifact prohibition; no findings
+findings: []
+assumptions:
+- Codex emulated; authored tree619d950dd1484c4284addbae9b0347acca5ba069 and HEAD unchanged
+unverified_areas:
+- Required lifecycle and viewer implementations remain pending separately
+checks:
+  target_coverage: PASS independent all44 targets complete and changed
+  identity_reflection: PASS shared parser fields and fenced examples agree with accepted AC03
+  governance: PASS independent22 rules
+  migration: PASS independent5 active nodes,4 ordinary destinations, archived operations bytes and pinned contract SHA unchanged
+diff_scope:
+  base: bb235e916fb4a0402819abd3c646d60b2ab61c76
+  head: 7e14c948391637ca5556de9a6e5e974350983bc7
+activity_effort: high
