@@ -1,0 +1,39 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:17:12.139151Z'
+status: completed
+summary: 'code-reviewer: AC-01 to AC-04 and AC-06 pass; AC-05 passes except four P3 precision issues in rollback wording and three citations; worked example confirmed against 93e72152c'
+findings:
+- issue: Design says the proposal is untouched after both a complete and an incomplete rollback; after an incomplete rollback, moved paths whose move-back failed stay at their destinations
+  evidence: docs/designs/delivery/DESIGN-proposal-handoff/design.md:103; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.py:291-321
+  failure_condition: A move-back fails during rollback; a reader treats the bundle as intact and reruns
+  suggested_action: State that proposal.md is kept and that after an incomplete rollback the detailed paths may remain at their destinations
+  resolution: open
+  severity: P3
+- issue: Projection rule cited as CAP-DLV-proposal-lifecycle §4.1 first paragraph; it is the second
+  evidence: docs/designs/delivery/DESIGN-proposal-handoff/design.md:86; docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md:42-51
+  failure_condition: A reader following the citation lands on the wrong paragraph
+  suggested_action: Cite §4.1, the paragraph before the numbered steps
+  resolution: open
+  severity: P3
+- issue: Domain says a fixing task may set its own invalidated resolution back to open; the owners state it as an obligation
+  evidence: docs/domain/delivery/DOMAIN-feedback-lifecycle.md:59; skills/spec/references/source-feedback.md
+  failure_condition: A task reads it as permission to leave an invalidated resolution in place
+  suggested_action: 'Describe it as what the task does: sets it back to open'
+  resolution: open
+  severity: P3
+- issue: Dismissal reasons cited to feedback-hygiene Step 3 (they are Step 1); Source feedback recording cited to CAP-HARN-agent-guidance §4.5 (it is feedback-hygiene Step 2 and CAP-DLV-proposal-planning §3.1), omitting the session's agreed scope
+  evidence: docs/domain/delivery/DOMAIN-feedback-lifecycle.md:37,54-56; playbooks/feedback-hygiene/SKILL.md Steps 1-2
+  failure_condition: A reader checking the cited sections does not find the rule
+  suggested_action: Cite Step 1 for dismissal reasons, Step 2 and CAP-DLV-proposal-planning §3.1 for Source feedback, add the session's agreed scope
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected --base cdbcdf224 18 passed (partial)
+  lint: PASS devkit rules check --ci --base cdbcdf224; just lint-check
+  diff_check: PASS git diff --check cdbcdf224..HEAD
+diff_scope:
+  base: cdbcdf22427e99ae31a40ca20c9922e6bb6a6382
+  head: 966a2f6344bf2e35110d71692d8f814135df2747
