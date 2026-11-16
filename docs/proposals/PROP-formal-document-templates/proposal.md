@@ -82,7 +82,7 @@ grammar.
   guidance as comments, table skeletons, the pre-seeded empty `related_*` lists and the missing `status` value
   comment? *Settled: all of them; Planning decisions.*
 - **Q3**: Do the five delivered documents change to match the templates, or do the templates only govern documents
-  written after them? *Decision needed at `plan-accept`.*
+  written after them? *Settled: full alignment; Planning decisions.*
 - **Q4**: Is `templates/design-template.md`, the compatibility pointer to `design.md`, removed? State whether any
   released version shipped the older name. *Settled: removed; no tag v0.1.0–v0.1.6 contains it.*
 
@@ -129,19 +129,19 @@ grammar.
   `ADR-linked-domain-relationship-views`. Its `§3.4` traces stay as history: two of them belong to clauses
   `ADR-formal-role-document-identities` already superseded, and retargeting them to §3.3 would misstate them.
 
-### Pending decision (Q3)
+- **Q3 — Delivered documents.** The five delivered documents are pilots of the new kinds, so they are restructured
+  in full to the revised templates once the shape is settled here, rather than left for a later cleanup. Each gets
+  the problem lead paragraph without a question section or label, its kind's body headings (`## Relationship
+  overview` for domain; `## Routing` and `## Normal-state observation` for operations; topic headings for design), its
+  central table in the skeleton's columns, and the `## Authority boundary` and `## Maintenance and next action`
+  closing sections. Content is reorganized, not rewritten: statements, owners and links keep their meaning.
 
-Recommended: bring each delivered document into line with each clause of the PADR, keeping its topic headings and
-tables:
-
-| PADR clause | `DESIGN-distribution-transactions` | `DESIGN-distribution-file-directory-replacement` | both `DOMAIN-*` documents | `OPS-distribution-sync` |
-| --- | --- | --- | --- | --- |
-| Problem opening, no question | remove the label; make the lead state the problem | remove the label; add a problem lead | replace `## Question` with a problem lead | already met |
-| Authority boundary | add the heading over the existing prose | add the heading over the existing prose | already met | already met |
-| Maintenance and next action | already met | already met | add a maintenance trigger to the closing section | add a maintenance and next-action close |
-
-Alternatives: full alignment to the template headings, or no change (the external copy-once practice, which leaves
-four documents against the revised SHOULD).
+  | Document | Main changes |
+  | --- | --- |
+  | `DESIGN-distribution-transactions` | label removed; lead states the problem; authority prose under `## Authority boundary`; `Maintenance touchpoints` becomes `## Maintenance and next action` |
+  | `DESIGN-distribution-file-directory-replacement` | label removed; new problem lead; authority prose under `## Authority boundary`; `Maintenance seam` becomes `## Maintenance and next action` |
+  | `DOMAIN-bundle-selection-and-installation`, `DOMAIN-delivery-relationships` | `## Question` replaced by a problem lead; table moved to the `Concept or relationship \| Distinction \| Authoritative owner` columns; closing section split into authority boundary and maintenance |
+  | `OPS-distribution-sync` | lead states the symptom; `## Routing` with the skeleton columns; `## Normal-state observation`; boundary section renamed; maintenance close added |
 
 ### Assets
 
@@ -162,7 +162,8 @@ Edit the docs bundle sources under `packages/devkit-docs/src/devkit_docs/bundles
   comments; the docs bundle distribution test passes.
 - **T2 — Instructions**: Each writing instruction states the scoping step and agrees with its template and with
   `CAP-DOCS-documentation-ownership` §3.3.
-- **T3 — Documents**: The delivered documents agree with the Q3 outcome and pass `devkit rules check`;
+- **T3 — Documents**: The five delivered documents follow their kind's revised template (opening, body headings,
+  table columns, closing sections) with their statements, owners and links preserved, and pass `devkit rules check`;
   `rg -n '^\*\*Reader question|^## Question' docs/designs docs/domain docs/operations` returns no hit.
 - **T4 — Pointer**: `templates/design-template.md` is gone from the bundle and the installed copy;
   `rg -n design-template docs/capabilities docs/architecture docs/development packages` returns no hit, while

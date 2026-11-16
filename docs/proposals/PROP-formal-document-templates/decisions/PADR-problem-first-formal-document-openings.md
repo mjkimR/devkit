@@ -69,5 +69,5 @@ relationship overview, authority boundary and next useful step remain.
 ## 6. Confirmation
 
 The three templates and writing instructions carry no question section or label and state the opening, scoping
-step and closing above; `CAP-DOCS-documentation-ownership` §3.3 item 2 states the same; the delivered documents
-agree with the proposal's Q3 outcome and pass `devkit rules check`.
+step and closing above; `CAP-DOCS-documentation-ownership` §3.3 item 2 states the same; the five delivered
+documents follow the revised templates and pass `devkit rules check`.
