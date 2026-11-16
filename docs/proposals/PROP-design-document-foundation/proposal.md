@@ -2,7 +2,7 @@
 id: PROP-design-document-foundation
 title: Documentation ownership and minimal design foundation
 summary: "Uses the completed pilot to settle documentation ownership and linked ID-free design entries, without new indexed kinds or runtime support."
-status: reviewing
+status: accepted
 created_at: 2026-11-16
 target_area: documents/
 priority: high
