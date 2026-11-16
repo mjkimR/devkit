@@ -6,11 +6,12 @@ status: planned
 created: 2026-11-16
 depends_on:
   - SPEC-design-bundle-layout
-related_capabilities: []
+related_capabilities:
+  - CAP-DOCS-documentation-ownership
+  - CAP-DOCS-document-model
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-formal-document-templates] Template alignment for formal design, domain and operations documents
 
@@ -59,22 +60,116 @@ grammar.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Template alignment for formal design, domain and operations documents so that system capabilities are extended.
+- **US-1**: As an author or agent writing a formal design, domain or operations document, I want a template whose
+  opening, body and closing match the documents this repository already writes, so that the copied template needs
+  no restructuring and adds no section that repeats the frontmatter `summary`.
+- **US-2**: As an author, I want the writing instruction of each kind to state the scoping step, the opening and the
+  closing in the same terms as its template, so that the instruction and the template never disagree.
+- **US-3**: As a reader of the five delivered documents, I want each to follow its kind's revised template with its
+  statements, owners and links unchanged, so that every formal document reads the same way.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: paths, identity, frontmatter schema, the `area` field, support placement, status vocabulary
+   and relation fields; `SPEC-design-bundle-layout` and `ADR-formal-role-document-identities` own them.
+2. **Scope Excluded**: a rule that checks template sections or leftover template guidance.
+   **When to Reconsider**: when authored documents repeatedly ship with leftover guidance; a warn-only check is the
+   cheapest start (`docs/materials/2026-11/20261116-formal-document-templates/template-survey.md` §2 item 6).
+3. **Scope Excluded**: a per-document template version marker, template variants and separate guide files.
+4. **Scope Excluded**: rewriting the content of the delivered documents; they are reorganized, and their statements,
+   owners and links keep their meaning.
+5. **Scope Excluded**: retargeting the historical `§3.4` traces of `ADR-linked-domain-relationship-views`.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Templates open with the problem and close with the authority boundary and maintenance
 
-## 5. Carried Proposal Notes
+- **Given** the docs bundle sources `templates/design.md`, `templates/domain.md` and `templates/operations.md`
+- **When** each template body is read
+- **Then** none has a heading or bold label containing "question", none has a numbered `## <digit>.` heading, the
+  line after the H1 is an HTML comment that asks for the kind's problem (design: the problem the mechanism solves;
+  domain: the concepts readers confuse; operations: the observed symptom), and the last two H2 headings are exactly
+  `## Authority boundary` and `## Maintenance and next action`
+- **And** every guidance line in the body sits inside an HTML comment of at most two lines; the only body text
+  outside comments is headings and table skeleton rows
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Kind body headings, table skeletons and frontmatter comments
+
+- **Given** the three revised templates
+- **When** their bodies and frontmatter are read
+- **Then** `domain.md` has `## Relationship overview` holding the table header
+  `| Concept or relationship | Distinction | Authoritative owner |` with placeholder rows, `operations.md` has
+  `## Routing` holding `| Symptom or state | Discriminating evidence | Next useful owner |` with placeholder rows
+  followed by `## Normal-state observation`, and `design.md` has no table skeleton
+- **And** each frontmatter carries `status: draft  # draft | active | retired`, a double-quoted `title`, and the
+  `related_*` fields (plus `entrypoints` for design) only as YAML comments, with no pre-seeded empty list
+- **And** the docs bundle distribution test passes:
+  `uv run pytest packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py` exits `0`
+
+### [AC-03] Writing instructions state the scoping step, opening and closing
+
+- **Given** `instructions/design-writing.md`, `instructions/domain-writing.md` and `instructions/operations-writing.md`
+- **When** each is read beside its template
+- **Then** each states the scoping step (settle the one reader question before writing; split or drop a document
+  without one), the kind's opening, its body headings, the `## Authority boundary` and
+  `## Maintenance and next action` closing, and a final step to delete the template's HTML comments before
+  `devkit rules check`
+- **And** `operations-writing.md` requires the normal-state observation and `domain-writing.md` the distinguishing
+  example and the glossary pointer
+- **And** `uv run devkit rules check --phase hygiene <instruction>` reports no `RULE-agent-asset-wording` warning
+  for any of the three, and the forbidden-marker scan in `test_distribution.py` passes
+
+### [AC-04] The capability clause agrees with the decision
+
+- **Given** `CAP-DOCS-documentation-ownership` §3.3 item 2 and `ADR-problem-first-formal-document-openings`
+- **When** both are read
+- **Then** §3.3 item 2 asks for the problem opening, the authority boundary and the maintenance trigger with next
+  useful action, and carries the reader question only as an authoring scoping step; it no longer asks authors to
+  state the reader question in the document
+
+### [AC-05] The five delivered documents follow their kind's revised template
+
+- **Given** `DESIGN-distribution-transactions`, `DESIGN-distribution-file-directory-replacement`,
+  `DOMAIN-bundle-selection-and-installation`, `DOMAIN-delivery-relationships` and `OPS-distribution-sync`
+- **When** each is compared with its kind's template
+- **Then** each opens with an unheaded problem paragraph, uses its kind's body headings (topic headings for design,
+  `## Relationship overview` for domain, `## Routing` and `## Normal-state observation` for operations), centres
+  domain and operations tables on the skeleton columns, and closes with `## Authority boundary` then
+  `## Maintenance and next action`
+- **And** `rg -n '^\*\*Reader question|^## Question' docs/designs docs/domain docs/operations` returns no hit (exit `1`)
+- **And** every full ID and link present before the change is still present, and
+  `uv run devkit rules check docs/designs docs/domain docs/operations` reports no violation
+
+### [AC-06] The design-template compatibility pointer is gone
+
+- **Given** the docs bundle after this change and a synchronized workspace
+- **When** the bundle templates and the installed copy are listed
+- **Then** `templates/design-template.md` exists in neither the bundle source nor `.devkit/managed/docs/templates/`,
+  `.devkit/installation.json` no longer records it, and
+  `rg -n design-template docs/capabilities docs/architecture docs/development packages` returns no hit (exit `1`)
+- **And** `uv run devkit sync --check` exits `0`
+
+### [AC-07] The installed consumer instantiates the revised templates
+
+- **Given** the built-wheel consumer of `packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py`
+- **When** it instantiates the installed design, domain and operations templates
+- **Then** it fails with an assertion if an expected placeholder or the H1 cut point is missing, and otherwise the
+  sample documents resolve, list, search and pass `devkit rules check`
+
+## 5. Assumptions
+
+- The superseded-in-part pointer on `ADR-linked-domain-relationship-views` already landed with the handoff commit;
+  Development verifies it and does not duplicate it.
+- `docs/proposals/PROP-formal-document-templates/` no longer exists after handoff, so it leaves the planned
+  boundaries.
+- The bundle templates are the docs bundle's own assets; they name no repository document ID
+  (`agent-asset-writing` self-containment).
+
+## 6. Source feedback
+
+- `FB-scout-lacks-web-search` (scope: repo), recorded during Planning; not addressed by this spec.
+
+## 7. Carried Proposal Notes
 
 ### 2. Technical Spike Questions
 
