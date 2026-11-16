@@ -2,7 +2,7 @@
 id: PROP-design-document-lifecycle
 title: Formal documentation authoring and reconciliation lifecycle
 summary: "Integrates complete authoring, Planning, review, reconciliation and maintenance for formal design, domain and operations kinds under SDD and adaptive-dev."
-status: draft
+status: reviewing
 created_at: 2026-11-16
 target_area: delivery/
 priority: high
