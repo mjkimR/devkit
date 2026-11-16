@@ -1,4 +1,4 @@
-"""devkit_spec.features.entrypoints: code entrypoints of capabilities and use cases, and their derivation from spec
+"""devkit_spec.features.entrypoints: code entrypoints of core-eligible documents, and their derivation from spec
 bundles.
 
 The path contract (normalization, ``covers``/``overlaps``, which documents carry entrypoints) is devkit-docs'

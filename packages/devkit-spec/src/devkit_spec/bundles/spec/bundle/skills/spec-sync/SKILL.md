@@ -15,6 +15,9 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
    `devkit docs search "<topic>"`). Update or create capabilities, use cases (templates in
    `.devkit/managed/docs/templates/`) and `docs/architecture/`; if the change did introduce or rename a domain term,
    update the owning `docs/steering/glossary.md` or `docs/packages/<name>/steering/glossary.md` where it exists. No index tables in directory `README.md` files.
+   - Assess design, domain and operations against the implemented diff: affected IDs/statements, source identity,
+     owner, action and evidence, or a bounded unaffected reason. Use the core per-kind instruction and template.
+     Do not require unaffected layers or whole-layer traversal.
    - Screens: if `spec.md` has a `Screens` section, write its drafts and register rows by
      [screens](references/screens.md).
    - Copy no user stories into `docs/` (they state the request, not the contract); fold the delivered behavior into
@@ -31,6 +34,10 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
        resolution: modified   # modified | waived (with a substantive rationale)
    ---
    ```
+
+   Include every modified or deleted formal document and support file as a `modified` target. Compare removed
+   paths and their replacements explicitly in the body; required mismatches cannot be waived. Ordinary artifact
+   links need actual destination checks, beyond formal reference rules.
 
    Every written UX document, changed use case and modified root or namespace `steering/ux-objects.md` is a target; every drafted screen
    has a `docs/ux/` target.
@@ -51,3 +58,25 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
 - [ ] `devkit workflow next --unit <dir>` shows `frontmatter(reconcile.md status resolved)` and
   `anchor-status-completed` met.
 - [ ] `devkit rules check` (`--staged` or `--ci --base <ref>`) and the project lint pass.
+
+## Formal document maintenance
+
+- Create/update: compare the retained source identity and statements, sole owner and useful current routes. Give
+  independent details their own formal IDs; regenerate a supporting artifact only when its actual source changed.
+- Rename/root move: move the canonical file and ID-owned artifact subtree together. For same-kind rename keep the
+  old-ID alias; unchanged-ID root moves need none. Repair current prose/typed references with `devkit rules fix`,
+  ordinary incoming/artifact links and relative source links inside and outside the moved subtree. Check global
+  and registered namespace destinations, collisions and absence of old folders; an alias never legalizes an orphan.
+- Split: allocate every statement, independent detail and retained artifact to exactly one canonical owner. Move
+  each artifact to its owner's subtree and repair links; leave no stale duplicate. Keep an old active ID only if
+  it still owns a maintained subject; otherwise retire it and link useful successors. Never alias one ID to two nodes.
+- Reclassify: retire the old identity and create the receiving kind's canonical node. Transfer sole statement and
+  artifact ownership, repair current routes/ordinary links and reject cross-prefix aliases.
+- Retire: retain resolvable history/provenance and useful successors without ADR supersession fields. In the same
+  change as source deletion, remove/replace obsolete DESIGN entrypoints while retaining useful live anchors; put
+  removed source coordinates only in explicitly historical prose with the source commit. DOMAIN/OPS use body
+  source/action-owner links. Retired nodes remain rule-checked. Verify shared support users before moving/removing
+  files; keep every retained artifact under one live or retired canonical parent, or historical materials with provenance.
+
+Verify canonical/alias resolution, incoming/outgoing refs, namespace selection, actual ordinary link destinations,
+source agreement and support bytes after composed operations. Formal reference checks do not prove ordinary links.

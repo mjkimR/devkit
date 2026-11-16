@@ -39,3 +39,9 @@ CLI read/fix/derive/apply operations and source/ordinary-link comparison. Run in
 Pyright for both packages, affected unit-integration selection from 5d1cb2661871cd3fe12cf806b58ac2515a3ffaf4 with
 full fallback, native sync and CI rules. HIGH separate code and reconcile reviews use frozen source snapshots.
 Core and Viewer are separately owned; required Viewer completion cannot be claimed here.
+
+## Formal applicability of this change
+
+All three responsibilities gain delivery guidance. Current canonical DOMAIN/DESIGN/OPS examples keep the same
+subjects and bytes: no conceptual meaning, implementation mechanism, distribution guarantee or operational action
+authority changes. Delivery capabilities own the changed normative procedure; no empty role-document edit is needed.

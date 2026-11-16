@@ -69,7 +69,9 @@ instructions take precedence. Never end the user's session on your own.
 
 ## 5. Managed Files
 
-- Templates: `.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md`; proposal:
+- Templates: `.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone,design,domain,operations}.md`; proposal:
   `.devkit/managed/spec/templates/proposal.md`.
+- Assess design, domain and operations impact in existing plan/review/reconcile bodies; use core role instructions
+  and full IDs, source evidence and bounded unaffected reasons, with no whole-layer update prerequisite.
 - Read policy through `devkit spec policy`, never by parsing `.devkit/config.toml`.
 - Change `.devkit/managed/` through `devkit override` or the project's own bundle, never by editing it.

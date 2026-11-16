@@ -20,6 +20,11 @@ with frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`.
 3. **Design**: every user story and `[AC-NN]` scenario gets a handling component; no non-goal is planned. Name the
    components touched, their contracts (types, signatures, schemas; for a CLI or API its flags, codes and payloads),
    failure modes and any migration.
+   Assess design, domain and operations against the actual change. For each responsibility record affected IDs
+   or a prospective canonical destination, changed statements, source identity, one statement owner, maintenance
+   action and verification; give a bounded source-based reason when unaffected. Select only useful owner/detail
+   links, with no fixed layer order or empty document requirement. Read the core role writing instruction before
+   authoring; it owns identity, relations, artifacts and entrypoint eligibility.
 4. **Verification**: name the tests and checks proving each scenario; a bugfix keeps its reproduction test as the
    regression test.
 

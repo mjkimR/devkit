@@ -14,3 +14,7 @@ In a new context every `open` assignment is interrupted; no earlier agent still 
 For each ID inspect `worktree_state`, `commits`, `dirty` and `attention`, read its goal, stop condition, commit grant, governing documents and checks with `uv run devkit adaptive assignment show <id>`, then record a return from retained state, dispatch it again or close it as abandoned.
 Before pausing, name outstanding assignment IDs and next recovery actions in current context; the ledger holds their scope, base and checks.
 An ID absent from the ledger is stale context.
+
+In Documents, retain warranted formal DOMAIN/DESIGN/OPS IDs or `undocumented`, source identity and affected
+comparison gaps; use `documents.md` for maintenance. Invalidate source-dependent evidence after source changes;
+keep the context mutable and preserve explicitly existing SDD history without creating implicit records.

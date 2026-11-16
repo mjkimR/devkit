@@ -29,7 +29,8 @@ entrypoints:
 
 1. The agent starts the explicitly requested baseline procedure without activating SDD (`CAP-DLV-sdd-baseline-adoption`, rules 1–2).
 2. The agent identifies current source, approach, retained product scope, exclusions and existing evidence (`CAP-DLV-sdd-baseline-adoption`, rules 2–3).
-3. The agent compares retained behavior, structure and choices against implementation and current documents (`CAP-DLV-sdd-baseline-adoption`, rules 3 and 6).
+3. The agent compares retained behavior, structure, choices and warranted formal domain/design/operations coverage
+   against implementation, source evidence and current documents (`CAP-DLV-sdd-baseline-adoption`, rules 3 and 6).
 4. The agent runs the relevant independent checks and representative user flows, correcting the authorized current documents (`CAP-DLV-sdd-baseline-adoption`, rules 4–5).
 5. The agent presents the evidenced ready baseline and exact activation effects (`CAP-DLV-sdd-baseline-adoption`, rules 5 and 8).
 6. The product owner authorizes those same source, scope and effects, or the agent reuses their existing explicit decision (`CAP-DLV-sdd-baseline-adoption`, rule 7).
@@ -112,3 +113,10 @@ freshness; partial-state recovery; subsequent SDD routing (`CAP-DLV-sdd-baseline
 - **When** recovery is reported,
 - **Then** actual partial approach/selection state is visible, no rollback is assumed and supported correction plus revalidation precedes completion.
 - **Covers**: 7a.
+
+### Formal coverage and stale source evidence
+
+- **Given** retained DOMAIN/DESIGN content with missing required OPS coverage, or a later changed source,
+- **When** the agent compares the baseline and its evidence,
+- **Then** required gaps remain visible and changed-source comparisons are repeated before readiness; adaptive development continues.
+- **Covers**: 4a, 5a (`CAP-DLV-sdd-baseline-adoption`).

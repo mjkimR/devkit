@@ -112,7 +112,9 @@ joins them.
 4. **Document side**: every `reconcile.md` target (the shape `RULE-reconcile-contract` checks: `targets` of `file`
    and `resolution`) is a document unless its resolution is `waived` or it is not entrypoint-bearing. A target that
    is not an indexed document is skipped as `missing-doc` (no such file) or `not-a-document` (an existing file without
-   an ID, with malformed frontmatter, a `README.md` or a template). Each document counts once per bundle.
+   an ID, with malformed frontmatter, a `README.md` or a template). Eligibility comes from the docs core's
+   `entrypoint_bearing` policy: canonical DESIGN participates; DOMAIN/OPS and README/artifact paths are skipped
+   as `not-entrypoint-bearing`. Each document counts once per bundle.
 5. **Pairs**: every document is paired with every candidate. `state` is `declared` when an existing entrypoint equals
    the path or is a directory containing it, else `new`; `exists` tells whether the path is in the working tree.
 6. **Managed outputs**: derivation MUST skip `.devkit/managed`, every descendant and `.devkit/installation.json`,
@@ -187,6 +189,10 @@ A bundle that touched a capability only for wording still pairs it with every pa
 `spec-entrypoints` skill holds the review: drop documents touched only for metadata, keep directory candidates only
 for documents that own the package, exclude hub files, then apply per document with `--target` and `--code`. Inside
 `spec-sync` it runs on the current bundle; as a backfill it runs over `--all` with a `--min-count` threshold.
+For CAP/UC select 1–3 implementation doorways; for DESIGN choose useful mechanism anchors, including a helper,
+model or schema when it is the subject's reading start. Core eligibility and path/liveness semantics stay in
+§§3.1–3.3; they do not establish semantic correctness or public-adapter standing. Record meaningful rejected
+candidates and explicit ineligible-kind skips; do not manufacture source anchors for DOMAIN/OPS.
 
 ## 4. Interfaces & Data Contracts
 

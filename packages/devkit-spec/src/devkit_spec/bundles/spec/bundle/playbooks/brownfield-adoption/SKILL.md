@@ -26,7 +26,9 @@ git ls-files -- 'docs/*.md' 'specs/*.md' > /tmp/legacy.txt
 ```
 
 - Remove from the set the paths `docs:docs-skeleton` seeded, if added, and files already shaped like the Living
-  Spec; fix those in place as ordinary work.
+  Spec; fix those in place as ordinary work. Canonical DESIGN/DOMAIN/OPS nodes and their parent-owned artifacts
+  are current content, not legacy merely because they are formal roles. Inventory warranted conceptual meaning,
+  implementation mechanisms/datasheets and operational evidence routes before selecting legacy destinations.
 - Review a long or mixed set with the user.
 
 ## Step 2: Contain

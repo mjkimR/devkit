@@ -7,6 +7,9 @@ description: Develop or resume an incomplete product idea through adaptive clari
 
 Take the next useful action toward the user's product goal, keeping enough current evidence to resume in another session.
 
+Before maintaining formal domain, design or operations documents, read `references/documents.md`; it routes
+core writing instructions, source-bound maintenance and context coverage without implicit SDD records.
+
 ## Constraints
 
 - Before product actions, check the effective `configuration.development.approach` from `uv run devkit config show`, not bundle selection or installed packages. If inspection fails, stop product work and report it. If it is not `adaptive-dev`, stop product work and explain the shared `.devkit/config.toml` setting `[development] approach = "adaptive-dev"`; change it only on the user's direction.

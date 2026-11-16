@@ -1,6 +1,6 @@
 ---
 name: spec-entrypoints
-description: Derive, review and write capability/use case entrypoints from a spec's tasks.md and reconcile.md, during spec-sync or as a backfill across completed specs.
+description: Derive, review and write core-eligible document entrypoints from a spec's tasks.md and reconcile.md, during spec-sync or as a backfill across completed specs.
 ---
 
 # spec-entrypoints: Entrypoint Derivation and Sync
@@ -15,17 +15,20 @@ specs, read [backfill](references/backfill.md) instead.
    `[CANDIDATES: <doc> ...]` line.
 2. Review:
    - Drop a document the bundle touched only for metadata or wording.
-   - Keep 1–3 doorway files per document, where reading starts (`cli.py`, `usecase.py`, `service.py`, `index.ts`,
+   - For CAP/UC, keep 1–3 doorway files per document, where reading starts (`cli.py`, `usecase.py`, `service.py`, `index.ts`,
      `__init__.py`); not helpers, models, schemas or tests.
+   - For DESIGN, select useful mechanism file/directory anchors, including helpers/models/schemas when they are
+     the subject's reading start; entrypoints do not prove correctness or public adapter standing. Consume core
+     eligibility; DOMAIN/OPS and README/artifact paths are ineligible and produce no pairs.
    - Use a directory (trailing `/`) only when the document owns the whole package, never a broad shared directory.
 3. Apply only the chosen pairs:
-   `devkit spec entrypoints derive --spec <dir> --apply --target <CAP-or-UC-id> --code <path> [--code ...]`, with
+   `devkit spec entrypoints derive --spec <dir> --apply --target <eligible-document-id> --code <path> [--code ...]`, with
    `--exclude` for hub paths (`AGENTS.md`, `README.md`). Without `--target` and `--code` it writes every candidate.
 4. Record each document whose `entrypoints` changed as a `modified` `reconcile.md` target, or in a `session` task's
    report.
 
 ## Completion
 
-- [ ] `devkit rules check <document>` passes, and `devkit docs list capability --file <path>` (or `usecase`) lists the
+- [ ] `devkit rules check <document>` passes, and `devkit docs list capability --file <path>` (or `usecase` / `design`) lists the
   document for a written path.
 - [ ] The report states rejected candidates that matter later.

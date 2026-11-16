@@ -52,7 +52,8 @@ capabilities:
    `CAP-DLV-delivery-workflows`).
 2. The agent starts Planning on `plan-<slug>` and sets the proposal in review (`CAP-DLV-delivery-workflows`).
 3. The agent gathers evidence through `scout` and criticism through `challenger` as the Planning effort requires,
-   records their returns, and records preliminary decisions as PADRs (`CAP-DLV-delivery-workflows`,
+   records change-specific formal responsibility/source/maintenance impact in the blueprint, records their returns,
+   and records preliminary decisions as PADRs (`CAP-DLV-delivery-workflows`,
    `CAP-DLV-proposal-planning`).
 4. The agent puts every open question to the user in one round, folds the answers into the proposal and its PADRs,
    refines the Development effort hint, and records fresh feedback-sweep coverage before each return to the user
@@ -362,3 +363,10 @@ capabilities:
 - **Given**: accepted mode accept_and_handoff with authorized scope and selected effort
 - **When**: the Planning merge lands
 - **Then**: verification is pending and handoff is not_started; after synchronization and passing final checks, the Host invokes the fresh handoff command with retained authority and effort
+
+### Change-specific formal impact
+
+- **Given** a multi-role state/diagnostic change or a mechanism-only change,
+- **When** the agent prepares the target blueprint and reviews the source-specific direction,
+- **Then** affected formal owners and maintenance are selected; bounded unaffected reasons leave other roles unchanged.
+- **Covers**: main success scenario, steps 3–5 (`CAP-DLV-proposal-planning`).
