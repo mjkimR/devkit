@@ -1,0 +1,31 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T09:26:32.961553Z'
+status: completed
+summary: 'Completed one fresh HIGH Development continuation for delivered bundle/domain-area grammar: Task5 AC01–08, whole-bundle support isolation/inventory, area/canonical navigation, real retained5/CAP routes, handbook, current UX/materials, explicit source feedback resolved; fresh code round4 and reconcile round3 pass; final-report04 committed; clean Host handoff, no integration effects'
+findings: []
+assumptions:
+- Codex host boundaries are emulated with explicit assigned-tree cwd/absolute paths, scoped commits, author freeze and matching full tracked/nonignored before/after snapshots; no native isolation guarantee
+- Original historical Planning pin/envelopes retained; current delivered-interface comparison and pre-code Task5 screen refinement committed before runtime changes; no new callback, registry, architecture edge, core schema or template policy
+unverified_areas:
+- No additional real-browser visual walkthrough or separate package E2E tier; native DOM/HTTP/public-host/wheel checks provide recorded coverage
+- Host owns source preparation, integration and combined landed-head verification; no merge, push, publication or lifecycle reference effects performed
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0; no selected bundle source edits or sync output
+  tests: PASS source4f7b5a262 frontend265/22 focused backend-handbook207 affected296 partial20 against002241b56fd8e5a446cbfa4f2e4bf42d25484455 preserving full fallback; no runtime/test edits since
+  build: PASS install243/pack/build/generated-stale0/current generic public-host1/external-tsc/wheel100 exact set-bytes; source4f7b5a262 unchanged
+  lint: PASS Viewer Ruff/Pyright0, frontend lint/Svelte0, exact handbook Ruff; committed rules22 at7db43300 no errors/warnings
+  review: PASS fresh independent HIGH code round4 zero findings; source4f7b5a262 frozen full snapshot5925bd8bfaf3910e06e21e7dd9114abe36242517 matched
+  reconcile: PASS fresh independent HIGH round3 all16 modified3 justified waivers zero findings; b451c031 full snapshotb92c9867763e0d735f4681a81493d2204565fc2e matched; spec completed/reconcile resolved
+  outcome: PASS current-grammar baseline249/250 real paths RED; regression250/251 RED8 phantom nodes vs4; head265 GREEN four canonical nodes and complete support with no reread; functional measurement not performance
+  pins: PASS immutable core-contract SHA2561d724834426991e04904fd9f1677f60235de49764d9a1863ad9c8d112c55f413; delivered002/current Kind-table bytes exact d2883d6c
+  scope: PASS declared TierA only, no extensions or denied source changes; native generated static only; preserved Host core owner/ADR edits; no other unit edits except explicitly granted FB disposition
+  feedback: PASS FB-viewer-adopts-bundle-grammar resolved with verified disposition; fresh feedback02 sweep0 new; critical open0
+  workflow: PASS fresh review04/reconcile04/feedback02/final-report04; native integrate, dev-integration auto by policy; Host lint-ci-clean runner/integration remain
+diff_scope:
+  base: cff2ca7c0b2e888b16c0c348a0f5deed099f162e
+  head: c8fdaeca65736b4a5a04b00448664a0c5ab3d4d7
+activity_effort: high
