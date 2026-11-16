@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:28:22.441033Z'
+status: completed
+summary: 'Design bundles and domain area directories delivered: layout-driven grammar in devkit-docs, four documents migrated, contracts and lifecycle consumers aligned; three review rounds and reconcile verification closed.'
+findings: []
+assumptions:
+- Off-grammar reporting now flags non-Markdown files under role directories outside document and support locations (dotfiles excepted); recorded in AC-03.
+- 'review-02 finding 4 (flat domain Markdown remediation) waived: formal kinds are unreleased.'
+checks:
+  tests: PASS just test-affected 2663 passed (partial, base main)
+  build: PASS just check pyright 0 errors; devkit sync --check clean
+  lint: PASS just lint-check; devkit rules check --ci --base 93514612d errors=0
+diff_scope:
+  base: 93514612da7464cb468bfcd29cb2fa2f3c7d6673
+  head: 47f9b0e05f5545359bb66d5a21f528f87c1132bb
