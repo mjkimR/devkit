@@ -985,6 +985,33 @@ def test_single_file_proposal(workspace: Path, write: Write) -> None:
     assert result.decisions == [] and result.materials is None
 
 
+def test_a_single_file_proposal_drops_its_own_file_from_the_boundaries(workspace: Path, write: Write) -> None:
+    write(
+        "docs/proposals/PROP-lone.md",
+        "---\nid: PROP-lone\ntitle: Lone\nstatus: accepted\ntarget_area: capabilities/x/\n"
+        "boundaries:\n  owns:\n    - docs/proposals/PROP-lone.md\n---\n\n# [PROP-lone] Lone\n",
+    )
+    handoff_proposal(workspace, "lone", today=TODAY)
+    plan = (spec_dir(workspace, "lone") / "plan.md").read_text(encoding="utf-8")
+    tasks = (spec_dir(workspace, "lone") / "tasks.md").read_text(encoding="utf-8")
+    assert "PROP-lone.md" not in plan and "PROP-lone.md" not in tasks
+    # An owns emptied by the removal falls back to the target area.
+    assert "  - **_Boundary**: capabilities/x/\n" in tasks
+
+
+def test_a_bugfix_handoff_drops_the_proposal_directory_from_its_notes(workspace: Path, write: Write) -> None:
+    write_workflow(workspace, "sdd-spec-bugfix")
+    write(
+        "docs/proposals/PROP-fixit/proposal.md",
+        "---\nid: PROP-fixit\ntitle: Fix It\nstatus: accepted\ntask_kind: bugfix\ntarget_area: capabilities/x/\n"
+        "boundaries:\n  owns:\n    - docs/proposals/PROP-fixit/\n    - src/fix/\n---\n\n# [PROP-fixit] Fix It\n",
+    )
+    handoff_proposal(workspace, "fixit", today=TODAY)
+    spec = (spec_dir(workspace, "fixit") / "spec.md").read_text(encoding="utf-8")
+    assert "- Planned Boundaries: `src/fix/`\n" in spec
+    assert "PROP-fixit/" not in spec
+
+
 @pytest.mark.parametrize("value", ["refactor", "elsewhere/x.md", "[feature]"])
 def test_a_task_kind_outside_the_axis_writes_nothing(workspace: Path, value: str) -> None:
     write_workflow(workspace, "sdd-spec-feature")
