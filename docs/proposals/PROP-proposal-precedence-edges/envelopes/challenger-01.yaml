@@ -1,0 +1,51 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T10:31:51.963115Z'
+status: completed
+summary: 'Medium pass on draft design D1-D3: 3 P1, 3 P2, 1 P3. The handoff-time edge and notice cannot catch the observed case (both dependents were handed off before the draft existed); editing accepted proposals contradicts ADR-proposal-acceptance; base status hides handoffs still on dev- branches.'
+findings:
+- issue: D1 (reverse depends_on added by Backlog) plus D2 (handoff notice) cannot catch the observed case; the premise was stale before the draft existed.
+  evidence: git log 7df4a6396 19:46:37 hand off design-document-lifecycle; f32b831f7 19:48:50 hand off design-document-viewer; 7fa1ce56a 19:51:11 draft design bundle layout proposal; 7fa1ce56a:docs/proposals/PROP-design-bundle-layout/proposal.md:83,133
+  failure_condition: The edge would be added after the dependents' handoff gate already ran; no notice is ever emitted.
+  suggested_action: Move detection to the time the claim is made (draft authoring) and to Planning start; drop the claim that D2 addresses the case.
+  resolution: open
+  severity: P1
+- issue: D1 contradicts accepted-proposal immutability and CAP-DLV-proposal-planning rule 13.
+  evidence: docs/decisions/2026-10/20261022-proposal-acceptance.md:87 (an accepted proposal is never edited); CAP-DLV-proposal-planning.md:133-139; ADR-roadmap-and-milestones-ledger:128
+  failure_condition: Development would supersede an accepted ADR clause and change a CAP MUST outside owns, widening an accepted direction without new acceptance.
+  suggested_action: Either keep immutability (an ordering claim against an accepted proposal goes to the user as a sequencing decision when the draft is written; no frontmatter edit) or supersede ADR-proposal-acceptance in part by PADR; the first is smaller and enough for the observed case.
+  resolution: open
+  severity: P1
+- issue: Base/HEAD status hides a handoff in progress, so a HEAD-only Planning recheck misses half the case.
+  evidence: handoff commits live on dev- branches until integration; at Planning start ad4606c23 still lists PROP-design-document-viewer as accepted though handed off at f32b831f7; next-work.md:31-34 reads base only; backlog.py:61 detects only plan- branches; policy/repositories/branches.py DEVELOPMENT_PREFIX
+  failure_condition: The recheck reports PROP-design-document-viewer as accepted and not handed off; the stale premise survives.
+  suggested_action: For each accepted PROP a draft names as following it, check local and fetched dev-<slug> branches at authoring and at the first Planning turn; optional CLI notice beside planning_branches.
+  resolution: open
+  severity: P1
+- issue: The D2 notice arrives after the handoff commit and worktree exist; its revert action names no supported procedure.
+  evidence: features/delivery/usecases/native_handoff.py:122-218 prepare, 253-278 worktree, 309-317 handoff and commit; worktree.md:15; ADR-proposal-acceptance:236-251
+  failure_condition: Under ask the user approves without seeing the unmet prerequisite; under auto the Host learns after the dev- commit.
+  suggested_action: If kept, compute unmet prerequisites in prepare() for the preview; replace revert with recording the override in spec.md.
+  resolution: open
+  severity: P2
+- issue: D2 would be quiet and duplicates the pickup override guidance.
+  evidence: 16 of 81 hand-off commits carried depends_on; only 7264bb43d and b671dd684 (2026-10-28) had unfinished prerequisites; next-work.md:39
+  failure_condition: Adds little value because the observed failure is not on this path.
+  suggested_action: Defer D2; not required for the feedback.
+  resolution: open
+  severity: P3
+- issue: D3 partly repeats planning.md:7 and its prose-claim check has no mechanical criterion.
+  evidence: planning.md:7 rechecks cited IDs only after a Host refresh; devkit docs refs --direction in returns nothing for the observed case
+  failure_condition: Without the dev- branch check the guidance misses the viewer; no testable acceptance criterion.
+  suggested_action: Apply planning.md:7 to the first turn too, add the dev- branch check, and pin the guidance sentence with a bundle-text test.
+  resolution: open
+  severity: P2
+- issue: The owns boundary misses paths every option needs.
+  evidence: guidance sources under packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/; base/errors.py; features/delivery/usecases/native_handoff.py; features/policy/repositories/branches.py; CAP-DLV-proposal-planning.md
+  failure_condition: Development writes outside its declared boundary.
+  suggested_action: Add only the paths the chosen option touches.
+  resolution: open
+  severity: P2
+checks: {}
