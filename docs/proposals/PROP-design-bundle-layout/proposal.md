@@ -2,7 +2,7 @@
 id: PROP-design-bundle-layout
 title: Area-scoped directory bundles for formal design documents
 summary: "Moves formal design documents from flat prefixed files to area-scoped directory bundles and places domain documents under area directories, before lifecycle and viewer integration consume the path grammar."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-16
 target_area: documents/
 priority: high                        # critical | high | medium | low
