@@ -1,0 +1,28 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T05:19:35.383838Z'
+status: completed
+summary: round 1; full formal standing, browser consumer, core pin, artifacts, namespace, handbook and public/static verification coherent; two specification gaps in Files and permissive identity parity.
+findings:
+- issue: Rendered Files support is not explicitly integrated into formal-document reference loading.
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:89; packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:114
+  failure_condition: Formal node opens directly in Files before book; decision-only index trigger leaves canonical links/incoming refs unavailable.
+  suggested_action: Explicitly extend lazy Files index trigger to rendered formal nodes; share formal metadata/reference panel across Read/Files; cold tests each kind with links, failures, cancellation and raw budgets.
+  resolution: open
+  severity: P2
+- issue: Prefix-extension tests do not explicitly protect permissive parsing from canonical path grammar.
+  evidence: docs/proposals/PROP-design-document-viewer/materials/core-contract.md:28; docs/proposals/PROP-design-document-viewer/materials/support-matrix.md:30
+  failure_condition: Core-resolvable formal ID/alias contains underscore but prose recognizer omits it.
+  suggested_action: Require frontend identity recognizers to match permissive core ID_SOURCE and test underscore ID/alias prose/statements for all prefixes; leave path/H1 validation with core.
+  resolution: open
+  severity: P2
+assumptions:
+- Emulated read-only batch; before/after tree9a35ede08870e9fa2a5ceb451b277646da6e1bdd and HEAD unchanged; no outside reads reported.
+unverified_areas:
+- No implementation or runtime tests; Development validates retained draft and closes UX findings.
+checks: {}
+diff_scope:
+  base: bde0a923192aaea7f6a467bb6a575db4ca447f9e
+  head: da9760b811ce5c8e6612f808295b214957a1face

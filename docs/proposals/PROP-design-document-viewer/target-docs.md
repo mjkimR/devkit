@@ -72,6 +72,9 @@ links with the written ID, not an arbitrary first match. Structured current rela
 incoming/outgoing graph rows with source/field context; provenance is a distinct labelled section and does not
 claim present authority. Preserve existing historical spec/material representations and source labels.
 
+Identity recognizers match the core permissive `ID_SOURCE`: `<known-prefix>-[A-Za-z0-9][A-Za-z0-9_-]*`.
+Do not replace this with canonical word-led path/slug governance. Explicit tests include underscore IDs and same-kind
+aliases in prose and ADR statements for DESIGN, DOMAIN and OPS, plus malformed controls. Core owns path/H1 validity.
 Use the core's visible-reference rules for comments, fenced/indented code, exact inline IDs, and statement-level
 supersession. Extend `supersession.ts` target-ID recognition for all three prefixes. Retain ADR/PADR-only decision
 summary UI unless the delivered core explicitly changes the domain rule; formal-node reference rows are not a
@@ -86,7 +89,7 @@ If that changes, stop and declare the exact `devkit_docs.features.documents` edg
 
 | Target | Future contract |
 | --- | --- |
-| `CAP-VIEW-repository-viewer` §§4.3,6 | Explicit chapter order/labels, namespace visibility, three kinds in index/list/search and deep links, metadata/reference graph/artifact/error contracts; existing read budget/cache/security retained |
+| `CAP-VIEW-repository-viewer` §§4.3,6 | Explicit chapter order/labels, namespace visibility, three kinds in index/list/search and deep links, metadata/reference graph/artifact/error contracts; extend the lazy index trigger to rendered formal Files nodes; existing unrelated budgets/cache/security retained |
 | UC-read-formal-document | Goal: find a formal document and follow its authority/detail/artifact context; 1 request Living Spec book, 2 choose namespace/group or search, 3 read formal node, 4 inspect incoming/outgoing relations, 5 follow detail/artifact, 6 return; extensions cover empty, unresolved, missing, unsupported and stale source |
 | UX-browse-formal-documents, UX-formal-document-relations, UX-read-supporting-artifact | Screens below, linked in both directions with new UC and existing CAP |
 | `UC-read-decision-supersession`, `UX-view-decision`, `UX-decision-supersession` | Recheck ADR/PADR interaction and unavailable-state regression; change only statements actually affected by shared panel/link behavior |
@@ -128,7 +131,12 @@ No binary body is blindly decoded as UTF-8. A dedicated supporting-file surface 
 components, not a new editing engine. Images must be reachable and display when supported. Unsupported binary formats show the existing
 unsupported state and an available file/raw/download action only when the data source supports it. No promise of a
 new binary preview is made. Missing files retain context and a back action. A graph is complete only for the loaded
-index; load/read errors remain visible with retry. Existing lazy index and handbook-first budgets remain intact.
+index; load/read errors remain visible with retry. Extend the existing lazy index trigger from rendered ADR/PADR Files nodes to rendered DESIGN/DOMAIN/OPS Files
+nodes. A cold Files read must load the same canonical ID links, metadata and reference panel as Read without a prior
+book request. Share the formal panel across Read and Files. Raw files, supporting artifacts and handbook reads do
+not trigger an identity index merely by opening; switching a formal Files node from raw to rendered may request
+it. Preserve existing cache generations, cancellation and unrelated handbook-first/index budgets. Test cold Files
+access for each kind, direct/alias links, relation failure/retry, source switches and raw-mode no-index reads.
 
 ## 5. Screens
 
@@ -169,7 +177,7 @@ body; linked independent details and supporting artifacts; UX-formal-document-re
 | Follow formal detail | UC-read-formal-document 5 | populated | populated/missing | UX-browse-formal-documents | `CAP-VIEW-repository-viewer` | Independent canonical detail header/body |
 | Follow supporting file | UC-read-formal-document 5 | populated | loading | UX-read-supporting-artifact | `CAP-VIEW-repository-viewer` | Artifact path and source context |
 | View raw / Rendered | global: inspect original source and unknown metadata | populated/raw | raw/populated | | `CAP-VIEW-repository-viewer` | Source or rendered body at retained context |
-| Change repository/branch | UC-read-formal-document *a | populated/loading/error | loading | | `CAP-VIEW-repository-viewer` | Cancel old reads; selected source shown and book request reset |
+| Change repository/branch | UC-read-formal-document *a | populated/loading/error | loading | | `CAP-VIEW-repository-viewer` | Cancel old reads/context; show selected source loading, then handbook state; offer Living Spec book to resume step 1 |
 | Return | UC-read-formal-document 6 | populated/missing/unsupported | populated | back | `CAP-VIEW-repository-viewer` | Prior reading context restored |
 
 ### UX-formal-document-relations (panel draft)
@@ -215,7 +223,7 @@ its authority and source.
 | 4a incomplete/read error | Keep body and partial rows with completeness warning; Retry resumes 4 | UX-formal-document-relations |
 | 4b unresolved/ambiguous target | Show written ID/unavailable reason; no arbitrary target; retry resumes 4 or Back resumes 3 | UX-formal-document-relations |
 | 5a missing/unsupported file | Show artifact path/format/explanation; raw/download only when supported; Back resumes 3 | UX-read-supporting-artifact |
-| *a source change | Cancel old reads/assets; show selected repository/branch; reset book request per existing CAP; resume 1 | UX-browse-formal-documents and UX-read-supporting-artifact |
+| *a source change | Cancel old reads/assets; show selected repository/branch; reset book request per existing CAP; complete loading into selected source handbook state and offer Living Spec book; resume 1 | UX-browse-formal-documents and UX-read-supporting-artifact |
 
 ### UX-read-supporting-artifact (screen draft)
 
@@ -248,6 +256,7 @@ view raw/download/Back. Original source control is represented in the formal nod
 ## 6. Implementation and verification
 
 The complete per-kind matrix and exact source/test owners are [support matrix](materials/support-matrix.md).
+Cold Files participation and permissive underscore-ID/alias recognition are required alongside book paths.
 Every row must be completed for design/domain/operations, with actual new-kind fixtures and existing-kind controls.
 Generic code reuse is permitted only with passing behavior evidence. Public TypeScript/HTTP contracts remain
 backward compatible; new optional presentation data cannot become required host callbacks or exports.

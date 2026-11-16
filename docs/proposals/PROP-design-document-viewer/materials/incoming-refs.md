@@ -133,3 +133,46 @@ Pinned inspected HEAD: f75da999fcdff9e68559a01793efe620b3f2f570. Full inventorie
 [REF: SPEC-domain-model-documents path=specs/2026-11/20261116-domain-model-documents/spec.md status=completed fields=body count=1]
 [PAGE: total=6 offset=0 limit=100 count=6 next=-]
 ```
+
+## `CAP-DLV-release-handbook` supplemental Scout inventory
+
+At da9760b811ce5c8e6612f808295b214957a1face the Scout queried this inventory and read the full current CAP/ADR bodies plus the handbook constants, loader, coverage and generated-section code. Historical body results remain inventory only.
+
+```text
+[REF: ADR-release-handbook path=docs/decisions/2026-11/20261102-release-handbook.md status=accepted fields=body count=7]
+[REF: ARCH-05-1-containers path=docs/architecture/ARCH-05-1-containers.md status=active fields=body count=1]
+[REF: ARCH-05-2-components path=docs/architecture/ARCH-05-2-components.md status=active fields=body count=1]
+[REF: ARCH-07-deployment path=docs/architecture/ARCH-07-deployment.md status=active fields=body count=1]
+[REF: CAP-VIEW-repository-viewer path=docs/capabilities/viewer/CAP-VIEW-repository-viewer.md status=active fields=body count=1]
+[REF: PLAN-viewer-handbook-first-knowledge path=specs/2026-10/20261026-viewer-handbook-first-knowledge/plan.md status=- fields=body count=1]
+[REF: PROP-design-document-viewer-target path=docs/proposals/PROP-design-document-viewer/target-docs.md status=draft fields=body count=1]
+[REF: REC-foundation-documents path=specs/2026-10/20261026-foundation-documents/reconcile.md status=resolved fields=body count=1]
+[REF: REC-release-handbook path=specs/2026-10/20261026-release-handbook/reconcile.md status=resolved fields=body count=2]
+[REF: REC-viewer-handbook-first-knowledge path=specs/2026-10/20261026-viewer-handbook-first-knowledge/reconcile.md status=resolved fields=body count=2]
+[REF: SPEC-deep-research-bundle path=specs/2026-10/20261030-deep-research-bundle/spec.md status=completed fields=body count=1]
+[REF: SPEC-foundation-documents path=specs/2026-10/20261026-foundation-documents/spec.md status=completed fields=related_capabilities count=1]
+[REF: SPEC-release-handbook path=specs/2026-10/20261026-release-handbook/spec.md status=completed fields=related_capabilities count=1]
+[REF: SPEC-viewer-handbook-first-knowledge path=specs/2026-10/20261026-viewer-handbook-first-knowledge/spec.md status=completed fields=body,related_capabilities count=3]
+[PAGE: total=14 offset=0 limit=100 count=14 next=-]
+```
+
+## `ADR-release-handbook` supplemental Scout inventory
+
+At da9760b811ce5c8e6612f808295b214957a1face the Scout queried this inventory and read the full current CAP/ADR bodies plus the handbook constants, loader, coverage and generated-section code. Historical body results remain inventory only.
+
+```text
+[REF: ARCH-07-deployment path=docs/architecture/ARCH-07-deployment.md status=active fields=body count=1]
+[REF: CAP-DLV-release-handbook path=docs/capabilities/delivery/CAP-DLV-release-handbook.md status=active fields=body count=2]
+[REF: CAP-VIEW-repository-viewer path=docs/capabilities/viewer/CAP-VIEW-repository-viewer.md status=active fields=body count=2]
+[REF: FB-viewer-book-rendering path=specs/2026-10/20261024-viewer-dashboard-loading/feedback/viewer-book-rendering.md status=dismissed fields=body count=1]
+[REF: PLAN-release-handbook path=specs/2026-10/20261026-release-handbook/plan.md status=- fields=body count=2]
+[REF: PLAN-viewer-handbook-first-knowledge path=specs/2026-10/20261026-viewer-handbook-first-knowledge/plan.md status=- fields=body count=2]
+[REF: REC-performance-pass path=specs/2026-10/20261028-performance-pass/reconcile.md status=resolved fields=body count=1]
+[REF: REC-release-handbook path=specs/2026-10/20261026-release-handbook/reconcile.md status=resolved fields=body count=2]
+[REF: REC-review-refactor-lessons path=specs/2026-10/20261027-review-refactor-lessons/reconcile.md status=resolved fields=body count=1]
+[REF: REC-viewer-handbook-first-knowledge path=specs/2026-10/20261026-viewer-handbook-first-knowledge/reconcile.md status=resolved fields=body count=4]
+[REF: SPEC-release-handbook path=specs/2026-10/20261026-release-handbook/spec.md status=completed fields=body count=5]
+[REF: SPEC-review-refactor-lessons path=specs/2026-10/20261027-review-refactor-lessons/spec.md status=completed fields=body count=1]
+[REF: SPEC-viewer-handbook-first-knowledge path=specs/2026-10/20261026-viewer-handbook-first-knowledge/spec.md status=completed fields=body count=2]
+[PAGE: total=13 offset=0 limit=100 count=13 next=-]
+```
