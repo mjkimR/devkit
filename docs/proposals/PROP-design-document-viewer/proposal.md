@@ -1,7 +1,7 @@
 ---
 id: PROP-design-document-viewer
-title: Documentation-layer navigation in the repository viewer
-summary: "Exposes domain models, design bundles and operational guidance with their contract links and supporting artifacts in the repository viewer."
+title: Minimal documentation-layer navigation in the repository viewer
+summary: "Validates existing viewer navigation for the chosen domain, design and operations representations and adds only functionality required by demonstrated gaps."
 status: draft
 created_at: 2026-11-16
 target_area: viewer/
@@ -31,50 +31,42 @@ depends_on:
 - PROP-operations-documents
 ---
 
-
-# [PROP-design-document-viewer] Documentation-layer navigation in the repository viewer
+# [PROP-design-document-viewer] Minimal documentation-layer navigation in the repository viewer
 
 ## 1. Background & Hypothesis
 
-Design bundles can group details and non-Markdown artifacts, but a document list alone does not show their
-relationship to contracts or explain which supporting file a reader needs. The repository viewer should expose
-that structure without treating designs as replacements for capability, architecture or UX documents.
+The selected representations must remain usable in the repository viewer. A separate content role does not
+necessarily need a new screen, editor or custom rendering. Use retained pilot examples to establish which existing
+navigation and artifact facilities work before deciding changes.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: How should design entries appear in existing browsing and detail views, and how should related contracts
-  and independently indexed details be distinguished from supporting files?
-- **Q2**: Which artifact types can use existing viewing or download behavior, and how should unsupported formats,
-  missing files and stale references be represented?
+- **Q1**: Which entry, contract and supporting-file links already work for the selected representations?
+- **Q2**: Which remaining gap needs viewer code rather than a corrected link, entry document or existing configuration?
+- **Q3**: How should genuinely unsupported formats and missing files use existing viewing or download behavior?
 
 ## 3. Proposed Design & Impact
 
-- Consume the identity, ownership relationships and bundle conventions delivered by
-  `PROP-design-document-foundation`; avoid defining a competing viewer-only schema.
-- Expose navigation from relevant contracts to designs, from a design to its contracts, and from its entry
-  document to the details, examples, diagrams and datasheets it cites.
-- Reuse existing artifact handling. Provide usable links or downloads for unsupported formats rather than adding
-  spreadsheet editing or proprietary-format rendering.
-- Draft the affected screens and interactions before code, within `CAP-VIEW-repository-viewer` and the existing
-  use case and UX document structure. Keep the design's implementation content out of those UX contracts.
+- Consume the delivered conventions; define no competing viewer-only schema. Use the retained domain, design
+  and operational examples as post-implementation integration cases.
+- Exercise concept-to-contract, contract-to-design-to-detail/artifact, and symptom-to-procedure/reference paths.
+  Reuse generic document navigation and links. Existing facilities meeting the agreed paths pass without new UI.
+- Implement only evidenced gaps in necessary navigation, labeling or artifact handling. Provide existing link or
+  download behavior for unsupported formats rather than add spreadsheet editing or proprietary-format engines.
+- If screens or interactions must change, draft them before code and reconcile their use cases and UX contracts.
+  Keep implementation content out of UX documents. Do not create a separate editor or graph view for every role.
 
 ### Expected acceptance evidence
 
-- A reader can navigate a related contract, a design entry, a separate detail and a datasheet without guessing
-  filesystem paths. Existing document kinds retain their navigation and labels.
-- Missing artifacts and unsupported formats have explicit usable states; the implementation passes the viewer's
-  required frontend checks and focused backend checks for changed artifact/navigation behavior.
-
-### Expanded documentation-layer scope
-
-- Expose domain models and operational guidance alongside designs using their delivered identities and
-  relationships. Keep conceptual relationships, implementation details and operational procedures distinguishable.
-- Verify navigation from a domain concept to its contracts and designs, and from an operational symptom to the
-  applicable procedure or reference. Support non-indexed artifacts through the chosen entry documents.
-- Reuse generic document navigation where possible. Do not create a separate schema or document editor per layer;
-  apply required viewer frontend checks to changed surfaces.
+- The actual delivered representations reach the retained examples and supporting artifacts through their chosen
+  entry points. Users need no guessed filesystem paths; existing document kinds retain usable navigation.
+- Missing or unsupported artifacts have usable existing or changed behavior. Evidence distinguishes reused paths
+  from required fixes; dedicated UI and runtime edits are conditional on observed failures.
+- Changed frontend surfaces pass required frontend checks, and changed backend behavior has focused checks.
+  If existing code suffices, navigation walkthrough evidence replaces unnecessary implementation work.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Start after the foundation, domain-model and operations conventions are delivered. Acceptance and handoff use the proposal gates. Retirement requires
-verified navigation and matching UX documentation. Repository-wide content migration is outside this proposal.
+Start after the role conventions are delivered. Acceptance and handoff use the proposal gates. Retirement requires
+verified navigation against actual retained examples and documentation of any required fixes. Together with the
+lifecycle proposal, this supplies final integration evidence after the early content pilot.

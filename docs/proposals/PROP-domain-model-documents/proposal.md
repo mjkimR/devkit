@@ -1,7 +1,7 @@
 ---
 id: PROP-domain-model-documents
 title: Domain-model documentation
-summary: "Adds maintained domain-model documentation for concepts, identity, relationships and lifecycles, with explicit ownership and integrated document discovery."
+summary: "Establishes maintained conceptual domain views with clear authoritative sources, reusing document discovery unless the early pilot demonstrates a gap."
 status: draft
 created_at: 2026-11-16
 target_area: documents/
@@ -31,50 +31,52 @@ depends_on:
 - PROP-design-document-foundation
 ---
 
-
 # [PROP-domain-model-documents] Domain-model documentation
 
 ## 1. Background & Hypothesis
 
-Glossary entries define terms, while capability and architecture documents explain individual contracts and
-structures. Agents still need to assemble conceptual identity, relationships and lifecycles across those files.
-A maintained domain model can make these meanings explicit without becoming a database schema or class catalog.
+Domain documentation makes concepts, identity, relationships and lifecycles understandable together. The early
+pilot identifies useful views without assuming that every conceptual rule should move out of its existing owner.
+The domain role is retained whether it needs a new indexed kind or existing document facilities are sufficient.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: How should domain concepts, identity, relationships, cardinality and lifecycles be represented and split
-  into readable documents? Which concepts need independent identity and which belong to one domain entry?
-- **Q2**: What definitions and conceptual invariants become authoritative here, and how should glossary,
-  capabilities, architecture and designs cite them without duplicating rules?
-- **Q3**: Does this require a separate indexed kind or an existing-kind convention? How will lookup, search,
-  references, global/package namespaces and validation expose the chosen representation?
+- **Q1**: What document boundaries make the pilot's concepts and relationships understandable without becoming a
+  class catalog, database schema or implementation-algorithm reference?
+- **Q2**: Which definitions already have authoritative owners, and does a selected invariant justify an explicit
+  ownership transfer rather than a reference/composition view?
+- **Q3**: Which location, identity and tooling choices meet discovery needs using the smallest supported representation?
 
 ## 3. Proposed Design & Impact
 
-- Apply `PROP-design-document-foundation`'s common ownership matrix. Define the domain-model home and document
-  structure in Planning; `docs/domain/` is a candidate, not a pre-approved layout.
-- Own conceptual meaning and relationships. Link command preconditions, error guarantees and payload schemas to
-  capabilities; link implementation structures and algorithms to designs or architecture as appropriate.
-- Include identity, relationship meaning, lifecycle and invariants only where they help readers understand the
-  domain. Keep glossary entries short and linked to their defining owner; avoid a second authoritative definition.
-- Use delivery and distribution examples: proposal/spec/milestone relationships, and bundle/asset/projection
-  relationships. Distinguish membership, prerequisite and provenance; distinguish asset identity from file paths.
-- Deliver the selected template, authoring convention, document discovery and references as one domain-document
-  extension. Preserve existing package boundaries; identify any new feature edge in Planning.
-- Leave cross-layer delivery workflow integration, viewer UI and migration to the common lifecycle, viewer and
-  pilot proposals. Those depend on this proposal's finished conventions.
+- Apply `PROP-design-document-foundation`'s matrix and early content evidence. Choose the domain home during
+  Planning; `docs/domain/` is a candidate. Keep readable entry documents and split details only where useful.
+- Default to an integrated conceptual view citing existing authoritative validity and transformation contracts.
+  Clarify term usage and relationship meaning without creating an independent copy of the same normative fact.
+- Permit explicit transfer of selected definitions or invariants when it improves ownership. Demonstrate one
+  complete transfer first: identify the old owner, replace its authoritative restatement with a reference, and
+  retain observable enforcement behavior in the appropriate capability. Broad normative migration is not a default.
+- Use milestone/proposal/spec relationships to distinguish membership, prerequisite and provenance, and
+  bundle/asset/projection relationships to distinguish conceptual identity from deployed file paths.
+- Link schemas, algorithms and storage mappings to their existing contract or design owners. Keep the glossary
+  concise and avoid duplicating full definitions there and in the domain model.
+- Deliver the chosen authoring convention and minimal representation. Decide location, indexed kind/ID and
+  tooling independently using pilot evidence. Reuse lookup/search/reference and namespace support where adequate;
+  add runtime behavior only for a named unmet need, with focused tests and declared feature edges if required.
+- Leave cross-layer lifecycle and viewer integration to their proposals. Their completion may demonstrate reuse
+  of existing facilities; no dedicated domain editor or new classification platform is assumed.
 
 ### Expected acceptance evidence
 
-- Representative fixtures explain relationships and lifecycles without assuming Python classes, database tables
-  or a particular storage format. A glossary reference and a capability reference reach one conceptual owner.
-- Domain versus capability, architecture, design and ADR examples have explicit ownership, including ambiguous
-  invariant cases. Existing document behavior and namespace discovery remain supported.
-- Templates, identity/reference validation and CLI/MCP/search discovery cover the chosen representation with
-  focused tests where behavior changes; no unrelated generic kind-extension platform is introduced.
+- The selected examples explain identity, relationships and lifecycles without depending on Python or DB layout.
+  Each statement's normative owner is identifiable; glossary and capability references reach the correct source.
+- A milestone-membership change walkthrough distinguishes domain explanation from relation validity and handoff
+  behavior. No unchanged fact acquires two authoritative owners under different labels.
+- The representation decision names the early pilot evidence. Agreed entry and reference paths work in global
+  and package namespaces; runtime tests cover actual changes and walkthroughs cover reused behavior.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Start after the common ownership foundation is delivered. Planning settles layout and representation; acceptance
-and handoff use the proposal gates. Retirement requires documented conventions and verified document-system
-support. Pilot content, cross-layer reconciliation and viewer changes remain in their own proposals.
+Start after the common foundation. Planning settles representation and any selected ownership transfer;
+acceptance and handoff use the proposal gates. Retirement requires usable maintained domain documentation and
+verified discovery, not a mandatory new kind or broad migration. Later integration checks use the retained examples.

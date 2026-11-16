@@ -1,7 +1,7 @@
 ---
 id: PROP-design-document-foundation
-title: Design document ownership and document-system foundation
-summary: "Defines implementation-design ownership against existing document kinds and adds design bundles to document identity, discovery, references and validation."
+title: Documentation ownership and minimal design foundation
+summary: "Uses the early content pilot to define documentation ownership and choose the smallest design representation, adding runtime support only for demonstrated gaps."
 status: draft
 created_at: 2026-11-16
 target_area: documents/
@@ -27,80 +27,65 @@ boundaries:
   - packages/devkit-spec/
 task_kind: feature
 workflow: sdd-proposal
+depends_on:
+- PROP-design-document-pilot
 ---
 
-
-# [PROP-design-document-foundation] Design document ownership and document-system foundation
+# [PROP-design-document-foundation] Documentation ownership and minimal design foundation
 
 ## 1. Background & Hypothesis
 
-Capabilities currently contain implementation detail and large examples alongside behavioral contracts.
-`CAP-DOCS-document-model` has no dedicated home for a maintained implementation design and its supporting
-artifacts. Dated materials preserve evidence, while architecture, UX and module references already own some
-information that could otherwise be placed in a generic design directory.
+Domain, design and operations are retained roles within the documentation system. The early examples in
+`PROP-design-document-pilot` establish where each adds value and where existing owners already suffice.
+Separate content locations, indexed kinds/IDs and dedicated tooling are independent decisions.
 
-A design layer can close this gap only if its responsibility is distinguishable from existing document kinds.
-Clean role separation is the primary design criterion. Neither document length nor the presence of numbers
-justifies moving content. Datasheets are a supporting-artifact use case, not a reason to relocate contract limits.
-
-Architecture authors may already know arc42. The missing guidance is architecture's ownership boundary within
-the complete documentation system, rather than an explanation of chapter numbers. New layers need explicit
-rules for what architecture retains and what it references, including adjacent domain-model and operations content.
+Architecture authors may know arc42. The missing guidance is architecture's boundary within the complete docs
+system, rather than a tutorial on its chapters. Neither document length nor numerical content determines ownership.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: What routing matrix distinguishes capability, architecture, domain model, use case, UX, ADR, materials,
-  module reference, development guide, operations, executable playbook and implementation design? Which owner wins for ambiguous content?
-- **Q2**: What belongs to a design entry document, an independently addressable detail document, or a supporting
-  file such as a CSV datasheet? How are one-to-many and shared designs connected to existing contracts?
-- **Q3**: What identity, bundle layout, summaries and relationship fields support discovery and references in
-  global and registered package namespaces without creating duplicate authoritative statements?
-- **Q4**: Which existing index, CLI/MCP, search and rule paths already consume the kind registry, and which need
-  changes to support designs and links to non-indexed artifacts?
-- **Q5**: Assuming arc42 knowledge, where does architecture's authority end relative to capability, domain model,
-  design, UX, ADR, references and operations? How should overlapping views cite their authoritative owner?
+- **Q1**: Which owner defines each representative statement across capability, architecture, domain, use case,
+  UX, ADR, materials, reference, developer guide, operations, executable guidance and design?
+- **Q2**: What minimal design entry and optional supporting files satisfy the pilot's reading and maintenance needs?
+- **Q3**: Which demonstrated discovery or reference gap requires a new kind/ID, relation or runtime change, and
+  which needs only content placement, links or existing configuration?
+- **Q4**: Assuming arc42 knowledge, what architectural content is retained and what should cite another owner?
 
 ## 3. Proposed Design & Impact
 
-- Establish the proposed `docs/designs/` layer for current implementation mechanisms, algorithms, internal
-  collaboration and implementation strategies, with examples, diagrams and datasheets where needed.
-- Specify role boundaries before settling templates or runtime behavior. Cover an interface limit, an internal
-  algorithm, a cross-cutting dependency, a screen interaction, a choice rationale, a historical benchmark, a
-  command example and a developer procedure as routing examples. Preserve each existing owner's responsibility.
-- Define architecture's inclusion, exclusion and reference boundaries within the complete docs system. Exercise
-  solution strategy versus decision rationale, building blocks versus implementation detail, runtime views versus
-  use cases and algorithms, cross-cutting concepts versus domain meaning and common contracts, and deployment
-  views versus operational diagnosis and recovery procedures. Distinguish architectural significance from mere
-  document size or level of detail; do not turn this into an arc42 tutorial or require unused chapters.
-- State the neighboring responsibilities of domain models and operations so architecture does not absorb them
-  implicitly. Their implementation is delivered by `PROP-domain-model-documents` and `PROP-operations-documents`;
-  this proposal establishes the common ownership vocabulary and reference boundaries first.
-- Define one authoritative home per statement and explicit links where another document needs that information.
-  Keep authoritative contract limits in capabilities; keep historical evidence in materials. Do not reclassify
-  all implementation detail in architecture or UX merely because designs now exist.
-- Define a minimal entry document and optional supporting files. Settle the document-kind prefix, file naming,
-  relations, independent detail identity and artifact handling during Planning; the discussed directory tree is
-  an illustration, not an approved schema.
-- Implement the chosen design identity, discovery, lookup, reference and validation behavior as one document-kind
-  extension. Cover package namespaces and existing CLI/MCP and search surfaces. Add checks only for concrete
-  identity, ownership-link or artifact-reference failures; semantic ownership remains a review concern.
-- Keep document logic in `devkit-docs`; any shared model or adapter change is limited to exposing this extension
-  through existing boundaries. Declare any required cross-feature edge explicitly during Planning.
+- Use the early pilot to settle the common ownership matrix before finalizing schemas or runtime changes.
+  Maintain domain, design and operations as explicit roles even where existing runtime facilities are reused.
+- Define architecture's inclusion, exclusion and reference boundaries. Exercise strategy versus ADR rationale,
+  building blocks versus internal mechanisms, runtime views versus use cases and algorithms, cross-cutting
+  concepts versus domain meaning and common contracts, and deployment views versus operational procedures.
+- Establish `docs/designs/` as the proposed current-design home, with entry documents and optional details,
+  examples, diagrams and datasheets. Compare existing ARCH deep dives and linked references as implementation
+  alternatives; architectural significance and content ownership decide routing, not length alone.
+- Keep one authoritative statement and reference it from other views. Preserve contract limits in capabilities,
+  rationale in ADRs and historical evidence in materials. Explicitly distinguish retained owners from transferred
+  owners; an ownership transfer removes or replaces the old authoritative restatement in the same change.
+- Adopt overview-to-detail reading paths and explicit boundary links. Keep uncertain findings in proposal/materials
+  until supported. Reuse existing ownership metadata instead of creating parallel source-path registries.
+- Decide content location, indexed kind/ID and dedicated tooling independently. Add only the identity, lookup,
+  search, reference, namespace or artifact behavior required by an observed pilot gap. Existing facilities that
+  meet the selected discovery contract pass without code changes. Add checks only for concrete failures.
+- Keep document logic in `devkit-docs`; shared-model and adapter changes serve only demonstrated gaps. Declare
+  any required feature edge in Planning. Domain and operations implementation belongs to
+  `PROP-domain-model-documents` and `PROP-operations-documents`; this proposal establishes their shared boundaries.
 
 ### Expected acceptance evidence
 
-- The routing matrix assigns a primary owner to every representative case and states when to link rather than copy.
-- An author familiar with arc42 can route the architecture overlap cases above without inferring ownership from
-  chapter names alone. Cross-document views preserve one authoritative owner for each statement and use references
-  for the other views; chapter guidance stays consistent with this boundary.
-- A small design works as one entry document; a larger fixture includes a separate detail, an example and a
-  datasheet without treating every supporting file as a standalone indexed document.
-- Existing lookup, search and reference behavior works for the chosen identity in global and package namespaces.
-  Invalid identities, missing references and affected existing kinds have focused regression coverage.
+- The matrix assigns one primary owner to each pilot statement and explains when to link or transfer ownership.
+  An arc42-aware author can route the architectural overlap cases without relying on chapter names alone.
+- A decision table separately justifies location, identity and tooling for each role. Existing-kind and linked-file
+  alternatives are evaluated; new runtime support is conditional on a named unmet discovery or maintenance need.
+- Selected design examples have usable entry paths and optional supporting artifacts, without mandatory empty
+  hierarchy or independent IDs on every detail. Illustrative fixtures prove format behavior, not real demand.
+- The chosen representation is verified in global and package namespace cases. Run focused regression tests only
+  where runtime behavior changes; unchanged discovery paths have walkthrough evidence instead of invented code work.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning settles ownership boundaries across all three proposed layers and the design schema before implementation.
-This proposal delivers the document-system foundation; authoring lifecycle, viewer UX and repository migration
-are separate work. Acceptance and handoff use
-the repository's proposal gates. Retirement requires verified runtime support and matching Living Spec contracts.
+Start after the early pilot. Planning settles roles and representation before implementation; acceptance and
+handoff use the proposal gates. Retirement requires verified ownership conventions and selected discovery paths.
+Runtime edits are required only for demonstrated gaps. Cross-layer lifecycle and viewer integration remain later work.

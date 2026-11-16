@@ -1,7 +1,7 @@
 ---
 id: PROP-operations-documents
 title: Operations and recovery documentation
-summary: "Adds maintained operational guidance for diagnosis, recovery and upgrades with explicit boundaries against architecture, command references and executable playbooks."
+summary: "Establishes symptom-led operational guidance that routes to existing recovery owners, adding document tooling only for gaps demonstrated by the early pilot."
 status: draft
 created_at: 2026-11-16
 target_area: documents/
@@ -31,51 +31,53 @@ depends_on:
 - PROP-design-document-foundation
 ---
 
-
 # [PROP-operations-documents] Operations and recovery documentation
 
 ## 1. Background & Hypothesis
 
-Deployment structure, setup instructions and individual command references do not provide one maintained path
-from an operational symptom to diagnosis, recovery and confirmation of normal operation. Historical incident
-notes and command-level error actions cannot by themselves serve as current operational guidance.
+Operations documentation connects symptoms, diagnostic evidence, recovery selection and normal-state checks.
+Existing status commands, advisory actions, recovery contracts, references and playbooks already cover parts of
+that path. The early pilot determines what an operational entry adds without duplicating those sources.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: Which scope distinguishes operations from deployment architecture, use cases, developer guides,
-  command references and executable playbooks? Which source owns a procedure when a playbook already exists?
-- **Q2**: How should symptom, applicability, prerequisites, read-only diagnosis, recovery effects, stop conditions
-  and success checks be represented without inventing new execution authority?
-- **Q3**: What layout, identity and discovery convention make current procedures reachable in global/package
-  namespaces? Is a new indexed kind needed, or can existing document facilities support the required navigation?
+- **Q1**: What operational content remains distinct from deployment architecture, capability recovery guarantees,
+  advisory actions, command references, developer guides and executable instructions or playbooks?
+- **Q2**: Which diagnostic evidence selects an existing recovery owner, and what applicability, prerequisites,
+  stop conditions and success checks must the operational view provide?
+- **Q3**: Which location, identity and tooling choices satisfy the demonstrated discovery need without new execution authority?
 
 ## 3. Proposed Design & Impact
 
-- Apply `PROP-design-document-foundation`'s common ownership matrix. Define the operations home and representation
-  in Planning; `docs/operations/` is a candidate, not an approved schema.
-- Cover normal-state checks, diagnosis, recovery and upgrade guidance. Distinguish deployment topology from
-  operator actions, and distinguish operational procedure from API/CLI reference and developer contribution flow.
-- Make applicability, required state, diagnostic evidence, procedure ownership, effects and completion checks
-  visible. Preserve existing authorization and secret-handling boundaries; a document is not permission to run it.
-- When an executable playbook owns a procedure, link to it and explain applicability rather than duplicate its
-  steps. Keep incident history and measurements in materials; keep current guidance up to date.
-- Deliver templates, authoring conventions and the selected lookup/search/reference/validation support. Limit
-  adapter and shared-model changes to this extension and declare required feature edges during Planning.
-- Use interrupted synchronization or receipt mismatch as representative fixtures. Leave execution engines,
-  cross-layer delivery workflow integration, viewer UI and repository migration to their existing owners or
-  separate proposals.
+- Apply the foundation matrix and early pilot. Retain the operations role; choose its home in Planning with
+  `docs/operations/` as a candidate rather than a fixed kind or schema.
+- Own symptom classification, diagnostic evidence, applicability, recovery-owner selection and confirmation of
+  normal operation. Cover upgrade guidance where a real selected scenario needs it.
+- Include capability recovery contracts and advisory actions in the ownership matrix. Keep command guarantees,
+  compatibility conditions and error actions with their existing owners. Reuse executable instructions and
+  playbooks by reference; do not maintain parallel recovery steps.
+- If a procedure changes owner, explicitly retire its old authoritative copy or reduce it to a reference.
+  Keep deployment topology in architecture, incident history in materials and CLI/API syntax in references.
+- Use interrupted sync or receipt mismatch only where the early pilot shows added routing value over current
+  status/recover guidance. Verify supported commands and avoid executing real recovery effects just to author docs.
+- Deliver the authoring convention and smallest supported representation. Decide location, indexed kind/ID and
+  tooling separately. Add lookup/search/reference, namespace or validation behavior only for demonstrated gaps;
+  identify required feature edges and focus tests on runtime changes.
+- Preserve existing execution permissions. Leave execution engines, general incident-management systems,
+  cross-layer lifecycle integration and viewer work outside this proposal.
 
 ### Expected acceptance evidence
 
-- A representative fixture leads from symptom through read-only diagnosis to the appropriate recovery owner and
-  an observable normal-state check. Unsupported or ambiguous states have a stop/escalation path.
-- Architecture, reference, playbook and materials boundaries are explicit, with one authoritative procedure and
-  no implicit authorization for recovery effects.
-- Current operational documents are discoverable and their references resolve under the chosen representation
-  in global and package namespaces, with focused tests for runtime behavior changes.
+- The selected example adds a supported symptom-to-diagnosis-to-recovery-owner-to-normal-state path. It identifies
+  the evidence selecting each branch and gives a stop/escalation route where current support is insufficient.
+- Recovery guarantees and steps have one authoritative owner across capabilities, advisories, instructions,
+  playbooks and references. A journal-compatibility change walkthrough identifies affected routing without
+  duplicating the recovery contract in operations.
+- Representation and discovery choices follow pilot evidence and work in global/package cases. Reused facilities
+  count as support when the agreed path is demonstrated; new runtime behavior has focused tests.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Start after the common ownership foundation is delivered. Planning settles the representation and procedure
-boundaries; acceptance and handoff use the proposal gates. Retirement requires verified documentation support,
-not execution of real recovery effects. Cross-layer reconciliation, viewer work and the pilot remain separate.
+Start after foundation. Planning settles representation and procedure ownership; acceptance and handoff use the
+proposal gates. Retirement requires useful maintained operational guidance and verified entry paths, not a new
+kind, executor or execution of recovery effects. Later integration checks use the retained operational example.
