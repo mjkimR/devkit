@@ -252,6 +252,9 @@ milestone: "v0.5: First"
 boundaries:
   owns:
     - src/scaffold/
+    - docs/proposals/PROP-carry/
+    - docs/proposals/PROP-carry
+    - docs/proposals/PROP-carry-other/
     - capabilities/lifecycle/
   excludes:
     - docs/decisions/
@@ -321,12 +324,16 @@ Nested detail.
     assert "\n---\n\n## Remaining Scope" not in spec
 
     plan = (spec_dir(workspace, "carry") / "plan.md").read_text(encoding="utf-8")
+    # The handoff removes the proposal's own directory, so no boundary names it; a sibling sharing its prefix stays.
     assert (
-        "### Planned Boundaries:\n- `src/scaffold/`\n- `capabilities/lifecycle/`\n\n"
-        "### Excluded Boundaries:\n- `docs/decisions/`\n"
+        "### Planned Boundaries:\n- `src/scaffold/`\n- `docs/proposals/PROP-carry-other/`\n"
+        "- `capabilities/lifecycle/`\n\n### Excluded Boundaries:\n- `docs/decisions/`\n"
     ) in plan
     tasks = (spec_dir(workspace, "carry") / "tasks.md").read_text(encoding="utf-8")
-    assert "  - **_Boundary**: src/scaffold/, capabilities/lifecycle/\n  - _Requirements: AC-01, AC-02_" in tasks
+    assert (
+        "  - **_Boundary**: src/scaffold/, docs/proposals/PROP-carry-other/, capabilities/lifecycle/\n"
+        "  - _Requirements: AC-01, AC-02_"
+    ) in tasks
     blueprint = (spec_dir(workspace, "carry") / "target-docs.md").read_text(encoding="utf-8")
     assert "[cap](../../../docs/capabilities/lifecycle/CAP-X.md)" in blueprint
     assert f"{SPEC}-carry/spec.md" in result.rewritten_files
