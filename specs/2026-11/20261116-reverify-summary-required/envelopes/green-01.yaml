@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T10:34:15.191079Z'
+status: completed
+summary: envelope reverify now refuses a missing or blank --summary before writing; envelope commit names each failing field and its writer flag with the same-file retry; other refusals, skeletons and committable reverifies are unchanged
+findings: []
+checks:
+  resolved: 'PASS test_envelope_commit.py: the 5 regression tests pass under the same conditions (51/51 in the file)'
+  preserved: 'PASS just test-affected --base 22b28c936: 2516 passed (partial selection incl. workflow, devkit-spec bundle guidance and docs tests); ruff and pyright clean; rules check --ci --base main clean'
+diff_scope:
+  base: 22b28c936c4d4b05d8465178ac6175fb6dfa8b2b
+  head: c7b2c46f0f3ec74222945c5f441d09133978fc3e
