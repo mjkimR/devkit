@@ -148,7 +148,9 @@ and every registered namespace's mirror to mention; and nothing without register
 directory. A malformed registry raises `DOCS_CONFIG_INVALID`, which the command reports as a
 `CONTEXT_DOCUMENTS_EXTENSION_FAILED` warning.
 
-Formal roles have the same flat canonical homes under every registered docs root: designs/DESIGN-slug.md,
-domain/DOMAIN-slug.md and operations/OPS-slug.md. Their ID/format/summary/reference rules apply there as globally;
-only DESIGN accepts optional workspace-relative entrypoints. Parent-owned artifacts require a same-kind canonical
-parent in that same root. Namespace selection never permits duplicate IDs/aliases or limits resolve/refs.
+Formal roles have the same canonical homes under every registered docs root: `designs/<area>/DESIGN-<slug>/design.md`
+bundles, `domain/<area>/DOMAIN-<slug>.md` and flat `operations/OPS-<slug>.md` (`ADR-area-scoped-design-bundles`).
+Their ID/format/summary/area/reference rules apply there as globally; only DESIGN accepts optional
+workspace-relative entrypoints. Design support lives in its bundle; domain and operations support under
+`<PARENT-ID>/artifacts/` requires a same-kind canonical parent in that same root. A move across docs roots keeps the
+ID and changes namespace membership. Namespace selection never permits duplicate IDs/aliases or limits resolve/refs.

@@ -209,8 +209,8 @@ live; the index itself does not check it.
 | `FB` | `feedback` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`, `specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`, `docs/proposals/PROP-<slug>/feedback/<slug>.md` |
 | `MAT` | `material` | `docs/materials/...` |
 | `MS` | `milestone` | `<root>/MS-<slug>.md` (planned/active) or `<root>/_archive/MS-<slug>.md` (done/dropped), where `<root>` is `docs/roadmap/` or a registered namespace's `docs/packages/<name>/roadmap/` |
-| `DESIGN` | `design` | `<docs-root>/designs/DESIGN-<word-led-slug>.md` |
-| `DOMAIN` | `domain` | `<docs-root>/domain/DOMAIN-<word-led-slug>.md` |
+| `DESIGN` | `design` | `<docs-root>/designs/<area>/DESIGN-<word-led-slug>/design.md` |
+| `DOMAIN` | `domain` | `<docs-root>/domain/<area>/DOMAIN-<word-led-slug>.md` |
 | `OPS` | `operations` | `<docs-root>/operations/OPS-<word-led-slug>.md` |
 
 The table order is the kind order: `devkit docs list` sorts by it. Living Spec documents of a namespace live under
@@ -218,12 +218,15 @@ The table order is the kind order: `devkit docs list` sorts by it. Living Spec d
 
 The kind definition table in the documents models is the single definition of kinds
 (`ADR-document-system`): one row per `Kind` member, in the order above, holds
-the prefix and the per-kind facts the index and the rules read (its directory, Living Spec membership, area scoping,
-the `RULE-spec-format` scope, whether a first H1 carries an ID token, the summary requirement, whether it bears
+the prefix and the per-kind facts the index and the rules read (its directory, its layout, Living Spec membership,
+area scoping, the `RULE-spec-format` scope, whether a first H1 carries an ID token, the summary requirement, whether it bears
 `entrypoints`, its terminal statuses, its fix-time default status and the relation fields that take its IDs). The
 ID pattern and prefix map derive from the rows. A table with a missing, extra or reordered row, a prefix or relation
 field in two rows, or an inconsistent row MUST fail with `KindTableError`; a consumer that lacks a fact a kind needs
-MUST fail the same way instead of applying another kind's. Path grammars and lifecycles stay kind-specific code.
+MUST fail the same way instead of applying another kind's. A layout is `flat`, `area` or `area-bundle` with its
+anchor file name; area scoping derives from it (`area` or `area-bundle`), and the layout anchor is independent of the
+summary anchor. A Living Spec ID is the file stem for `flat` and `area` kinds and the bundle directory name for
+`area-bundle` kinds (`ADR-area-scoped-design-bundles`). Other path grammars and lifecycles stay kind-specific code.
 Consumers MUST read the rows through `definitions()` or `definition(kind)` when they run, never through constants
 bound at import, so an injected table changes their results; the ID grammar (`PREFIXES`, `ID_SOURCE`, `ID_PATTERN`)
 is the one exception, built from the rows at import (`packages/devkit-docs/tests/unit/features/documents/`). The
@@ -237,8 +240,12 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
 ### Formal role schema
 
 Design/domain/operations MUST declare nonempty string id, title, status and double-quoted English summary, and
-first H1 `# [ID] title` matching stem and metadata. Slugs are lowercase ASCII kebab case with a letter in the first
-segment. All three are unscoped Living Spec kinds in every docs root; area is inapplicable. Status MUST be exactly
+first H1 `# [ID] title` matching the path-derived ID and metadata. Slugs are lowercase ASCII kebab case with a letter
+in the first segment. All three are Living Spec kinds in every docs root. A design is an `area-bundle`: the directory
+`<docs-root>/designs/<area>/DESIGN-<slug>/` with the anchor `design.md`, whose directory name is the ID. A domain
+document is `area`-scoped: the file `<docs-root>/domain/<area>/DOMAIN-<slug>.md`. Both MUST declare `area` equal to
+their area directory; an area is a directory name the project chooses, and no registry lists valid areas. Operations
+documents stay `flat` at `<docs-root>/operations/OPS-<slug>.md` and MUST omit `area`. Status MUST be exactly
 draft, active or retired, with draft the template/fix default. Retirement hides default browse/search but keeps
 resolve/refs/aliases and governance checks active. Use prose and optional related_* successor edges for retirement,
 not ADR supersession. DOMAIN/OPS MUST omit entrypoints; DESIGN MAY declare safe existing workspace-relative paths.
@@ -250,15 +257,23 @@ MUST contain existing targets of its declared prefix without repeated canonical 
 aliases are rewritten as current references. Aliases remain same-prefix identity, not edges. No generic reciprocal
 or cycle constraint is introduced. IDs and aliases remain repository-wide across namespace roots.
 
-Independent Markdown detail has a formal peer ID. Parent-owned support under `<ROLE-ID>/artifacts/` has one same-root
-canonical parent; supporting Markdown names that parent and MUST NOT declare any parser-recognized identity field
-(`id` or `reconcile_id`) or an H1 ID token. CSV/images need
-no fake IDs. Canonical artifacts are ID-free and unindexed; invalid/orphan/identified artifacts and stray nested
-independent Markdown fail identity governance. README remains optional navigation. Same-kind rename/root move carries
-the artifact subtree and repairs ordinary links; split/reclassification assigns every retained artifact one parent.
+Independent Markdown detail has a formal peer ID: a peer design bundle, or a peer domain or operations file. Inside
+a design bundle only `design.md` carries an ID; every other file at any depth is parent-owned support of the bundle's
+design. Domain and operations parent-owned support lives under `<ROLE-ID>/artifacts/` beside its parent file, in the
+domain area directory or the flat operations directory, with one same-root canonical parent. Supporting Markdown
+names its parent and MUST NOT declare any parser-recognized identity field (`id` or `reconcile_id`) or an H1 ID
+token. CSV/images need no fake IDs. Canonical support is ID-free and unindexed. Identified Markdown at any depth of a
+design bundle, including a nested `DESIGN-*/design.md`, is a stray: bundles never nest, and independent detail
+becomes a peer bundle. A design bundle without `design.md` is an orphan. Invalid, orphan or identified support and
+stray Markdown fail identity governance. `README.md` remains optional navigation, exempt in area directories and
+bundles; under `<ROLE-ID>/artifacts/` it is supporting Markdown. An area move changes the path and `area` and keeps the ID, aliases and incoming references; `devkit rules
+fix` repairs a stale `area` but never moves files. A move across docs roots changes namespace membership. Same-kind
+rename/root move carries the bundle or artifact subtree and repairs ordinary links; split/reclassification assigns
+every retained support file one parent.
 Cross-kind reclassification retains the old node retired; cross-prefix aliases remain invalid.
 
-`ADR-formal-role-document-identities` owns this lasting schema decision. Existing public Kind values/order and
+`ADR-formal-role-document-identities` owns this lasting schema decision, and `ADR-area-scoped-design-bundles` owns
+the design bundle and domain area path grammar. Existing public Kind values/order and
 Document/Reference JSON keys remain unchanged; design/domain/operations rows are appended. Templates include
 three formal role files and the legacy design-template compatibility pointer, for nine total files. No docs MCP
 service, docs-to-spec import or implicit delivery lifecycle is introduced.
@@ -371,7 +386,7 @@ service, docs-to-spec import or implicit delivery lifecycle is introduced.
 | `status` | string | Lifecycle status; `completed` on a `spec.md` makes its bundle historical, its feedback aside; a terminal status makes the document historical for browsing (rule 8). |
 | `title` | string | Display title (any language). |
 | `summary` | string | One or two English sentences; embedded by search. |
-| `area` | string | Area of a capability, use case or UX document (its directory). |
+| `area` | string | Area of a capability, use case, UX, design or domain document (its area directory). |
 | `element` | string | What a UX document describes: `screen`, `modal` or `panel` (read by `RULE-ux-links`). |
 | `usecases`, `capabilities`, `related_usecases`, `related_capabilities`, `related_designs`, `related_domains`, `related_operations` | list of IDs | Relation fields. |
 | `spec`, `plan` | ID | Relation fields. |

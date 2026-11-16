@@ -1,0 +1,43 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:18:42.951470Z'
+status: completed
+summary: 'Round 2: review-01 fixes hold; loose-binary reporting judged acceptable. REVISE for four P3: unrecorded requirement, .gitkeep flagged, dead area-bundle branch in off_grammar, flat domain Markdown remediation.'
+findings:
+- issue: off_grammar reporting of non-Markdown files under role directories is not recorded in spec.md.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:97-118; specs/2026-11/20261116-design-bundle-layout/spec.md:93-107
+  failure_condition: Reconcile finds behavior no criterion covers.
+  suggested_action: Append it as a discovered requirement to an acceptance criterion.
+  resolution: open
+  severity: P3
+- issue: .gitkeep placeholders under role directories are reported as off-grammar.
+  evidence: scratch/review-02/test_probe.py output for docs/designs/.gitkeep and docs/domain/core/.gitkeep
+  failure_condition: An empty role directory with .gitkeep fails rules check --ci.
+  suggested_action: Exempt dotfiles in off_grammar and add a test.
+  resolution: open
+  severity: P3
+- issue: off_grammar's area-bundle flat-shape branch is unreachable and its docstring claims it.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:85-89,99-110
+  failure_condition: A leftover flat design binary gets a rename-the-bundle remediation while the docstring promises an area move.
+  suggested_action: Drop the area-bundle claim and limit the substitution to area kinds.
+  resolution: open
+  severity: P3
+- issue: Markdown at the old flat domain <ID>/artifacts/ path gets a promote-to-document remediation while binaries get an area move.
+  evidence: scratch/review-02/test_probe2.py; packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:102
+  failure_condition: Following the remediation turns former support Markdown into an identified document.
+  suggested_action: Align the Markdown remediation, or waive because formal kinds are unreleased.
+  resolution: open
+  severity: P3
+assumptions:
+- Formal role kinds are unreleased; no consumer holds flat-grammar support.
+unverified_areas:
+- Rules outside a Git work tree and staged/diff-mode targeting of off_grammar.
+checks:
+  tests: PASS id_convention and spec_format rule tests 99 passed
+  rules: PASS errors=0
+diff_scope:
+  base: 3361d33b643c687df90c677c5028de9eda80b49e
+  head: f15b8daf3d01bf3b2e8d4a487ed006d019028381
+activity_effort: high

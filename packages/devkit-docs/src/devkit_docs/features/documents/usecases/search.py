@@ -10,8 +10,9 @@ The policy on top of the generic ranking:
   in whatever language they are written. Measured on benchmark documents (Korean titles and bodies, English paraphrase
   queries), hybrid MRR rose from 0.54 (ID, title and area embedded) to 0.70 (ID alone) and 0.81 (ID and summary);
   embedding whole bodies did worse than the ID alone.
-- **Pinning**: a query equal to a document's ID, workspace-relative path or file name (case-insensitive) puts that
-  document first, whatever the ranking.
+- **Pinning**: a query equal to a document's ID, an alias, its workspace-relative path or file name
+  (case-insensitive) puts that document first, whatever the ranking. A bundle anchor's file name (``design.md``,
+  the ``layout_anchor`` of an ``area-bundle`` kind) is shared by every bundle of the kind and pins none.
 - **Glossary expansion**: global and selected registered namespace ``steering/glossary.yaml`` files (optional; ``terms: [{primary, synonyms: [...]}]``) adds a term's
   whole synonym cluster to the query when the query contains any of its terms, compared as ``tokenize`` words.
   Terms of different clusters with the same words (``C++`` and ``C#`` both tokenize to ``c``) expand to both
@@ -33,7 +34,7 @@ from devkit_core.core.yaml import safe_load
 from devkit_dist.features.search import SearchDocument, SearchIndex, SearchMode, tokenize
 
 from devkit_docs.base.errors import GlossaryInvalidError
-from devkit_docs.features.documents import Document, DocumentIndex, Kind
+from devkit_docs.features.documents import Document, DocumentIndex, Kind, definition
 from devkit_docs.features.documents.usecases.browse import NamespaceScope
 
 GLOSSARY_PATH = "docs/steering/glossary.yaml"
@@ -137,9 +138,13 @@ def metadata(document: Document) -> str:
 
 
 def _matches_exactly(document: Document, query: str) -> bool:
-    """The query is the document's ID, one of its aliases, its path or its file name (case-insensitive)."""
+    """The query is the document's ID, one of its aliases, its path or its file name (case-insensitive); a bundle
+    anchor's file name is not its own."""
     wanted = query.strip().casefold()
-    names = (document.id, *document.aliases, document.path, document.path.rsplit("/", 1)[-1])
+    name = document.path.rsplit("/", 1)[-1]
+    row = definition(document.kind)
+    own_name = () if row.bundled and name == row.layout_anchor else (name,)
+    names = (document.id, *document.aliases, document.path, *own_name)
     return wanted in (name.casefold() for name in names)
 
 

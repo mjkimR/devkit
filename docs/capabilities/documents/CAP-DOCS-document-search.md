@@ -45,7 +45,8 @@ expansion. Going from a known ID to its path stays `devkit docs resolve` (`CAP-D
    only, in any language. `RULE-document-summary` requires the summary on the documents agents search.
 3. **Pinning**: a query equal to a document's ID, one of its declared `aliases`, its workspace-relative path or file
    name (compared case-insensitively after trimming) MUST put that document first, whatever the ranking, with
-   `score=-` (`null` in JSON) and `pinned=yes`. A pinned document is not repeated among the ranked hits.
+   `score=-` (`null` in JSON) and `pinned=yes`. A pinned document is not repeated among the ranked hits. A layout
+   anchor file name shared by every bundle of a kind (`design.md`) MUST NOT pin; its bundle path and ID still do.
 4. **Glossary expansion**: search MUST read optional project-owned `docs/steering/glossary.yaml` followed by the
    selected registered namespaces' `docs/packages/<name>/steering/glossary.yaml` files in namespace-name order,
    through the shared `devkit_core.core.yaml` LibYAML safe parser (`ADR-namespace-steering-registers`). Explicit or

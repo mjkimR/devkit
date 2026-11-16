@@ -1336,7 +1336,7 @@
     },
     ".agents/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "5cf15bee411dc7fe8849017c4429daf23ed61f3876dc4cdbdf6b644cae72e577"
+      "sha256": "1e0a3511ecb33d2a2b3120706808771bde275eeea82c6457b63ab8424b192d08"
     },
     ".agents/skills/spec-sync/references/screens.md": {
       "mode": 420,
@@ -1668,7 +1668,7 @@
     },
     ".claude/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "5cf15bee411dc7fe8849017c4429daf23ed61f3876dc4cdbdf6b644cae72e577"
+      "sha256": "1e0a3511ecb33d2a2b3120706808771bde275eeea82c6457b63ab8424b192d08"
     },
     ".claude/skills/spec-sync/references/screens.md": {
       "mode": 420,
@@ -2064,7 +2064,7 @@
     },
     ".devkit/managed/docs/instructions/design-writing.md": {
       "mode": 420,
-      "sha256": "77a6c849d7ea190b1c198a1ddd529fed1ebd77705f1b4cda879479345648c5fc"
+      "sha256": "1023c129e320e0c6f011c32e38e18b8140102684cbe5a12d7148e9b1f1437a6d"
     },
     ".devkit/managed/docs/instructions/document-writing.md": {
       "mode": 420,
@@ -2072,11 +2072,11 @@
     },
     ".devkit/managed/docs/instructions/domain-writing.md": {
       "mode": 420,
-      "sha256": "784045a61434977d5ecf9658c74684dd6e1813779cf2732243ade5184cd2bbbc"
+      "sha256": "04f073225e96fd5a143a3fcf686f7541629d37280f7f981f4c99f14b38473fde"
     },
     ".devkit/managed/docs/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "2369f680993d0fb073ba1b5fb1c3c7cc0a6c6f349cb7e72ffe2f6bd226c1014f"
+      "sha256": "1e944a2378b276ff4b8a4526e7aa8a5b3d49dbb55245bc61297ffed852259e23"
     },
     ".devkit/managed/docs/instructions/operations-writing.md": {
       "mode": 420,
@@ -2092,7 +2092,7 @@
     },
     ".devkit/managed/docs/rules/code_entrypoints/guide.md": {
       "mode": 420,
-      "sha256": "2ebcd5e3265ffee65c8577b7d39d7b874cd381091b36bcb846454c98a646318a"
+      "sha256": "e27cbbf86a916053e2bdcfa9f0ee923c3b213f47a7820dcaba9da289f85dc06d"
     },
     ".devkit/managed/docs/rules/code_entrypoints/rule.py": {
       "mode": 420,
@@ -2100,7 +2100,7 @@
     },
     ".devkit/managed/docs/rules/code_entrypoints/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "fae6d7a6a33b84987ddf13d619a2576b4b397074a2868dce9ab78203514c81d8"
+      "sha256": "e093e0e28cefcd92c0714fcb062e52849339e96d3ad1b7736bb0a0ed10b13907"
     },
     ".devkit/managed/docs/rules/decision_supersession/guide.md": {
       "mode": 420,
@@ -2140,7 +2140,7 @@
     },
     ".devkit/managed/docs/rules/id_convention/guide.md": {
       "mode": 420,
-      "sha256": "2172b3730e71051283d2ccb4e59b1e8aa225dd3f972a27ec973d011dc7c479a8"
+      "sha256": "3c37801e0ea785ac8988bd18264e8f8e4ffc1f7770f1bac457d1f4a18eae7049"
     },
     ".devkit/managed/docs/rules/id_convention/rule.py": {
       "mode": 420,
@@ -2148,11 +2148,11 @@
     },
     ".devkit/managed/docs/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "afe9b2b3c9f1dd0362cf6bf4dc37c2c54bae4b3f8e6448443e4cfc9835ea2e4f"
+      "sha256": "0377688651f71b4ec14dce29dd5d2b4e80d8faac65f5009ba44f19f4aa791cc0"
     },
     ".devkit/managed/docs/rules/spec_format/guide.md": {
       "mode": 420,
-      "sha256": "eeb982749f5fc4952e6f9e2202a5cb872d0e03cd9ec679ca582264468745f3a1"
+      "sha256": "a6663e930351591da08ac6c71ccbcfdb1988428262f8fc641022598dcb25a45d"
     },
     ".devkit/managed/docs/rules/spec_format/rule.py": {
       "mode": 420,
@@ -2160,7 +2160,7 @@
     },
     ".devkit/managed/docs/rules/spec_format/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "132a67c2a70c393c03a4225d9a8aac1bf9d79edc64da258219662ba2974aac8c"
+      "sha256": "4d97728abd6c11ee72809bbda254e4eae5fd12c6b2476a37e3127f1eda967862"
     },
     ".devkit/managed/docs/rules/steering_documents/guide.md": {
       "mode": 420,
@@ -2224,11 +2224,11 @@
     },
     ".devkit/managed/docs/templates/design.md": {
       "mode": 420,
-      "sha256": "2c1a47265a94447fcaf87e2cd7b16408ee3244d1661bd4e8e080792354bcd385"
+      "sha256": "043e559b0813fa499b0cbe1c44d7b6f8964555cf4acb5cc079e100db3fd0be02"
     },
     ".devkit/managed/docs/templates/domain.md": {
       "mode": 420,
-      "sha256": "e26d508fcf77b5f8abeb3e92dcf38ac788452e40ee86d5000be7b52f0329a245"
+      "sha256": "75747e849a13c869e16167e3c99286d73a02cf808ee98492a8e6d6d40d318be9"
     },
     ".devkit/managed/docs/templates/milestone.md": {
       "mode": 420,
@@ -2304,7 +2304,7 @@
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/references/migration.md": {
       "mode": 420,
-      "sha256": "8f41c0efd78035eb94495161f0bc6f03cd08664f177602499a6e5bf5a54c0c74"
+      "sha256": "568a59de852323afcd49184a9e424b55b611ca9031f38f5db44be3bf6e977fed"
     },
     ".devkit/managed/spec/playbooks/feedback-consolidation/SKILL.md": {
       "mode": 420,
@@ -2508,7 +2508,7 @@
     },
     ".devkit/managed/spec/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "5cf15bee411dc7fe8849017c4429daf23ed61f3876dc4cdbdf6b644cae72e577"
+      "sha256": "1e0a3511ecb33d2a2b3120706808771bde275eeea82c6457b63ab8424b192d08"
     },
     ".devkit/managed/spec/skills/spec-sync/references/screens.md": {
       "mode": 420,

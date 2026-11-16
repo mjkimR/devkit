@@ -36,7 +36,7 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
    ```
 
    Include every modified or deleted formal document and support file as a `modified` target. Compare removed
-   paths and their replacements explicitly in the body; required mismatches cannot be waived. Ordinary artifact
+   paths and their replacements explicitly in the body; required mismatches cannot be waived. Ordinary support
    links need actual destination checks, beyond formal reference rules.
 
    Every written UX document, changed use case and modified root or namespace `steering/ux-objects.md` is a target; every drafted screen
@@ -63,13 +63,17 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
 
 - Create/update: compare the retained source identity and statements, sole owner and useful current routes. Give
   independent details their own formal IDs; regenerate a supporting artifact only when its actual source changed.
-- Rename/root move: move the canonical file and ID-owned artifact subtree together. For same-kind rename keep the
-  old-ID alias; unchanged-ID root moves need none. Repair current prose/typed references with `devkit rules fix`,
-  ordinary incoming/artifact links and relative source links inside and outside the moved subtree. Check global
-  and registered namespace destinations, collisions and absence of old folders; an alias never legalizes an orphan.
+- Support location: a DESIGN keeps support files beside `design.md` in its bundle
+  `designs/<area>/DESIGN-<slug>/`; a DOMAIN or OPS keeps them in the sibling `<ID>/artifacts/` directory.
+- Rename/root move: move a DESIGN's whole bundle directory, or a DOMAIN/OPS file together with its
+  `<ID>/artifacts/` directory. For same-kind rename keep the old-ID alias; unchanged-ID area and root moves need
+  none. Repair current prose/typed references with `devkit rules fix`, ordinary incoming/support links and relative
+  source links inside and outside the moved bundle or support directory. Check global and registered namespace
+  destinations, collisions and absence of old folders; an alias never legalizes an orphan.
 - Split: allocate every statement, independent detail and retained artifact to exactly one canonical owner. Move
-  each artifact to its owner's subtree and repair links; leave no stale duplicate. Keep an old active ID only if
-  it still owns a maintained subject; otherwise retire it and link useful successors. Never alias one ID to two nodes.
+  each support file to its owner's support location and repair links; leave no stale duplicate. Keep an old active
+  ID only if it still owns a maintained subject; otherwise retire it and link useful successors. Never alias one ID
+  to two nodes.
 - Reclassify: retire the old identity and create the receiving kind's canonical node. Transfer sole statement and
   artifact ownership, repair current routes/ordinary links and reject cross-prefix aliases.
 - Retire: retain resolvable history/provenance and useful successors without ADR supersession fields. In the same

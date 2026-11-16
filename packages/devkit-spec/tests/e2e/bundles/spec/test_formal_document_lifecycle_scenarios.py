@@ -17,6 +17,39 @@ import pytest
 
 APPROACH = "sdd"
 ROLES = [("designs", "DESIGN", "design"), ("domain", "DOMAIN", "domain"), ("operations", "OPS", "operations")]
+AREA = "core"
+AREA_DIRECTORIES = ("designs", "domain")
+DESIGN_ANCHOR = "design.md"
+
+
+def home(root: str, directory: str, identifier: str, area: str = AREA) -> str:
+    """The ID-named directory that moves with its document: a DESIGN bundle, or a DOMAIN/OPS support parent."""
+    scope = f"/{area}" if directory in AREA_DIRECTORIES else ""
+    return f"{root}/{directory}{scope}/{identifier}"
+
+
+def canonical(root: str, directory: str, identifier: str, area: str = AREA) -> str:
+    owned = home(root, directory, identifier, area)
+    return f"{owned}/{DESIGN_ANCHOR}" if directory == "designs" else f"{owned}.md"
+
+
+def support(root: str, directory: str, identifier: str, name: str, area: str = AREA) -> str:
+    owned = home(root, directory, identifier, area)
+    return f"{owned}/{name}" if directory == "designs" else f"{owned}/artifacts/{name}"
+
+
+def is_support(path: str) -> bool:
+    """Parent-owned support: any non-anchor file in a DESIGN bundle, or a file under a DOMAIN/OPS artifacts directory."""
+    bundled = re.search(r"/designs/[^/]+/DESIGN-[^/]+/(.+)$", path)
+    return "/artifacts/" in path or (bundled is not None and bundled.group(1) != DESIGN_ANCHOR)
+
+
+def is_canonical(path: str) -> bool:
+    return path.endswith(".md") and not is_support(path) and not path.endswith("/README.md")
+
+
+UNRELATED = canonical("docs", "domain", "DOMAIN-unrelated")
+ROUTER = canonical("docs", "designs", "DESIGN-router")
 
 
 class Exercise:
@@ -90,10 +123,31 @@ class Exercise:
         return os.path.relpath(self.root / target, (self.root / origin).parent)
 
     def doc(self, path: str, identifier: str, body: str, extra: str = "", status: str = "active") -> Path:
+        """Write a formal document; a document in an area directory carries that directory as its ``area``."""
+        scoped = re.search(r"(?:^|/)(?:designs|domain)/([^/]+)/", path)
+        area = f"area: {scoped.group(1)}\n" if scoped else ""
         return self.write(
             path,
-            f'---\nid: {identifier}\ntitle: Retained subject\nsummary: "Retained subject and its source-specific support."\nstatus: {status}\n{extra}---\n# [{identifier}] Retained subject\n\n{body}\n',
+            f'---\nid: {identifier}\ntitle: Retained subject\nsummary: "Retained subject and its source-specific support."\nstatus: {status}\n{area}{extra}---\n# [{identifier}] Retained subject\n\n{body}\n',
         )
+
+    def relocate(self, directory: str, source: str, target: str) -> None:
+        """Move a document's home: a DESIGN bundle whole, or a DOMAIN/OPS file with its support directory."""
+        (self.root / target).parent.mkdir(parents=True, exist_ok=True)
+        if directory != "designs":
+            (self.root / f"{source}.md").rename(self.root / f"{target}.md")
+        (self.root / source).rename(self.root / target)
+
+    def prune(self, path: Path) -> None:
+        """Remove the empty directories left above ``path`` inside ``docs``."""
+        for directory in path.parents:
+            if directory == self.root / "docs" or not directory.exists() or any(directory.iterdir()):
+                break
+            directory.rmdir()
+
+    def orphaned(self, output: str, owned: str) -> None:
+        """The rule output reports a file inside the parentless home ``owned``."""
+        assert any(path.startswith(f"{owned}/") for path in re.findall(r"file=(\S+)", output)), output
 
     def rules(self, expected: int = 0, staged: bool = False) -> str:
         return self.cli("rules", "check", *(["--staged"] if staged else ["docs"]), expected=expected).stdout
@@ -117,10 +171,10 @@ class Exercise:
         removed = self.run(
             "git", "diff", "--cached", "--name-only", "--no-renames", "--diff-filter=D", "--", "docs"
         ).stdout.splitlines()
-        assert targets and any("/artifacts/" in path for path in targets)
-        canonical = next(path for path in targets if path.endswith(".md") and "/artifacts/" not in path)
+        assert targets and any(is_support(path) for path in targets)
+        canonical = next(path for path in targets if is_canonical(path))
         if require_removed:
-            assert removed and any("/artifacts/" in path for path in removed)
+            assert removed and any(is_support(path) for path in removed)
 
         def missing(selected: list[str]) -> set[str]:
             return set(targets) - set(selected)
@@ -159,7 +213,7 @@ class Exercise:
             )
             self.run("git", "add", bundle)
 
-        write_record([*targets, "docs/domain/DOMAIN-unrelated.md"])
+        write_record([*targets, UNRELATED])
         negative = self.rules(expected=1, staged=True)
         assert "RULE-reconcile-contract" in negative and "DOMAIN-unrelated.md" in negative
         write_record(targets)
@@ -203,14 +257,13 @@ class Exercise:
 def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: str, prefix: str, kind: str) -> None:
     e = Exercise(tmp_path / "consumer")
     identifier = f"{prefix}-original"
-    parent = f"{docs_root}/{directory}/{identifier}.md"
-    detail = f"{docs_root}/{directory}/{prefix}-detail.md"
-    artifact = f"{docs_root}/{directory}/{identifier}/artifacts/example.md"
-    data = f"{docs_root}/{directory}/{identifier}/artifacts/data.csv"
-    router = "docs/designs/DESIGN-router.md"
-    unaffected = e.doc(
-        "docs/domain/DOMAIN-unrelated.md", "DOMAIN-unrelated", "Unrelated conceptual meaning.\n"
-    ).read_bytes()
+    owned = home(docs_root, directory, identifier)
+    parent = canonical(docs_root, directory, identifier)
+    detail = canonical(docs_root, directory, f"{prefix}-detail")
+    artifact = support(docs_root, directory, identifier, "example.md")
+    data = support(docs_root, directory, identifier, "data.csv")
+    router = ROUTER
+    unaffected = e.doc(UNRELATED, "DOMAIN-unrelated", "Unrelated conceptual meaning.\n").read_bytes()
     csv = "size,latency\n4,12\n"
     e.write(data, csv)
     e.write(artifact, f"# Example\nParent `{identifier}`. [data](data.csv).\n")
@@ -236,7 +289,8 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
     original_bytes = (e.root / parent).read_bytes()
     (e.root / parent).unlink()
     e.run("git", "add", parent)
-    assert "artifact" in e.rules(expected=1, staged=True).lower()
+    # Without its canonical document the support has no parent: an anchor-less bundle, or an orphan artifacts directory.
+    e.orphaned(e.rules(expected=1, staged=True), owned)
     (e.root / parent).write_bytes(original_bytes)
     e.run("git", "add", parent)
     # Update source and compare the precise retained bytes, without changing unrelated roles.
@@ -247,11 +301,11 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
     assert e.run(sys.executable, "-c", "exec(open('src/mechanism.py').read()); print(MODE)").stdout.strip() == "2"
     # Same-kind rename carries parent-owned support; aliases preserve identity, not filesystem paths.
     renamed = f"{prefix}-renamed"
-    new_parent = f"{docs_root}/{directory}/{renamed}.md"
-    (e.root / parent).rename(e.root / new_parent)
-    (e.root / f"{docs_root}/{directory}/{identifier}").rename(e.root / f"{docs_root}/{directory}/{renamed}")
-    data = f"{docs_root}/{directory}/{renamed}/artifacts/data.csv"
-    artifact = f"{docs_root}/{directory}/{renamed}/artifacts/example.md"
+    new_home = home(docs_root, directory, renamed)
+    new_parent = canonical(docs_root, directory, renamed)
+    e.relocate(directory, owned, new_home)
+    data = support(docs_root, directory, renamed, "data.csv")
+    artifact = support(docs_root, directory, renamed, "example.md")
     e.doc(new_parent, renamed, body(new_parent, data, source_hash), f"aliases: [{identifier}]\n")
     e.write(
         artifact,
@@ -265,23 +319,27 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
     )
     e.cli("rules", "fix", "docs")
     assert e.resolve(identifier)["id"] == renamed
-    assert not (e.root / parent).exists() and not (e.root / f"{docs_root}/{directory}/{identifier}").exists()
-    orphan = e.write(f"{docs_root}/{directory}/{identifier}/artifacts/orphan.csv", csv)
-    assert "artifact" in e.rules(expected=1).lower()
+    assert not (e.root / parent).exists() and not (e.root / owned).exists()
+    # Support left at the old ID is parentless; the old-ID alias never legalizes it.
+    orphan = e.write(support(docs_root, directory, identifier, "orphan.csv"), csv)
+    e.orphaned(e.rules(expected=1), owned)
     orphan.unlink()
-    orphan.parent.rmdir()
-    orphan.parent.parent.rmdir()
-    # Move unchanged identity between global and registered roots in both directions.
+    e.prune(orphan)
+    # Move unchanged identity between global and registered roots in both directions, changing area on the way out.
     original_root = docs_root
-    for destination in ["docs/packages/api" if docs_root == "docs" else "docs", original_root]:
-        moved = f"{destination}/{directory}/{renamed}.md"
-        e.write(f"{destination}/{directory}/.keep", "")
-        (e.root / new_parent).rename(e.root / moved)
-        (e.root / f"{docs_root}/{directory}/{renamed}").rename(e.root / f"{destination}/{directory}/{renamed}")
+    area = AREA
+    for destination, destination_area in [
+        ("docs/packages/api" if docs_root == "docs" else "docs", "moved"),
+        (original_root, AREA),
+    ]:
+        moved_home = home(destination, directory, renamed, destination_area)
+        e.relocate(directory, new_home, moved_home)
+        e.prune(e.root / new_home)
         assert not (e.root / new_parent).exists()
-        docs_root, new_parent = destination, moved
-        data = f"{docs_root}/{directory}/{renamed}/artifacts/data.csv"
-        artifact = f"{docs_root}/{directory}/{renamed}/artifacts/example.md"
+        docs_root, area, new_home = destination, destination_area, moved_home
+        new_parent = canonical(docs_root, directory, renamed, area)
+        data = support(docs_root, directory, renamed, "data.csv", area)
+        artifact = support(docs_root, directory, renamed, "example.md", area)
         e.doc(new_parent, renamed, body(new_parent, data, source_hash), f"aliases: [{identifier}]\n")
         e.write(
             artifact,
@@ -295,10 +353,10 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
         e.rules()
     # A split gives retained CSV one new canonical parent and keeps independent detail identity.
     split = f"{prefix}-split"
-    split_path = f"{docs_root}/{directory}/{split}.md"
-    split_data = f"{docs_root}/{directory}/{split}/artifacts/data.csv"
+    split_path = canonical(docs_root, directory, split)
+    split_data = support(docs_root, directory, split, "data.csv")
     e.doc(split_path, split, "Owns the measured support subject.")
-    (e.root / split_data).parent.mkdir(parents=True)
+    (e.root / split_data).parent.mkdir(parents=True, exist_ok=True)
     (e.root / data).rename(e.root / split_data)
     e.doc(new_parent, renamed, body(new_parent, split_data, source_hash), f"aliases: [{identifier}]\n")
     e.write(artifact, f"# Example\nParent `{renamed}`. [data]({e.relative(artifact, split_data)}).\n")
@@ -307,13 +365,12 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
     # Cross-kind transfer retires the previous node, never gives the receiving prefix an old-prefix alias.
     receiving_dir, receiving_prefix, _ = ROLES[(next(i for i, row in enumerate(ROLES) if row[1] == prefix) + 1) % 3]
     receiving = f"{receiving_prefix}-transferred"
-    receiving_path = f"{docs_root}/{receiving_dir}/{receiving}.md"
-    receiving_data = f"{docs_root}/{receiving_dir}/{receiving}/artifacts/data.csv"
+    receiving_path = canonical(docs_root, receiving_dir, receiving)
+    receiving_data = support(docs_root, receiving_dir, receiving, "data.csv")
     e.doc(receiving_path, receiving, "Owns the transferred support subject.")
-    (e.root / receiving_data).parent.mkdir(parents=True)
+    (e.root / receiving_data).parent.mkdir(parents=True, exist_ok=True)
     (e.root / split_data).rename(e.root / receiving_data)
-    (e.root / split_data).parent.rmdir()
-    (e.root / split_data).parent.parent.rmdir()
+    e.prune(e.root / split_data)
     e.doc(split_path, split, f"Receiving owner `{receiving}`.", status="retired")
     e.doc(new_parent, renamed, body(new_parent, receiving_data, source_hash), f"aliases: [{identifier}]\n")
     e.write(artifact, f"# Example\nParent `{renamed}`. [data]({e.relative(artifact, receiving_data)}).\n")
@@ -387,7 +444,7 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
     assert "DESIGN-router" in str(e.json("docs", "refs", renamed, "--direction", "in"))
     for linked in [new_parent, artifact, router]:
         e.links(linked)
-    assert (e.root / "docs/domain/DOMAIN-unrelated.md").read_bytes() == unaffected
+    assert (e.root / UNRELATED).read_bytes() == unaffected
     e.finish(renamed, source_hash)
 
 
@@ -411,9 +468,9 @@ def test_source_bound_sdd_impact_plan_review_and_reconcile(tmp_path: Path, multi
         ),
     }
     for identifier, (directory, statement) in documents.items():
-        e.doc(f"docs/{directory}/{identifier}.md", identifier, statement)
+        e.doc(canonical("docs", directory, identifier), identifier, statement)
     before = {
-        identifier: (e.root / f"docs/{directory}/{identifier}.md").read_bytes()
+        identifier: (e.root / canonical("docs", directory, identifier)).read_bytes()
         for identifier, (directory, _) in documents.items()
     }
     old_source = hashlib.sha256((e.root / "app.py").read_bytes()).hexdigest()
@@ -445,7 +502,7 @@ def test_source_bound_sdd_impact_plan_review_and_reconcile(tmp_path: Path, multi
     targets = []
     for identifier in affected:
         directory, statement = documents[identifier]
-        path = f"docs/{directory}/{identifier}.md"
+        path = canonical("docs", directory, identifier)
         if identifier == "DESIGN-state-list":
             statement = (
                 "Two literal state entries supply JSON output."
@@ -460,7 +517,7 @@ def test_source_bound_sdd_impact_plan_review_and_reconcile(tmp_path: Path, multi
         targets.append(path)
     for identifier in set(documents) - set(affected):
         directory, _ = documents[identifier]
-        assert (e.root / f"docs/{directory}/{identifier}.md").read_bytes() == before[identifier]
+        assert (e.root / canonical("docs", directory, identifier)).read_bytes() == before[identifier]
     if multi_role:
         e.write(capability, contract(observed))
         targets.append(capability)
@@ -498,7 +555,7 @@ def test_brownfield_formal_destination_preserves_current_content_and_history(tmp
     e.cli("playbook", "get", "spec/brownfield-adoption")
     migration = (e.root / ".devkit/managed/spec/playbooks/brownfield-adoption/references/migration.md").read_text()
     assert "Formal DESIGN" in migration and "Formal DOMAIN" in migration and "Formal OPS" in migration
-    current = e.doc("docs/domain/DOMAIN-retained.md", "DOMAIN-retained", "Retained conceptual meaning.")
+    current = e.doc(canonical("docs", "domain", "DOMAIN-retained"), "DOMAIN-retained", "Retained conceptual meaning.")
     current_bytes = current.read_bytes()
     legacy = e.write(
         "docs/materials/_legacy/mechanism.md", "# Local mechanism\nMODE is the retained implementation constant.\n"
@@ -506,13 +563,14 @@ def test_brownfield_formal_destination_preserves_current_content_and_history(tmp
     history = e.write("docs/materials/_legacy/experiment.txt", "Historical discarded experiment; not current design.\n")
     history_bytes = history.read_bytes()
     source = hashlib.sha256((e.root / "src/mechanism.py").read_bytes()).hexdigest()
+    destination = canonical("docs", "designs", "DESIGN-retained-mechanism")
     e.doc(
-        "docs/designs/DESIGN-retained-mechanism.md",
+        destination,
         "DESIGN-retained-mechanism",
         legacy.read_text().split("\n", 1)[1] + f"Source SHA256: {source}.",
     )
     legacy.unlink()
     e.rules()
-    assert e.resolve("DESIGN-retained-mechanism")["path"] == "docs/designs/DESIGN-retained-mechanism.md"
+    assert e.resolve("DESIGN-retained-mechanism")["path"] == destination
     assert current.read_bytes() == current_bytes and history.read_bytes() == history_bytes
     assert e.history.read_bytes() == e.history_bytes and not legacy.exists()

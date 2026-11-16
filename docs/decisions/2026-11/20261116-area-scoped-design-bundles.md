@@ -1,16 +1,16 @@
 ---
-id: PADR-area-scoped-design-bundles
+id: ADR-area-scoped-design-bundles
 title: Area-scoped design bundles and domain area directories
 summary: Formal designs live in area-scoped directory bundles with a design.md anchor and in-bundle support, and domain documents in area directories; IDs stay area-free, and operations stay flat.
-proposal: PROP-design-bundle-layout
+proposal: SPEC-design-bundle-layout
 supersedes: [ADR-formal-role-document-identities]
-status: draft
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-area-scoped-design-bundles] Area-scoped design bundles and domain area directories
+# [ADR-area-scoped-design-bundles] Area-scoped design bundles and domain area directories
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---
@@ -58,8 +58,8 @@ Chosen option 2.
 - **Kind table.** The kind table records each kind's layout (`flat`, `area` or `area-bundle` with its anchor file
   name), from which `area_scoped` derives, and identity, support, frontmatter, entrypoint and search rules read it.
 
-Supersedes in part `ADR-formal-role-document-identities`: the flat canonical path clause and the
-`<ID>/artifacts/` support clause for design and domain documents. Its identity, prefix, status, relation,
+Supersedes in part `ADR-formal-role-document-identities`: the flat canonical path clause for design and
+domain documents and the `<ID>/artifacts/` support clause for design documents. Its identity, prefix, status, relation,
 ownership and entrypoint clauses stay in force.
 
 ## 5. Consequences

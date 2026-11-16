@@ -3,6 +3,7 @@ id: DOMAIN-<slug>
 title: <Title>
 status: draft
 summary: "<English sentence stating the subject and boundary.>"
+area: <area>
 related_capabilities: []
 related_usecases: []
 related_designs: []

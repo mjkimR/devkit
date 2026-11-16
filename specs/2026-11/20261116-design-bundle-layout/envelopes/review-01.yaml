@@ -1,0 +1,38 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:07:46.227515Z'
+status: completed
+summary: 'Round 1 independent review: AC-01..AC-07 implemented and tested, no Non-Goal breach; REVISE for one P2 (spec_format fix identifies bundle support) and two P3 (README exemption scope, old flat domain binary support).'
+findings:
+- issue: RULE-spec-format fix gives invalid ID-free design bundle support Markdown an id from its file stem, turning it into a stray and reporting role-only problems on support.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/spec_format.py:137,265
+  failure_condition: rules fix on unnamed bundle support writes id plain; id_convention then reports a stray.
+  suggested_action: Keep role support paths out of spec_format scope and fix; add a rule test.
+  resolution: open
+  severity: P2
+- issue: README.md under domain/operations <ID>/artifacts/ is exempted in code, against AC-03 (existing checks kept) and the capability wording.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:136; docs/capabilities/documents/CAP-DOCS-document-model.md:268; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/id_convention/guide.md:123
+  failure_condition: An identified README under a domain artifacts directory passes.
+  suggested_action: Pick one scope and align code, guide, docstring and capabilities.
+  resolution: open
+  severity: P3
+- issue: Binary support left at the old flat domain path docs/domain/<ID>/artifacts/ is silently accepted.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:76-78
+  failure_condition: An orphaned binary after a domain area move passes rules check.
+  suggested_action: Report off-grammar binary support shapes under role directories; add a test.
+  resolution: open
+  severity: P3
+assumptions:
+- Reviewed committed content at the head; handoff commit changes are Planning tooling.
+unverified_areas:
+- AC-03 stray and orphan tests cover only the global root; a namespace probe passed.
+checks:
+  tests: PASS host test-affected 2656 passed; reviewer reran 23 lifecycle/entrypoint tests
+  rules: PASS rules check --ci errors=0
+  lint: PASS lint-check and pyright 0 errors
+diff_scope:
+  base: 93514612da7464cb468bfcd29cb2fa2f3c7d6673
+  head: fd17edb0940f1a353a5de8ae183e7a262a381a74
+activity_effort: high

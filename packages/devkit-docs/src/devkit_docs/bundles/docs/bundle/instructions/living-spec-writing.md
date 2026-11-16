@@ -30,12 +30,14 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
   keep recovery steps and permissions with that owner.
 - If transferring a normative statement, replace its previous normative restatement in the same change and name
   the receiving owner; otherwise use a concise non-normative summary citing the owner.
-- Give design, domain and operations entries first-class IDs: `DESIGN-<slug>` in `designs/`, `DOMAIN-<slug>` in
-  `domain/`, and `OPS-<slug>` in `operations/` under the global or registered package docs root.
+- Give design, domain and operations entries first-class IDs: a `designs/<area>/DESIGN-<slug>/design.md` bundle,
+  `DOMAIN-<slug>.md` in `domain/<area>/`, and `OPS-<slug>.md` in `operations/` under the global or registered package
+  docs root; a design or domain document declares its area directory as `area`.
 - Read `design-writing.md`, `domain-writing.md` or `operations-writing.md` before editing its role; use the matching
   template in `../templates/`. Keep these roles equally formal without a fixed authoring sequence.
-- Give independently maintained Markdown details/examples/datasheets their own formal peer IDs; reserve
-  `<PARENT-ID>/artifacts/` for parent-owned support, with no fake IDs for CSV or images.
+- Give independently maintained Markdown details/examples/datasheets their own formal peer IDs; keep parent-owned
+  support inside the design bundle, or under `<PARENT-ID>/artifacts/` beside a domain or operations document, with
+  no fake IDs for CSV or images.
 - Use full IDs for current document navigation and optional typed related_* lists only where useful; require no
   reciprocal registry, all-pairs links, whole-layer reading or fixed hop count.
 - Review owner uniqueness, source agreement and ordinary artifact/source link destinations; choose content by

@@ -63,8 +63,8 @@ repository-wide, so a slug is unique across `docs/` and every package.
 - No frontmatter (or one never closed): `Missing YAML frontmatter; expected <field>: <ID>`.
 - A frontmatter `id` (`reconcile_id` in `reconcile.md`) other than the path requires (fixable): `Frontmatter <field>
   is "<declared>" but the path requires "<ID>"`.
-- A capability's or use case's `area` other than its directory (fixable): `Frontmatter area is "<area>" but the
-  directory requires "<directory>"`.
+- A capability's, use case's, UX document's, design's or domain document's `area` other than its area directory
+  (fixable): `Frontmatter area is "<area>" but the directory requires "<directory>"`.
 - A first `# ` heading opened by an `[ID]` or `` `ID` `` token that is not the ID (fixable; in a spec bundle file
   the token may follow a leading label, `` # Technical Plan: `SPEC-{slug}` ``, and a plan, tasks or reconcile heading
   may name `SPEC-{slug}`): `Heading token [<token>] does not match identifier <ID>[ or <ID>]`. An ID later in the
@@ -82,9 +82,9 @@ repository-wide, so a slug is unique across `docs/` and every package.
 
 ## 3. Remediation
 
-1. Move the file to the required path (for a Living Spec document or milestone, the ID is the file stem; for a dated
-   document, use the decision or start date). `devkit rules fix` never moves files; `devkit docs resolve <ID>` finds
-   a document by ID.
+1. Move the file to the required path (for a Living Spec document or milestone, the ID is the file stem, for a design
+   the bundle directory name; for a dated document, use the decision or start date). `devkit rules fix` never moves
+   files; `devkit docs resolve <ID>` finds a document by ID.
 2. **Autofix**: `devkit rules fix` sets the `id` / `reconcile_id` and `area` lines (inserting a missing one: the ID as
    the first header line, `area` after the `id` line) and rewrites the heading token (in a spec bundle file, to
    `SPEC-{slug}`). It never moves a file or changes lifecycle status, never renames a duplicate slug, never
@@ -109,4 +109,30 @@ in a `materials/` directory; `[rules] exclude` removes a file from every rule.
 
 ## Formal roles
 
-Formal DESIGN/DOMAIN/OPS documents use flat prefixed stems in their respective designs/domain/operations roots, globally or in a registered namespace. Their first H1 is # [ID] title matching metadata. Independent Markdown details require peer IDs. Parent-owned support under PARENT-ID/artifacts needs one same-root/same-kind canonical parent; Markdown is ID-free and names it. Orphans, ID-bearing artifacts and stray nested independent Markdown fail. Binary support needs no fake ID. Fix never moves files.
+Formal role documents live in a global or registered namespace docs root:
+
+| Document | Path | Also required |
+| :--- | :--- | :--- |
+| Design | `designs/{area}/DESIGN-{slug}/design.md` | the ID is the bundle directory name; `area: {area}` |
+| Domain | `domain/{area}/DOMAIN-{slug}.md` | the ID is the file stem; `area: {area}` |
+| Operations | `operations/OPS-{slug}.md` | the ID is the file stem; no `area` |
+
+Their first H1 is `# [ID] title` matching metadata. Independent Markdown details require peer IDs (a peer bundle for
+a design). Every other file of a design bundle, at any depth, is parent-owned support of its `design.md`; domain and
+operations support lives under `{ID}/artifacts/` beside the document, in its directory. Supporting Markdown is
+ID-free and names its parent; binary support needs no fake ID. `README.md` is exempt in area directories and bundles;
+a `README.md` under `{ID}/artifacts/` is supporting Markdown.
+
+- Identified Markdown inside a design bundle, a nested `DESIGN-{slug}/design.md` included: `Invalid partition path:
+  identified Markdown inside a DESIGN bundle is a stray; only its design.md anchor carries an ID`. Promote it to a
+  peer bundle with its own ID, or remove its ID and name the parent.
+- A bundle file whose bundle has no `design.md` with the bundle directory name as its ID: `Invalid partition path:
+  bundle has no eligible design.md anchor whose ID is the bundle directory name`.
+- A flat design or domain path, or a design file directly in an area directory: `Invalid partition path: Design
+  must be stored at <root>/designs/{area}/DESIGN-{word-led-slug}/design.md` (`Domain must be stored at
+  <root>/domain/{area}/DOMAIN-{word-led-slug}.md`).
+- A non-Markdown file other than a dotfile such as `.gitkeep` under a role directory that fits no document or
+  support path of its kind, such as one left at the flat `domain/{ID}/artifacts/` path: `Invalid partition path:
+  file under <root>/domain/ fits no DOMAIN document or support path`. Move it to `<root>/domain/{area}/{ID}/artifacts/` beside its document, or remove it.
+- Orphan domain or operations support and ID-bearing support fail. Fix never moves files; it writes the bundle
+  directory name as a design's `id` and the area directory as `area`.

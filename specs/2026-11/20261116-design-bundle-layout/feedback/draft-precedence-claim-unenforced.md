@@ -37,7 +37,7 @@ created_at: 2026-11-16
 - **Versions**: devkit main after the formal document lifecycle integration.
 - **Conditions**: Draft in Backlog, dependents accepted with `depends_on` naming only an earlier spec.
 - **Workarounds Attempted**: Manual comparison of handoff commits and spec statuses; succeeded.
-- **Related Assets**: `devkit spec proposal handoff`, `devkit spec proposal check`, `PROP-design-bundle-layout`,
+- **Related Assets**: `devkit spec proposal handoff`, `devkit spec proposal check`, `SPEC-design-bundle-layout`,
   `SPEC-design-document-lifecycle`, `PROP-design-document-viewer`.
 
 ## Evidence

@@ -3,7 +3,8 @@
 ``Kind`` is a declared enum, so static checks see every member
 (``ADR-kind-definition-table-keyed-on-the-declared-kind-enum``). Each member has exactly one ``KindDefinition`` row,
 in enum order, holding the facts the index, the spec rules and the entrypoint paths read: the ID prefix, the
-directory under a docs root, Living Spec membership, area scoping, the ``RULE-spec-format`` scope, whether a first H1
+directory under a docs root, Living Spec membership, the path layout under that directory (from which area scoping
+is derived), the ``RULE-spec-format`` scope, whether a first H1
 carries an ID token, the summary requirement, whether ``entrypoints`` may be declared, the terminal statuses, the
 fix-time default status and the relation fields that take the kind's IDs.
 
@@ -44,6 +45,14 @@ class Kind(StrEnum):
     OPERATIONS = "operations"
 
 
+class Layout(StrEnum):
+    """How a document of the kind is stored under its directory of a docs root."""
+
+    FLAT = "flat"  # ``<directory>/<ID>.md``
+    AREA = "area"  # ``<directory>/<area>/<ID>.md`` with a matching ``area:`` field
+    AREA_BUNDLE = "area-bundle"  # ``<directory>/<area>/<ID>/<layout_anchor>`` with a matching ``area:`` field
+
+
 class Summary(StrEnum):
     """When ``RULE-document-summary`` requires a ``summary``."""
 
@@ -71,18 +80,31 @@ class KindDefinition:
     kind: Kind
     prefix: str
     directory: str  # the kind's directory under a docs root ("capabilities"), "" when it has none
-    living_spec: bool  # its ID is the file stem and its directory is checked in every docs root
-    area_scoped: bool  # stored under ``<directory>/<area>/`` with a matching ``area:`` field
+    # Its directory is checked in every docs root, and its ID is the file stem (``flat`` and ``area`` layouts) or the
+    # bundle directory name (``area-bundle`` layout).
+    living_spec: bool
+    layout: Layout
+    layout_anchor: str  # the anchor file name of an ``area-bundle`` layout ("design.md"), "" otherwise
     format_scope: FormatScope
     heading_token: bool  # ``RULE-id-convention`` reads a first-H1 ``[ID]`` token of this prefix
     summary: Summary
-    anchor: str  # the anchor file name of an ``ANCHOR`` summary, "" otherwise
+    anchor: str  # the anchor file name of an ``ANCHOR`` summary, "" otherwise; independent of ``layout_anchor``
     entrypoints: bool  # documents of the kind may declare ``entrypoints``
     terminal_statuses: frozenset[
         str
     ]  # lower-cased statuses that settle a document (``ADR-terminal-statuses-are-historical``)
     default_status: str  # the status ``RULE-spec-format``'s fix writes
     relation_fields: tuple[str, ...]  # frontmatter relation fields that take this kind's IDs
+
+    @property
+    def area_scoped(self) -> bool:
+        """Stored under ``<directory>/<area>/`` with a matching ``area:`` field: an ``area`` or ``area-bundle`` layout."""
+        return self.layout is not Layout.FLAT
+
+    @property
+    def bundled(self) -> bool:
+        """Stored as a bundle directory named by the ID, whose ``layout_anchor`` file is the document."""
+        return self.layout is Layout.AREA_BUNDLE
 
 
 _NONE: frozenset[str] = frozenset()
@@ -95,7 +117,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "CAP",
         "capabilities",
         living_spec=True,
-        area_scoped=True,
+        layout=Layout.AREA,
+        layout_anchor="",
         format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -110,7 +133,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "UC",
         "usecases",
         living_spec=True,
-        area_scoped=True,
+        layout=Layout.AREA,
+        layout_anchor="",
         format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -125,7 +149,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "UX",
         "ux",
         living_spec=True,
-        area_scoped=True,
+        layout=Layout.AREA,
+        layout_anchor="",
         format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -140,7 +165,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "ARCH",
         "architecture",
         living_spec=True,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -155,7 +181,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "ADR",
         "decisions",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -170,7 +197,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "PROP",
         "proposals",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.GLOBAL,
         heading_token=False,
         summary=Summary.ANCHOR,
@@ -185,7 +213,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "PADR",
         "",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=False,
         summary=Summary.NEVER,
@@ -200,7 +229,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "SPEC",
         "",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=True,
         summary=Summary.ANCHOR,
@@ -215,7 +245,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "PLAN",
         "",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=True,
         summary=Summary.NEVER,
@@ -230,7 +261,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "TASKS",
         "",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=True,
         summary=Summary.NEVER,
@@ -245,7 +277,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "REC",
         "",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=True,
         summary=Summary.NEVER,
@@ -260,7 +293,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "FB",
         "",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=True,
         summary=Summary.NEVER,
@@ -275,7 +309,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "MAT",
         "materials",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.NONE,
         heading_token=False,
         summary=Summary.NEVER,
@@ -290,7 +325,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "MS",
         "roadmap",
         living_spec=False,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -305,7 +341,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "DESIGN",
         "designs",
         living_spec=True,
-        area_scoped=False,
+        layout=Layout.AREA_BUNDLE,
+        layout_anchor="design.md",
         format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -320,7 +357,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "DOMAIN",
         "domain",
         living_spec=True,
-        area_scoped=False,
+        layout=Layout.AREA,
+        layout_anchor="",
         format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -335,7 +373,8 @@ ROWS: tuple[KindDefinition, ...] = (
         "OPS",
         "operations",
         living_spec=True,
-        area_scoped=False,
+        layout=Layout.FLAT,
+        layout_anchor="",
         format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
@@ -370,6 +409,8 @@ def validate(rows: Sequence[KindDefinition]) -> tuple[KindDefinition, ...]:
             fields[name] = row.kind
         if (row.summary is Summary.ANCHOR) != bool(row.anchor):
             raise KindTableError(f"kind {row.kind}: an anchor file is required exactly for an anchor-only summary")
+        if row.bundled != bool(row.layout_anchor):
+            raise KindTableError(f"kind {row.kind}: a layout anchor file is required exactly for an area-bundle layout")
         needs_directory = (
             row.living_spec or row.area_scoped or row.entrypoints or row.format_scope is not FormatScope.NONE
         )

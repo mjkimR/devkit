@@ -2,6 +2,7 @@
 id: DOMAIN-delivery-relationships
 title: "Delivery relationships"
 status: active
+area: delivery
 summary: "Distinguishes proposal and spec identity, milestone membership, prerequisites and provenance across delivery."
 ---
 
