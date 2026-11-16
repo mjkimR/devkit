@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T11:44:49.281960Z'
+status: completed
+summary: 'Implementer self-verified at medium after reconcile-check-01: CAP-HARN-agent-guidance now states the head-pinned recheck runs on the first Planning turn and after each Host refresh, matching planning.md:7; reconcile.md resolved, spec completed; rules check --ci passes'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: ''
+  head: 1eec9c808dd2f27fb9f49ca16fb6bb2eae27be7c

@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T11:44:24.916955Z'
+status: completed
+summary: 'reconcile-reviewer (isolated) at 8fe3ed436: CAP-HARN-agent-guidance target matches backlog/planning text and AC-01..AC-04; unaffected reasons, entrypoints decision and FB resolution justified; one P3: the first-turn head-pinned recheck is not stated in the capability'
+findings:
+- issue: planning.md now runs the general head-pinned recheck on the first Planning turn before the first decision, but CAP-HARN-agent-guidance mentions the head-pinned recheck only for ordering claims and reconcile.md does not say whether the widening has a Living Spec owner.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md:7; docs/capabilities/harness/CAP-HARN-agent-guidance.md:418; specs/2026-11/20261116-proposal-precedence-edges/reconcile.md:12-21
+  failure_condition: A Living Spec reader cannot tell that every first Planning turn rechecks head-pinned evidence before its first decision.
+  suggested_action: State in the CAP paragraph that the head-pinned recheck runs on the first turn and after each Host refresh.
+  resolution: open
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: 8fe3ed4366c69f76e270c1bc93081fcc72d19f11

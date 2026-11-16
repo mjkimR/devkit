@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T11:42:38.687932Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified at 5eb03d104: planning.md branch check now covers cost-dependent proposals (P2) and asks the user to sequence a still-accepted proposal in the question round (P3); CAP and AC-02 aligned; test_ordering_claim_guidance.py and budgets 161 passed, rules and lint pass'
+findings:
+- issue: Planning runs the dev-<slug> branch check only for proposals the draft names as following it, while CAP-HARN-agent-guidance says the first Planning turn checks every named unit for both claim types; a cost-only claim gets no branch check at Planning.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md:8; docs/capabilities/harness/CAP-HARN-agent-guidance.md:418
+  failure_condition: 'A draft whose only claim is that it is cheap because PROP-X has no spec yet, while PROP-X is on dev-x: the first Planning turn reads PROP-X accepted and keeps the stale cost premise.'
+  suggested_action: Broaden planning.md:8 to the Backlog trigger (proposals or specs whose handoff order or state the draft's claims rely on) and extend the test, or narrow the CAP paragraph.
+  resolution: resolved
+  severity: P2
+- issue: planning.md gives no step for a named proposal still accepted with no dev-<slug> branch at the first Planning turn; the sequencing decision exists only at the Backlog commit.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md:8
+  failure_condition: A draft committed before this guidance or without it reaches Planning with an unsequenced claim against an accepted proposal; the user is never asked to sequence.
+  suggested_action: 'Add: if it is still accepted with no branch and the draft records no sequencing decision, ask the user in the Planning question round.'
+  resolution: resolved
+  severity: P3
+checks: {}

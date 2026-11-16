@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T11:46:35.843624Z'
+status: completed
+summary: Backlog (references/backlog.md) checks each proposal or spec a draft's ordering or cost claim names (base status plus local/fetched dev-<slug> branch) before committing the draft, rewrites a handed-off premise and asks the user to sequence a still-accepted one; Planning (references/planning.md) runs the head-pinned recheck on the first turn too, with the same branch check and a sequencing question; CAP-HARN-agent-guidance owns the checks; no CLI, field or accepted-proposal edit; FB-draft-precedence-claim-unenforced resolved
+findings: []
+checks:
+  tests: 'PASS just test-affected --base d889ae40f: 1762 passed (partial selection); test_ordering_claim_guidance.py + test_bundle_budgets.py 161 passed'
+  build: PASS devkit sync --check clean after devkit sync
+  lint: PASS just lint-check; just check (pyright) 0 errors; devkit rules check --ci --base main clean
+diff_scope:
+  base: d889ae40f4f36b7c17bb6b25d55b81cdb9936730
+  head: c3e51e84a63b327d77fe31de0d3186ccad0aefbf

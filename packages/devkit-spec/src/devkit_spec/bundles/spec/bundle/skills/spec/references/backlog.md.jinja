@@ -6,6 +6,9 @@ Backlog holds queued requests as draft proposals, follow-ups as feedback, and mi
 
 - Keep every request not starting now as a draft proposal, including small work.
 - Before editing, splitting or deleting a draft, fetch (within existing network authorization) and run `devkit spec proposal check <slug>`; on `SPEC_PROPOSAL_IN_PLANNING`, leave the draft to its Planning branch.
+- If a draft claims its handoff precedes another proposal's, or its cost depends on another proposal's or spec's state, check each named one before committing the draft: its base `status` and `git branch -a --list 'dev-<slug>' '*/dev-<slug>'`. Read local and already fetched branches; fetch only within existing network authorization, never implicitly.
+  - If a `dev-<slug>` branch or a `SPEC-<slug>` exists, the proposal was handed off: rewrite the premise.
+  - If it is still `accepted` with no `dev-<slug>` branch, ask the user to sequence the two before committing, and state the decision in the draft's body.
 - Promote open feedback into drafts only through the `feedback-hygiene` playbook.
 - Decompose with `devkit spec proposal new <child> --decomposed-from PROP-<parent>`: keep the parent's `--milestone MS-<slug>`, choose each child's effort hints afresh, and delete the parent in the same commit after [feedback retirement](feedback-retirement.md).
 - Delegate the split to the `decomposer` only from Backlog, never on your own initiative: for a `needs_decompose` draft once its Planning return is merged, on the user's request to split a draft, and for an `XL` draft.

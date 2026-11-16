@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -48,3 +48,14 @@ git log: "spec: hand off design-document-lifecycle to Development", "spec: hand 
 SPEC-design-document-lifecycle status: completed (integrated into main)
 devkit spec proposal check design-bundle-layout -> editable=yes, no notice
 ```
+
+## Disposition
+
+Resolved by `SPEC-proposal-precedence-edges`. A draft that claims its handoff precedes another proposal's, or
+whose cost depends on another unit's state, is now checked before it is committed in Backlog and again on its first
+Planning turn: each named unit's base `status` and its local or fetched `dev-<slug>` branch, which reveals a handoff
+the base still lists as `accepted`. A stale premise is rewritten before the first Planning decision; an ordering
+against a still-accepted proposal goes to the user as a sequencing decision. The suggested handoff-time edge was
+declined: both handoffs in the observed case ran before the claim existed, and an edge on an accepted proposal
+would edit it. Verification: `packages/devkit-spec/tests/integration/bundles/spec/test_ordering_claim_guidance.py`
+and the code review of the Development range.
