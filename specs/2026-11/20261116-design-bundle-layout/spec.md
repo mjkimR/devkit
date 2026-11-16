@@ -6,11 +6,15 @@ status: planned
 created: 2026-11-16
 depends_on:
   - SPEC-formal-document-kinds
-related_capabilities: []
+related_capabilities:
+  - CAP-DOCS-document-model
+  - CAP-DOCS-documentation-ownership
+  - CAP-DOCS-namespaces
+  - CAP-TRACE-code-entrypoints
+  - CAP-GOV-spec-rules
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-design-bundle-layout] Area-scoped directory bundles for formal design documents
 
@@ -58,18 +62,78 @@ consumers itself, and the viewer adopts it after it lands.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Area-scoped directory bundles for formal design documents so that system capabilities are extended.
+- **US-1**: As an agent writing a design, I keep the design and its support in one area-scoped directory, so a
+  rename, area move or write boundary names one path.
+- **US-2**: As an agent planning delivery, I scope design or domain work by an area path prefix.
+- **US-3**: As an agent maintaining formal documents, I move a design or domain document between areas without
+  changing its ID, aliases or incoming references.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: DESIGN, DOMAIN or OPS identity, prefixes, status vocabulary, `related_*` fields and role
+   ownership boundaries stay as they are.
+2. **Scope Excluded**: Viewer changes; the viewer adopts the grammar in a recorded follow-up.
+3. **Scope Excluded**: Lifecycle behavior; only path and support-file statements of landed lifecycle assets and
+   fixtures change.
+4. **Scope Excluded**: Areas or bundles for operations documents, and bundles for domain documents.
+5. **Scope Excluded**: Template sections and authoring guidance beyond path, `area` and support statements
+   (`PROP-formal-document-templates`).
+6. **Scope Excluded**: An area registry, a file mover, and consumer repository migration (formal kinds are
+   unreleased).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Kind layout drives the path grammar
+- **Given** the kind definition table
+- **When** each kind declares its layout (`flat`, `area` or `area-bundle` with an anchor file name)
+- **Then** DESIGN is `area-bundle` with anchor `design.md`, DOMAIN is `area`, OPS stays `flat`, existing area kinds
+  keep their behavior, `area_scoped` is derived from the layout, the layout anchor is independent of the summary
+  anchor, and a table test proves the derivation.
+
+### [AC-02] Design bundle and domain area grammar
+- **Given** documents in the global docs root and in a registered namespace root
+- **When** `devkit rules check` runs
+- **Then** `designs/<area>/DESIGN-<slug>/design.md` with matching `id`, H1 and `area` passes; `domain/<area>/DOMAIN-<slug>.md`
+  with matching `area` passes; a flat design or domain path, an `area` mismatch, a bundle whose directory and `id`
+  differ, and `area` on an operations document each fail with a stable code; `README.md` stays exempt in area
+  directories and bundles.
+
+### [AC-03] Bundle support, strays and orphans
+- **Given** a design bundle holding Markdown and non-Markdown support at the top level and in a nested directory
+- **When** `devkit rules check` runs
+- **Then** ID-free support Markdown that names its parent passes at any depth without frontmatter; identified
+  Markdown at any depth, including a nested `DESIGN-*/design.md`, fails as a stray with a promote-to-peer-bundle
+  remediation; a bundle without `design.md` fails as an orphan; domain support under `<ID>/artifacts/` in the area
+  directory keeps its existing checks.
+
+### [AC-04] Fixes, entrypoints and search on bundles
+- **Given** a bundle design anchor with a blank `id` or stale `area`, and a bundle design with entrypoints
+- **When** `devkit rules fix`, `RULE-code-entrypoints`, `devkit spec entrypoints derive` and `devkit docs search` run
+- **Then** fix writes the bundle directory name as the ID and the area directory as `area` without moving files; a
+  dead entrypoint in a bundle design is reported; derive accepts a bundle design target; a query `design.md` pins
+  no bundle.
+
+### [AC-05] Identity survives moves and migration
+- **Given** the two delivered designs moved to `docs/designs/distribution/` bundles and the two domain documents
+  moved to `docs/domain/distribution/` and `docs/domain/delivery/`
+- **When** `devkit docs resolve`, `refs`, `list`, `search` and entrypoint reverse lookup run, and a test moves a
+  bundle between areas
+- **Then** each returns the documents under unchanged IDs, ordinary links resolve, the moved bundle keeps its ID,
+  aliases and incoming references, and the repository passes `devkit rules check`.
+
+### [AC-06] One path grammar across contracts, assets and lifecycle consumers
+- **Given** the superseding ADR, capability documents, docs bundle templates, instructions and rule guides, and
+  the landed spec and adaptive lifecycle assets and tests
+- **When** they are read and the affected test suites run
+- **Then** each states one path grammar per kind; a search of those paths for a flat design path or a design-scoped
+  `<ID>/artifacts/` finds only domain or operations statements and historical records; the spec and adaptive
+  lifecycle end-to-end scenarios pass on bundle and area paths.
+
+### [AC-07] Viewer follow-up recorded
+- **Given** `PROP-design-document-viewer` pins the flat grammar in its contract materials
+- **When** this spec completes
+- **Then** a recorded follow-up names those pins, the delivered-core reconcile clause and the bundle grammar to
+  adopt, with synthetic fixtures until adoption.
 
 ## 5. Carried Proposal Notes
 
