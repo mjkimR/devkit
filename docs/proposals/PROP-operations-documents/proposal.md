@@ -2,7 +2,7 @@
 id: PROP-operations-documents
 title: Operations and recovery documentation
 summary: "Establishes symptom-led operational guidance that routes to existing recovery owners, adding document tooling only for gaps demonstrated by the early pilot."
-status: draft
+status: reviewing
 created_at: 2026-11-16
 target_area: documents/
 priority: high
