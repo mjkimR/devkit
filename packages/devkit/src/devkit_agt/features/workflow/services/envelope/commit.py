@@ -25,12 +25,20 @@ def commit_message(anchor_id: str, envelope: Envelope) -> tuple[str, str]:
 
 
 def require_authored(
-    envelope: Envelope, workflow: str, segment: int, stages: set[str], *, unit: str = "", retry: str = ""
+    envelope: Envelope,
+    workflow: str,
+    segment: int,
+    stages: set[str],
+    *,
+    unit: str = "",
+    retry: str = "",
+    tracked: bool = False,
 ) -> None:
     """A summary and exact current identity exclude unfilled skeletons and stale segments.
 
     The refusal names every failing field and the writer flag that fills it; ``unit`` (shell-quoted,
     workspace-relative) completes the writer command and ``retry`` is the same-file commit command its fix ends with.
+    A ``tracked`` file is committed history: its fix writes a new envelope and never removes the file.
     """
     problems: list[str] = []
     flags: list[str] = []
@@ -52,10 +60,15 @@ def require_authored(
         writer += f" --unit {unit}"
     added = f" plus {' and '.join(flags)}" if flags else ""
     where = " in the current segment" if stale else ""
-    then = f", then run `{retry}`" if retry else ""
+    write = f"with `{workflow_command(writer)}` and its original options{added}"
+    if tracked:
+        fix = (
+            f"Keep [TARGET]: it is committed history. Write a new envelope{where} {write}, then commit that new file"
+            " with `envelope commit`"
+        )
+    else:
+        then = f", then run `{retry}`" if retry else ""
+        fix = f"Remove the uncommitted [TARGET] and write it again{where} {write}{then}"
     raise EnvelopeCommitInvalidError(
-        f"envelope is not authored: {'; '.join(problems)}",
-        target_files=[envelope.file],
-        fix=f"Remove the uncommitted [TARGET] and write it again{where} with `{workflow_command(writer)}` and its"
-        f" original options{added}{then}",
+        f"envelope is not authored: {'; '.join(problems)}", target_files=[envelope.file], fix=fix
     )

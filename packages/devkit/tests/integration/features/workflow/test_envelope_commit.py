@@ -480,3 +480,27 @@ def test_commit_refusal_names_an_undeclared_stage_and_its_flag(repo: Path) -> No
     assert "summary" not in error.message
     assert "--stage" in (error.fix or "") and "--summary" not in (error.fix or "")
     assert f"envelope review --unit {UNIT}" in (error.fix or "")
+
+
+def test_commit_refusal_names_a_stale_segment_without_a_flag(repo: Path) -> None:
+    """A stale workflow/segment is named; the fix rewrites in the current segment and names no flag."""
+    p = repo / UNIT / FILE
+    p.write_text(p.read_text().replace("segment: 0", "segment: 1"))
+    error = refusal(repo, "ENVELOPE_COMMIT_INVALID")
+    assert "workflow/segment w/1 is not the current w/0" in error.message
+    fix = error.fix or ""
+    assert "Remove the uncommitted [TARGET] and write it again in the current segment" in fix
+    assert "--summary" not in fix and "--stage" not in fix
+
+
+def test_commit_refusal_never_removes_a_committed_record(repo: Path) -> None:
+    """A committed record that no longer passes (its stage was undeclared later) gets a non-destructive fix."""
+    commit(repo)
+    definition = repo / ".devkit/workflows/w.md"
+    definition.write_text(definition.read_text().replace("id: s", "id: t"))
+    git(repo, "commit", "-qam", "rename stage")
+    error = refusal(repo, "ENVELOPE_COMMIT_INVALID")
+    fix = error.fix or ""
+    assert "Remove" not in fix
+    assert "Keep [TARGET]: it is committed history. Write a new envelope" in fix
+    assert "--stage" in fix

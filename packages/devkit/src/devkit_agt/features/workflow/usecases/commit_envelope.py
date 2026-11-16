@@ -74,6 +74,7 @@ class CommitEnvelopeUseCase(BaseUseCase):
                 {s.id for s in ref.doc.stages},
                 unit=shlex.quote(unit),
                 retry=retry,
+                tracked=repo.tree_entry(before, path.relative_to(workspace.root).as_posix()) is not None,
             )
             subject, body = commit_message(str(anchor_doc.get("id", "")), envelope)
             target = path.relative_to(workspace.root).as_posix()
