@@ -11,7 +11,7 @@ planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 milestone: MS-documentation-system-evolution
 depends_on:
-  - PROP-design-bundle-layout
+  - SPEC-design-bundle-layout
 boundaries:
   owns:
     - packages/devkit-docs/src/devkit_docs/bundles/docs/
@@ -54,7 +54,7 @@ their sections:
 Hypothesis: a template that matches the shape authors already produce, without a section that repeats the summary,
 yields documents that need no restructuring after authoring.
 
-`PROP-design-bundle-layout` changes the canonical paths the same templates and instructions name. This proposal
+`SPEC-design-bundle-layout` changes the canonical paths the same templates and instructions name. This proposal
 follows it, so each file is restructured once against the delivered path grammar.
 
 ## 2. Technical Spike Questions
@@ -82,7 +82,7 @@ follows it, so each file is restructured once against the delivered path grammar
 
 ### Non-Goals
 
-- No change to paths, identity, frontmatter schema, status vocabulary or relation fields; `PROP-design-bundle-layout`
+- No change to paths, identity, frontmatter schema, status vocabulary or relation fields; `SPEC-design-bundle-layout`
   and `ADR-formal-role-document-identities` own those.
 - No rule that checks template sections.
 
@@ -97,5 +97,5 @@ follows it, so each file is restructured once against the delivered path grammar
 ## 4. Lifecycle & Retirement Criteria
 
 Planning settles Q1–Q4. This stays one S feature proposal and starts Development after
-`PROP-design-bundle-layout` delivers its path grammar. Acceptance and handoff follow the existing gates.
+`SPEC-design-bundle-layout` delivers its path grammar. Acceptance and handoff follow the existing gates.
 Retirement requires T1–T3.

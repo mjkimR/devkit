@@ -1,44 +1,24 @@
 ---
-id: PROP-design-bundle-layout
+id: SPEC-design-bundle-layout
 title: Area-scoped directory bundles for formal design documents
-summary: "Moves formal design documents from flat prefixed files to area-scoped directory bundles and places domain documents under area directories, before lifecycle and viewer integration consume the path grammar."
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-11-16
-target_area: documents/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
-milestone: MS-documentation-system-evolution
+summary: Moves formal design documents from flat prefixed files to area-scoped directory bundles and places domain documents under area directories, before lifecycle and viewer integration consume the path grammar.
+status: planned
+created: 2026-11-16
 depends_on:
   - SPEC-formal-document-kinds
-boundaries:
-  owns:
-    - packages/devkit-docs/
-    - docs/capabilities/documents/
-    - docs/capabilities/traceability/
-    - docs/capabilities/governance/CAP-GOV-spec-rules.md
-    - docs/designs/
-    - docs/domain/
-    - docs/decisions/
-    - docs/README.md
-    - docs/proposals/PROP-design-bundle-layout/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-sync/SKILL.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/brownfield-adoption/references/migration.md
-    - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
-    - packages/devkit-spec/tests/
-    - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/documents.md
-    - packages/devkit-adaptive/tests/
-    - .devkit/installation.json
-  excludes:
-    - packages/devkit-viewer/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-design-bundle-layout] Area-scoped directory bundles for formal design documents
+# [SPEC-design-bundle-layout] Area-scoped directory bundles for formal design documents
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-design-bundle-layout on 2026-11-16.
+
+### 1. Background & Hypothesis
 
 `SPEC-formal-document-kinds` delivered design, domain and operations as formal kinds with one shared path grammar:
 a flat file `<docs-root>/<directory>/<PREFIX>-<slug>.md`, with parent-owned support under a sibling
@@ -76,7 +56,26 @@ Development and pins the flat grammar in its core contract material, with no vie
 delivery on the flat grammar adds migration work, so the grammar change lands now: it migrates the landed lifecycle
 consumers itself, and the viewer adopts it after it lands.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Area-scoped directory bundles for formal design documents so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Do the kind definition table's existing `area_scoped` and `anchor` facts carry the design grammar in
   `RULE-id-convention`, `RULE-spec-format`, the index and `devkit docs resolve`, or does the bundle need
@@ -90,7 +89,7 @@ consumers itself, and the viewer adopts it after it lands.
 - **Q4**: Which landed lifecycle consumers in the spec and adaptive bundles, and their tests, assume the flat
   grammar or the stem-is-ID rule, and what is the narrowest edit that makes them grammar-neutral or bundle-aware?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - **Design path.** A design is the directory `<docs-root>/designs/<area>/DESIGN-<slug>/` with the anchor file
   `design.md`. The directory name is the ID. The `area` field matches the area directory. The ID carries no area,
@@ -108,7 +107,7 @@ consumers itself, and the viewer adopts it after it lands.
   bundles under the `distribution` area. Move `DOMAIN-bundle-selection-and-installation` under `distribution` and
   `DOMAIN-delivery-relationships` under `delivery`. Repair ordinary links. IDs do not change, so ID references need
   no rewrite.
-- **Decision record.** `PADR-area-scoped-design-bundles` records the layout; at handoff it becomes an ADR that supersedes in part the flat canonical path and `<ID>/artifacts/` support clauses of
+- **Decision record.** `ADR-area-scoped-design-bundles` records the layout; at handoff it becomes an ADR that supersedes in part the flat canonical path and `<ID>/artifacts/` support clauses of
   `ADR-formal-role-document-identities` for the kinds this proposal changes. Its identity, status, relation,
   ownership and entrypoint clauses stay in force.
 - **Contracts and assets.** Update the path grammar in `CAP-DOCS-document-model`, `CAP-DOCS-documentation-ownership`,
@@ -122,7 +121,7 @@ consumers itself, and the viewer adopts it after it lands.
   it records a follow-up for the viewer to adopt the bundle grammar; the viewer's own unit or a later proposal does
   that work.
 
-### Planning decisions
+#### Planning decisions
 
 - **Q1 — kind layout fact, not table rows alone.** `area_scoped` drives only hand-written Living Spec grammar
   entries, and `anchor` is coupled to anchor-derived summaries, so the kind table gains one layout fact per kind
@@ -157,7 +156,7 @@ consumers itself, and the viewer adopts it after it lands.
 - **Consumer migration.** Formal kinds are unreleased and no consumer repository holds flat design or domain
   documents, so consumer repository migration is out of scope (user decision).
 
-### Non-Goals
+#### Non-Goals
 
 - No change to DESIGN, DOMAIN or OPS identity, prefixes, status vocabulary, `related_*` fields or the ownership
   boundaries between roles.
@@ -169,7 +168,7 @@ consumers itself, and the viewer adopts it after it lands.
 - No consumer repository migration path, remediation for flat paths or migration note.
 - No registry or validation of area names beyond the directory and `area` field match.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
 - **B1 — Grammar**: Positive and negative rule tests cover the design bundle path, the domain area path, the
   `area` match, the anchor file, bundle support files at the top and a nested depth, a stray identified document
@@ -189,9 +188,10 @@ consumers itself, and the viewer adopts it after it lands.
   delivered-core reconcile clause and support-layout statements in its target documents, and the bundle grammar to
   adopt; until then the viewer tests against synthetic fixtures rather than this repository's moved documents.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning settles Q1–Q4 and records the layout choice as a PADR. This stays one L feature proposal: the layout
 code, migration and lifecycle fixtures form one change with one task kind. Acceptance
 and handoff follow the existing gates. It runs in parallel with the viewer's Development. Retirement requires
 B1–B5.
+

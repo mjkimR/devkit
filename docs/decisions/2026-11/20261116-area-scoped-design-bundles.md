@@ -1,16 +1,16 @@
 ---
-id: PADR-area-scoped-design-bundles
+id: ADR-area-scoped-design-bundles
 title: Area-scoped design bundles and domain area directories
 summary: Formal designs live in area-scoped directory bundles with a design.md anchor and in-bundle support, and domain documents in area directories; IDs stay area-free, and operations stay flat.
-proposal: PROP-design-bundle-layout
+proposal: SPEC-design-bundle-layout
 supersedes: [ADR-formal-role-document-identities]
-status: draft
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-area-scoped-design-bundles] Area-scoped design bundles and domain area directories
+# [ADR-area-scoped-design-bundles] Area-scoped design bundles and domain area directories
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---

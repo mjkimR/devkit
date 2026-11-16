@@ -10,6 +10,10 @@ created_at: 2026-11-16
 
 # [ADR-formal-role-document-identities] Formal role documents with canonical identities
 
+Superseded in part by `ADR-area-scoped-design-bundles`: the flat canonical path clause and the
+`<ID>/artifacts/` support clause for design and domain documents. Its identity, prefix, status, relation,
+ownership and entrypoint clauses stay in force.
+
 - **Status**: Accepted
 - **Date**: 2026-11-16
 
