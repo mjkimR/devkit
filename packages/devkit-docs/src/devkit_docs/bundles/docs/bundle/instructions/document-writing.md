@@ -35,6 +35,17 @@ the domain basics, and lacks only this repository's facts.
 
 Order content by when the reader needs it: purpose, constraints, procedure, completion check, references.
 
+## Reference Pages
+
+A reference page lists exact syntax: commands, flags, configuration keys, payload fields and codes. Start a new page
+from `../templates/reference.md`; it has no frontmatter or ID.
+
+- Open with one purpose line naming the capability that owns the behavior, by full ID.
+- Order the sections usage, configuration, codes; drop a section the subject lacks.
+- Write each code table with the columns `Code | Level | Condition | Fix`: Condition states the observable trigger,
+  Fix the reader's next action.
+- When adding a row to an existing code table, state its trigger condition even if the table has other columns.
+
 ## YAML Frontmatter
 
 - Devkit reads Markdown frontmatter with PyYAML's LibYAML safe parser. Keep frontmatter valid for that parser and use

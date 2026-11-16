@@ -24,8 +24,10 @@ the mechanism needs. -->
 
 ## <Example or datasheet topic>
 
-<!-- Optional worked example or datasheet. Independent detail gets its own peer DESIGN bundle; parent-owned support
-sits in this bundle beside design.md, linked from here. -->
+<!-- Worked example or datasheet. Add a datasheet when the mechanism writes data that a later run, another process
+or another tool reads back: location pattern, encoding, fields or layout, identity derivation, ordering and one
+example. Independent detail gets its own peer DESIGN bundle; parent-owned support sits in this bundle beside
+design.md, linked from here. -->
 
 ## Authority boundary
 

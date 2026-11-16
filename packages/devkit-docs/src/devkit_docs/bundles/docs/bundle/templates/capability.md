@@ -20,7 +20,7 @@ usecases:
 - **Out-of-Scope**: Responsibilities handled by other capabilities or external systems (Non-Goals: Scope Excluded, with Rationale and When to Reconsider when they help).
 
 ## 3. Business Rules & Policies
-<!-- One EARS sentence per rule with an RFC 2119 keyword (capability-writing): [WHEN <event> | WHILE <state> | IF <condition> THEN | WHERE <feature>,] <system> MUST <response>. End a checked rule with its RULE-<slug> or test path. -->
+<!-- One EARS sentence per rule with an RFC 2119 keyword (capability-writing): [WHEN <event> | WHILE <state> | IF <condition> THEN | WHERE <feature>,] <system> MUST <response>. End a checked rule with its RULE-<slug> or test path. Observable contract only; route mechanism, private formats and syntax by living-spec-writing. -->
 1. **[Rule 1 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). The selected development approach defines authorization for exceptions. -->
 2. **[Rule 2 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). -->
 3. **[Rule 3 Name]**: <!-- Rule specification and RFC 2119 keyword (SHOULD NOT). -->

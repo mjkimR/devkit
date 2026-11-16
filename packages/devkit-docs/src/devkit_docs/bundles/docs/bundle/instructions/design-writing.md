@@ -19,6 +19,8 @@ description: Read before writing or editing designs/ under a docs root. Defines 
    sentence phrased as a question; add no question section or label.
 6. Explain implementation mechanisms, examples and datasheets under topic headings named for what they explain; cite
    existing behavioral/permission owners instead of copying their normative statements.
+   - When the mechanism writes data that a later run, another process or another tool reads back, add a datasheet:
+     location pattern, encoding, fields or layout, identity derivation, ordering and one example.
 7. Close with `## Authority boundary`, naming what the document does not settle and the owner that does by full ID,
    then `## Maintenance and next action`, naming the change that requires an update and the next useful reader action.
 8. Link only useful related_designs, related_domains, related_operations, related_capabilities or related_usecases IDs

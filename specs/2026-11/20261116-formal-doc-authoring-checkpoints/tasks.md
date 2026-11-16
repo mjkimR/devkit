@@ -8,8 +8,8 @@ plan: PLAN-formal-doc-authoring-checkpoints
 
 ## Phase 1: Implementation
 
-- [ ] **Task 1.1**: Docs bundle guidance, reference template and template-list pins
-  - **_Boundary**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/, packages/devkit-docs/tests/integration/bundles/docs/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja, packages/devkit-spec/tests/integration/bundles/spec/, .devkit/installation.json (sync output)
+- [x] **Task 1.1**: Docs bundle guidance, reference template and template-list pins
+  - **_Boundary**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/, packages/devkit-docs/tests/integration/bundles/docs/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja, packages/devkit-spec/tests/integration/bundles/spec/, .devkit/installation.json (sync output), packages/devkit-docs/README.md (scope extension: the package README restates the docs bundle template count that templates/reference.md changes)
   - _Requirements: AC-01, AC-02_
   - **Verification**: `uv run pytest packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py packages/devkit-spec/tests/integration/bundles/spec/test_ux_guidance.py`
 

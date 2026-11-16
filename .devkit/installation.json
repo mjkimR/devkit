@@ -424,6 +424,7 @@
         ".devkit/managed/docs/templates/domain.md",
         ".devkit/managed/docs/templates/milestone.md",
         ".devkit/managed/docs/templates/operations.md",
+        ".devkit/managed/docs/templates/reference.md",
         ".devkit/managed/docs/templates/usecase.md",
         ".devkit/managed/docs/templates/ux.md"
       ]
@@ -2035,7 +2036,7 @@
     },
     ".devkit/managed/docs/AGENTS.md": {
       "mode": 420,
-      "sha256": "e2438142e8eee3ca841be0f5ab4910049c52505142f8b083d1fa6a05410a75f5"
+      "sha256": "c4f11fd74098c0e1eadd0be95d20ce9ebf3b2db4a02959f1a5907365744a1433"
     },
     ".devkit/managed/docs/bundle.toml": {
       "mode": 420,
@@ -2051,7 +2052,7 @@
     },
     ".devkit/managed/docs/instructions/capability-writing.md": {
       "mode": 420,
-      "sha256": "857323f7eecd10063235ca8e1e9787c53fc818b6df353695b153454678554081"
+      "sha256": "fded30dfaf85dbe9da075973505483729df7e26faf061a89d465d1216d6f20f5"
     },
     ".devkit/managed/docs/instructions/contract-authoring.md": {
       "mode": 420,
@@ -2063,11 +2064,11 @@
     },
     ".devkit/managed/docs/instructions/design-writing.md": {
       "mode": 420,
-      "sha256": "8dbf73e52f8920e450293455d26434f922e44a3e76120987f066e23f9646b04e"
+      "sha256": "d036ec8ec3ab78a305374e7101d8c59239c7f46609a3d7e18e72e40aeeb0f902"
     },
     ".devkit/managed/docs/instructions/document-writing.md": {
       "mode": 420,
-      "sha256": "9db753f538907f60ad9f732401a67a619639adb725d6a6303e13cb8097461f97"
+      "sha256": "10f1c0d630e7a484fcf3ed5ef302663fb29258727129a46f87678e48bff7b393"
     },
     ".devkit/managed/docs/instructions/domain-writing.md": {
       "mode": 420,
@@ -2075,7 +2076,7 @@
     },
     ".devkit/managed/docs/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "1e944a2378b276ff4b8a4526e7aa8a5b3d49dbb55245bc61297ffed852259e23"
+      "sha256": "ec68b2194dc7835fededa33fa77e217fb53132df580c28b5b4af8f03d4f315f9"
     },
     ".devkit/managed/docs/instructions/operations-writing.md": {
       "mode": 420,
@@ -2211,7 +2212,7 @@
     },
     ".devkit/managed/docs/templates/capability.md": {
       "mode": 420,
-      "sha256": "a78075bf669aca5675cac640a6e56f350c329ddf42c1428e9c46dc0b8b7b670c"
+      "sha256": "db5f6577f5a1df81e6f1ed6d3d66b5c2057ece63965730145aa78dcc4c30c2da"
     },
     ".devkit/managed/docs/templates/decision.md": {
       "mode": 420,
@@ -2219,7 +2220,7 @@
     },
     ".devkit/managed/docs/templates/design.md": {
       "mode": 420,
-      "sha256": "6dabbdec3fa0b934518a8f285db79fb86970409df2dc9b5242e3b44055b63e02"
+      "sha256": "7ca5e57a9cf48bd62f384428bbc9fa87bf479c6f6254af6cc5d086b0b100851d"
     },
     ".devkit/managed/docs/templates/domain.md": {
       "mode": 420,
@@ -2232,6 +2233,10 @@
     ".devkit/managed/docs/templates/operations.md": {
       "mode": 420,
       "sha256": "a63cf14f6555f701513768a1a24921e852df14c9aece5e67e4998cfa9a82f888"
+    },
+    ".devkit/managed/docs/templates/reference.md": {
+      "mode": 420,
+      "sha256": "471aa562852ed93950d8d24c0fb616d49518beafa54a3f40ce82dcdd831870f0"
     },
     ".devkit/managed/docs/templates/usecase.md": {
       "mode": 420,
@@ -2275,7 +2280,7 @@
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
-      "sha256": "36fcdd6490c2ad1b5d7f5a74a23ab2749e8474650f99bc2e9bba4b07f078dd18"
+      "sha256": "d2bbe471e00c29489e466399cd4d6860479b3e91947b1aa653b71631df2577e6"
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,

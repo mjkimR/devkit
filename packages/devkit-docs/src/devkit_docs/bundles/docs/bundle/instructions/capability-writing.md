@@ -30,3 +30,13 @@ Write each rule as one EARS sentence with an RFC 2119 keyword. Choose the templa
 - Name each In-Scope responsibility once. Name the owner of each Out-of-Scope item: another capability or an
   external system.
 - List interfaces exactly: commands with flags, output kinds, exit and error codes, payload fields.
+
+## What Stays Out
+
+A capability states what a consumer can observe or rely on. Leave out the rest and route it by the fact-type table
+in `living-spec-writing`:
+
+- Implementation pseudocode and internal algorithm steps go to a design, or stay in the source alone.
+- A format only the implementation reads back goes to a design datasheet.
+- Command, flag and code syntax beyond the interface list goes to a reference page.
+- A paragraph another document owns becomes one sentence citing that owner by full ID.

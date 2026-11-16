@@ -25,6 +25,20 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 - Assign each normative statement one owner by responsibility: contracts to capabilities, actor goals to use cases,
   interactions to UX, system structure/constraints to architecture, conceptual meaning to domain models, local
   mechanisms to design, rationale to decisions, evidence to materials and syntax to references.
+- Route each fact by its type to the owner in this table; a fact with two parts splits between the owners named:
+
+  | Fact type | Owner |
+  | --- | --- |
+  | Behavior, limit, output order or tie-break a consumer can observe | Capability |
+  | That a code is raised, and when, as a guarantee | Capability rule; trigger condition, level and fix in a reference code table |
+  | Command, flag, configuration key or payload field syntax | Reference; the capability lists the interface |
+  | Data that a later run, another process or another tool reads back: location pattern, encoding, fields, example | Design datasheet; a format consumers author or parse is also a capability interface |
+  | How an ID, key, hash, token or name is derived | Design; what the identity means belongs to the domain model |
+  | Internal processing order, algorithm or pseudocode | Design, or the source alone |
+  | Concept meaning, identity and lifecycle | Domain model; glossary for terms |
+  | Rationale and rejected options | ADR |
+  | Measurement or experiment | Materials |
+
 - Keep domain meaning, implementation design and operational composition distinct without a fixed authoring order.
 - For operational questions, route symptom/evidence to the existing action owner and normal-state observation;
   keep recovery steps and permissions with that owner.
