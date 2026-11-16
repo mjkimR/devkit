@@ -2,7 +2,7 @@
 id: SPEC-formal-document-templates
 title: Template alignment for formal design, domain and operations documents
 summary: Aligns the design, domain and operations templates and writing instructions with the documents authors write, starting with removal of the question section that restates the summary.
-status: in-progress
+status: completed
 created: 2026-11-16
 depends_on:
   - SPEC-design-bundle-layout

@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-formal-document-templates
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     resolution: modified
