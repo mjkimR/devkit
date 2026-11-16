@@ -391,7 +391,7 @@ def test_parent_snapshot_deletion_checks_unchanged_artifacts_and_honors_exclusio
         workspace_root=tmp_path,
         changed_files=list(snapshot.changed),
         snapshot=snapshot,
-        exclude=["docs/designs/DESIGN-parent/artifacts/**"],
+        exclude=("docs/designs/DESIGN-parent/artifacts/**",),
     )
     assert not evaluate_rules(excluded, [IdConventionRule()]).violations
     # Composed rename moves the support subtree too, so the staged snapshot is valid.
