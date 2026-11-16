@@ -8,9 +8,9 @@ supporting_actors: []
 status: active
 capabilities: [CAP-VIEW-repository-viewer]
 entrypoints:
-  - packages/devkit-viewer/frontend/src/lib/SddViewer.svelte
-  - packages/devkit-viewer/frontend/src/lib/features/document/SupersessionSummary.svelte
-  - packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte
+  - packages/devkit-viewer/frontend/src/SddViewer.svelte
+  - packages/devkit-viewer/frontend/src/features/document/SupersessionSummary.svelte
+  - packages/devkit-viewer/frontend/src/features/knowledge/KnowledgeViews.svelte
 ---
 
 # [UC-read-decision-supersession] Read decision supersession

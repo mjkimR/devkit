@@ -25,7 +25,7 @@ consumer smoke and the viewer job run on Linux. The workflow executes:
 | **Dist-only Tests** | `just test-dist` | Syncs a separate environment with `devkit-dist` and its extras only (`scripts/dist_only.sh`), refuses to run if any `devkit-agt` module is importable there, and runs the `devkit-dist` tests without the harness. |
 | **Governance Rules** | `just rules-check` | Runs devkit governance rules on the working tree. |
 | **Consumer Smoke** | `just smoke` | Builds wheels and verifies installation in a clean consumer environment. |
-| **Viewer Frontend** | `just viewer install`, `lint`, `check`, `test`, `pack` | With Node 24: formatting, `svelte-check`, the frontend tests and the library tarball's contents and exports. |
+| **Viewer Frontend** | `just viewer install`, `lint`, `check`, `test` | With Node 24: formatting, `svelte-check` and the frontend tests. |
 | **Viewer Build** | `uv run --no-active devkit generated check viewer-assets` | Rebuilds the page from the lockfile in a clean checkout and fails when the committed build under `packages/devkit-viewer/src/devkit_viewer/static/` differs. |
 
 For cumulative branch verification before integration, also run `just rules-check --ci --base <base-ref>` locally.
@@ -129,7 +129,7 @@ types and governance remain required:
   for a frontend-only change, also when it selects readers; `reads` names a path selected only by read
   discovery). When a frontend path changed, the next line is
   `[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test && just viewer
-  pack && just viewer build]`, the checks of the CI viewer job: the agent runs that command (Node and npm) and
+  build]`, the checks of the CI viewer job: the agent runs that command (Node and npm) and
   commits the rebuilt page with the sources. `--list` adds one `[TEST_PATH: <path>]` per path and runs nothing.
   Otherwise `full` and `partial` run `just test all [paths...]`
   with its preflight, options and exit code, and `none` exits `0`. A base without a merge base is the input error

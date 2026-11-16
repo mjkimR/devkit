@@ -13,6 +13,8 @@ aliases:
 
 # [ADR-release-handbook] Release handbook as an on-request snapshot, shown first in the viewer
 
+Superseded in part by `ADR-internal-repository-viewer`: the library-host clauses (library hosts keep their `RepositoryDataSource`; the host guarantee of the `book` view id, `initialView` and the `sdd:path-change` event; the standalone `KnowledgeViews` binding of the book request; the library-host deep links).
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Involved Components/Capabilities**: `CAP-DLV-release-handbook`, `CAP-VIEW-repository-viewer`, `handbook/`,
@@ -266,7 +268,7 @@ the tag (`CAP-DLV-release-handbook` §3.3 rule 1), so between the refresh commit
   `translated_from` per page. (ADR-localized-handbook-language-exception)
 - Review only for non-English text outside `handbook/<lang>/`; no rule checks document language.
   (ADR-localized-handbook-language-exception)
-- Frontend tests in Development (`frontend/src/lib/features/knowledge/`, `frontend/src/lib/SddViewer.test.ts`):
+- Frontend tests in Development (`frontend/src/features/knowledge/`, `frontend/src/SddViewer.test.ts`):
   (ADR-handbook-first-book-on-request)
   - a manifest opens the handbook within the read budget; its absence shows the note and the control;
   - no `tree` or `blob` under `docs/` or `specs/` and no `section.chapter` element before the control, also after

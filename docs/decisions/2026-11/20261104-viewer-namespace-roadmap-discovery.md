@@ -9,6 +9,8 @@ created_at: 2026-11-04
 
 # [ADR-viewer-namespace-roadmap-discovery] Discover viewer namespace roadmaps by structural paths
 
+Superseded in part by `ADR-internal-repository-viewer`: the generic-host clauses (generic discovery trusting host tree/blob representation; generic hosts keeping their tree/blob interface; one helper serving both generic routes).
+
 - **Status**: Accepted.
 
 ## 1. Context & Problem Statement
@@ -67,12 +69,15 @@ working-tree reads, independent parsing and Planning-overlay clauses remain in f
 
 ## 6. Confirmation
 
+As verified when this decision was made; the paging, cache and generic-host checks below describe behavior that
+`ADR-internal-repository-viewer` later removed.
+
 - `tests/integration/features/browse/test_namespace_roadmap.py` verifies global/two-package and configuration
   matrices, saved untracked content, header-only reads, local symlinks and partial errors.
-- `frontend/src/lib/api/milestones.test.ts` verifies shared generic discovery, host-returned types, cross-root
+- `frontend/src/api/milestones.test.ts` verifies shared generic discovery, host-returned types, cross-root
   readiness and proposal membership, optional/listed root errors, abort/refresh/expiry, six workers and optimized pages.
 - Existing dashboard, roadmap and view tests preserve paging, caches, Planning overlays and detail paths.
-- `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer pack`, `just viewer build` and
+- `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer build` and
   `devkit generated check viewer-assets` verify the source and committed application build.
 - `CAP-VIEW-repository-viewer` sections 2, 4.1, 5 and 6 restate the decision. The retained baseline and observed
   implementation result live under `docs/materials/2026-11/20261104-viewer-namespace-roadmap/`.

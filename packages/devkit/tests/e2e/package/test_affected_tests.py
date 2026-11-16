@@ -345,10 +345,10 @@ def test_an_empty_selection_runs_nothing(
     assert command == []
 
 
-FRONTEND = "packages/devkit-viewer/frontend/src/lib/App.svelte"
+FRONTEND = "packages/devkit-viewer/frontend/src/App.svelte"
 FRONTEND_LINE = (
     "[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test"
-    " && just viewer pack && just viewer build]"
+    " && just viewer build]"
 )
 
 

@@ -31,11 +31,11 @@ graph TD
         PkgAdaptive["packages/devkit-adaptive<br>(devkit-adaptive wheel)"]
         PkgCat["packages/devkit-catalog<br>(devkit-catalog wheel)"]
         PkgStart["packages/devkit-starter<br>(devkit-starter wheel)"]
-        PkgViewer["packages/devkit-viewer<br>(devkit-viewer wheel, Svelte library tarball)"]
+        PkgViewer["packages/devkit-viewer<br>(devkit-viewer wheel, internal repository viewer)"]
         ModelEmbed["models/devkit-embed<br>(devkit-embed wheel, manual release)"]
     end
 
-    subgraph ConsumerApp ["Consumer Repository (e.g. app-common, autohub)"]
+    subgraph ConsumerApp ["Consumer Repository (e.g. app-common)"]
         Runtime["Runtime Application Code"]
         DevTools["Development Environment / Agents"]
     end
@@ -62,7 +62,6 @@ graph TD
     PkgSpec -.->|SDD commands and agent assets| DevTools
     PkgViewer -->|Harness dependency| PkgDevkit
     PkgViewer -.->|Local read-only viewer| DevTools
-    PkgViewer -.->|Vendored viewer library (autohub)| Runtime
 ```
 
 ---
@@ -152,12 +151,13 @@ their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deplo
 - **Distribution Wheel**: `devkit_viewer-<version>-py3-none-any.whl`, carrying the committed page build.
 - **CLI**: `devkit viewer serve`, mounted through `devkit.commands`: a foreground, loopback-only, read-only server
   for several local repositories.
-- **Contents**: the server (`devkit_viewer`) and, under `frontend/`, one Svelte source for the page and for the
-  component library whose `npm pack` tarball autohub vendors. Node is needed only to change the frontend.
+- **Contents**: the server (`devkit_viewer`) and, under `frontend/`, one Svelte Vite application whose build is
+  committed under `src/devkit_viewer/static/`. It is an internal tool with no published or vendored library. Node is
+  needed only to change the frontend.
 - **Dependencies**: `devkit-agt`, `devkit-core` and `click`. It consumes foundation primitives,
   distribution project support and `devkit.advisory`; it has no dependency on `devkit-docs` or `devkit-spec` code,
   since the page parses the documents itself.
-- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-repository-viewer`.
+- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-internal-repository-viewer`.
 
 ### 2.7 Opt-in and Example Content Packages
 - **`devkit-adaptive` (`packages/devkit-adaptive`)**: Owns the opt-in `adaptive-dev` bundle and `devkit adaptive assignment` commands. It requires `devkit-docs`, `devkit-core` and `click` (internal wheels pinned to selected actual versions), and never imports `devkit_spec`.

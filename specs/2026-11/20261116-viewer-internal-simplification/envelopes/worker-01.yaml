@@ -1,0 +1,18 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:08:56.469294Z'
+status: completed
+summary: 'Development through final-change-report: specified, implemented and verified the internal one-host viewer (library, lib/app split, optional members and ref, Shared tab, /review and shared API, dashboard paging and caches, remote Planning sources, overlay cache and host props removed; ADR-repository-viewer superseded; viewer-assets rebuilt). Review round 1 closed (1 P2, 5 P3; 5 resolved, 1 waived); reconcile resolved; feedback FB-viewer-host-wording-outside-unit and FB-viewer-roadmap-branch-plumbing recorded. No baseline measurement named; measured viewer source 10852 to 9100 lines at base vs head. Integration left to the Host.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base 4bd757276 mode=full 7036 passed 4 skipped
+  frontend: PASS just viewer install/lint/check/test/build, 244 tests
+  build: PASS devkit generated check viewer-assets stale=0
+  lint: PASS just lint-check; devkit rules check --ci --base 4bd757276
+diff_scope:
+  base: ''
+  head: 89f3583d5ddd683c363c2149ccc0ffafb7506e1a
+activity_effort: medium

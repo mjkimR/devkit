@@ -18,8 +18,8 @@ created_at: 2026-10-17
 devkit packages are not hosted on PyPI. A Git tag (`vX.Y.Z`) triggers a GitHub Release with changed workspace
 wheels, `SHA256SUMS`, installation commands and `release-inventory.json`. The completed inventory contains every
 workspace package's actual version, original wheel URL and SHA256, plus the separately versioned model artifact.
-Unchanged wheels remain at their original release location. The model and viewer npm library retain their
-independent policies (`ADR-selective-package-versions`).
+Unchanged wheels remain at their original release location. The model artifact retains its independent policy
+(`ADR-selective-package-versions`).
 
 ### 1.1 Consumer Dependency Declaration
 
@@ -98,8 +98,9 @@ Release notes generate the complete URL closure for harness, dist-only, search, 
 and CLI-only variants. Consumers MUST use each selected artifact's original URL; constructing every wheel URL from
 the newest tag is invalid. Git installs continue to resolve all workspace packages from one monorepo commit with
 consistent actual-version pins. A tool installation names the executable owner and adds its required closure:
-`uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's
-Svelte library remains a pinned-commit npm tarball (`CAP-VIEW-repository-viewer`).
+`uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer
+ships only as the `devkit-viewer` wheel with its committed page build and is not published to npm
+(`CAP-VIEW-repository-viewer`).
 
 Python runtime YAML reads require PyYAML's `yaml.CSafeLoader`; package dependency metadata does not guarantee that optional binding. For uv-managed environments, install PyYAML without building it from source with `uv add --no-build-package pyyaml ...` or `uv tool install --no-build-package pyyaml ...`. A compatible binary wheel needs no system LibYAML development headers. Installation guidance then checks the active interpreter with `uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader')"`; runtime availability is authoritative, and a missing binding raises `YAML_BINDING_UNAVAILABLE` with exit `2` at the first YAML read. This check does not guarantee support for every operating system or Python build.
 

@@ -59,28 +59,28 @@ error                                       {"error": {"code", "message"}}
 | `VIEWER_HOST_REFUSED` | 403 |
 | `VIEWER_METHOD_NOT_ALLOWED` | 405 |
 
-The dashboard loads each section independently: candidate frontmatter supplies sorted lists and counts; only visible pages fetch full bodies (6 milestones, 9 proposals, 6 feedback per page). Load more appends one page in the existing order. Cached lists and displayed pages remain reusable for 30 seconds from list completion; use Dashboard Refresh to reload saved changes and reset to the first page. Recursive tree reads list metadata only and omit symlinks and `.git`.
+The dashboard loads each section independently: `dashboard-list` supplies the frontmatter that sorts and counts the section, then the body of every eligible entry is read and all cards are shown, with no paging. A failed body read shows its path and error beside the other cards and still counts. Dashboard sections are not cached; Dashboard Refresh clears the source's caches and reloads saved changes. The document index and roadmap are reused for 30 seconds across tab switches. Recursive tree reads list metadata only and omit symlinks and `.git`.
 
 Dashboard and roadmap milestone discovery covers global `docs/roadmap/` and direct
 `docs/packages/<name>/roadmap/` roots, including each flat `_archive/`. Both routes use structural paths without
 reading namespace registration, so unregistered directories can appear and namespace config errors do not change
 visibility. Cross-root archived prerequisites and direct proposal membership resolve over the complete set before
-history is filtered. Generic sources use host-returned types; only the local filesystem reader certifies symlink
-exclusion. Missing optional roots are empty; listed-root failures remain visible without erasing successful roots.
+history is filtered. The local filesystem reader applies the symlink exclusions. Missing optional roots are empty; listed-root failures remain visible without erasing successful roots.
 
 The **Read** tab (view id `book`) opens `handbook/<lang>/README.md` where `handbook/manifest.json` exists, through the
 ordinary `blob` read: the manifest, `VERSION` and one page, nothing under `docs/` or `specs/`. Without a manifest it
 says so after that one read. The header orders the manifest tag against `v<VERSION>` and notes a snapshot behind the
 repository. The Living Spec book is computed only after `Living Spec book` is selected, and the request lasts until
-the repository or branch changes. A host's `initialView="book"` with an `initialPath` file under `docs/` counts as
-the request. Contract: `CAP-VIEW-repository-viewer` §4.3.
+the repository or branch changes. The page always opens on the Dashboard, and its address keeps only the repository.
+Contract: `CAP-VIEW-repository-viewer` §4.3.
 
 Proposals under Planning overlay the checkout's: a separate `planning-proposals` request reads
-`docs/proposals/PROP-<slug>/proposal.md` from each `plan-<slug>` worktree (saved files), else the local branch, else
-the first remote-tracking `<remote>/plan-<slug>` as of the last fetch (refs merged into the checkout are skipped), through one `git worktree list`, one
-`git for-each-ref` and one `git cat-file --batch`. Cards update in place with a source badge (`worktree plan-x`,
-`plan-x`, `origin/plan-x`); the next list build orders with the overlay. Source IDs are `worktree:plan-<slug>`,
-`branch:plan-<slug>` and `remote:<remote>/plan-<slug>`; `source` is accepted only by `tree` and `blob` for paths in
+`docs/proposals/PROP-<slug>/proposal.md` from each `plan-<slug>` worktree (saved files), else the local branch
+(local branches merged into the checkout are skipped; remote-tracking refs are not read), through one
+`git worktree list`, one `git for-each-ref` and one `git cat-file --batch`. Cards update in place with a source badge
+(`worktree plan-x`, `plan-x`) and Planning-only proposals are appended; the overlay is requested again on every
+dashboard or Proposals load and never cached or used for ordering. Source IDs are `worktree:plan-<slug>` and
+`branch:plan-<slug>`; `source` is accepted only by `tree` and `blob` for paths in
 that source's proposal directory. Nothing fetches, calls `gh` or writes; the roadmap and every other tab read the
 checkout.
 
@@ -93,7 +93,6 @@ just viewer check     # svelte-check
 just viewer test      # vitest
 just viewer probe <abs-dir> [vitest args]   # vitest on the *.test.ts files of a directory outside src/ (review probes)
 just viewer build     # rebuild the committed app under src/devkit_viewer/static/
-just viewer pack      # the library tarball autohub vendors, checked for its exports
 uv run devkit generated check viewer-assets   # the committed build matches the sources
 ```
 
@@ -106,10 +105,6 @@ the package, so a probe imports `vitest`, `@testing-library/svelte` or a compone
 `src/`. It writes a temporary `.viewer-probe.vitest.config.mts` into that directory and removes it on exit. A failing
 probe exits `1`; a relative or missing directory exits `2`.
 
-
-The exact local report page is `/review/<registered-id>/<generation-id>`; it displays escaped Markdown with source/language/expiry and never regenerates reports. See `CAP-VIEW-repository-viewer`.
-
-
 ## Formal document reading
 
 Read groups include Domain, Designs and Operations in the order owned by `CAP-VIEW-repository-viewer` §4.3.
@@ -120,7 +115,7 @@ View raw switches source in place; Back retains the parent reading context.
 
 Relative supporting files use the same RepositoryDataSource.blob callback and selected branch/Planning source.
 Markdown/Mermaid, text/CSV and safe images have previews; unsupported bytes retain an explicit download state.
-No extra host callback is required. The per-file preview limit is 8 MiB; an article permits 32 repository images
+No extra data-source member is required. The per-file preview limit is 8 MiB; an article permits 32 repository images
 and 16 MiB total image bytes. Source/path guards, abort signals and disposable URLs apply to these reads.
 The browser displays declared metadata and entrypoints without certifying core governance or source liveness.
 

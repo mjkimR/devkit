@@ -1,4 +1,4 @@
-"""The viewer frontend recipes name the missing install instead of failing inside npm."""
+"""The viewer frontend recipes name the missing install instead of failing inside npm; removed actions are unknown."""
 
 from __future__ import annotations
 
@@ -11,14 +11,26 @@ import pytest
 ROOT = Path(__file__).resolve().parents[5]
 
 
-@pytest.mark.parametrize("action", ["lint", "check", "test", "build", "pack"])
-def test_action_without_dependencies_names_the_install(tmp_path: Path, action: str) -> None:
+def _copy_script(tmp_path: Path) -> Path:
     (tmp_path / "scripts").mkdir()
     shutil.copy(ROOT / "scripts/viewer.sh", tmp_path / "scripts/viewer.sh")
     (tmp_path / "packages/devkit-viewer/frontend").mkdir(parents=True)
-    result = subprocess.run(
-        ["bash", str(tmp_path / "scripts/viewer.sh"), action], capture_output=True, text=True, check=False
-    )
+    return tmp_path / "scripts/viewer.sh"
+
+
+@pytest.mark.parametrize("action", ["lint", "check", "test", "build"])
+def test_action_without_dependencies_names_the_install(tmp_path: Path, action: str) -> None:
+    script = _copy_script(tmp_path)
+    result = subprocess.run(["bash", str(script), action], capture_output=True, text=True, check=False)
     assert result.returncode == 2
     assert "`just viewer install`" in result.stderr
+    assert result.stdout == ""
+
+
+def test_pack_is_an_unknown_action(tmp_path: Path) -> None:
+    script = _copy_script(tmp_path)
+    (tmp_path / "packages/devkit-viewer/frontend/node_modules").mkdir()
+    result = subprocess.run(["bash", str(script), "pack"], capture_output=True, text=True, check=False)
+    assert result.returncode == 2
+    assert "Unknown action: pack" in result.stderr
     assert result.stdout == ""

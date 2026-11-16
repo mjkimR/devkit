@@ -1,4 +1,4 @@
-"""Viewer uses shared primitives, distribution project/CLI support and immutable shared reports.
+"""Viewer uses shared primitives and distribution project/CLI support.
 
 It never imports devkit-spec, so it stays independent of SDD models.
 """
@@ -18,9 +18,6 @@ ALLOWED = (
     "devkit.advisory",
     "devkit_viewer",
     "click",
-    "devkit_dist.features.shared.models.api",
-    "devkit_dist.features.shared.models.errors",
-    "devkit_dist.features.shared.repositories.local",
 )
 
 
