@@ -33,5 +33,25 @@ def test_every_use_case_of_this_repository_parses() -> None:
                 "4a": screen,
             }
             assert {step.key: step.screens for step in parsed.steps} == expected, document.path
+        elif document.id == "UC-read-formal-document":
+            browse = ("UX-browse-formal-documents",)
+            relations = ("UX-formal-document-relations",)
+            artifact = ("UX-read-supporting-artifact",)
+            expected = {
+                "1": browse,
+                "2": browse,
+                "3": browse,
+                "4": ("UX-formal-document-relations", "UX-browse-formal-documents"),
+                "5": ("UX-browse-formal-documents", "UX-read-supporting-artifact"),
+                "6": ("UX-browse-formal-documents", "UX-formal-document-relations", "UX-read-supporting-artifact"),
+                "2a": browse,
+                "3a": browse,
+                "3b": browse,
+                "4a": relations,
+                "4b": relations,
+                "5a": artifact,
+                "*a": ("UX-browse-formal-documents", "UX-read-supporting-artifact"),
+            }
+            assert {step.key: step.screens for step in parsed.steps} == expected, document.path
         else:
             assert all(step.screens == () for step in parsed.steps), document.path

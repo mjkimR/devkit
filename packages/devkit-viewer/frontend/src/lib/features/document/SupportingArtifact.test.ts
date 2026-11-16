@@ -42,7 +42,10 @@ it('keeps Planning reads in the selected source and never falls back to checkout
 	expect(source.blob).not.toHaveBeenCalled();
 });
 it('shows binary images and disposes preview/download URLs on source replacement and unmount', async () => {
-	const first = repository(btoa(String.fromCharCode(137, 80, 78, 71, 255)), 'base64');
+	const first = repository(
+		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
+		'base64'
+	);
 	const view = render(SupportingArtifact, { source: first, branch: 'old', path: 'docs/chart.png' });
 	await screen.findByRole('img', { name: 'docs/chart.png' });
 	expect(URL.createObjectURL).toHaveBeenCalledTimes(2);

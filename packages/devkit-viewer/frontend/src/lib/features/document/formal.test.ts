@@ -160,3 +160,14 @@ it('retains malformed recursive metadata as explicit uncertainty without crashin
 	);
 	expect(deriveReferences(subject, [subject]).issues.join(' ')).toContain('Recursive metadata');
 });
+
+it('uses reconcile_id identity for typed references from another indexed kind', () => {
+	const target = doc('docs/designs/DESIGN-x.md', 'DESIGN-x');
+	const source = parseBlob(
+		'specs/month/unit/reconcile.md',
+		'---\nreconcile_id: REC-example\nstatus: resolved\nrelated_designs: [DESIGN-x]\n---\n# Reconcile',
+		'utf-8'
+	);
+	expect(identityResolver([source, target]).resolve('REC-example').document).toBe(source);
+	expect(deriveReferences(target, [source, target]).incoming[0].id).toBe('REC-example');
+});

@@ -1,0 +1,40 @@
+kind: ux-review
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T07:32:59.119314Z'
+status: completed
+summary: Implementer closure of two pre-code Planning UX rounds; all five retained findings resolved against the unchanged selected Screens and actual Read/Files/supporting-file tests; not another independent round
+findings:
+- issue: 'UX-browse-formal-documents R3: artifact navigation enters an undefined unsupported state.'
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:120; retained drafts copied to spec.md Screens; implementation proof in development-evidence.md Retained UX finding closure, FormalReading.test.ts, SupportingArtifact.test.ts and existing SddViewer/HandbookMode tests
+  failure_condition: Step5 opens unsupported artifact but state content/action not defined.
+  suggested_action: Add path/format, available raw/download and Back retaining parent context.
+  resolution: resolved
+- issue: 'link check (reviewer judgment): artifact destination not named.'
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:135; retained drafts copied to spec.md Screens; implementation proof in development-evidence.md Retained UX finding closure, FormalReading.test.ts, SupportingArtifact.test.ts and existing SddViewer/HandbookMode tests
+  failure_condition: Step5 artifact target is file/detail surface.
+  suggested_action: Split formal details from supporting-file screen and define return.
+  resolution: resolved
+- issue: 'link check (reviewer judgment): extensions lack keyed flows and screen citations.'
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:66; retained drafts copied to spec.md Screens; implementation proof in development-evidence.md Retained UX finding closure, FormalReading.test.ts, SupportingArtifact.test.ts and existing SddViewer/HandbookMode tests
+  failure_condition: Failure or source-change extension lacks resume step.
+  suggested_action: Add numbered UC with 2a,4a,4b,5a and source-change extension.
+  resolution: resolved
+- issue: 'UX-browse-formal-documents R6: View raw CTA lacks representation/interaction.'
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:113; retained drafts copied to spec.md Screens; implementation proof in development-evidence.md Retained UX finding closure, FormalReading.test.ts, SupportingArtifact.test.ts and existing SddViewer/HandbookMode tests
+  failure_condition: Unknown metadata needs raw source but draft control absent.
+  suggested_action: Add raw control/state/rendered return and global interaction.
+  resolution: resolved
+- issue: 'link check (reviewer judgment): source change does not reach resumed step1 entry state.'
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:164; retained drafts copied to spec.md Screens; implementation proof in development-evidence.md Retained UX finding closure, FormalReading.test.ts, SupportingArtifact.test.ts and existing SddViewer/HandbookMode tests
+  failure_condition: Browse source-change ends loading but request Living Spec book starts from handbook.
+  suggested_action: Explicitly load selected handbook state, then offer Living Spec book so source-change resumes step1.
+  resolution: resolved
+assumptions:
+- Screens existed and were independently reviewed before code in accepted target-docs; specify linked them, and build-verify corrected body-copy placement without changing the arrangement
+checks:
+  ux: PASS all three screens and UC steps/extensions matched; tests238 and rules22
+diff_scope:
+  base: f32b831f7ca791566fad7934e13f537a40aaf787
+  head: 718f02c8c0852ba4218c15fce3ffbc5553b793e6
