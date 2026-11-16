@@ -27,6 +27,17 @@ authorities. The unavailable discovery hop remains unavailable. This is a qualit
 not elapsed-time, corpus-size, accuracy-percentage or runtime improvement evidence. The initial reader's
 extraction overreads/truncation are retained in its trial record, not counted as successful whole-corpus inspection.
 
+## Independent review confirmation
+
+The mandatory Code Reviewer repeated the protocol and audited all draft passages at
+`3a1a21701faf9c827088204b586aaf7a25e77359`: PASS, no findings.
+[Reviewer trials](reviewer-trials.md) preserve its fresh bounded contract-only result, supplied-entry paths,
+separate allowed-search experiment, actual read ledger and limitations. Unlike the first reader's initial
+extract, its numbered transaction extract did not truncate. Its ownership detour and other broad source reads
+remain visible usability costs. Supplied-entry repeats shared cross-role visibility; they were not separately
+blinded sessions. Native boundaries were emulated and one initial outside-worktree reply-skill read was disclosed.
+No new content or tooling requirement was inferred from the repeated discovery gap.
+
 ## Existing discovery facilities
 
 Executed at specify HEAD with unindexed draft working files. For each ID below, these exact command forms exited 0:
