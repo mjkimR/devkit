@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T11:48:02.359526Z'
+status: completed
+summary: 'Isolated code-reviewer: AC-01..AC-05 met, boundaries and Tier B extension consistent, Red content gate-clean; one P3 test gap'
+findings:
+- issue: The own-path exclusion has no regression test for the bugfix carried notes or a single-file proposal
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:473-476; test_proposal_handoff.py:252-336
+  failure_condition: Passing meta instead of scope_meta to _scope_notes, or breaking the single-file match, would go unnoticed
+  suggested_action: Add a bugfix handoff assertion and a single-file proposal case
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS pytest test_proposal_handoff, test_role_contracts, test_cli_documents 192 passed at 61de0206b
+  lint: PASS just lint-check, just check, devkit rules check --ci --base main clean
+diff_scope:
+  base: a627466bb2451fa7bc6466ab2b309c1711b570ca
+  head: 61de0206b40cf3f1d61c8c32a7074cdb60d1fb25
