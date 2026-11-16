@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T12:04:46.524400Z'
+status: completed
+summary: 'Development through the final change report: specify, six formal documents drafted by three parallel helpers (A delivery, B host+mcp, C distribution+search) and integrated by this worker, review-01 (3 P3) fixed and reverified, reconcile-check passed, six owner-gap feedback items recorded; none dropped; no scope extension; integration not run'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base 88732885f 18 passed (partial)
+  lint: PASS devkit rules check --ci --base main 0 errors
+  diff_check: PASS git diff --check 88732885f..HEAD
+diff_scope:
+  base: ''
+  head: bedee7135cb1450a23486bfdf2dcb634002002a8
+activity_effort: medium

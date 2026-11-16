@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T12:04:37.426260Z'
+status: completed
+summary: Six formal documents delivered (DESIGN-workflow-stage-evaluation, OPS-assignment-attention-routing, OPS-host-hook-dispatch-routing, OPS-mcp-runtime-refusals, DOMAIN-override-lifecycle, OPS-search-mode-and-model-routing); none dropped; review-01 three P3 fixed and reverified; reconcile-check passed; six owner-gap feedback items recorded
+findings: []
+checks:
+  tests: PASS just test-affected --base 88732885f 18 passed (partial, docs/ specs/)
+  build: PASS docs-only, no build artifact; devkit docs resolve for six IDs
+  lint: PASS devkit rules check --ci --base main 0 errors; git diff --check clean
+diff_scope:
+  base: 88732885f6a98e8939b001b724c7ae62273d6c26
+  head: 949f1ac2ae5745fa59e788fa8fe612f5bdc8b10f

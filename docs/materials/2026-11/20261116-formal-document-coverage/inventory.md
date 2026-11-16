@@ -1,6 +1,6 @@
 # Formal document inventory
 
-Reader-question inventory for `PROP-formal-document-coverage`, from four parallel scouts over the 18 capability areas,
+Reader-question inventory for `SPEC-formal-document-coverage`, from four parallel scouts over the 18 capability areas,
 architecture, reference and source (scout envelopes `scout-01` to `scout-04`). A candidate survives only when no
 capability, architecture, reference, use case, glossary (`docs/steering/glossary.md`) or existing formal document
 already answers its one reader question (`CAP-DOCS-documentation-ownership` §3.1, §3.3). Line numbers are evidence
