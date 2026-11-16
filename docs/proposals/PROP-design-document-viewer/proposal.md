@@ -2,7 +2,7 @@
 id: PROP-design-document-viewer
 title: First-class formal documentation in the repository viewer
 summary: "Provides complete navigation, identity, references, metadata, artifact access and packaged viewer support for formal design, domain and operations kinds."
-status: reviewing
+status: accepted
 created_at: 2026-11-16
 target_area: viewer/
 priority: high
