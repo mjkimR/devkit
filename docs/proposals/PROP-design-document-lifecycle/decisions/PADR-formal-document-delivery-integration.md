@@ -1,9 +1,8 @@
 ---
 id: PADR-formal-document-delivery-integration
 title: Consume formal documentation policy at delivery boundaries
-summary: For formal document maintenance across delivery approaches, we consume shared document policy at existing delivery boundaries, to preserve complete impact coverage and ownership, accepting explicit per-change semantic review.
+summary: "For formal document maintenance across delivery approaches, we consume shared document policy at existing delivery boundaries, to preserve complete impact coverage and ownership, accepting explicit per-change semantic review."
 proposal: PROP-design-document-lifecycle
-# supersedes: [ADR-<slug>]   # write Supersedes in part `ADR-<slug>`: <the replaced clauses>. in Decision Outcome
 status: draft
 created_at: 2026-11-16
 ---
@@ -42,15 +41,15 @@ not establish semantic source agreement.
 Option 1 is selected for ownership consistency and existing authority with complete downstream coverage.
 
 - Planning and review assess every formal responsibility for the actual change, recording affected IDs/actions
-  and source evidence or a bounded unaffected reason. → `CAP-DLV-proposal-planning` formal impact rules (planned).
+  and source evidence or a bounded unaffected reason. → `CAP-DLV-proposal-planning` formal impact rules (planned MUST).
 - SDD reconciliation compares affected formal statements and identity/reference/detail/artifact maintenance with
-  retained source through existing records. → `CAP-DLV-delivery-workflows` rule 9 reflection and rule 15 coverage (planned).
+  retained source through existing records. → `CAP-DLV-delivery-workflows` rule 9 reflection and rule 15 coverage (planned MUST).
 - Delivery entrypoint derivation consumes the docs core's applicable-kind and path policy, with role-appropriate
-  source review. → `CAP-TRACE-code-entrypoints` derivation and review rules (planned).
+  source review. → `CAP-TRACE-code-entrypoints` derivation and review rules (planned MUST).
 - Adaptive authoring uses the same core formal ownership and maintenance contract without implicit SDD Units,
-  envelopes, gates or immutable iteration history. → `CAP-DLV-adaptive-development` project documents rules (planned).
+  envelopes, gates or immutable iteration history. → `CAP-DLV-adaptive-development` project documents rules (planned MUST).
 - Baseline adoption treats required formal-document or source-evidence gaps as retained coverage gaps.
-  → `CAP-DLV-sdd-baseline-adoption` retained coverage rules (planned).
+  → `CAP-DLV-sdd-baseline-adoption` retained coverage rules (planned MUST).
 
 The core decision replaces ID-free standing. This decision does not duplicate its supersession or alter approval,
 execution permissions, recovery ownership or neutral document formats.
