@@ -64,11 +64,12 @@ outside the top level of a Git checkout (`MCP_CHECKOUT_REQUIRED`), both targetin
 | `MCP_HOST_UNSUPPORTED` | `WARNING` | A selected host has no MCP registration adapter |
 | `MCP_REGISTRATION_SHADOWED` | `WARNING` | A same-name devkit server in user or managed settings shadows the project entry; resolve it with host tools |
 | `MCP_EXCLUSIONS_RETAINED` | `NOTICE` | The run that removed the last owned entry left the clone-local exclusion lines in Git info/exclude |
-| `MCP_RUNTIME_STALE` | The serving process loaded devkit code that differs from the installed code; restart or reconnect the service, then call again (read-only tools still run) |
-| `MCP_WORKSPACE_UNAVAILABLE` | Reconnect from an existing retained checkout; inspect partial effects |
-| `MCP_INTERACTIVE_UNAVAILABLE` | Use a local interactive Host or independently authorized CLI/PR route |
-| `HOST_MCP_FAILED` | Correct installed service entry points/runtime and reconnect |
-| `HOST_MCP_ARGUMENT_INVALID` | Supply only the advertised tool schema's arguments |
+| `MCP_REGISTRATION_PENDING` | `NOTICE` | `sync --locked` withheld a selected host's registration write; run `uv run devkit sync --registrations-only` |
+| `MCP_RUNTIME_STALE` | `ERROR` `INTERACTION` | The serving process loaded devkit code that differs from the installed code; restart or reconnect the service, then call again (read-only tools still run) |
+| `MCP_WORKSPACE_UNAVAILABLE` | `ERROR` `BLOCKED` | Reconnect from an existing retained checkout; inspect partial effects |
+| `MCP_INTERACTIVE_UNAVAILABLE` | `ERROR` `BLOCKED` | Use a local interactive Host or independently authorized CLI/PR route |
+| `HOST_MCP_FAILED` | `ERROR` `MAINTENANCE` | Correct installed service entry points/runtime and reconnect |
+| `HOST_MCP_ARGUMENT_INVALID` | `ERROR` `INPUT_ERROR` | Supply only the advertised tool schema's arguments |
 
 `mcp serve` is a native-protocol exception to ordinary output/format flags; startup errors remain advisories on
 stderr. Other commands emit one JSON object or an MCP result sentinel and advisory notices. No output includes

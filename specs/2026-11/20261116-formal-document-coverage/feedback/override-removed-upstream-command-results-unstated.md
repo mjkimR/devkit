@@ -8,7 +8,7 @@ target: CAP-DIST-workspace-ownership
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -37,3 +37,7 @@ created_at: 2026-11-16
 packages/devkit-dist/src/devkit_dist/features/distribution/models/results.py: drift_detected false when the current digest is None
 packages/devkit-dist/src/devkit_dist/features/distribution/usecases/override_commands.py: diff and accept call _find, which raises SELECTION_INVALID asset not found
 ```
+
+## Disposition
+
+- **Disposition**: Resolved in SPEC-remaining-feedback-fixes: CAP-DIST-workspace-ownership 3 states that a kept record whose asset left its bundle lists with drift_detected false, that override diff and accept refuse with SELECTION_INVALID (asset not found) and that override remove reconciles it; test_remove_drops_the_override_of_a_removed_asset pins the list, diff and accept results.

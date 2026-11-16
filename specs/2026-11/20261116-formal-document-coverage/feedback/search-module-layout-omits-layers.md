@@ -8,7 +8,7 @@ target: CAP-SRCH-document-search
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -30,3 +30,7 @@ created_at: 2026-11-16
 packages/devkit-dist/src/devkit_dist/features/search/services/: dense.py fusion.py index.py lexical.py
 packages/devkit-dist/src/devkit_dist/features/search/models/: contracts.py errors.py
 ```
+
+## Disposition
+
+- **Disposition**: Resolved in SPEC-remaining-feedback-fixes: CAP-SRCH-document-search 6 now names each module with its layer: services/lexical.py, services/dense.py, services/fusion.py, services/index.py (SearchIndex), models/contracts.py (SearchMode, SearchDocument, SearchHit) and models/errors.py.

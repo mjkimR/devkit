@@ -8,7 +8,7 @@ target: CAP-HOST-lifecycle-observation
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -37,3 +37,7 @@ created_at: 2026-11-16
 packages/devkit-dist/src/devkit_dist/features/host/services/observation.py: written by the observe handler only
 packages/devkit-dist/src/devkit_dist/features/host/usecases/status.py loads handlers but never calls them
 ```
+
+## Disposition
+
+- **Disposition**: Resolved in SPEC-remaining-feedback-fixes: CAP-HOST-lifecycle-observation 5 states that only the observe handler writes the observation record, that another handler leaves last_received null after successful dispatches and that its failure appears only on hook stderr; a persisted last-failure record was not adopted because there is no evidence of need.

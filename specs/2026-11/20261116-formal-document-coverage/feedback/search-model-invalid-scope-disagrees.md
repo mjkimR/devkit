@@ -8,7 +8,7 @@ target: CAP-DOCS-document-search
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -38,3 +38,7 @@ CAP-DOCS-document-search §4.5: "SEARCH_EXTRA_MISSING, SEARCH_MODEL_NOT_FOUND an
 CAP-SRCH-document-search §2: "A broken model package MUST raise SEARCH_MODEL_INVALID in every mode."
 packages/devkit-dist/src/devkit_dist/features/search/services/index.py resolve_mode catches only SearchExtraMissingError and ModelNotFoundError; the LEXICAL branch of search never touches the embedder
 ```
+
+## Disposition
+
+- **Disposition**: Resolved in SPEC-remaining-feedback-fixes: CAP-DOCS-document-search 4.5 and CAP-SRCH-document-search 2 now state that SEARCH_MODEL_INVALID passes through for every mode that loads the model (auto, dense, hybrid) and never for lexical, while SEARCH_EXTRA_MISSING and SEARCH_MODEL_NOT_FOUND pass through only for explicit dense or hybrid.

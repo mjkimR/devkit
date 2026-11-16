@@ -235,6 +235,9 @@ bundle and path but loses content keeps applying, with drift reported, until the
   paths MUST stay and be reported as an `ORPHAN_LEFT` warning. For a tracked override of an asset its installed bundle
   no longer has (removed or renamed upstream), it deletes every file under the recorded override path and its
   baseline, and the sync drops the record.
+- Until `remove` reconciles such a kept record, `override list` reports it with `drift_detected: false`, since no
+  current upstream digest exists, and `override diff` and `override accept` refuse with `SELECTION_INVALID` (asset
+  not found).
 
 
 ## Checkout-local ownership
