@@ -1,0 +1,36 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T05:13:04.260392Z'
+status: completed
+summary: Source and incoming-reference inspection identified required SDD/adaptive consumer integration; corrected baseline query provenance is in materials/integration-contract.md section 6.
+findings:
+- issue: Existing SDD guidance and target-docs scaffold omit complete formal-role impact and maintenance.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-plan/SKILL.md:14; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py:387
+  failure_condition: A change affects design, domain or operations but Planning/reconcile only consider CAP/UC/ARCH.
+  suggested_action: Extend existing Planning, review, scaffold and reconciliation boundaries with core formal-role assessment and source-specific verification.
+  resolution: open
+- issue: Entrypoint runtime policy is generic while consumer guidance assumes CAP/UC.
+  evidence: packages/devkit-spec/src/devkit_spec/features/entrypoints/services/derive.py:96; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-entrypoints/SKILL.md:6
+  failure_condition: A core-eligible formal kind is omitted or receives CAP/UC heuristics inappropriately.
+  suggested_action: Consume core entrypoint policy and prove eligible and ineligible new-kind behavior in derive/apply/CLI tests.
+  resolution: open
+- issue: Adoption and adaptive guidance omit complete formal maintenance destinations.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/brownfield-adoption/references/migration.md:10; packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/documents.md:17
+  failure_condition: Canonical formal content is routed elsewhere or adaptive authoring acquires implicit SDD records.
+  suggested_action: Integrate all formal maintenance operations and retained coverage in existing adoption/documenter procedures and consumer tests.
+  resolution: open
+- issue: Neutral docs assets and core interface require one source owner.
+  evidence: docs/proposals/PROP-formal-document-kinds/materials/support-audit.md
+  failure_condition: Consumer guidance copies unresolved schema or role applicability and diverges from core.
+  suggested_action: Core owns neutral docs policy/assets; lifecycle owns spec/adaptive consumers and consumes a pinned delivered interface.
+  resolution: open
+assumptions:
+- Codex emulated read-only role; author freeze and identical clean HEAD/tree after return substituted for native confinement; no outside-tree reads reported.
+unverified_areas:
+- Source inspection only; no implementation tests. Paginated incoming-reference bodies not all inspected. Core final interface not delivered.
+checks: {}
+diff_scope:
+  base: 306b30ed6d8aff09c26c3547cfffc62705d3123a
+  head: 306b30ed6d8aff09c26c3547cfffc62705d3123a

@@ -1,0 +1,21 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T05:14:46.261373Z'
+status: completed
+summary: Confirmed CAP-DLV-delivery-workflows rules 9 and 15 own formal impact reflection at existing review/reconcile boundaries; structural consistency use case stays structural.
+findings:
+- issue: Formal impact semantic reflection belongs in delivery-workflow coverage rather than structural-rule use-case promises.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:110; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:145
+  failure_condition: Semantic source agreement is described as proven by structural rules or approval authority is changed.
+  suggested_action: Restate formal impact in existing rules 9 and 15; update spec-review/spec-sync without a new stage; keep structural use-case scenarios limited to structural checks.
+  resolution: open
+assumptions:
+- Codex emulated read-only support; unchanged HEAD and exact nonignored content/mode snapshot 9b28830282a954a95c22edcea325a2684f48aa810f55c6ba83b5847dfc810a1b before/after; no outside-tree reads reported.
+unverified_areas:
+- 204 incoming nodes, only first 20 inspected; no behavior tests.
+checks: {}
+diff_scope:
+  base: 306b30ed6d8aff09c26c3547cfffc62705d3123a
+  head: 306b30ed6d8aff09c26c3547cfffc62705d3123a
