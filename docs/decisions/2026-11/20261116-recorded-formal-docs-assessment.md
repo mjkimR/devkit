@@ -1,16 +1,15 @@
 ---
-id: PADR-recorded-formal-docs-assessment
+id: ADR-recorded-formal-docs-assessment
 title: Recorded formal-docs assessment and reimplementability review
 summary: "For reconcile records, we require design, domain and operations coverage (related_* IDs or a formal_docs none reason) when a commit newly resolves a record, checked by RULE-reconcile-contract, plus reviewer reimplementability findings, accepting one field and more review."
-proposal: PROP-formal-doc-authoring-checkpoints
-# supersedes: [ADR-<slug>]   # write Supersedes in part `ADR-<slug>`: <the replaced clauses>. in Decision Outcome
-status: draft
+proposal: SPEC-formal-doc-authoring-checkpoints
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-recorded-formal-docs-assessment] Recorded formal-docs assessment and reimplementability review
+# [ADR-recorded-formal-docs-assessment] Recorded formal-docs assessment and reimplementability review
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---

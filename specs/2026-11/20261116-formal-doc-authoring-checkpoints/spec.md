@@ -1,45 +1,23 @@
 ---
-id: PROP-formal-doc-authoring-checkpoints
+id: SPEC-formal-doc-authoring-checkpoints
 title: 'Formal documentation checkpoints: route facts, review reimplementability, record assessments'
 summary: Make formal documentation get filled during ordinary delivery by adding fact-type routing, a reconcile formal-docs assessment field, reimplementability questions for the reconcile reviewer, a capability observable-contract rule and a reference template.
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-11-16
-target_area: documents/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/
-    - packages/devkit-docs/tests/integration/bundles/docs/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-plan/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-sync/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/reconcile-reviewer.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/reconcile_contract/
-    - packages/devkit-spec/src/devkit_spec/features/governance/usecases/reconcile_contract.py
-    - packages/devkit-spec/tests/integration/features/governance/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - packages/devkit-spec/tests/integration/features/worker/test_worker_inspect.py
-    - packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py
-    - docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
-    - docs/capabilities/documents/CAP-DOCS-document-model.md
-    - docs/capabilities/governance/CAP-GOV-spec-rules.md
-    - docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
-    - docs/proposals/PROP-formal-doc-authoring-checkpoints/
-  excludes:
-    - handbook/
-    - .devkit/managed/
-    - docs/development/reference/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-16
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-formal-doc-authoring-checkpoints] Formal documentation checkpoints: route facts, review reimplementability, record assessments
+# [SPEC-formal-doc-authoring-checkpoints] Formal documentation checkpoints: route facts, review reimplementability, record assessments
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-formal-doc-authoring-checkpoints on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-formal-doc-authoring-checkpoints`
+
+### 1. Background & Hypothesis
 
 A reimplementability review of 17 capability areas found that the documentation layers are sufficient. The gaps are
 content nobody wrote, not missing layers:
@@ -59,7 +37,7 @@ only reliably present content is what something checks:
 - the reconcile record schema has `targets` only;
 - `reconcile-reviewer` checks behavior, capability and constraint changes, never formal documents;
 - 10 of 260 `reconcile.md` files mention a formal document, all from the 2026-11-16 formal-document specs
-  ([evidence](materials/planning-evidence.md));
+  ([evidence](../../../docs/materials/2026-11/20261116-formal-doc-authoring-checkpoints/planning-evidence.md));
 - routing exists per responsibility (`CAP-DOCS-documentation-ownership` §3.1 rule 5), not per fact type;
 - nothing says what stays out of a capability;
 - reference pages have no template.
@@ -71,8 +49,57 @@ recorded assessment and an independent reviewer question.
 The formal-document steps in plan, review and sync landed on 2026-11-16, so no ordinary spec has run under them yet.
 Planning should keep the change proportionate to that.
 
+## 2. User Stories
 
-## 2. Technical Spike Questions
+- **US-1**: As a developer/agent, I want to implement Formal documentation checkpoints: route facts, review reimplementability, record assessments so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+One spec, `sdd-spec-feature`, size M, `dev_effort: medium`. No split: the guidance, the record field and the
+reviewer classes describe one fact-type model and land together; four tasks fit one spec:
+
+### Scenario 1 [AC-01]: Carried from proposal
+1. Docs bundle guidance and templates (Q1, Q4, Q5, Q6) with the template-list pins.
+
+### Scenario 2 [AC-02]: Carried from proposal
+2. `RULE-reconcile-contract`: role coverage, `formal_docs` form and the newly-resolved requirement, guide, tests
+   and the two existing fixtures that resolve records in snapshot runs.
+
+### Scenario 3 [AC-03]: Carried from proposal
+3. Spec bundle: `spec-sync`, `reconcile-reviewer`, `spec-plan`, `spec-review` wording.
+
+### Scenario 4 [AC-04]: Carried from proposal
+4. Living Spec capabilities and the promoted ADR; the spec's own `reconcile.md` covers every role.
+
+Acceptance evidence:
+
+### Scenario 5 [AC-05]: Carried from proposal
+- Rule tests: in `--staged` and `--ci` snapshot runs, a new or newly resolved record with a role uncovered is
+  reported; a record `resolved` at the base and edited, a `pending` record, a record resolved in a merge parent
+  (`MERGE_HEAD`) and a plain explicitly targeted completed record without coverage are not; each malformed form (not a
+  mapping, unknown key, missing `none: ` prefix, short reason, a role with both IDs and a reason) is reported; full
+  coverage through `related_*` lists, `none:` reasons or a mix passes.
+
+### Scenario 6 [AC-06]: Carried from proposal
+- `uv run devkit rules check specs/` (every record an explicit target) reports no new `RULE-reconcile-contract`
+  violation over the 260 existing records, and the spec's own record passes `--ci` with every role covered.
+
+### Scenario 7 [AC-07]: Carried from proposal
+- The template distribution and constitution tests list `reference`; `devkit sync` projects `templates/reference.md`.
+
+### Scenario 8 [AC-08]: Carried from proposal
+- Reviewed text: `reconcile-reviewer` names the four classes with severities and the `diff_scope` limit; the
+  fact-type rows in `CAP-DOCS-documentation-ownership` and `living-spec-writing` agree.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 Each question is settled; the reasons are under Planning decisions.
 
@@ -110,9 +137,9 @@ Each question is settled; the reasons are under Planning decisions.
   work, to be evaluated once the reference code table shape has landed and five ordinary specs have completed under
   the checkpoints.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Docs bundle (`packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`)
+#### Docs bundle (`packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`)
 
 - `instructions/living-spec-writing.md`, "Responsibility and design navigation": add the fact-type routing table:
 
@@ -139,7 +166,7 @@ Each question is settled; the reasons are under Planning decisions.
   Fix the next action.
 - `AGENTS.md` template list gains `reference`.
 
-### Spec bundle (`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/`)
+#### Spec bundle (`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/`)
 
 - `skills/spec-sync/SKILL.md`: step 1 records the design/domain/operations coverage in the record's frontmatter;
   step 2's schema shows it:
@@ -166,23 +193,23 @@ Each question is settled; the reasons are under Planning decisions.
   formats, identity derivations, orderings and codes the change introduces, routed by the fact-type table.
 - `AGENTS.md.jinja` template list gains `reference`.
 
-### Living Spec
+#### Living Spec
 
 - `CAP-DOCS-documentation-ownership` §3.1: the fact-type table (Q1) and an "Observable contract" SHOULD rule (Q4).
 - `CAP-DOCS-document-model`: the template inventory names the reference template beside the eight formal templates.
 - `CAP-GOV-spec-rules`: the `RULE-reconcile-contract` row names the role-coverage check.
 - `CAP-DLV-delivery-workflows` rule 9 (the assessment is indexed in `reconcile.md` by `related_*` IDs or
   `formal_docs` reasons) and rule 15 (the reviewer's reimplementability classes).
-- New ADR from `PADR-recorded-formal-docs-assessment`.
+- New ADR from `ADR-recorded-formal-docs-assessment`.
 
-### Out of scope
+#### Out of scope
 
 - Migrating existing reference pages, capability text or formal documents; a sweep of older gaps.
 - A rule that every declared code has a documented condition (Q7).
 - `docs/development/reference/`: existing pages are not migrated (Q5). `.devkit/managed/` is regenerated by
   `devkit sync`, never edited.
 
-## Planning decisions
+### Planning decisions
 
 - **Q1, canonical owner**: the capability holds the contract and the instruction is what agents read; keeping the
   capability canonical matches §3.1 rule 1, and the instruction stays self-contained because consumer projects do not
@@ -214,40 +241,17 @@ Each question is settled; the reasons are under Planning decisions.
   persisted data at P2.
 - **Q7**: the deferred rule depends on a uniform table shape that only new pages will have; five ordinary specs give a
   first measure of whether the reviewer class alone keeps conditions written.
-- **PADR**: `PADR-recorded-formal-docs-assessment` records the record field, its check and the reviewer classes,
+- **PADR**: `ADR-recorded-formal-docs-assessment` records the record field, its check and the reviewer classes,
   because it changes an existing rule contract and spans the spec and docs bundles. The guidance changes (Q1, Q4, Q5,
   Q6) change no contract or check and stay here.
 - **Concurrent work**: `PROP-handoff-rewrite-overlap-scheduling` (draft) owns `packages/devkit-spec/tests/`, which
   contains this proposal's owned test paths, including `test_worker_inspect.py` and
   `test_formal_document_lifecycle_scenarios.py`, whose fixtures resolve records in snapshot runs and gain coverage; no sequencing decision is needed while it is a draft.
 
-## Spec boundaries, acceptance evidence and size
-
-One spec, `sdd-spec-feature`, size M, `dev_effort: medium`. No split: the guidance, the record field and the
-reviewer classes describe one fact-type model and land together; four tasks fit one spec:
-
-1. Docs bundle guidance and templates (Q1, Q4, Q5, Q6) with the template-list pins.
-2. `RULE-reconcile-contract`: role coverage, `formal_docs` form and the newly-resolved requirement, guide, tests
-   and the two existing fixtures that resolve records in snapshot runs.
-3. Spec bundle: `spec-sync`, `reconcile-reviewer`, `spec-plan`, `spec-review` wording.
-4. Living Spec capabilities and the promoted ADR; the spec's own `reconcile.md` covers every role.
-
-Acceptance evidence:
-
-- Rule tests: in `--staged` and `--ci` snapshot runs, a new or newly resolved record with a role uncovered is
-  reported; a record `resolved` at the base and edited, a `pending` record, a record resolved in a merge parent
-  (`MERGE_HEAD`) and a plain explicitly targeted completed record without coverage are not; each malformed form (not a
-  mapping, unknown key, missing `none: ` prefix, short reason, a role with both IDs and a reason) is reported; full
-  coverage through `related_*` lists, `none:` reasons or a mix passes.
-- `uv run devkit rules check specs/` (every record an explicit target) reports no new `RULE-reconcile-contract`
-  violation over the 260 existing records, and the spec's own record passes `--ci` with every role covered.
-- The template distribution and constitution tests list `reference`; `devkit sync` projects `templates/reference.md`.
-- Reviewed text: `reconcile-reviewer` names the four classes with severities and the `diff_scope` limit; the
-  fact-type rows in `CAP-DOCS-documentation-ownership` and `living-spec-writing` agree.
-
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Planning settles Q1-Q7 and the spec boundaries; acceptance hands off to Development and integrates locally under
   `dev-integration=auto`.
 - Retire when the guidance and checkpoints land. After five ordinary specs complete under them, evaluate the effect
   before proposing the deferred code-condition rule.
+
