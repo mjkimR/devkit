@@ -2,7 +2,7 @@
 id: SPEC-domain-model-documents
 title: Domain-model documentation
 summary: Establishes maintained conceptual domain views with clear authoritative sources, reusing document discovery unless the early pilot demonstrates a gap.
-status: planned
+status: in-progress
 created: 2026-11-16
 depends_on:
   - SPEC-design-document-foundation
