@@ -8,11 +8,11 @@ plan: PLAN-formal-docs-feedback-handoff
 
 ## Phase 1: Documents
 
-- [ ] **Task 1.1**: Feedback lifecycle domain entry
+- [x] **Task 1.1**: Feedback lifecycle domain entry
   - **_Boundary**: `docs/domain/delivery/DOMAIN-feedback-lifecycle.md`
   - _Requirements: AC-01, AC-02, AC-04, AC-05, AC-06_
   - **Verification**: `uv run devkit rules check --ci --base cdbcdf224`
-- [ ] **Task 1.2**: Proposal handoff design
+- [x] **Task 1.2**: Proposal handoff design
   - **_Boundary**: `docs/designs/delivery/DESIGN-proposal-handoff/`
   - _Requirements: AC-01, AC-03, AC-04, AC-05, AC-06_
   - **Verification**: `uv run devkit rules check --ci --base cdbcdf224`

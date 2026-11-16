@@ -2,7 +2,7 @@
 id: SPEC-formal-docs-feedback-handoff
 title: Feedback lifecycle domain and proposal handoff design documents
 summary: Add DOMAIN-feedback-lifecycle and DESIGN-proposal-handoff, the two medium-priority formal documents the coverage review found missing, written from current behavior.
-status: planned
+status: in-progress
 created: 2026-11-16
 related_capabilities: []
 related_usecases: []
