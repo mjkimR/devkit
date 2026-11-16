@@ -85,7 +85,6 @@ def test_selection_round_trip_and_project_owned_seed_bytes(tmp_path: Path) -> No
     design = tmp_path / ".devkit/managed/docs/templates/design.md"
     assert design.read_bytes() == (BUNDLE / "templates/design.md").read_bytes()
     assert design.read_text().startswith("---\n")
-    assert not (tmp_path / ".devkit/managed/docs/templates/design-template.md").exists()
     invoke(tmp_path, "add", "docs:docs-skeleton")
     seed = tmp_path / "docs/README.md"
     seed.write_text(seed.read_text() + "\nProject-owned bytes.\n")

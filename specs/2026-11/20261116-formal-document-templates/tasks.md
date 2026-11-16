@@ -19,11 +19,11 @@ plan: PLAN-formal-document-templates
 
 ## Phase 2: Living Spec
 
-- [ ] **Task 2.1**: Reword the capability clause and drop the pointer from the capability, document model and README
+- [x] **Task 2.1**: Reword the capability clause and drop the pointer from the capability, document model and README
   - **_Boundary**: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md, docs/capabilities/documents/CAP-DOCS-document-model.md, packages/devkit-docs/README.md
   - _Requirements: AC-04, AC-06_
   - **Verification**: `rg -n design-template docs/capabilities docs/architecture docs/development packages` exits 1
-- [ ] **Task 2.2**: Restructure the five delivered documents to the revised templates
+- [x] **Task 2.2**: Restructure the five delivered documents to the revised templates
   - **_Boundary**: docs/designs/, docs/domain/, docs/operations/
   - _Requirements: AC-05_
   - **Verification**: `uv run devkit rules check docs/designs docs/domain docs/operations`; `rg -n '^\*\*Reader question|^## Question' docs/designs docs/domain docs/operations` exits 1

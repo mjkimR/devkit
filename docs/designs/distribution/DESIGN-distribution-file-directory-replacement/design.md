@@ -10,11 +10,9 @@ entrypoints:
 
 # [DESIGN-distribution-file-directory-replacement] File/directory replacement: the transaction mechanism
 
-**Reader question:** Which ordering and recorded evidence let a managed file become a directory, and the reverse?
-
-This non-normative detail explains the current transaction.py implementation.
-`CAP-DIST-sync-and-transactions` §3 owns eligibility, safety and recovery guarantees.
-For orientation, the `DESIGN-distribution-transactions` locates this mechanism within distribution.
+Letting a managed file become a directory, and the reverse, depends on the ordering of deletions and writes and on
+the evidence recorded for rollback. This non-normative detail explains how the current transaction.py implementation
+provides both. For orientation, the `DESIGN-distribution-transactions` locates this mechanism within distribution.
 
 ## Preflight and the change set
 
@@ -26,7 +24,7 @@ part of the planned change rather than a blind overwrite.
 For a concrete file-to-directory shape, deleting the managed file `notes` permits writing `notes/SKILL.md`.
 For the reverse shape, deleting the owned contents beneath `notes/` permits writing a file named `notes`.
 These names illustrate a change-set shape; they do not report a recovery run or introduce a new allowed destination.
-The exact refusal conditions belong to the capability owner above.
+The exact refusal conditions belong to `CAP-DIST-sync-and-transactions` §3.
 
 ## Forward application
 
@@ -48,11 +46,16 @@ the journal and prunes empty owned parents left by deletions.
 removal of transaction-created content before restoring prior content. `_prune_created` removes recorded created
 directories only while empty. The implementation then removes the journal.
 
-For a later edit or a legacy journal, next use `CAP-DIST-sync-and-transactions` §3 “Recovery”; its stop conditions
-own the operational decision. This explanation is not a rollback procedure. Use the cited owner to decide an operational action.
+## Authority boundary
 
-## Maintenance seam
+`CAP-DIST-sync-and-transactions` §3 owns eligibility, safety and recovery guarantees. This explanation is not a
+rollback procedure. Use the cited owner to decide an operational action.
+
+## Maintenance and next action
 
 A change to deletion ordering calls for checking `_ordered`, `apply_changes`, `recover_locked` and this detail.
 It does not itself change the domain relationship between selection and installed evidence. Revisit architecture
 only if system interactions or component responsibilities change, and capability guarantees if their facts change.
+
+For a later edit or a legacy journal, next use `CAP-DIST-sync-and-transactions` §3 “Recovery”; its stop conditions
+own the operational decision.
