@@ -9,6 +9,9 @@ created_at: 2026-11-16
 
 # [ADR-linked-domain-relationship-views] Linked domain relationship views
 
+Superseded in part by `ADR-problem-first-formal-document-openings`: the clause that an entry gives its question; its
+relationship overview, authority boundary and next useful step remain.
+
 Superseded in part by `ADR-formal-role-document-identities`: the ID-free domain representation, exclusion from indexed identity and selected absence of Kind, template, namespace and runtime support.
 
 - **Status**: Accepted

@@ -32,7 +32,7 @@ created_at: 2026-11-16
 
 - **Reproduction**: Delegate a scout whose `task_goal` asks for a survey of external sources not named in the payload.
 - **Expected / Actual**: Expected source discovery; actual tool set allows only fetching given URLs.
-- **Versions**: devkit worktree at the Planning head of `PROP-formal-document-templates`.
+- **Versions**: devkit worktree at the Planning head of `SPEC-formal-document-templates`.
 - **Conditions**: Claude Code host, `native` scout route.
 - **Workarounds Attempted**: `role-worker` emulation; succeeded, with the diff check as the only write guard.
 - **Related Assets**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/scout.md`, the

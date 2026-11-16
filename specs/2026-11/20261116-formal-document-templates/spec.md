@@ -1,45 +1,29 @@
 ---
-id: PROP-formal-document-templates
+id: SPEC-formal-document-templates
 title: Template alignment for formal design, domain and operations documents
-summary: "Aligns the design, domain and operations templates and writing instructions with the documents authors write, starting with removal of the question section that restates the summary."
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-11-16
-target_area: documents/
-priority: medium                      # critical | high | medium | low
-size: S                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-documentation-system-evolution
+summary: Aligns the design, domain and operations templates and writing instructions with the documents authors write, starting with removal of the question section that restates the summary.
+status: planned
+created: 2026-11-16
 depends_on:
   - SPEC-design-bundle-layout
-boundaries:
-  owns:
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/
-    - packages/devkit-docs/tests/
-    - packages/devkit-docs/README.md
-    - docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
-    - docs/capabilities/documents/CAP-DOCS-document-model.md
-    - docs/decisions/2026-11/20261116-linked-domain-relationship-views.md
-    - docs/designs/
-    - docs/domain/
-    - docs/operations/
-    - docs/proposals/PROP-formal-document-templates/
-    - .devkit/installation.json
-  excludes:
-    - packages/devkit-viewer/
-    - packages/devkit-spec/
-    - packages/devkit-adaptive/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-formal-document-templates] Template alignment for formal design, domain and operations documents
+# [SPEC-formal-document-templates] Template alignment for formal design, domain and operations documents
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-formal-document-templates on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-formal-document-templates`
+
+### 1. Background & Hypothesis
 
 `SPEC-formal-document-kinds` shipped `templates/{design,domain,operations}.md` and the matching writing
 instructions in the docs bundle. The five delivered documents diverge from those templates, and no rule checks
-their sections (inventory: `materials/template-survey.md` §1):
+their sections (inventory: `docs/materials/2026-11/20261116-formal-document-templates/template-survey.md` §1):
 
 - **Question section.** The design template opens with `## 1. Reader question and mechanism` and the domain
   template with `## 1. Conceptual question`; the operations template has none. The two designs carry a bold
@@ -64,7 +48,7 @@ their sections (inventory: `materials/template-survey.md` §1):
 Hypothesis: a template that matches the shape authors already produce, without a section that repeats the summary,
 yields documents that need no restructuring after authoring.
 
-External practice agrees (`materials/template-survey.md` §2): KEP, Rust RFC, PEP 12, Go, MADR and arc42 state the
+External practice agrees (`docs/materials/2026-11/20261116-formal-document-templates/template-survey.md` §2): KEP, Rust RFC, PEP 12, Go, MADR and arc42 state the
 problem once after the summary and keep any question inside it or as an authoring prompt; scope is set by
 exclusions plus pointers to the owning document; guidance sits in comments or a separate guide; table skeletons are
 placeholder rows; copy-once systems leave old documents alone and check body sections, if at all, warn-only.
@@ -73,11 +57,30 @@ placeholder rows; copy-once systems leave old documents alone and check body sec
 templates and instructions. This proposal follows it, so each file is restructured once against the delivered path
 grammar.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Template alignment for formal design, domain and operations documents so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Does removing the question section satisfy `CAP-DOCS-documentation-ownership` §3.3, which asks authors to
   state the reader question, or does that clause change with the templates? *Settled: the clause changes;
-  `PADR-problem-first-formal-document-openings`.*
+  `ADR-problem-first-formal-document-openings`.*
 - **Q2**: Which of the remaining gaps does this proposal fix: section structure, authority boundary section,
   guidance as comments, table skeletons, the pre-seeded empty `related_*` lists and the missing `status` value
   comment? *Settled: all of them; Planning decisions.*
@@ -86,11 +89,11 @@ grammar.
 - **Q4**: Is `templates/design-template.md`, the compatibility pointer to `design.md`, removed? State whether any
   released version shipped the older name. *Settled: removed; no tag v0.1.0–v0.1.6 contains it.*
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Planning decisions
+#### Planning decisions
 
-- **Q1 — Opening.** `PADR-problem-first-formal-document-openings`: each document opens with the problem it answers
+- **Q1 — Opening.** `ADR-problem-first-formal-document-openings`: each document opens with the problem it answers
   per kind, with no question section or label; at most one sentence of it is a question. Settling the one reader
   question becomes an authoring step in each writing instruction (split or drop a document that has none). It
   rewords `CAP-DOCS-documentation-ownership` §3.3 item 2 and supersedes in part the question clause of
@@ -143,19 +146,19 @@ grammar.
   | `DOMAIN-bundle-selection-and-installation`, `DOMAIN-delivery-relationships` | `## Question` replaced by a problem lead; table moved to the `Concept or relationship \| Distinction \| Authoritative owner` columns; closing section split into authority boundary and maintenance |
   | `OPS-distribution-sync` | lead states the symptom; `## Routing` with the skeleton columns; `## Normal-state observation`; boundary section renamed; maintenance close added |
 
-### Assets
+#### Assets
 
 Edit the docs bundle sources under `packages/devkit-docs/src/devkit_docs/bundles/docs/` and project them with
 `devkit sync`. Start from the templates and instructions as `SPEC-design-bundle-layout` delivers them.
 
-### Non-Goals
+#### Non-Goals
 
 - No change to paths, identity, frontmatter schema, the `area` field, support placement, status vocabulary or
   relation fields; `SPEC-design-bundle-layout` and `ADR-formal-role-document-identities` own those.
 - No rule that checks template sections or leftover guidance.
 - No per-document template version marker, template variants or separate guide files.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
 - **T1 — Templates**: The three templates carry no question section, open and close with the headings above, carry
   guidance in HTML comments, ship the domain and operations table skeletons and the `status` and `related_*`
@@ -170,8 +173,9 @@ Edit the docs bundle sources under `packages/devkit-docs/src/devkit_docs/bundles
   materials, completed specs and other proposals keep their mentions as history. `test_installed_consumer.py`
   instantiates the revised templates.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning settles Q1–Q4. This stays one S feature proposal and starts Development after
 `SPEC-design-bundle-layout` delivers its path grammar. Acceptance and handoff follow the existing gates; handoff
-promotes `PADR-problem-first-formal-document-openings`. Retirement requires T1–T4.
+promotes `ADR-problem-first-formal-document-openings`. Retirement requires T1–T4.
+
