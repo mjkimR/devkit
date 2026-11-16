@@ -16,7 +16,7 @@ aliases:
 
 # [ADR-repository-viewer] Repository viewer distribution and read-only working-tree server
 
-Superseded in part by `ADR-internal-repository-viewer`: every decision (distribution and frontend, autohub consumption, server, working-tree reads, proposal-review route and Planning proposal overlay); the ADR becomes superseded after handoff.
+Superseded in part by `ADR-internal-repository-viewer`: every decision (distribution and frontend, autohub consumption, server, working-tree reads, proposal-review route and Planning proposal overlay).
 
 - **Status**: Superseded by `ADR-internal-repository-viewer`
 - **Date**: 2026-11-02

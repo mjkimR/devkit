@@ -238,6 +238,41 @@ describe('tab caches', () => {
 		expect(await loadRoadmapDocuments(source, 'main', signal())).not.toBe(fresh);
 	});
 
+	it('refills index workers before a slow read ends, with at most six reads in flight', async () => {
+		const many = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [`docs/${i}.md`, '# A']));
+		const source = testSource({
+			treeRecursive: vi.fn(async (root: string, _signal: AbortSignal) => ({
+				items: Object.keys(many)
+					.filter((path) => path.startsWith(`${root}/`))
+					.map((path) => ({ path, name: path.split('/').at(-1)!, type: 'blob' }))
+			})),
+			blob: vi.fn(async (path: string, _signal: AbortSignal) => ({
+				path,
+				content: many[path],
+				encoding: 'utf-8'
+			}))
+		});
+		const blob = source.blob.getMockImplementation()!;
+		let release!: () => void;
+		const slow = new Promise<void>((resolve) => (release = resolve));
+		let active = 0,
+			maximum = 0;
+		source.blob.mockImplementation(async (path, s) => {
+			maximum = Math.max(maximum, ++active);
+			try {
+				if (path === 'docs/0.md') await slow;
+				return await blob(path, s);
+			} finally {
+				active--;
+			}
+		});
+		const work = scanDocuments(source, signal(), ['docs']);
+		await vi.waitFor(() => expect(source.blob).toHaveBeenCalledTimes(12));
+		expect(maximum).toBeLessThanOrEqual(6);
+		release();
+		expect((await work).documents).toHaveLength(12);
+	});
+
 	it('lists each index root with one recursive request and ignores out-of-scope paths', async () => {
 		const source = tree();
 		source.treeRecursive.mockImplementation(async (root: string) => ({

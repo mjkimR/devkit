@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { discoverMilestonePaths, isMilestonePath } from './milestones';
+import { discoverMilestonePaths, isMilestonePath, loadMilestoneDocuments } from './milestones';
 import { buildRoadmap, loadRoadmapDocuments } from './roadmap';
 import { loadDashboardSection } from '../features/dashboard/loading';
 import { extractDashboardData } from '../features/dashboard/dashboard';
@@ -226,7 +226,7 @@ describe('namespace milestone discovery', () => {
 		expect(source.blob).toHaveBeenCalledTimes(10);
 		expect(vi.mocked(source.blob).mock.calls.some(([p]) => p.includes('/_archive/'))).toBe(false);
 	});
-	it('bounds dashboard body reads to six and refills before a slow request completes', async () => {
+	it('bounds roadmap milestone body reads to six and refills before a slow request completes', async () => {
 		const values = Object.fromEntries(
 			Array.from({ length: 12 }, (_, i) => [
 				`docs/packages/api/roadmap/MS-${String(i).padStart(2, '0')}.md`,
@@ -250,7 +250,7 @@ describe('namespace milestone discovery', () => {
 				active--;
 			}
 		});
-		const loading = loadDashboardSection(source, 'milestones', signal());
+		const loading = loadMilestoneDocuments(source, signal());
 		await vi.waitFor(() => expect(source.blob).toHaveBeenCalledTimes(12));
 		expect(maximum).toBeLessThanOrEqual(6);
 		release();

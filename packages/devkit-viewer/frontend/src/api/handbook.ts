@@ -123,12 +123,6 @@ export function rememberLanguage(lang: string) {
 
 export const pagePath = (lang: string, page: string) => `handbook/${lang}/${page}`;
 
-/** `handbook/<lang>/<page>` split into its language and page, or `null` for another path. */
-export function parsePagePath(path: string): { lang: string; page: string } | null {
-	const match = path.match(/^handbook\/([^/]+)\/(.+\.md)$/);
-	return match ? { lang: match[1], page: match[2] } : null;
-}
-
 export async function loadPage(
 	source: RepositoryDataSource,
 	lang: string,

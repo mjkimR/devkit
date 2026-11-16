@@ -145,7 +145,7 @@ The viewer is an internal tool with one host, `devkit viewer serve`, and no publ
 
 ### Supersession
 
-Supersedes in part `ADR-repository-viewer`: every decision (distribution and frontend, autohub consumption, server, working-tree reads, proposal-review route and Planning proposal overlay); the ADR becomes superseded after handoff.
+Supersedes in part `ADR-repository-viewer`: every decision (distribution and frontend, autohub consumption, server, working-tree reads, proposal-review route and Planning proposal overlay).
 
 Supersedes in part `ADR-release-handbook`: the library-host clauses (library hosts keep their `RepositoryDataSource`; the host guarantee of the `book` view id, `initialView` and the `sdd:path-change` event; the standalone `KnowledgeViews` binding of the book request; the library-host deep links).
 

@@ -30,7 +30,7 @@ just viewer build     # rebuild the committed page; commit it with the sources
 
 ## Data source
 
-`RepositoryDataSource` has only required members, each taking an optional `AbortSignal`: `info`, `tree(path)`,
+`RepositoryDataSource` has only required members, each taking an `AbortSignal`: `info`, `tree(path)`,
 `treeRecursive(path)`, `blob(path)`, `dashboardList(section)`, `planningProposals()`, `planningTree(source, path)` and
 `planningBlob(source, path)`. There is no `refs` member and no `ref` argument. `blob` rejects an absent file with an
 error whose message starts with `HTTP 404`; the Read tab treats that as "no handbook".

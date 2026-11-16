@@ -345,7 +345,7 @@ package `exports`, peer dependency or tarball.
   committed build differs. Installing devkit from Git therefore needs no Node; only changing the frontend does.
 - **One data source**: The page MUST read through one `RepositoryDataSource`, the local HTTP API of §2, whose members
   are all required: `info`, `tree(path)`, `treeRecursive(path)`, `blob(path)`, `dashboardList(section)`,
-  `planningProposals()`, `planningTree(source, path)` and `planningBlob(source, path)`, each taking an optional
+  `planningProposals()`, `planningTree(source, path)` and `planningBlob(source, path)`, each taking an
   `AbortSignal`. It has no `refs` member and no `ref` argument, and the frontend keeps no discovery path for a source
   without these members.
 - **Absent file**: `blob` MUST signal an absent file by rejecting with an error whose message starts with `HTTP 404`;

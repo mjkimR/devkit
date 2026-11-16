@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import DashboardView from './DashboardView.svelte';
 import type { RepositoryDataSource } from '../../api/repository';
 import { testSource } from '../../testing/source';
+import { cachedResult, cacheGeneration, cacheResult } from '../../api/cache';
 
 describe('DashboardView', () => {
 	afterEach(() => {
@@ -108,6 +109,21 @@ describe('DashboardView', () => {
 		await fireEvent.click(screen.getByText('Refresh'));
 		await waitFor(() => expect(source.blob).toHaveBeenCalledTimes(calls * 3));
 		expect(source.dashboardList).toHaveBeenCalledTimes(9);
+	});
+	it('clears the source caches on Refresh', async () => {
+		const source = mockSource();
+		render(DashboardView, { props: { source, repoId: 'test', branch: 'main' } });
+		await waitFor(() => expect(screen.getByText('CLI Issue')).toBeTruthy());
+		cacheResult(
+			source,
+			'main',
+			'documents',
+			{ documents: [], errors: [] },
+			cacheGeneration(source)
+		);
+		expect(cachedResult(source, 'main', 'documents')).toBeDefined();
+		await fireEvent.click(screen.getByText('Refresh'));
+		expect(cachedResult(source, 'main', 'documents')).toBeUndefined();
 	});
 	it('keeps errors local and ignores the old source after switching', async () => {
 		const source = mockSource();
