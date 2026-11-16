@@ -9,6 +9,7 @@ targets:
   - file: docs/usecases/viewer/UC-read-formal-document.md
   - file: docs/ux/viewer/UX-browse-formal-documents.md
   - file: docs/ux/viewer/UX-formal-document-relations.md
+  - file: docs/ux/viewer/UX-read-supporting-artifact.md
   - file: docs/steering/ux-objects.md
   - file: docs/development/reference/viewer.md
   - file: docs/capabilities/delivery/CAP-DLV-release-handbook.md
@@ -64,7 +65,7 @@ If that changes, stop and declare the exact `devkit_docs.features.documents` edg
 | --- | --- |
 | `CAP-VIEW-repository-viewer` §§4.3,6 | Explicit chapter order/labels, namespace visibility, three kinds in index/list/search and deep links, metadata/reference graph/artifact/error contracts; existing read budget/cache/security retained |
 | UC-read-formal-document | Goal: find a formal document and follow its authority/detail/artifact context; 1 request Living Spec book, 2 choose namespace/group or search, 3 read formal node, 4 inspect incoming/outgoing relations, 5 follow detail/artifact, 6 return; extensions cover empty, unresolved, missing, unsupported and stale source |
-| UX-browse-formal-documents, UX-formal-document-relations | Screens below, linked in both directions with new UC and existing CAP |
+| UX-browse-formal-documents, UX-formal-document-relations, UX-read-supporting-artifact | Screens below, linked in both directions with new UC and existing CAP |
 | `UC-read-decision-supersession`, `UX-view-decision`, `UX-decision-supersession` | Recheck ADR/PADR interaction and unavailable-state regression; change only statements actually affected by shared panel/link behavior |
 | docs/steering/ux-objects.md | Add shared formal Design, Domain, Operations, Reference and Supporting artifact rows using the core glossary terms; retain Decision/Proposed decision/Supersession relation rows |
 | docs/development/reference/viewer.md and `CAP-DLV-release-handbook` | Public library examples, navigation/deep links, source lookup/inclusion policy and verification commands |
@@ -93,8 +94,13 @@ target context. Missing targets show their written ID/path with an unavailable e
 or Overview result. Unsupported unknown kinds retain readable generic files without claiming formal validity.
 
 Resolve relative Markdown/detail/artifact links from the source document path and its source context; preserve
-fragments, URI encoding, repository path/symlink guards and sanitization. Markdown examples, Mermaid/diagram source,
-CSV/text and images use the existing supported render/raw/file route. Unsupported binary formats show the existing
+fragments, URI encoding, repository path/symlink guards and sanitization. Add a repository-source artifact resolver for relative `a[href]` and `img[src]`: current renderDocument only
+rewrites indexed Markdown anchors and does not load supporting blobs. Resolve assets using the existing
+RepositoryDataSource.blob contract, preserving UTF-8/base64 bytes and source context. Display safe image formats
+through bounded object URLs, revoke URLs on replacement/disposal, and retain DOMPurify plus explicit MIME/format
+handling. Markdown examples and Mermaid use existing rendering; CSV/diagram source use readable text/raw.
+No binary body is blindly decoded as UTF-8. A dedicated supporting-file surface uses the shared renderer/raw
+components, not a new editing engine. Images must be reachable and display when supported. Unsupported binary formats show the existing
 unsupported state and an available file/raw/download action only when the data source supports it. No promise of a
 new binary preview is made. Missing files retain context and a back action. A graph is complete only for the loaded
 index; load/read errors remain visible with retry. Existing lazy index and handbook-first budgets remain intact.
@@ -113,7 +119,7 @@ reuse `frontend/src/lib/features/knowledge/KnowledgeSidebar.svelte`, document co
 **Purpose:** Find and read a formal node. Facts: selected repository/branch, namespace, kind/group, canonical ID,
 title, summary and status. Primary region: selected document/book; secondary: chapter navigation and filters.
 
-**Content tree:** Repository/branch context; Read mode and Living Spec book control; namespace selector; chapter
+**Content tree:** Repository/branch context; Rendered/Raw source control; Read mode and Living Spec book control; namespace selector; chapter
 navigation with Domain, Designs, Operations; matching document ID/title entries; selected formal node header and
 body; linked independent details and supporting artifacts; UX-formal-document-relations panel.
 
@@ -125,6 +131,8 @@ body; linked independent details and supporting artifacts; UX-formal-document-re
 | empty | No matching documents; clear search/select another group or namespace |
 | error | Read/index failure with source context and retry; retain successfully loaded content |
 | missing | Requested ID/path unavailable; show written target and back/retry |
+| raw | Original source and metadata; Rendered control returns to the same document position |
+| unsupported | Artifact path/format and explanation; supported raw/download action when available; Back retains prior document context |
 
 | Trigger | Step | From | To | Target | Capability | Feedback |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -132,7 +140,10 @@ body; linked independent details and supporting artifacts; UX-formal-document-re
 | Choose namespace/group or search | UC-read-formal-document 2 | populated | populated/empty | | `CAP-VIEW-repository-viewer` | Matching IDs/count, selected scope |
 | Open formal node/alias/deep link | UC-read-formal-document 3 | populated/loading | populated/missing | | `CAP-VIEW-repository-viewer` | Canonical ID/title and selected context |
 | Inspect relations | UC-read-formal-document 4 | populated | populated | UX-formal-document-relations | `CAP-VIEW-repository-viewer` | Source-aware reference rows |
-| Follow detail/artifact | UC-read-formal-document 5 | populated | populated/missing/unsupported | file/detail surface | `CAP-VIEW-repository-viewer` | Target path/content or explanatory state |
+| Follow formal detail | UC-read-formal-document 5 | populated | populated/missing | UX-browse-formal-documents | `CAP-VIEW-repository-viewer` | Independent canonical detail header/body |
+| Follow supporting file | UC-read-formal-document 5 | populated | loading | UX-read-supporting-artifact | `CAP-VIEW-repository-viewer` | Artifact path and source context |
+| View raw / Rendered | global: inspect original source and unknown metadata | populated/raw | raw/populated | | `CAP-VIEW-repository-viewer` | Source or rendered body at retained context |
+| Change repository/branch | UC-read-formal-document *a | populated/loading/error | loading | | `CAP-VIEW-repository-viewer` | Cancel old reads; selected source shown and book request reset |
 | Return | UC-read-formal-document 6 | populated/missing/unsupported | populated | back | `CAP-VIEW-repository-viewer` | Prior reading context restored |
 
 ### UX-formal-document-relations (panel draft)
@@ -161,6 +172,52 @@ Register draft rows: Design/Domain/Operations, Developer reading repository, gro
 open document/view raw/follow reference; Reference, same role, direction/field/source/written ID/unavailable row,
 follow target/retry; Supporting artifact, same role, parent link/path/format/status, open file/back. Core glossary
 spelling is the final authority. Existing decision register rows remain.
+
+### UC-read-formal-document flow draft
+
+Main scenario: 1. Request Living Spec book in UX-browse-formal-documents. 2. Select namespace/group or search in
+that screen. 3. Read selected canonical formal node there. 4. Inspect and follow current/provenance context in
+UX-formal-document-relations, returning to UX-browse-formal-documents for a target. 5. Open an independent formal
+detail in UX-browse-formal-documents or a supporting file in UX-read-supporting-artifact. 6. Return to the source
+node/context using Back. Success: the reader reaches the intended identified node or support file and understands
+its authority and source.
+
+| Extension | Flow and resume point | Screen |
+| --- | --- | --- |
+| 2a empty results | Show selected filters and no matches; clear/change filters, resume 2 | UX-browse-formal-documents |
+| 3a unavailable requested ID/path | Show written target and missing/ambiguous reason; Back resumes 2, retry resumes 3 | UX-browse-formal-documents |
+| 4a incomplete/read error | Keep body and partial rows with completeness warning; Retry resumes 4 | UX-formal-document-relations |
+| 4b unresolved/ambiguous target | Show written ID/unavailable reason; no arbitrary target; retry resumes 4 or Back resumes 3 | UX-formal-document-relations |
+| 5a missing/unsupported file | Show artifact path/format/explanation; raw/download only when supported; Back resumes 3 | UX-read-supporting-artifact |
+| *a source change | Cancel old reads/assets; show selected repository/branch; reset book request per existing CAP; resume 1 | UX-browse-formal-documents and UX-read-supporting-artifact |
+
+### UX-read-supporting-artifact (screen draft)
+
+**Purpose:** Read a parent-linked supporting file. Facts: parent formal ID, repository/branch/source, target path
+and format. Primary region: supported content; secondary: source/raw/download controls and Back to parent.
+**Content tree:** Parent ID/title and Back; artifact path/format/source; safe supported image or Markdown/Mermaid
+preview, text/CSV/diagram source; Raw/download only for available blob bytes; failure explanation and Retry.
+Reuse existing document/file renderer styles and source guards; no proprietary editing controls.
+
+| State | Representation and next action |
+| --- | --- |
+| loading | Path and source with progress; Back cancels pending file load |
+| populated | Supported content and file identity; view raw/download if applicable or Back |
+| raw | Exact readable source; Rendered returns to preview, Back returns to parent |
+| missing/error | Path and read failure; Retry or Back to parent |
+| unsupported | Path/format and explanation; available blob download or readable raw only; Back preserves source position |
+
+| Trigger | Step | From | To | Target | Capability | Feedback |
+| --- | --- | --- | --- | --- | --- | --- |
+| Open file | UC-read-formal-document 5 | loading | populated/missing/error/unsupported | | `CAP-VIEW-repository-viewer` | Content or explicit path/format explanation |
+| Retry | UC-read-formal-document 5a | missing/error | loading | | `CAP-VIEW-repository-viewer` | Fresh read progress |
+| Raw / Rendered | global: inspect supporting source when readable | populated/raw | raw/populated | | `CAP-VIEW-repository-viewer` | Same artifact source/preview |
+| Download | UC-read-formal-document 5a | populated/unsupported | populated/unsupported | | `CAP-VIEW-repository-viewer` | Download started when supported |
+| Back | UC-read-formal-document 6 | populated/raw/loading/missing/error/unsupported | populated | UX-browse-formal-documents | `CAP-VIEW-repository-viewer` | Parent reading position restored; file read cancelled |
+| Change repository/branch | UC-read-formal-document *a | populated/loading/error | handbook | UX-browse-formal-documents | `CAP-VIEW-repository-viewer` | Old file and URLs disposed; selected source shown |
+
+Register row refinement: Supporting artifact uses path/format/source/content/unsupported explanation, open file,
+view raw/download/Back. Original source control is represented in the formal node screen and toggles raw/rendered.
 
 ## 6. Implementation and verification
 
