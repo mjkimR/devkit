@@ -1,0 +1,36 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:11:39.140668Z'
+status: completed
+summary: 'round 1; closes reconcile-check-01; implementer rechecked whole44-target reflection after exact named wording fixes; HIGH minor-fix exception applies: no production/schema or accepted meaning changed'
+findings:
+- issue: Existing entrypoint applicability statements omit or explicitly exclude DESIGN.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-lookup.md:115; docs/capabilities/documents/CAP-DOCS-document-model.md:380; docs/capabilities/governance/CAP-GOV-spec-rules.md:298
+  failure_condition: An agent reads the established file contract that excludes DESIGN rather than the appended paragraph.
+  suggested_action: Include canonical DESIGN alongside capabilities and use cases in these three statements, retaining DOMAIN/OPS exclusion and path semantics.
+  resolution: resolved
+  severity: P1
+- issue: The governance targeting contract omits the implemented dependent-artifact exception.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:75-78 and 526-529
+  failure_condition: A snapshot removes a canonical parent and identity governance reports an unchanged artifact, contrary to the incomplete targeting description.
+  suggested_action: Add role-artifact identity to cross-file targeting cases and state unchanged dependent artifact checks on parent deletion, honoring explicit exclusions.
+  resolution: resolved
+  severity: P1
+- issue: The reconciliation record reverses the preserved feature dependency.
+  evidence: specs/2026-11/20261116-formal-document-kinds/reconcile.md:111
+  failure_condition: A reader uses the reconciliation explanation to understand the retained dependency.
+  suggested_action: Replace documents-to-governance with governance-to-documents in that sentence.
+  resolution: resolved
+  severity: P2
+assumptions:
+- Independent round1 required no production or schema change; exact wording fixes meet all HIGH minor-fix criteria
+checks:
+  reflection: PASS all44 targets match changed current/source-asset paths; all three suggestions applied in named locations
+  governance: PASS rules check --ci --base main22
+  contract: PASS pinned core SHA256 unchanged; ordinary source destinations and historical bytes preserved
+diff_scope:
+  base: bb0192c549888dc7d34c98a60304480283d32c56
+  head: a2494ac6e35fa815da25b4ee7f2304c0ce3a0fff
+activity_effort: high

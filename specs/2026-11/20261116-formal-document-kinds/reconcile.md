@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-formal-document-kinds
-status: pending
+status: resolved
 targets:
   - file: docs/README.md
     resolution: modified

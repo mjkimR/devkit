@@ -2,7 +2,7 @@
 id: SPEC-formal-document-kinds
 title: First-class design, domain and operations document kinds
 summary: Registers design, domain and operations as formal document kinds with complete identity, governance, authoring, discovery and migration support, replacing the ID-free direction.
-status: in-progress
+status: completed
 created: 2026-11-16
 supersedes: PROP-operations-documents
 related_capabilities: []
