@@ -45,3 +45,11 @@ each flat `_archive/`. Discovery follows structural paths without a namespace re
 also appear; it does not certify document validity. Cross-root dependencies and direct proposals resolve over the
 combined set before history filtering. History, totals and detail paths remain available; open counts exclude
 done/dropped. Missing optional roots are empty and failed roots retain errors alongside successful results.
+
+
+Formal DESIGN, DOMAIN and OPS entries have explicit book chapters, canonical/alias search and an Include retired
+control. Direct references retain selected historical targets. Read and rendered Files share current incoming/
+outgoing reference context and separately labelled provenance. View raw retains the reading context.
+Parent-linked Markdown/Mermaid, CSV/source text and safe image previews use existing blob callbacks; unsupported
+bytes keep an explicit download state. Source/branch cancellation and object-URL cleanup apply, and Planning
+supporting reads never use checkout fallback. No additional host callback or document-engine dependency is required.

@@ -30,3 +30,10 @@ lockfile integrity. Contract: `CAP-VIEW-repository-viewer` in the devkit reposit
 `dashboardList` returns `{items: RepositoryBlob[], errors: string[]}` for `milestones`, `proposals` or `feedback`. Each item contains only UTF-8 frontmatter, including delimiters, or empty content when there is no frontmatter. The browser derives status/severity ordering and exact counts before fetching only visible full bodies. Load more appends 6 milestones, 9 proposals or 6 feedback entries. Cached lists retain loaded pages and their displayed count for 30 seconds from list completion; page loads do not renew expiry. Refresh resets the list and first page. Hosts without this optional method retain selective full scans on cold load and paged rendering.
 
 `planningProposals` returns `{sources, items, errors}`: each Planning source (`{id, kind, label, slug}`) and its own `docs/proposals/PROP-<slug>/proposal.md`. The Dashboard and Proposals tab request it after the checkout and update matching proposals in place with the source label; `planningTree` and `planningBlob` read an overlaid proposal's bundle from that source. The last loaded overlay seeds the next proposal list build. Hosts without these optional methods show the checkout only.
+
+Formal DESIGN, DOMAIN and OPS entries have explicit book chapters, canonical/alias search and an Include retired
+control. Direct references retain selected historical targets. Read and rendered Files share current incoming/
+outgoing reference context and separately labelled provenance. View raw retains the reading context.
+Parent-linked Markdown/Mermaid, CSV/source text and safe image previews use existing blob callbacks; unsupported
+bytes keep an explicit download state. Source/branch cancellation and object-URL cleanup apply, and Planning
+supporting reads never use checkout fallback. No additional host callback or document-engine dependency is required.

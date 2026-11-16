@@ -1,4 +1,7 @@
 <script lang="ts">
+	import FormalReferences from './FormalReferences.svelte';
+	import { repositoryImages } from '../../api/artifacts';
+	import type { RepositoryDataSource } from '../../api/repository';
 	import FrontmatterHeader from './FrontmatterHeader.svelte';
 	import SupersessionSummary from './SupersessionSummary.svelte';
 	import type { RepositoryDocument } from '../../api/documents';
@@ -9,6 +12,10 @@
 
 	let {
 		currentBlob = null,
+		source = null,
+		branch = 'main',
+		renderedHtml = undefined,
+		onSupportingOpen = () => {},
 		loading = false,
 		error = null,
 		rawMode = false,
@@ -21,6 +28,10 @@
 		onRelationOpen = () => {},
 		onReloadRelations = () => {}
 	}: {
+		source?: RepositoryDataSource | null;
+		branch?: string;
+		renderedHtml?: string;
+		onSupportingOpen?: (path: string, fragment: string) => void;
 		currentBlob?: {
 			path: string;
 			content: string;
@@ -39,9 +50,36 @@
 		onRelationOpen?: (path: string) => void;
 		onReloadRelations?: () => void;
 	} = $props();
+	function assets(node: HTMLElement) {
+		const a = repositoryImages(node, { source, branch }),
+			d = diagramAction?.(node);
+		return {
+			destroy() {
+				a.destroy();
+				d?.destroy();
+			}
+		};
+	}
+	function links(node: HTMLElement) {
+		const follow = (event: MouseEvent) => {
+			const a = (event.target as Element).closest<HTMLAnchorElement>(
+				'a[data-doc-path],a[data-repo-path]'
+			);
+			if (!a || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+			event.preventDefault();
+			if (a.dataset.docPath) onRelationOpen(a.dataset.docPath);
+			else onSupportingOpen(a.dataset.repoPath!, a.dataset.fragment ?? '');
+		};
+		node.addEventListener('click', follow);
+		return {
+			destroy() {
+				node.removeEventListener('click', follow);
+			}
+		};
+	}
 </script>
 
-<main class="content-viewport">
+<main class="content-viewport" use:links>
 	{#if error}
 		<div class="error-banner">
 			<span class="error-icon">⚠️</span>
@@ -63,7 +101,14 @@
 			{#if rawMode}
 				<RawViewer content={currentBlob.content} />
 			{:else}
-				{#if relationSubject}<SupersessionSummary
+				{#if relationSubject}<FormalReferences
+						subject={relationSubject}
+						documents={relationDocuments}
+						loading={relationLoading}
+						errors={relationErrors}
+						onOpen={onRelationOpen}
+						onReload={onReloadRelations}
+					/><SupersessionSummary
 						subject={relationSubject}
 						documents={relationDocuments}
 						loading={relationLoading}
@@ -71,8 +116,8 @@
 						onOpen={onRelationOpen}
 						onReload={onReloadRelations}
 					/>{/if}
-				{#key `${currentBlob.path}-${theme}`}
-					<MarkdownArticle html={currentBlob.html} {diagramAction} />
+				{#key `${currentBlob.path}-${theme}-${renderedHtml ?? currentBlob.html}`}
+					<MarkdownArticle html={renderedHtml ?? currentBlob.html} diagramAction={assets} />
 				{/key}
 			{/if}
 		</div>

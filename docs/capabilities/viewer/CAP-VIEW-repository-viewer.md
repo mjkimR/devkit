@@ -1,10 +1,10 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local repository page and Svelte library with Planning overlays, paged dashboard lists, global and namespace milestone roadmaps, decision supersession and the release handbook before the on-demand Living Spec."
+summary: "A read-only local repository page and Svelte library with formal references, source-safe artifacts, Planning overlays, dashboard lists, roadmaps, decision supersession and handbook-first reading."
 area: viewer
 status: active
-usecases: [UC-read-decision-supersession]
+usecases: [UC-read-decision-supersession, UC-read-formal-document]
 entrypoints:
   - packages/devkit-viewer/src/devkit_viewer/
   - packages/devkit-viewer/frontend/src/app/
@@ -193,12 +193,12 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
   also after Proposals or Specs loaded the document index. Once computed, the book keeps the chapter groups and order
   of §4. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **Chapter groups**: The book MUST group `docs/` (and each `docs/packages/<name>/` as `docs/`) in the order Overview,
-  Architecture, Capabilities, Use Cases, UX, Steering, Decisions, Development; UX documents (`ux/`) form the UX group.
+  Architecture, Domain, Capabilities, Use Cases, UX, Designs, Operations, Steering, Decisions, Development; UX documents (`ux/`) form the UX group.
   Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **ID links**: A `[ID]` prose reference or an inline code span holding exactly one ID of a document in the index,
-  UX IDs included, MUST link to that document. Check: `frontend/src/lib/documents.test.ts`.
+  UX, DESIGN, DOMAIN and OPS IDs and unambiguous same-prefix aliases included, MUST link to that document. Check: `frontend/src/lib/documents.test.ts`.
 - **One index**: For a data source and branch, the document index MUST start only with a Proposals or Specs view,
-  a book request or a rendered Files decision; a view change MUST reuse an unexpired completed index. Check:
+  a book request, a rendered Files decision/formal node or an identified document declaring a typed formal relation; a view change MUST reuse an unexpired completed index. Check:
   `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **Request lifetime**: The book request MUST last for the life of `SddViewer` across rail switches and host prop
   changes, and MUST hold only for the data source and branch it was made for, so a change of either returns the tab to
@@ -245,6 +245,60 @@ The local source supports recursive metadata requests to avoid one HTTP call per
 8. **Freshness**: WHEN relations reload, the viewer MUST refresh peer documents while each summary continues using its exact displayed subject metadata and statement. Files opens saved subjects independently of the index TTL. Source or branch changes MUST prevent older loads publishing. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
 9. **Read budget**: Files MUST request the existing document index lazily only for a rendered ADR or PADR; this feature MUST NOT start a scan for raw mode, ordinary files, dashboard or handbook-only navigation. Read reuses its existing index; reload invalidates the source cache. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 10. **Navigation and safety**: Resolved targets MUST use focusable same-view links; Read reveals another namespace when needed. Relation metadata and statement text MUST render escaped, without inserting source HTML. Check: `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`, `frontend/src/lib/features/document/SupersessionSummary.test.ts`.
+
+### 4.5 Formal documents and supporting files
+
+`UC-read-formal-document`, `UX-browse-formal-documents`, `UX-formal-document-relations` and
+`UX-read-supporting-artifact` describe the reading flow. Core identity and ownership remain with
+`CAP-DOCS-document-model` and `CAP-DOCS-documentation-ownership`.
+
+1. **Identity**: WHEN a formal document is read, the viewer MUST resolve canonical identities before same-prefix
+   aliases and leave missing or ambiguous written IDs unavailable. The permissive ID recognizers include
+   underscores; canonical path validity remains a core governance concern. Check: `frontend/src/lib/features/document/formal.test.ts`.
+2. **Independent detail**: The book MUST exclude role artifacts and README files from canonical navigation,
+   counts, search and graph identities while retaining independently identified peer details. Check:
+   `frontend/src/lib/features/document/formal.test.ts` and `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+3. **Search**: WHEN the reader searches the book, the viewer MUST match title, canonical ID, aliases, summary and
+   body in the selected structural namespace plus global context. Check: `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+4. **Retirement**: Normal book navigation MUST hide retired formal nodes until Include retired is selected.
+   Check: `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+5. **Direct targets**: WHEN an explicit path, canonical ID, alias or reference selects a filtered or retired node,
+   the viewer MUST materialize that target with status without enabling unrelated history. Check:
+   `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+6. **Current context**: Rendered formal nodes and identified documents declaring related_designs, related_domains or related_operations in Read and Files MUST share outgoing/incoming typed and visible
+   prose references over the loaded index, including references from any indexed kind. Rows retain direction,
+   field, written alias, canonical identity and status; aliases create no graph edge. Check:
+   `frontend/src/lib/features/document/formal.test.ts` and `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+7. **Uncertainty**: IF known metadata is malformed or an index read fails, THEN the panel MUST retain the body,
+   successful rows and incomplete information with reload; missing/ambiguous targets have no arbitrary link.
+   Check: `frontend/src/lib/features/document/SupportingArtifact.test.ts` and `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+8. **Provenance**: The formal panel MUST label historical origin separately from current references and retain
+   unknown metadata in inspectable metadata/raw source. Declared source entrypoints are not a source-liveness or
+   semantic-validity claim. Check: `frontend/src/lib/features/document/formal.test.ts`.
+9. **Source controls**: WHEN View raw or Rendered is selected in Read, the viewer MUST switch the exact document
+   source/body in place. Back from a reference or supporting file restores the prior reading context and position.
+   Check: `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+10. **Supporting reads**: WHEN a relative document/image/support link opens, the viewer MUST resolve it from the
+    origin path and source through existing blob callbacks, preserving decoded fragments and cancellation.
+    Planning content never falls back to checkout content. Check: `frontend/src/lib/api/artifacts.test.ts` and
+    `frontend/src/lib/features/document/SupportingArtifact.test.ts`.
+11. **Bytes and formats**: The supporting reader MUST preserve UTF-8/base64 bytes, preview Markdown/Mermaid,
+    readable CSV/diagram/source text and PNG/JPEG/GIF/WebP/AVIF or sanitized SVG, and leave other formats explicit
+    with download from available bytes. It MUST NOT decode binary data as UTF-8 text. Check:
+    `frontend/src/lib/api/artifacts.test.ts` and `frontend/src/lib/features/document/SupportingArtifact.test.ts`.
+12. **Image bounds**: A supporting preview MUST cap each blob at 8 MiB and each rendered article at 32 repository
+    images and 16 MiB of image bytes. Relative image sources and srcset MUST NOT reach the viewer origin before
+    source hydration; generated object URLs are revoked on replacement/disposal. Check: `frontend/src/lib/api/artifacts.test.ts`.
+13. **Unavailable files**: IF a supporting read is missing, invalid or unsupported, THEN the reader MUST retain
+    path, format/source context, explanation and Back; Retry applies to failed reads; raw/download controls require available readable
+    source/bytes. Check: `frontend/src/lib/features/document/SupportingArtifact.test.ts`.
+14. **Index budget**: Raw files, supporting artifacts and handbook reads MUST NOT request an identity index solely
+    by opening. Switching a formal Files node to rendered mode may request it. Check:
+    `frontend/src/lib/features/knowledge/FormalReading.test.ts` and `frontend/src/lib/SddViewer.test.ts`.
+
+The viewer does not repair stale source anchors, orphan artifacts or repository governance errors. Canonical aliases
+follow current identities; ordinary obsolete file paths remain unavailable rather than becoming alias redirects.
+Tree/blob APIs retain the existing byte, traversal and symlink guards for all formal roots.
 
 ## 5. Roadmap
 

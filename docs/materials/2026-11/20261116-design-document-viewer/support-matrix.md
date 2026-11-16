@@ -21,28 +21,28 @@ direct IDs/aliases/refs retain them regardless of default list filter. ADR/PADR-
 
 ## Three-kind-by-surface acceptance matrix
 
-D, N, O mean design, domain, operations. All three columns are required. P means planned and not executed.
-Each result must become a named passing test or walkthrough artifact in Development; inspection alone is not PASS.
+D, N, O mean design, domain, operations. All three columns are required. PASS means executed consumer evidence in development-evidence.md.
+Named passing tests and the source-specific command ledger are in development-evidence.md; inspection alone is not PASS.
 
 | Surface and applicability | D | N | O | Mechanism/owner and exact planned proof |
 | --- | --- | --- | --- | --- |
-| Identity/prefix input | P | P | P | Core-delivered valid and invalid prefix/path/H1/status fixtures; frontend consumer parity test against core definitions, no new schema authority |
-| Group/order/namespace list | P | P | P | api/documents.ts:266–299 bookGroup/bookGroups; documents.test.ts; KnowledgeViews.test.ts; explicit group in global and registered fixture, independent formal peer detail and unregistered structural control; never Overview |
-| List/search/current/history | P | P | P | KnowledgeViews.svelte:193–201 and KnowledgeSidebar.svelte; test title/body/ID/alias matches, selected namespace, retired defaults and explicit deep-linked historical node |
-| Canonical ID/alias/deep links | P | P | P | api/documents.ts idIndex/renderDocument plus SddViewer.svelte; documents.test.ts and SddViewer.test.ts; canonical, alias, encoded path/anchor, duplicate/missing ID; hidden-filter target reachable |
-| Prose and statement references | P | P | P | api/documents.ts:240 and document/supersession.ts:27; documents.test.ts and supersession.test.ts; every core prefix positive, underscore IDs/same-kind aliases using permissive ID_SOURCE, plus malformed/fence/comment/indented/code controls, whole/partial ADR statement targets |
-| Metadata and applicable relations | P | P | P | knowledge/KnowledgeViews.svelte:290–296, document/FrontmatterHeader.svelte and new shared formal relation panel/helpers under features/document/; typed scalar/list handling, malformed metadata, all core related_* fields, entrypoints only if applicable |
-| Reference graph/provenance | P | P | P | features/document/ relation projection and API ID index; new focused helper/component tests in same frontend ownership; outgoing/incoming direction, field/body origin, alias canonicalization, provenance separate, duplicate/unresolved/incomplete states |
-| Cold rendered Files | P | P | P | SddViewer.svelte:114 lazy index trigger extended for formal nodes, shared document metadata/reference panel; SddViewer.test.ts and document component tests: each kind before book request, direct/alias links, incomplete/retry, source switch/cancellation, raw/artifact/handbook no-index controls |
-| Current/historical | P | P | P | Preserve read source/Planning labels; retired stays accessible by explicit reference, raw source and historical links; historical completed spec/material not migrated or relabelled current; test no fabricated current authority |
-| Independent details/support | P | P | P | knowledge/KnowledgeViews and document renderer plus file explorer source; real migrated design/detail, domain and ops; relative Markdown examples, diagrams/Mermaid, CSV/text, image fixtures; unsupported binary, missing artifact, sanitization, back and source isolation |
-| Backend tree/blob | P | P | P | features/browse/usecases/read.py:30–51 may stay generic; extend tests/integration/features/browse/test_worktree.py or focused peer in same tier: all formal global/namespace paths and artifacts served, missing/symlink/traversal refused |
-| Public frontend library | P | P | P | frontend/src/lib/index.ts, api/repository.ts and wrappers; existing SddViewer/KnowledgeViews/RepositoryDataSource/RepositoryDocument exports remain compatible, generic host source needs no new callback; pack consumer exercises kinds and artifacts |
-| Static and Python wheel | P | P | P | vite.config.ts output and src/devkit_viewer/static/** generated via declared viewer-assets command; frontend checks, pack export checks, generated check and wheel asset inspection prove shipped page matches source |
-| Handbook source recognition | P | P | P | scripts/handbook.py:48,56,220; tools/devkit-dev/tests/integration/test_handbook_script.py: all prefixes/aliases recognized and cited source lookup/staleness verified with missing source control |
-| Handbook inclusion | P | P | P | CAP-DLV-release-handbook contract: formal sources citeable; generated decisions/changes/glossary and CAP/UC coverage requirements retain current scope; no auto page or release refresh |
-| Rename/rootmove/split/reclassify/retire | P | P | P | New core pin maintenance fixtures; alias opens canonical node with moved ID-owned artifact subtree, namespace/root move keeps source context, split/cross-kind each artifact has one parent; old file path missing rather than alias redirect; retired DESIGN removes/replaces dead entrypoints and shows historical prose+commit distinctly; core-invalid orphan/stale controls remain visible uncertainty |
-| Existing-kind compatibility | P | P | P | Existing CAP/UC/UX/ARCH/ADR/PADR/spec/proposal/milestone fixtures retain groups/linking/rendering; ADR/PADR summary decision-only; dashboard milestone/proposal/feedback scope unchanged |
+| Identity/prefix input | PASS | PASS | PASS | Core-delivered valid and invalid prefix/path/H1/status fixtures; frontend consumer parity test against core definitions, no new schema authority |
+| Group/order/namespace list | PASS | PASS | PASS | api/documents.ts:266–299 bookGroup/bookGroups; documents.test.ts; KnowledgeViews.test.ts; explicit group in global and registered fixture, independent formal peer detail and unregistered structural control; never Overview |
+| List/search/current/history | PASS | PASS | PASS | KnowledgeViews.svelte:193–201 and KnowledgeSidebar.svelte; test title/body/ID/alias matches, selected namespace, retired defaults and explicit deep-linked historical node |
+| Canonical ID/alias/deep links | PASS | PASS | PASS | api/documents.ts idIndex/renderDocument plus SddViewer.svelte; documents.test.ts and SddViewer.test.ts; canonical, alias, encoded path/anchor, duplicate/missing ID; hidden-filter target reachable |
+| Prose and statement references | PASS | PASS | PASS | api/documents.ts:240 and document/supersession.ts:27; documents.test.ts and supersession.test.ts; every core prefix positive, underscore IDs/same-kind aliases using permissive ID_SOURCE, plus malformed/fence/comment/indented/code controls, whole/partial ADR statement targets |
+| Metadata and applicable relations | PASS | PASS | PASS | knowledge/KnowledgeViews.svelte:290–296, document/FrontmatterHeader.svelte and new shared formal relation panel/helpers under features/document/; typed scalar/list handling, malformed metadata, all core related_* fields, entrypoints only if applicable |
+| Reference graph/provenance | PASS | PASS | PASS | features/document/ relation projection and API ID index; new focused helper/component tests in same frontend ownership; outgoing/incoming direction, field/body origin, alias canonicalization, provenance separate, duplicate/unresolved/incomplete states |
+| Cold rendered Files | PASS | PASS | PASS | SddViewer.svelte:114 lazy index trigger extended for formal nodes, shared document metadata/reference panel; SddViewer.test.ts and document component tests: each kind before book request, direct/alias links, incomplete/retry, source switch/cancellation, raw/artifact/handbook no-index controls |
+| Current/historical | PASS | PASS | PASS | Preserve read source/Planning labels; retired stays accessible by explicit reference, raw source and historical links; historical completed spec/material not migrated or relabelled current; test no fabricated current authority |
+| Independent details/support | PASS | PASS | PASS | knowledge/KnowledgeViews and document renderer plus file explorer source; real migrated design/detail, domain and ops; relative Markdown examples, diagrams/Mermaid, CSV/text, image fixtures; unsupported binary, missing artifact, sanitization, back and source isolation |
+| Backend tree/blob | PASS | PASS | PASS | features/browse/usecases/read.py:30–51 may stay generic; extend tests/integration/features/browse/test_worktree.py or focused peer in same tier: all formal global/namespace paths and artifacts served, missing/symlink/traversal refused |
+| Public frontend library | PASS | PASS | PASS | frontend/src/lib/index.ts, api/repository.ts and wrappers; existing SddViewer/KnowledgeViews/RepositoryDataSource/RepositoryDocument exports remain compatible, generic host source needs no new callback; pack consumer exercises kinds and artifacts |
+| Static and Python wheel | PASS | PASS | PASS | vite.config.ts output and src/devkit_viewer/static/** generated via declared viewer-assets command; frontend checks, pack export checks, generated check and wheel asset inspection prove shipped page matches source |
+| Handbook source recognition | PASS | PASS | PASS | scripts/handbook.py:48,56,220; tools/devkit-dev/tests/integration/test_handbook_script.py: all prefixes/aliases recognized and cited source lookup/staleness verified with missing source control |
+| Handbook inclusion | PASS | PASS | PASS | CAP-DLV-release-handbook contract: formal sources citeable; generated decisions/changes/glossary and CAP/UC coverage requirements retain current scope; no auto page or release refresh |
+| Rename/rootmove/split/reclassify/retire | PASS | PASS | PASS | New core pin maintenance fixtures; alias opens canonical node with moved ID-owned artifact subtree, namespace/root move keeps source context, split/cross-kind each artifact has one parent; old file path missing rather than alias redirect; retired DESIGN removes/replaces dead entrypoints and shows historical prose+commit distinctly; core-invalid orphan/stale controls remain visible uncertainty |
+| Existing-kind compatibility | PASS | PASS | PASS | Existing CAP/UC/UX/ARCH/ADR/PADR/spec/proposal/milestone fixtures retain groups/linking/rendering; ADR/PADR summary decision-only; dashboard milestone/proposal/feedback scope unchanged |
 
 ## File ownership and boundaries
 
@@ -95,3 +95,11 @@ maintenance semantics now explicitly compose canonical ID-owned artifact moves, 
 and live-entrypoint cleanup for retired DESIGN. The old pin and its role records remain in committed history.
 The uncommitted old-pin worker envelope was removed on Host instruction and is regenerated only after new review.
 No committed envelope was edited or removed. Fresh Challenger checks the updated maintenance consumer fixtures.
+
+
+## Delivered implementation evidence
+
+The preceding inventory retains Planning source anchors. [Development evidence](development-evidence.md) maps
+every row to actual named three-kind tests and package/source checks. New typed role fields on CAP, UC and MAT
+also expose the same panel and qualified rendered-Files index trigger; unrelated/no-ID/raw/artifact/handbook files
+do not acquire a universal scan. Independent review and final affected checks remain unit-envelope evidence.

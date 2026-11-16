@@ -14,6 +14,7 @@
 		area = $bindable(''),
 		areas = [],
 		includeCompleted = $bindable(false),
+		includeRetired = $bindable(false),
 		book = [],
 		entries = [],
 		sources = {},
@@ -35,6 +36,7 @@
 		area?: string;
 		areas?: string[];
 		includeCompleted?: boolean;
+		includeRetired?: boolean;
 		book?: RepositoryDocument[];
 		entries?: RepositoryDocument[];
 		/** Planning source label by overlaid proposal path. */
@@ -63,6 +65,17 @@
 				{/each}
 			</select>
 		</label>
+		{#if view === 'book'}
+			<input
+				aria-label="Search documents"
+				placeholder="Search ID, alias or text"
+				bind:value={query}
+			/>
+			<label class="checkbox-label"
+				><input type="checkbox" bind:checked={includeRetired} /> Include retired</label
+			>
+			<p class="count">{book.length} documents</p>
+		{/if}
 		{#if view !== 'book'}
 			<input aria-label="Search title or ID" placeholder="Search title or ID" bind:value={query} />
 			<div class="filter-row">
@@ -115,6 +128,7 @@
 					onclick={() => onJump(doc.path)}
 				>
 					{doc.title}
+					<small>{doc.meta.id ?? ''}{doc.meta.status === 'retired' ? ' · retired' : ''}</small>
 				</button>
 				{#each rendered
 					.get(doc.path)

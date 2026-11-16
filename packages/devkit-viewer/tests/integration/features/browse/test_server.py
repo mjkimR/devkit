@@ -432,3 +432,31 @@ def test_dashboard_metadata_endpoint(server: ViewerServer) -> None:
         "errors": [],
     }
     assert request(server, "/api/repos/alpha/dashboard-list?path=invalid").status == 400
+
+
+@pytest.mark.parametrize(("prefix", "directory"), [("DESIGN", "designs"), ("DOMAIN", "domain"), ("OPS", "operations")])
+@pytest.mark.parametrize("docs_root", ["docs", "docs/packages/registered"])
+def test_http_formal_documents_and_artifacts_preserve_bytes_and_missing_paths(
+    server: ViewerServer, prefix: str, directory: str, docs_root: str
+) -> None:
+    from urllib.parse import quote
+
+    root = server.repositories["alpha"].root
+    parent = f"{docs_root}/{directory}/{prefix}-http.md"
+    files = {
+        parent: f"---\nid: {prefix}-http\n---\n# HTTP\n".encode(),
+        f"{docs_root}/{directory}/{prefix}-http/artifacts/data sheet.csv": b"a,b\n1,2\n",
+        f"{docs_root}/{directory}/{prefix}-http/artifacts/chart.png": bytes([137, 80, 78, 71, 255]),
+    }
+    for path, data in files.items():
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        response = request(server, f"/api/repos/alpha/blob?path={quote(path)}")
+        assert response.status == 200
+        assert base64.b64decode(response.json()["content"]) == data
+    tree = request(server, f"/api/repos/alpha/tree?path={quote(docs_root)}&recursive=true")
+    assert set(files) <= {item["path"] for item in tree.json()["items"]}
+    missing = request(server, f"/api/repos/alpha/blob?path={quote(parent + '.missing')}")
+    assert missing.status == 404
+    assert missing.json()["error"]["code"] == "VIEWER_PATH_NOT_FOUND"

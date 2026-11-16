@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { marked } from 'marked';
-	import { indexDocuments, parseBlob, type DocumentIndex } from './api/documents';
+	import SupportingArtifact from './features/document/SupportingArtifact.svelte';
+	import { ID_PATTERN, hasFormalContext, isArtifactPath } from './api/identity';
+	import { indexDocuments, parseBlob, renderDocument, type DocumentIndex } from './api/documents';
 	import { clearRepositoryCache } from './api/cache';
 	import { isDecision } from './features/document/supersession';
-	import DOMPurify from 'dompurify';
-	import { untrack, type Snippet } from 'svelte';
+	import { tick, untrack, type Snippet } from 'svelte';
 
 	import KnowledgeViews from './KnowledgeViews.svelte';
 	import RoadmapView from './RoadmapView.svelte';
@@ -101,6 +101,12 @@
 	let repoInfo = $state<RepositoryInfo | null>(null);
 	let fullscreenSvg = $state<string | null>(null);
 
+	let fileSupport = $state<{
+		path: string;
+		parent: string;
+		fragment: string;
+		scroll?: number;
+	} | null>(null);
 	let relationIndex = $state<DocumentIndex>({ documents: [], errors: [] });
 	let relationLoading = $state(false);
 	let relationReload = $state(0);
@@ -111,7 +117,11 @@
 		const repository = source,
 			ref = branch,
 			subject = relationSubject;
-		const wanted = view === 'files' && !rawMode && isDecision(subject);
+		const wanted =
+			view === 'files' &&
+			!rawMode &&
+			!currentBlob?.path.startsWith('handbook/') &&
+			(isDecision(subject) || hasFormalContext(subject));
 		relationReload;
 		const controller = new AbortController();
 		relationIndex = { documents: [], errors: [] };
@@ -182,7 +192,9 @@
 	// before any view could index the new ref. A host deep link to a file under docs/ is the request.
 	let bookRequest = $state.raw<{ source: RepositoryDataSource | null; branch: string } | null>(
 		untrack(() =>
-			initialView === 'book' && /^docs\/.*[^/]$/.test(initialPath) ? { source, branch } : null
+			initialView === 'book' && (/^docs\/.*[^/]$/.test(initialPath) || ID_PATTERN.test(initialPath))
+				? { source, branch }
+				: null
 		)
 	);
 	const bookRequested = $derived(bookRequest?.source === source && bookRequest?.branch === branch);
@@ -193,7 +205,10 @@
 	$effect(() => {
 		source;
 		branch;
-		if (initialView === 'book' && /^docs\/.*[^/]$/.test(initialPath))
+		if (
+			initialView === 'book' &&
+			(/^docs\/.*[^/]$/.test(initialPath) || ID_PATTERN.test(initialPath))
+		)
 			untrack(() => setBookRequested(true));
 	});
 	const requestFor = (current: string) =>
@@ -208,9 +223,21 @@
 		const ref = branch;
 		const id = ++generation;
 		const controller = new AbortController();
+		fileSupport = null;
 		if (repository && view === 'files') {
 			if (path.endsWith('/') || path === '') {
 				void loadTree(path, repository, ref, id, controller.signal);
+			} else if (!/\.(?:md|markdown)$/i.test(path) || isArtifactPath(path)) {
+				currentBlob = null;
+				error = null;
+				loading = false;
+				fileSupport = { path, parent: '', fragment: '' };
+				void repository
+					.tree(path.split('/').slice(0, -1).join('/'), ref, controller.signal)
+					.then((data) => {
+						if (id === generation && !controller.signal.aborted) treeItems = normalizeTree(data);
+					})
+					.catch(() => {});
 			} else {
 				void loadBlob(path, repository, ref, id, controller.signal);
 			}
@@ -269,10 +296,7 @@
 				throw new Error(`Unsupported encoding: ${data.encoding}`);
 			}
 			const { frontmatter, content } = parseFrontmatterAndMarkdown(rawContent);
-			const parsedHtml = DOMPurify.sanitize(
-				marked.parse(content, { gfm: true, breaks: true }) as string,
-				{ USE_PROFILES: { html: true } }
-			);
+			const parsedHtml = renderDocument(parseBlob(path, rawContent, 'utf-8'), []).html;
 			currentBlob = {
 				path,
 				content: rawContent,
@@ -332,6 +356,11 @@
 		}
 	}
 
+	const currentHtml = $derived(
+		relationSubject
+			? renderDocument(relationSubject, relationIndex.documents).html
+			: (currentBlob?.html ?? '')
+	);
 	const breadcrumbs = $derived(currentPath ? currentPath.split('/').filter(Boolean) : []);
 </script>
 
@@ -343,7 +372,7 @@
 		{view}
 		{breadcrumbs}
 		{currentPath}
-		hasCurrentBlob={Boolean(currentBlob)}
+		hasCurrentBlob={Boolean(currentBlob) && !fileSupport}
 		bind:rawMode
 		theme={themeState.current}
 		{picker}
@@ -427,20 +456,60 @@
 					onnavigate={navigateTo}
 					onparent={navigateParent}
 				/>
-				<DocumentViewer
-					{currentBlob}
-					{loading}
-					{error}
-					{rawMode}
-					theme={themeState.current}
-					diagramAction={diagramRenderer}
-					{relationSubject}
-					relationDocuments={relationIndex.documents}
-					{relationLoading}
-					relationErrors={relationIndex.errors}
-					onRelationOpen={(path) => navigateTo(path, false)}
-					onReloadRelations={reloadRelations}
-				/>
+				{#if fileSupport}
+					<SupportingArtifact
+						{source}
+						{branch}
+						path={fileSupport.path}
+						parent={fileSupport.parent}
+						fragment={fileSupport.fragment}
+						documents={relationIndex.documents}
+						diagrams={diagramRenderer}
+						onBack={async () => {
+							if (fileSupport?.parent) {
+								const scroll = fileSupport.scroll ?? 0;
+								fileSupport = null;
+								await tick();
+								const node = hostEl?.querySelector('.content-viewport');
+								if (node) node.scrollTop = scroll;
+							} else navigateParent();
+						}}
+						onOpen={(path, fragment) => {
+							if (
+								relationIndex.documents.some((doc) => doc.path === path && !isArtifactPath(path))
+							) {
+								fileSupport = null;
+								navigateTo(path, false);
+							} else if (fileSupport)
+								fileSupport = { ...fileSupport, path, fragment: fragment ?? '' };
+						}}
+					/>
+				{:else}
+					<DocumentViewer
+						{currentBlob}
+						{source}
+						{branch}
+						renderedHtml={currentHtml}
+						onSupportingOpen={(path, fragment) =>
+							(fileSupport = {
+								path,
+								parent: currentBlob?.frontmatter?.id ?? currentPath,
+								fragment,
+								scroll: hostEl?.querySelector('.content-viewport')?.scrollTop ?? 0
+							})}
+						{loading}
+						{error}
+						{rawMode}
+						theme={themeState.current}
+						diagramAction={diagramRenderer}
+						{relationSubject}
+						relationDocuments={relationIndex.documents}
+						{relationLoading}
+						relationErrors={relationIndex.errors}
+						onRelationOpen={(path) => navigateTo(path, false)}
+						onReloadRelations={reloadRelations}
+					/>
+				{/if}
 			</div>
 		</div>
 	</div>

@@ -1,11 +1,17 @@
 <script lang="ts">
 	import type { RepositoryDocument } from '../../api/documents';
 	import { documentAnchor, bookGroup } from '../../api/documents';
+	import RawViewer from '../document/RawViewer.svelte';
+	import FormalReferences from '../document/FormalReferences.svelte';
+	import { repositoryImages } from '../../api/artifacts';
+	import type { RepositoryDataSource } from '../../api/repository';
+	import { isFormal } from '../../api/identity';
 	import SupersessionSummary from '../document/SupersessionSummary.svelte';
 	import { isDecision } from '../document/supersession';
 
 	let {
 		doc,
+		source = null,
 		html,
 		branch,
 		theme,
@@ -20,6 +26,7 @@
 		onReloadRelations = () => {}
 	}: {
 		doc: RepositoryDocument;
+		source?: RepositoryDataSource | null;
 		html: string;
 		branch: string;
 		theme: string;
@@ -35,6 +42,17 @@
 		onReloadRelations?: () => void;
 	} = $props();
 
+	let raw = $state(false);
+	function assets(node: HTMLElement) {
+		const images = repositoryImages(node, { source, branch }),
+			diagrams = lazyDiagrams(node);
+		return {
+			destroy() {
+				images.destroy();
+				diagrams.destroy();
+			}
+		};
+	}
 	const fileLabel = (path: string) =>
 		({
 			'proposal.md': 'Proposal',
@@ -52,29 +70,39 @@
 			<span class="chapter-group">{bookGroup(doc) ?? fileLabel(doc.path)}</span>
 			<h2>{doc.title}</h2>
 			<small>{doc.meta.id ? doc.meta.id + ' · ' : ''}{doc.path}</small>
-			{#if isDecision(doc)}<span class="decision-status"
+			{#if isDecision(doc) || isFormal(doc)}<span class="decision-status"
 					>{typeof doc.meta.status === 'string' ? doc.meta.status : 'Unknown status'}</span
 				>{/if}
 		</div>
 		{#if sourceLabel}
 			<span class="source-badge" title="Planning source">{sourceLabel}</span>
 		{:else}
-			<button onclick={() => onOpen(doc.path)}>View raw</button>
+			<button onclick={() => (raw = !raw)}>{raw ? 'Rendered' : 'View raw'}</button>
 		{/if}
 	</header>
-	<SupersessionSummary
-		subject={doc}
-		{documents}
-		loading={relationLoading}
-		errors={relationErrors}
-		onOpen={onRelationOpen}
-		onReload={onReloadRelations}
-	/>
-	{#key `${doc.path}-${branch}-${theme}-${doc.raw}`}
-		<article class="markdown-body" use:lazyDiagrams use:trackHeading>
-			{@html html}
-		</article>
-	{/key}
+	{#if !raw}<FormalReferences
+			subject={doc}
+			{documents}
+			loading={relationLoading}
+			errors={relationErrors}
+			onOpen={onRelationOpen}
+			onReload={onReloadRelations}
+		/><SupersessionSummary
+			subject={doc}
+			{documents}
+			loading={relationLoading}
+			errors={relationErrors}
+			onOpen={onRelationOpen}
+			onReload={onReloadRelations}
+		/>
+	{/if}
+	{#if raw}<RawViewer content={doc.raw} />{:else}
+		{#key `${doc.path}-${branch}-${theme}-${doc.raw}-${html}`}
+			<article class="markdown-body" use:assets use:trackHeading>
+				{@html html}
+			</article>
+		{/key}
+	{/if}
 </section>
 
 <style>
