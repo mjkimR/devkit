@@ -1,0 +1,22 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:22:22.446313Z'
+status: completed
+summary: 'Supersedes final-report-01 after native return: full formal role core F1–F6, all parser identity routes and44-target reflection independently verified; required lifecycle/viewer phases remain pending'
+findings: []
+assumptions:
+- Codex emulated; scope/commits and before-after snapshots substitute for native isolation
+unverified_areas:
+- Host integration and landed-head batch remain pending; lifecycle L1–L4 and viewer V1–V4 are required separate implementations
+checks:
+  tests: PASS affected unit-integration2628 at8c3cc3228; independent209 documents/formal regressions and parser controls; production/test source unchanged since
+  build: PASS docs-only built-wheel installed consumer1 at8c3cc3228; adaptive consumer inventory E2E1 atbb235e916
+  lint: PASS just lint-check docs and just check docs Pyright0 at8c3cc3228; independent CI22 at7e14c94839
+  reconciliation: PASS fresh independent round2 all44 targets, five active migrations,4 ordinary destinations and pinned bytes
+  sync: PASS sync_start exit0 and final sync --check exit0; only tracked .devkit/installation.json output declared
+diff_scope:
+  base: bb0192c549888dc7d34c98a60304480283d32c56
+  head: e3930851f25d024aa3f9a67958e8e87765c29767
+activity_effort: high
