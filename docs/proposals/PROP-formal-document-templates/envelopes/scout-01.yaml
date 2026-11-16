@@ -1,0 +1,40 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T07:32:14.351929Z'
+status: completed
+summary: 'Internal inventory: the reader-question clause is CAP-DOCS-documentation-ownership §3.3 item 2 plus ADR-linked-domain-relationship-views §4; only 3 of 5 delivered documents have an authority-boundary heading and only the designs a maintenance note; design-template.md is in no tag.'
+findings:
+- issue: Removing the question section conflicts with CAP-DOCS-documentation-ownership §3.3 item 2 and ADR-linked-domain-relationship-views §4 ('An entry gives its question'), whose cited §3.4 no longer exists.
+  evidence: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md:75-76; docs/decisions/2026-11/20261116-linked-domain-relationship-views.md:46-48
+  suggested_action: Change the CAP clause and supersede the ADR clause in part through a PADR.
+  resolution: open
+- issue: 'The proposal overstates the delivered shape: the two designs state authority as prose without a heading; domain and operations documents have no maintenance note; only DOMAIN-delivery-relationships has the relationship/question/owner columns.'
+  evidence: docs/designs/DESIGN-distribution-transactions.md:11-29; docs/domain/DOMAIN-bundle-selection-and-installation.md:25; docs/proposals/PROP-formal-document-templates/proposal.md:46-51
+  suggested_action: Correct the background facts.
+  resolution: open
+- issue: design-template.md was added in 386c6b0b2 and reduced to a pointer in 97518c2ae; no tag v0.1.0-v0.1.6 contains either commit.
+  evidence: git tag --contains 386c6b0b2 (empty); packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py:55,86-88; packages/devkit-docs/README.md:62; docs/capabilities/documents/CAP-DOCS-document-model.md:263,430; .devkit/installation.json
+  suggested_action: Remove it without an alias and update the test, README, CAP lines and receipt.
+  resolution: open
+- issue: test_installed_consumer.py instantiates templates by placeholder replacement and truncates at '## 1.'; removing that heading keeps the whole body silently.
+  evidence: packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py:52-72
+  suggested_action: Development updates the truncation and placeholders together with the templates.
+  resolution: open
+- issue: 'Instructions disagree with templates: no instruction mentions a question, authority boundary or maintenance note; operations-writing item 4 omits the normal-state observation; domain-writing item 4 omits the distinguishing example and glossary pointer.'
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/operations-writing.md:13; instructions/domain-writing.md:13; templates/operations.md:19-21
+  suggested_action: Align instructions with the revised templates.
+  resolution: open
+- issue: PROP-design-bundle-layout edits the same template frontmatter, instruction items 2, 6 and 7, CAP §3.3 items 1 and 3, the four design and domain documents and test_installed_consumer.py.
+  evidence: docs/proposals/PROP-design-bundle-layout/proposal.md:93-131
+  suggested_action: Keep depends_on; leave paths, area and support placement to that proposal.
+  resolution: open
+assumptions:
+- 'Route: native scout subagent, read-only; diff snapshot before and after showed no writes'
+unverified_areas:
+- Other repositories under repos/ were not checked for template consumers
+checks: {}
+diff_scope:
+  base: ''
+  head: 94a6472c2db5bcadf8d6ead9c5de3d23aad21f07
