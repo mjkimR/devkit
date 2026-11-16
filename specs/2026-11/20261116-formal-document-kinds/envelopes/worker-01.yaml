@@ -1,0 +1,25 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:22:59.075512Z'
+status: completed
+summary: Completed formal document core F1–F6 with three code-review rounds and fresh reconcile round2; all findings resolved. Only tracked native sync output is .devkit/installation.json; three exact Host-authorized external tests changed only docs inventories. Host integration and later required phases remain pending.
+findings: []
+assumptions:
+- Codex emulated route; explicit assigned worktree paths, scoped commits and independent before-after snapshots substitute for native write isolation
+- No new feature edge or docs-to-spec dependency; exact consumer test additions are initial TierA Host extensions, not TierB adjacent scope
+unverified_areas:
+- Host must inspect and integrate this committed range, run its native lint-ci-clean runner and landed-head batch; required lifecycle/viewer phases are not implemented by this core turn
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0
+  tests: PASS affected2628 at8c3cc3228; independent209 documents/formal controls; source unchanged since
+  build: PASS docs-only built-wheel E2E1 at8c3cc3228; adaptive inventory E2E1 atbb235e916
+  lint: PASS just lint-check docs; just check docs Pyright0; independent CI22; diff hygiene
+  review: PASS code round3 and fresh reconcile round2 no open findings
+  measurement: PASS baseline0 formal role nodes to5 active canonical nodes;4 ordinary destinations verified
+diff_scope:
+  base: bb0192c549888dc7d34c98a60304480283d32c56
+  head: b4f733f5a5d8da87c66c5ed7a9261d1fbc645791
+activity_effort: high
