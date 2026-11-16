@@ -66,7 +66,7 @@ contains no runtime/test tier/feature-edge change; use document/source rules and
 ## Shared scope and limits
 
 `PROP-operations-documents-target` is the single canonical future-path blueprint. Shared future capability
-and source-guidance edits are serialized by Host alongside `PROP-domain-model-documents`, with refreshed source
+and source-guidance edits are serialized by Host alongside `SPEC-domain-model-documents`, with refreshed source
 before Development. No current source or other proposal was edited. Lifecycle/viewer remain existing proposals;
 `FB-runtime-journal-ordering` is unrelated scope. No new feedback observation was found beyond those stated
 limits; corrected exploratory CLI argument mistakes add no lasting tool defect.

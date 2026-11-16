@@ -116,7 +116,7 @@ asset, with mandatory independent code review and reconciliation under that effo
 coverage remains required. No runtime is invented to match the earlier high effort hint.
 
 The Host serializes future shared edits to the ownership capability, source `living-spec-writing.md` and transaction
-capability with `PROP-domain-model-documents`, refreshing the later worker against the landed content. Operations
+capability with `SPEC-domain-model-documents`, refreshing the later worker against the landed content. Operations
 adds its named section and selected ingress only; it does not overwrite the other proposal's role or link.
 
 ## 4. Lifecycle & Retirement Criteria

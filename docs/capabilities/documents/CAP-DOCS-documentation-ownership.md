@@ -20,7 +20,7 @@ indexed Kind. `ADR-documentation-ownership-and-linked-design-entries` records th
 - **In-Scope**: shared semantic ownership, architecture overlap and question-specific ID-free design navigation.
 - **Out-of-Scope**: identity/index/placement grammar (`CAP-DOCS-document-model`), search
   (`CAP-DOCS-document-search`), lookup (`CAP-DOCS-document-lookup`) and namespaces (`CAP-DOCS-namespaces`).
-  Domain and operations homes, lifecycle and viewer support remain with `PROP-domain-model-documents`,
+  Domain and operations homes, lifecycle and viewer support remain with `SPEC-domain-model-documents`,
   `PROP-operations-documents`, `PROP-design-document-lifecycle` and `PROP-design-document-viewer`.
 
 ## 3. Business Rules & Policies

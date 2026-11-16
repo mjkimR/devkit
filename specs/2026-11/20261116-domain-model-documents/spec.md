@@ -1,45 +1,51 @@
 ---
-id: PROP-domain-model-documents
+id: SPEC-domain-model-documents
 title: Domain-model documentation
-summary: "Establishes maintained conceptual domain views with clear authoritative sources, reusing document discovery unless the early pilot demonstrates a gap."
-status: accepted
-created_at: 2026-11-16
-target_area: documents/
-priority: high
-size: L
-planning_effort: high
-dev_effort: medium
-milestone: MS-documentation-system-evolution
-boundaries:
-  owns:
-  - docs/ # Create only the two domain entries named in target-docs.md
-  - docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
-  - docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
-  - docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
-  - docs/steering/glossary.md
-  - docs/decisions/
-  - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md
-  excludes:
-  - packages/devkit-core/
-  - packages/devkit-cli/
-  - packages/devkit-mcp/
-  - packages/devkit-viewer/
-  - packages/devkit-spec/
-task_kind: feature
-workflow: sdd-proposal
+summary: Establishes maintained conceptual domain views with clear authoritative sources, reusing document discovery unless the early pilot demonstrates a gap.
+status: planned
+created: 2026-11-16
 depends_on:
-- SPEC-design-document-foundation
+  - SPEC-design-document-foundation
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-domain-model-documents] Domain-model documentation
+# [SPEC-domain-model-documents] Domain-model documentation
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-domain-model-documents on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-domain-model-documents`
+- Target Docs Blueprint: `PROP-domain-model-documents-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Domain documentation makes concepts, identity, relationships and lifecycles understandable together. The early
 pilot identifies useful views without assuming that every conceptual rule should move out of its existing owner.
 The domain role is retained whether it needs a new indexed kind or existing document facilities are sufficient.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Domain-model documentation so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: What document boundaries make the pilot's concepts and relationships understandable without becoming a
   class catalog, database schema or implementation-algorithm reference?
@@ -47,11 +53,11 @@ The domain role is retained whether it needs a new indexed kind or existing docu
   ownership transfer rather than a reference/composition view?
 - **Q3**: Which location, identity and tooling choices meet discovery needs using the smallest supported representation?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Recommend linked ID-free `docs/domain/<slug>.md` relationship entries, with analogous `domain/` under a registered
 package docs root. Location, identity and tooling are independent choices: the domain home is selected; indexed
-identity and runtime changes are not required by the agreed outcomes. `PADR-linked-domain-relationship-views`
+identity and runtime changes are not required by the agreed outcomes. `ADR-linked-domain-relationship-views`
 records alternatives and the conditional discovery evidence. This direction awaits the Host's plan-accept gate.
 
 Maintain exactly two initial entries: `docs/domain/delivery-relationships.md` and
@@ -78,10 +84,10 @@ without a second responsibility matrix or repository IDs. No new template, Kind,
 relation, runtime, editor, viewer or production feature edge is selected. Shared source implementation must be
 scheduled sequentially by the Host after collecting overlapping future scope with the operations proposal.
 
-### Planning decisions and evidence
+#### Planning decisions and evidence
 
 - Planning effort remains high as assigned; content-only Development uses medium effort with independent review.
-- `materials/options-and-evidence.md` compares viable representations and records evidence limits. The supplied
+- `docs/materials/2026-11/20261116-domain-model-documents/options-and-evidence.md` compares viable representations and records evidence limits. The supplied
   domain pilot proves useful explanation, not unsupplied-entry discovery. Foundation proves DESIGN routes only.
 - No accepted ADR is superseded. The new home extends the deferred domain decision in the Foundation.
 - If independent global/package routes fail, first correct entry wording or selected links. If the agreed outcome
@@ -89,8 +95,9 @@ scheduled sequentially by the Host after collecting overlapping future scope wit
 - No unresolved business question remains within the supplied goal and constraints. Direction approval and
   Development handoff remain the Host's separate gates.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Start after completed `SPEC-design-document-foundation`. Retirement requires the maintained conceptual entries,
 unique authority, source guidance and independently demonstrated domain discovery in both global and registered
 package contexts. Later lifecycle/viewer proposals may reuse the entries; their work is excluded here.
+

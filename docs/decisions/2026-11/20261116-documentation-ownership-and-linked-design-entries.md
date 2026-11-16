@@ -47,7 +47,7 @@ Development. Failed navigation is corrected or returned for scope review; it doe
   selected question-specific owner links. Package-local examples use the analogous namespace docs root.
   → `CAP-DOCS-documentation-ownership` §3.3 (SHOULD/MUST).
 - No new Kind, identity grammar, relation, registry, CLI/MCP/runtime feature or viewer support is selected.
-- Domain and operations homes remain with `PROP-domain-model-documents` and `PROP-operations-documents`.
+- Domain and operations homes remain with `SPEC-domain-model-documents` and `PROP-operations-documents`.
 
 `ADR-document-system` remains in force: document identity/index and implementation ownership do not change.
 No accepted ADR is superseded, wholly or partially.

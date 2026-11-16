@@ -1,15 +1,15 @@
 ---
-id: PADR-linked-domain-relationship-views
+id: ADR-linked-domain-relationship-views
 title: Linked domain relationship views
 summary: "For maintained conceptual relationships, we use linked ID-free domain entries with existing contract owners, to give question-specific understanding, accepting owner-led discovery and review-only link checks."
-proposal: PROP-domain-model-documents
-status: draft
+proposal: SPEC-domain-model-documents
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-linked-domain-relationship-views] Linked domain relationship views
+# [ADR-linked-domain-relationship-views] Linked domain relationship views
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---
