@@ -1,44 +1,23 @@
 ---
-id: PROP-viewer-internal-simplification
+id: SPEC-viewer-internal-simplification
 title: 'Viewer as an internal tool: drop the library surface and trim unused features'
 summary: autohub no longer vendors the viewer library, so remove the npm library surface and generic-host fallbacks and trim viewer features nothing in the repository uses.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-16
-target_area: viewer/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-viewer/
-    - packages/devkit/tests/integration/package/test_viewer_script.py
-    - packages/devkit/tests/e2e/package/test_affected_tests.py
-    - docs/capabilities/viewer/
-    - docs/usecases/viewer/
-    - docs/architecture/ARCH-05-1-containers.md
-    - docs/architecture/ARCH-07-deployment.md
-    - docs/decisions/
-    - docs/development/reference/viewer.md
-    - docs/development/setup.md
-    - docs/development/ci-cd.md
-    - docs/proposals/PROP-viewer-internal-simplification/
-    - scripts/viewer.sh
-    - scripts/affected_tests.py
-    - .github/workflows/ci.yml
-    - justfile
-    - .devkit/architecture.toml
-  excludes:
-    - handbook/
-    - packages/devkit-dist/
-    - docs/capabilities/collaboration/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-16
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-viewer-internal-simplification] Viewer as an internal tool: drop the library surface and trim unused features
+# [SPEC-viewer-internal-simplification] Viewer as an internal tool: drop the library surface and trim unused features
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-viewer-internal-simplification on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-viewer-internal-simplification`
+
+### 1. Background & Hypothesis
 
 `ADR-repository-viewer` built the viewer as one Svelte source with two hosts: devkit's local server and autohub's
 SvelteKit UI, which vendored an `npm pack` tarball of the component library. autohub now builds its own viewer and
@@ -50,7 +29,7 @@ host or for retired producers can be trimmed without losing what the repository 
 specs, the handbook, the roadmap, the dashboard, formal references, supersession, the explorer and Mermaid.
 
 Planning verified the inventory at the worktree HEAD. The counts, paths and corrections to the draft audit are in
-[planning evidence](materials/planning-evidence.md) and `envelopes/scout-01.yaml`.
+[planning evidence](../../../docs/materials/2026-11/20261116-viewer-internal-simplification/planning-evidence.md) and historical Git `b8a8a3d7ea404c49f4c87619689a2fcb8ece1f55:docs/proposals/PROP-viewer-internal-simplification/envelopes/scout-01.yaml`.
 
 Accommodations that exist only for the external host:
 
@@ -80,7 +59,26 @@ Kept regardless:
 - The loopback-only and GET-only server guards.
 - The frontend lint, check, test, build and probe checks.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Viewer as an internal tool: drop the library surface and trim unused features so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 The user settled every question at the recommended option; Planning settled the remaining choices on evidence.
 
@@ -92,9 +90,9 @@ The user settled every question at the recommended option; Planning settled the 
 - **Q4** (deep links): removed with the host events, because the local app does not use them.
 - **Q5** (split): one feature unit, size L.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Planning decisions
+#### Planning decisions
 
 1. **One host** (user). The viewer has one host, `devkit viewer serve`. Development removes the npm library surface
    and its pack check from `scripts/viewer.sh`, CI, `scripts/affected_tests.py` and the two devkit tests. It removes
@@ -134,7 +132,7 @@ The user settled every question at the recommended option; Planning settled the 
    the Confirmation paths in `ADR-viewer-indexed-decision-supersession`, `ADR-release-handbook` and
    `ADR-viewer-namespace-roadmap-discovery` are repaired to the new paths. The repairs leave every decision
    unchanged. Completed specs and `docs/materials/` keep their historical paths.
-8. **Decision record** (Planning). `PADR-internal-repository-viewer` supersedes `ADR-repository-viewer` whole and
+8. **Decision record** (Planning). `ADR-internal-repository-viewer` supersedes `ADR-repository-viewer` whole and
    restates each retained decision with its CAP-VIEW trace. The retained decisions are distribution and the committed
    build, working-tree reads, server safety, registration and repository IDs, the stdlib server, browser parsing,
    approvals out, checkout scope, the roadmap and the reduced overlay. The PADR also supersedes in part the
@@ -146,7 +144,7 @@ The user settled every question at the recommended option; Planning settled the 
    Its tasks are ordered: library and fallbacks, collapse, trims, then docs. A split would leave CAP-VIEW and the ADR
    half-updated between units. `dev_effort` stays `medium`: nothing irreversible changes, and no consumer remains.
 
-### Development tasks (ordered)
+#### Development tasks (ordered)
 
 1. Remove the library surface: `package.json` fields and `package` script, the `pack` action in
    `scripts/viewer.sh`, CI, `scripts/affected_tests.py` (`FRONTEND_CHECK`), `test_viewer_script.py`,
@@ -163,7 +161,7 @@ The user settled every question at the recommended option; Planning settled the 
    the package and frontend READMEs. Also make the ADR status and pointer changes of decision 8, and remove the
    `browse` edge to `devkit_dist.features.shared` from `.devkit/architecture.toml`.
 
-### Design, domain and operations impact
+#### Design, domain and operations impact
 
 - **Design**: no formal design document covers the viewer, so there is nothing to update. CAP-VIEW and
   `ARCH-05-1-containers` own the structure statements and change as listed.
@@ -174,7 +172,7 @@ The user settled every question at the recommended option; Planning settled the 
   `devkit_dist.features.shared` from `feature_dependencies.browse` in `.devkit/architecture.toml`. The `devkit-dist`
   public module list is unchanged. No package, feature or feature edge is added.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
 - **A1 Library gone**: no `exports`, `files`, `svelte`, `types`, `package` script or peer dependency remains in
   `package.json`. `scripts/viewer.sh pack` is an unknown action. CI and `FRONTEND_CHECK` run no pack.
@@ -196,10 +194,11 @@ The user settled every question at the recommended option; Planning settled the 
   `rg -n 'frontend/src/(lib|app)/' docs --glob '!docs/materials/**' --glob '!docs/proposals/**'
   --glob '!docs/decisions/2026-11/20261102-repository-viewer.md'` prints nothing.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Planning settled Q1-Q5 at the recommended options. The Host asks for `plan-accept`, then hands off to one
   `sdd-spec-feature` unit, which is integrated locally under `dev-integration=auto`.
-- At handoff, `PADR-internal-repository-viewer` becomes an ADR. Development then sets `ADR-repository-viewer` to
+- At handoff, `ADR-internal-repository-viewer` becomes an ADR. Development then sets `ADR-repository-viewer` to
   `superseded` and adds the partial pointers in the two other ADRs.
 - Retire the proposal when the trimmed viewer lands and A1-A5 hold.
+

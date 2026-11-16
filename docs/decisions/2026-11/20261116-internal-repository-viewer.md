@@ -1,16 +1,16 @@
 ---
-id: PADR-internal-repository-viewer
+id: ADR-internal-repository-viewer
 title: Internal single-host repository viewer
 summary: "For a viewer only devkit's local server hosts, we drop the Svelte library, generic-host fallbacks and remote-host features but keep the committed-build wheel and read-only working-tree server, to cut code and contract surface, accepting that no other host can embed it."
-proposal: PROP-viewer-internal-simplification
+proposal: SPEC-viewer-internal-simplification
 supersedes: [ADR-repository-viewer, ADR-release-handbook, ADR-viewer-namespace-roadmap-discovery]
-status: draft
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-internal-repository-viewer] Internal single-host repository viewer
+# [ADR-internal-repository-viewer] Internal single-host repository viewer
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 - **Involved Components/Capabilities**: `packages/devkit-viewer/` (Python package and `frontend/`),
   `.devkit/generated.toml` (`CAP-GEN-tracked-artifacts`), `CAP-VIEW-repository-viewer`, `ARCH-05-1-containers`,
@@ -58,7 +58,7 @@ Node.
 - **Internal single-host viewer, keeping every current feature**: removes the library surface and generic-host
   fallbacks; the Shared tab, `/review` page, dashboard paging and the full overlay stay without a producer or need.
 - **Internal single-host viewer with the unused features trimmed** (selected): removes the library surface and
-  fallbacks and trims the features the Planning decisions of `PROP-viewer-internal-simplification` select.
+  fallbacks and trims the features the Planning decisions of `SPEC-viewer-internal-simplification` select.
 - **Drop the committed static build as well**: Git installs would need Node to build the page; rejected because the
   build exists for Git installs, not for autohub.
 

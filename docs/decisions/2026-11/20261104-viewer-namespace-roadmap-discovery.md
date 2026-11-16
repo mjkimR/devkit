@@ -9,6 +9,8 @@ created_at: 2026-11-04
 
 # [ADR-viewer-namespace-roadmap-discovery] Discover viewer namespace roadmaps by structural paths
 
+Superseded in part by `ADR-internal-repository-viewer`: the generic-host clauses (generic discovery trusting host tree/blob representation; generic hosts keeping their tree/blob interface; one helper serving both generic routes).
+
 - **Status**: Accepted.
 
 ## 1. Context & Problem Statement
