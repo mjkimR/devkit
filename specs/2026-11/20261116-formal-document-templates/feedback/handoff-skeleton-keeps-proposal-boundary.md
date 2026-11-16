@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.p
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -43,3 +43,5 @@ plan.md (handoff skeleton) Planned Boundaries: ... - `docs/proposals/PROP-formal
 tasks.md (handoff skeleton) Task 1.1 _Boundary: ..., docs/proposals/PROP-formal-document-templates/, ...
 ls docs/proposals/ | rg formal  -> no entry
 ```
+
+- **Disposition**: `SPEC-open-feedback-fixes`: the handoff drops the proposal's own path (exact match) from the carried boundaries, as `CAP-DLV-proposal-lifecycle` now states; `test_carries_the_proposal_body` covers the removal and a prefix sibling kept.

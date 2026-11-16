@@ -2,7 +2,7 @@
 id: SPEC-open-feedback-fixes
 title: Fixes for four open feedback items
 summary: Fixes the runtime-view journal ordering, scout web search, handoff boundary carry-over of the removed proposal directory, and the docs resolve path anchor wording.
-status: planned
+status: in-progress
 created: 2026-11-16
 related_capabilities: []
 related_usecases: []

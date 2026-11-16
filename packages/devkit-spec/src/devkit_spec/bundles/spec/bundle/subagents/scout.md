@@ -7,10 +7,11 @@ x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]
 hosts:
-  # Bash runs the `devkit spec` queries; no Write or Edit, so path limits rest on the caller's diff comparison.
+  # Bash runs the `devkit spec` queries; WebSearch finds the external sources step 4 admits. No Write or Edit, so
+  # path limits rest on the caller's diff comparison.
   claude-code:
     status: native
-    tools: [Read, Grep, Glob, WebFetch, Bash]
+    tools: [Read, Grep, Glob, WebSearch, WebFetch, Bash]
   # The sandbox is not a path-level boundary; the caller compares the diff afterwards.
   codex:
     status: emulated

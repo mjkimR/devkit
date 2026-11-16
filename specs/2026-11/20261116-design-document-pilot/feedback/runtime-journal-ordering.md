@@ -8,7 +8,7 @@ target: docs/architecture/ARCH-06-runtime-view.md
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -41,3 +41,5 @@ The runtime diagram orders Dist→Target Write/update before Dist→Journal Reco
 The capability says journal contents are flushed before disk changes.
 `apply_changes` calls atomic_write for JOURNAL before entering its ordered file-application loop.
 No architecture edit is included in this pilot; the Host owns authorization for that separate correction.
+
+- **Disposition**: `SPEC-open-feedback-fixes`: `ARCH-06-runtime-view` §1 writes the journal of pending changes and previous state before the file-write loop, matching `CAP-DIST-sync-and-transactions` §3 item 3; the capability keeps the algorithm.

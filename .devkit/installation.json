@@ -1459,7 +1459,7 @@
     },
     ".claude/agents/scout.md": {
       "mode": 420,
-      "sha256": "e9143ce11663fcfb71fa4aa4258fb34920b168ef0fd998f1d1aac98326c3f446"
+      "sha256": "5cc21cf00fd902d9a8a3ac1adbdfff0ff6f770a67e8db5d33d500094dee6d6a9"
     },
     ".claude/agents/triage.md": {
       "mode": 420,
@@ -2623,7 +2623,7 @@
     },
     ".devkit/managed/spec/subagents/scout.md": {
       "mode": 420,
-      "sha256": "8dd2d4b687c0664a41d16e5026fc8eb05bb20ea100d912b06d3ec844b3e77ecc"
+      "sha256": "0be0e98950e653221e9d75aa62cdae09cc25b0ba8edb18f8e51fcc8c8e7d014d"
     },
     ".devkit/managed/spec/subagents/triage.md": {
       "mode": 420,

@@ -102,7 +102,7 @@ def _finish(notices: Sequence[AdvisoryError]) -> None:
 @FORMAT_OPTION
 @boundary
 def resolve_cmd(ids: tuple[str, ...], workspace_root: str | None, output_format: str) -> None:
-    """Print the path of each document ID."""
+    """Print the workspace-relative path of each document ID."""
     found, errors, notices = ResolveDocumentsUseCase().execute(resolve_root(workspace_root), ids)
     if is_json(output_format):
         echo_json(
