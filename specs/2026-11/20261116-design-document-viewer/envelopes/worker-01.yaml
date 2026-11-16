@@ -1,0 +1,30 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:22:58.736475Z'
+status: completed
+summary: Completed one HIGH Development turn for full V1-V4 formal viewer and handbook support; canonical identity/navigation/relations/artifacts, actual retained-document acceptance, generated/public/wheel evidence and current UX/contracts committed; ready for Host source preparation and integration, no integration effects performed
+findings: []
+assumptions:
+- Codex boundaries are emulated through explicit own-tree cwd/paths, scoped commits and clean before/after frozen full snapshots; no native isolation guarantee
+- Original audit base remains f32b831; spec-only0bd6043 preservation checkpoint is part of this one turn, not an earlier completed worker
+- Screens body copy was corrected during build; accepted source drafts and both independent UX reviews preceded code, with honest retained provenance
+unverified_areas:
+- No new real-browser visual walkthrough or package E2E tier; native DOM/HTTP/public-host/wheel checks provide recorded coverage
+- Host owns main lifecycle-reference source preparation, integration and combined landed-head verification; milestone remains open for later unapproved layout/template work
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0; no selected bundle source changes, no tracked sync output
+  tests: PASS frontend250/21 at44b2ff8; affected294 atd9ed254 preserving fallback; focused backend/handbook155; registered namespace12; public-host1
+  build: PASS pack/public-host/generated-stale0/wheel100 exact bytes at e04ace5f; later runtime/static parity confirmed
+  lint: PASS frontend lint/svelte-check0 at44b2ff8; Python lint/type at1793188d; current rules22 and source-only diff hygiene atb767ad53
+  review: PASS fresh HIGH round3 independent3 probes, no findings; earlier5 P1 fixed plus adjacent image fragment correction
+  reconcile: PASS independent whole15 targets; exact P2 wording closed by whole-reflection minor-fix check02; spec completed/reconcile resolved
+  outcome: PASS baseline git-show0 formal groups to current3; actual retained5 plus capability ingress routes pass; no performance claim
+  scope: PASS declared TierA only including Host-authorized exact UX governance mapping; no TierB extension or denied runtime/architecture/agent-asset writes
+  workflow: PASS final report and feedback sweep; no open findings/questions/problems or critical feedback
+diff_scope:
+  base: f32b831f7ca791566fad7934e13f537a40aaf787
+  head: 7d26823d09600270c267faa0f84b3a9db411677c
+activity_effort: high
