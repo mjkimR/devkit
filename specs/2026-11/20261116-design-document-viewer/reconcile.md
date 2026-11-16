@@ -50,7 +50,7 @@ budget. Supporting file reading covers bytes, safe previews, URI fragments, raw/
 `UC-read-formal-document` and all three drafted UX screens describe the delivered main and exception routes, and
 are registered in the root UX object register. The two package READMEs and viewer reference restate the existing
 public data-source interface and the newly available reading surfaces. The support matrix and development evidence
-map all three kinds, retained UX findings, before/after measurements and actual source/package checks.
+map all three kinds, retained UX findings, before/after measurements and actual source/package checks. The retained-document acceptance test reads all five real migrated Markdown files and their capability ingress, rather than replicas.
 
 `CAP-DLV-release-handbook` records formal source/alias recognition and staleness/citation checks without changing
 required CAP/UC coverage, deterministic ADR/SPEC membership or authorizing any handbook refresh.
@@ -78,7 +78,7 @@ static, document and cross-owner candidates are rejected rather than appended me
 
 No required acceptance criterion is deferred, and this unit has no explicitly linked open direct-fix feedback.
 All findings in code review rounds 1 and 2 are corrected; fresh round 3 has no findings. The review's independent
-probes and the worker's frontend249, affected294, backend/handbook155, public-host and exact wheel100 evidence
+probes and the worker's frontend250, affected294, backend/handbook155, public-host and exact wheel100 evidence
 remain distinguished by their recorded source identities. Independent reconcile verification is recorded next.
 
 Integration, lifecycle reference transactions and combined landed-head verification remain Host-owned. This

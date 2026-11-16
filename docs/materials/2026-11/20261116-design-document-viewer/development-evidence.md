@@ -116,3 +116,18 @@ link reads the fragment-free source path, preserves the named-view fragment on t
 base preview URL exactly once on disposal. Its permanent navigation regression was RED first. Final batch counts
 supersede the preceding248: Vitest249/21 files PASS, lint/type PASS, pack/public-host PASS, generated stale0 and
 wheel100 exact static bytes PASS. This same batch is submitted together to fresh review3.
+
+
+## Actual retained-document acceptance
+
+`FormalReading.test.ts` test “reads the five retained formal documents and their real capability ingress through
+shared book routes” reads the repository Markdown bytes directly, without replicas: `DESIGN-distribution-transactions`,
+`DESIGN-distribution-file-directory-replacement`, `DOMAIN-bundle-selection-and-installation`,
+`DOMAIN-delivery-relationships` and `OPS-distribution-sync`, plus `CAP-DIST-sync-and-transactions`.
+It parses all five identities/groups, follows the actual capability→design→peer detail and capability→domain prose
+links, selects the delivery domain and operations entries, and follows the operations action-owner link back to the
+capability. Source-specific body assertions check transaction mechanism, receipt relationship and diagnostic evidence.
+
+Frontend250/21 files PASS, with lint and svelte-check0 errors/warnings. This test-only addition closes the real
+retained-document row separately from the existing synthetic namespace/maintenance/artifact fixtures and native
+Kind-row comparison. Runtime/static/public bytes are unchanged from the independently reviewed correction source.

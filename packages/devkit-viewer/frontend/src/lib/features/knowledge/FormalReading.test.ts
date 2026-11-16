@@ -2,7 +2,8 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import KnowledgeViews from './KnowledgeViews.svelte';
 import SddViewer from '../../SddViewer.svelte';
-import { documentAnchor } from '../../api/documents';
+import { documentAnchor, parseBlob, bookGroup } from '../../api/documents';
+import { readFileSync } from 'node:fs';
 import type { RepositoryDataSource } from '../../api/repository';
 const roles = [
 	['DESIGN', 'designs'],
@@ -333,4 +334,85 @@ it('never indexes a no-ID typed declaration, ID-bearing artifact or handbook fil
 	});
 	await screen.findAllByRole('heading', { name: 'DESIGN-not-a-handbook-identity title' });
 	expect(source.treeRecursive).not.toHaveBeenCalled();
+});
+
+it('reads the five retained formal documents and their real capability ingress through shared book routes', async () => {
+	const capability = 'docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md';
+	const design = 'docs/designs/DESIGN-distribution-transactions.md';
+	const detail = 'docs/designs/DESIGN-distribution-file-directory-replacement.md';
+	const bundleDomain = 'docs/domain/DOMAIN-bundle-selection-and-installation.md';
+	const deliveryDomain = 'docs/domain/DOMAIN-delivery-relationships.md';
+	const operations = 'docs/operations/OPS-distribution-sync.md';
+	const paths = [capability, design, detail, bundleDomain, deliveryDomain, operations];
+	const files = Object.fromEntries(
+		paths.map((path) => [
+			path,
+			readFileSync(new URL('../../../../../../../' + path, import.meta.url), 'utf-8')
+		])
+	);
+	const documents = paths.map((path) => parseBlob(path, files[path], 'utf-8'));
+	expect(documents.slice(1).map((doc) => [doc.meta.id, bookGroup(doc)])).toEqual([
+		['DESIGN-distribution-transactions', 'Designs'],
+		['DESIGN-distribution-file-directory-replacement', 'Designs'],
+		['DOMAIN-bundle-selection-and-installation', 'Domain'],
+		['DOMAIN-delivery-relationships', 'Domain'],
+		['OPS-distribution-sync', 'Operations']
+	]);
+	const view = props(repository(files), 'CAP-DIST-sync-and-transactions');
+	render(KnowledgeViews, view);
+	await waitFor(() => expect(document.querySelectorAll('.chapter')).toHaveLength(6));
+	await waitFor(() =>
+		expect(view.onLocation).toHaveBeenCalledWith(
+			capability,
+			expect.any(String),
+			'book',
+			expect.objectContaining({ id: 'CAP-DIST-sync-and-transactions' })
+		)
+	);
+	const chapter = (path: string) => document.getElementById(documentAnchor(path))!;
+	const follow = async (origin: string, destination: string, id: string) => {
+		const link = chapter(origin).querySelector<HTMLAnchorElement>(
+			`article a[data-doc-path="${destination}"]`
+		);
+		expect(link).toBeTruthy();
+		await fireEvent.click(link!);
+		await waitFor(() =>
+			expect(view.onLocation).toHaveBeenLastCalledWith(
+				destination,
+				expect.any(String),
+				'book',
+				expect.objectContaining({ id })
+			)
+		);
+	};
+	await follow(capability, design, 'DESIGN-distribution-transactions');
+	await follow(design, detail, 'DESIGN-distribution-file-directory-replacement');
+	expect(chapter(detail).textContent).toContain('apply_changes');
+	await follow(detail, capability, 'CAP-DIST-sync-and-transactions');
+	await follow(capability, bundleDomain, 'DOMAIN-bundle-selection-and-installation');
+	expect(chapter(bundleDomain).textContent).toContain('Installation receipt');
+	const outline = screen.getByRole('complementary', { name: 'Table of contents' });
+	await fireEvent.click(
+		within(outline).getByRole('button', { name: /DOMAIN-delivery-relationships/ })
+	);
+	await waitFor(() =>
+		expect(view.onLocation).toHaveBeenLastCalledWith(
+			deliveryDomain,
+			expect.any(String),
+			'book',
+			expect.objectContaining({ id: 'DOMAIN-delivery-relationships' })
+		)
+	);
+	expect(chapter(deliveryDomain).textContent).toContain('Milestone membership');
+	await fireEvent.click(within(outline).getByRole('button', { name: /OPS-distribution-sync/ }));
+	await waitFor(() =>
+		expect(view.onLocation).toHaveBeenLastCalledWith(
+			operations,
+			expect.any(String),
+			'book',
+			expect.objectContaining({ id: 'OPS-distribution-sync' })
+		)
+	);
+	expect(chapter(operations).textContent).toContain('TRANSACTION_PENDING');
+	await follow(operations, capability, 'CAP-DIST-sync-and-transactions');
 });
