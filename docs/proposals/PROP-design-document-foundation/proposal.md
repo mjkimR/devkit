@@ -28,7 +28,7 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 depends_on:
-- PROP-design-document-pilot
+- SPEC-design-document-pilot
 ---
 
 # [PROP-design-document-foundation] Documentation ownership and minimal design foundation
@@ -36,7 +36,7 @@ depends_on:
 ## 1. Background & Hypothesis
 
 Domain, design and operations are retained roles within the documentation system. The early examples in
-`PROP-design-document-pilot` establish where each adds value and where existing owners already suffice.
+`SPEC-design-document-pilot` establish where each adds value and where existing owners already suffice.
 Separate content locations, indexed kinds/IDs and dedicated tooling are independent decisions.
 
 Architecture authors may know arc42. The missing guidance is architecture's boundary within the complete docs

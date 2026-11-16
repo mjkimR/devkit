@@ -1,34 +1,49 @@
 ---
-id: PROP-design-document-pilot
+id: SPEC-design-document-pilot
 title: Early content pilot for domain, design and operations
-summary: "Tests domain, design and operations ownership on small real devkit examples before selecting new document identities or implementing tooling."
-status: accepted
-created_at: 2026-11-16
-target_area: documents/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-milestone: MS-documentation-system-evolution
-boundaries:
-  owns:
-  - docs/proposals/PROP-design-document-pilot/
-  - docs/materials/
-  excludes:
-  - packages/
-task_kind: feature
-workflow: sdd-proposal
+summary: Tests domain, design and operations ownership on small real devkit examples before selecting new document identities or implementing tooling.
+status: planned
+created: 2026-11-16
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-design-document-pilot] Early content pilot for domain, design and operations
+# [SPEC-design-document-pilot] Early content pilot for domain, design and operations
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-design-document-pilot on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-design-document-pilot`
+- Target Docs Blueprint: `PROP-design-document-pilot-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Domain models, implementation designs and operations guidance are retained documentation roles. Their usefulness
 and boundaries should be tested with real content before committing to new indexed kinds or dedicated tooling.
 This early pilot supplies evidence for `PROP-design-document-foundation`; it does not wait for runtime or viewer work.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Early content pilot for domain, design and operations so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which existing content demonstrates a distinct contribution from each role, and which passages already
   have a suitable authoritative home in capability, architecture, reference or executable guidance?
@@ -36,13 +51,13 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
   paths using existing entry documents, links and discovery facilities?
 - **Q3**: Which concrete failures require a new identity, relation, search behavior, artifact handler or UI?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Use one bounded distribution slice for all three roles. Domain explains bundle availability, selection,
   projected asset paths and the installation receipt. Design explains journaled file-to-directory and
   directory-to-file replacement. Operations starts from `TRANSACTION_PENDING` and distinguishes the
   `RECOVERY_BLOCKED` branch. The selected sources and evidence protocol are in
-  [example selection](materials/example-selection.md).
+  [example selection](../../../docs/materials/2026-11/20261116-design-document-pilot/example-selection.md).
 - Keep the pilot to one entry draft per role and one design detail draft. Supporting artifacts are source links
   unless the chosen mechanism requires an authored diagram. Drafts are evaluation content, not current contracts.
   Existing support may be the final recommendation for any of the three representation decisions.
@@ -71,7 +86,7 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
   Name evidence for every proposed extension and the existing support that already works. Missing evidence may
   defer an extension; it does not remove the agreed documentation role.
 
-### Planning decisions and excluded scope
+#### Planning decisions and excluded scope
 
 - The Host's user decisions retain domain, design and operations as three roles. Architecture explains system
   scope, building blocks, runtime interactions and cross-cutting structure within the whole documentation system;
@@ -87,7 +102,7 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
 - Pilot deliverables and deferred targets are listed in `PROP-design-document-pilot-target`. Development remains
   `medium`: document evidence and independent review suffice; production tests and benchmarks are irrelevant.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
 - **AC-PILOT-01**: Small domain, design and operations examples each identify their purpose, existing sources and added value.
   A before/after ownership comparison identifies ambiguity and duplication, with no ownership transfer selected.
@@ -102,7 +117,7 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
 - **AC-PILOT-04**: Evidence distinguishes verified facts, open questions and illustrative content. The result states the minimal
   support needed by foundation and later proposals and preserves source contracts and historical evidence.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Run this proposal first. Planning selects the real examples; acceptance and handoff use the proposal gates.
 Retirement requires the content comparison and walkthrough evidence, not new document-system or viewer code.
@@ -110,3 +125,4 @@ Final runtime and viewer verification belongs to their respective proposals afte
 The evidence package can conclude that current facilities suffice. A failed navigation attempt is a finding to
 classify, not automatic authority to add runtime support. Foundation consumes recommendations with their source
 revision, limitations and retained example links.
+
