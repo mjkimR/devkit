@@ -85,3 +85,28 @@ artifact-carrying rename/root move/split/cross-kind transfer with ordinary-link 
 governance with source-deletion entrypoint cleanup. Target matrix adds composed fixtures. Flat layout rationale
 also names subject-qualified globally unique slugs and package-move/alias policy. These strengthen the contract,
 so a fresh HIGH Challenger round is required; this is not minor-fix self-verification.
+
+## Final Planning verification
+
+Fresh Challenger round 2 reviewed 440302f0163f695ba3acb315ea1503890ec2c417..504e2e12006ab3e2aad2b8ce470607646ad4c4ac
+and all affected contract meaning. It returned no findings. Caller verified the full pre/post temporary-index tree
+16507f7f9f0cceed2fa5c95755aebe5de8937292, unchanged HEAD and clean real worktree/index; no outside-tree reads reported.
+Round 1's two P2 findings are resolved by reverify-01; round 2 is challenger-02. Scout's four recorded source
+observations are incorporated in core-contract §§1–8 and target-docs §§1–5; they are future implementation
+obligations, not unresolved Planning choices. No unresolved user question or execution problem remains.
+
+Native scoped proposal rules: PASS 22 rules, errors=0 warnings=0. Exact proposal.md boundary check: PASS, no
+RULE-proposal-boundaries reports. Envelope check: blocked=false, pending_questions=[], malformed_workers=[],
+errors=[]. Workflow after feedback: direction-handoff, plan-accept ask pending; worker never records acceptance.
+`git diff --check` against bde0a923192aaea7f6a467bb6a575db4ca447f9e passes. Native Backlog `spec proposal check
+formal-document-kinds` returns exit 1 SPEC_PROPOSAL_IN_PLANNING as expected for reviewing on its Planning branch;
+it is a mutability refusal, not a Planning validation pass, and was not bypassed. Its refusal stops that command
+only; the assigned Planning remains authorized. Feedback sweep covers this run (repo and upstream), no new
+observations. Initial commit gate rejected one abbreviated architecture ID; it was corrected and the normal gate
+passed. No approval operation was refused or rerouted.
+
+All tracked changes are inside this proposal. No current source/runtime/canonical docs were modified and no code
+unit/integration/E2E/lint/type tests are claimed. Required F1–F6, built-wheel consumer, all migrations and dependent
+L1–L4/V1–V4 tests are Development obligations. The selected complete core contract remains one L unit; mandatory
+lifecycle/viewer scope is separately owned, not dropped to shrink implementation. No UX screens are drafted by
+this core Planning turn. The sole final worker records HIGH effort and these limits; the proposal stays reviewing.
