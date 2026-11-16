@@ -1,11 +1,19 @@
 # Domain Planning options and evidence
 
 Planning source HEAD: `5ff227fbb6a903539ba842661de14b3bba2370b1`; Foundation is present in this tree.
-Scout read-only at the same clean HEAD; no outside-worktree reads reported. Its corrected incoming inventories
-are retained in `incoming-references.txt`. Inventories count documents, not reference occurrences; no claim of
+Scout read-only at that clean HEAD reported no outside-worktree reads. Baseline incoming document counts were
+ownership 2, Foundation ADR 4, lifecycle 19 and transactions 88. `incoming-references.txt` was captured after
+draft authoring but before draft commit; it includes the new proposal/PADR references and totals 4, 5, 20 and 89
+respectively. These two stages are distinct; no claim of
 reading all incoming bodies is made. Read bodies were limited to the ownership CAP/ADR, relevant document-model,
 lookup/search/namespace contracts, delivery relation/handoff sections, pilot and Foundation evidence, glossary,
 Kind definitions and source authoring instructions. No whole-corpus modeling was attempted.
+
+Challenger round 1 reviewed committed `6137fd5336bd35e9e15260ac6c8233006cc9a816` with no material findings.
+Author writes and HEAD were frozen; full tracked plus nonignored-untracked byte snapshot before/after matched
+`70f26b9913a21b590c917c56065667fa3d6d94e16c215e56d6896ea49f4b70cf`. The reviewer reported no outside-worktree
+read or mutation. Only the stage labels above and EOF whitespace were corrected after the review; neither changes
+a decision, contract or scope. Round 1 therefore ends under the no-finding rule, without a fresh round.
 
 | Option | Why viable | Cost / limit | Decision |
 | --- | --- | --- | --- |

@@ -127,4 +127,3 @@ CAP-DIST-sync-and-transactions
 [REF: SPEC-worker-shared-state-mcp path=specs/2026-10/20261021-worker-shared-state-mcp/spec.md status=completed fields=body count=1]
 [REF: UC-snapshot-bundle-sources path=docs/usecases/distribution/UC-snapshot-bundle-sources.md status=active fields=body,capabilities count=2]
 [PAGE: total=89 offset=0 limit=0 count=89 next=-]
-
