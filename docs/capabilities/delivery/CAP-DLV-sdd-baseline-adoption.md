@@ -42,6 +42,9 @@ adaptive development.
    installing the spec package or selecting SDD assets. Installed assets alone do not establish readiness.
 3. **Retained coverage**: WHEN comparing retained product items, the agent MUST map behavior, important structure,
    current choices and verification methods to implementation, current documents and source-specific evidence.
+   This includes warranted DOMAIN, DESIGN and OPS statements, implementation/source identity, independent detail and
+   parent-owned support agreement. Canonical formal nodes are retained, not legacy solely by kind. Missing required
+   role documents or source evidence remain gaps; an unwarranted responsibility needs a bounded reason.
    Each item is `verified`, `gap` or `excluded`; exclusions name their reason and never count as verified coverage.
 4. **Actual evidence**: WHEN reporting verification, the agent MUST distinguish performed command/usage outcomes
    from failed, skipped or unavailable checks. Format-check success proves its checked conditions, not semantic readiness.

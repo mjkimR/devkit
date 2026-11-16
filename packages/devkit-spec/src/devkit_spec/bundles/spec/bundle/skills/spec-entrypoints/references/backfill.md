@@ -11,3 +11,7 @@ Apply the review rules of `SKILL.md` step 2 to the aggregated candidates.
 4. Run `devkit rules check`; report the filled documents and those left empty with the reason (`missing-path`, no
    candidates, rejected in review). Record the change in the current bundle's `reconcile.md` or a `session` task's
    report.
+
+Core eligibility also permits canonical DESIGN targets. Review its mechanism anchors by the role instruction;
+CAP/UC doorway heuristics do not exclude a DESIGN subject's helpers/models/schemas. DOMAIN/OPS and supporting
+artifact paths remain ineligible; report their skip evidence rather than manufacturing anchors.

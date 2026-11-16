@@ -3,7 +3,7 @@ id: PROP-design-document-lifecycle-target
 title: Formal document lifecycle target blueprint
 summary: "Plans complete formal-kind impact, maintenance, reconciliation and adoption through existing SDD and adaptive delivery boundaries."
 status: draft
-proposal: PROP-design-document-lifecycle
+proposal: SPEC-design-document-lifecycle
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
   - file: docs/capabilities/delivery/CAP-DLV-proposal-planning.md
@@ -18,7 +18,7 @@ targets:
 
 # [PROP-design-document-lifecycle-target] Formal document lifecycle target blueprint
 
-This is future-state Planning for `PROP-design-document-lifecycle`. Current contracts continue to describe current
+This is future-state Planning for `SPEC-design-document-lifecycle`. Current contracts continue to describe current
 behavior until implementation reconciles them. Core identity/schema and neutral docs assets belong to
 `SPEC-formal-document-kinds`; presentation belongs to `SPEC-design-document-viewer`.
 
@@ -55,7 +55,7 @@ No additional use case or screen is needed: the actor goals and command/output s
 
 ## 3. Architecture and decision impact
 
-`PADR-formal-document-delivery-integration` selects consumer integration at existing boundaries with one core policy.
+`ADR-formal-document-delivery-integration` selects consumer integration at existing boundaries with one core policy.
 Its future ADR restates delivery impact obligations in the capability targets above. The core decision owns replacement
 of the ID-free clauses of `ADR-documentation-ownership-and-linked-design-entries` and
 `ADR-linked-domain-relationship-views`; this PADR does not separately supersede those clauses.
@@ -104,13 +104,13 @@ Before source guidance changes, Development runs `uv run devkit get-context auth
 | Adaptive | Behavior/structure/choice map | Complete warranted formal role map and maintenance, without SDD artifacts |
 | Adoption | Formal role destinations omitted | Core destinations, canonical identity repairs and evidence gaps explicitly covered |
 
-L1–L4 require the complete verification matrix in [integration contract](materials/integration-contract.md).
+L1–L4 require the complete verification matrix in [integration contract](../../../docs/materials/2026-11/20261116-design-document-lifecycle/integration-contract.md).
 Core/viewer completion is separate required milestone evidence; these comparisons claim no implementation pass.
 
 
 ## 6. Selected core interface dependency
 
-[Core consumption record](materials/core-interface-pin.md) pins source 504e2e12006ab3e2aad2b8ce470607646ad4c4ac and
+[Core consumption record](../../../docs/materials/2026-11/20261116-design-document-lifecycle/core-interface-pin.md) pins source 504e2e12006ab3e2aad2b8ce470607646ad4c4ac and
 verified content hash. Use flat canonical role IDs and peer independent details; parent-owned artifacts live under
 PARENT-ID/artifacts. Same-kind rename/root moves carry that subtree and repair ordinary links; aliases do not
 legalize old orphan folders. Split/cross-kind transfer assigns every retained artifact exactly one canonical

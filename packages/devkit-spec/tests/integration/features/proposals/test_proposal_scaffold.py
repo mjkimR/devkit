@@ -285,3 +285,27 @@ def test_create_proposal_rolls_back_a_failed_write(workspace: Path, monkeypatch:
             CreateProposalUseCase().execute(workspace, "fast-engine", with_target_docs=True, today=TODAY)
     assert sorted(workspace.rglob("*")) == before
     assert CreateProposalUseCase().execute(workspace, "fast-engine", with_target_docs=True, today=TODAY).target_docs
+
+
+def test_generated_blueprint_records_change_specific_formal_impact(workspace: Path) -> None:
+    created = CreateProposalUseCase().execute(workspace, "formal-impact", with_target_docs=True, today=TODAY)
+    target = created.to_dict()["target_docs"]
+    assert isinstance(target, str)
+    path = workspace / target
+    text = path.read_text()
+    meta = parse(text).data
+    assert meta is not None and meta["targets"] == [] and meta["proposal"] == "PROP-formal-impact"
+    for term in (
+        "Domain",
+        "Design",
+        "Operations",
+        "source identity",
+        "statement owner",
+        "bounded source-based reason",
+        "artifact subtree",
+        "cross-prefix aliases",
+        "source-deleting change",
+        "modified/deleted",
+    ):
+        assert term in text
+    assert "System Capabilities Plan" in text and "Use Cases Plan" in text and "Architecture & Decision Impact" in text

@@ -119,3 +119,27 @@ def test_assignment_guidance_records_verifies_and_resumes_without_install_condit
     assert_rule(DOCUMENTS.read_text(), "--governing", "recording")
     for name in ("product-clarifier", "product-researcher", "usage-reviewer"):
         assert "devkit adaptive assignment" not in (BUNDLE / f"subagents/{name}.md").read_text()
+
+
+def test_formal_roles_have_source_bound_composed_maintenance_without_sdd() -> None:
+    text = DOCUMENTS.read_text()
+    for term in (
+        "design, domain and operations",
+        "source identity",
+        "bounded reason",
+        "Rename/root moves",
+        "Split",
+        "Reclassify",
+        "Retire",
+        "cross-prefix aliases",
+        "source-deleting change",
+        "one canonical owner",
+        "ordinary link destinations",
+        "existing SDD history bytes",
+    ):
+        assert term.lower() in text.lower()
+    documenter = (SKILL / "roles/documenter.md").read_text()
+    assert "../references/documents.md" in documenter and "sole owner" in documenter
+    assert "source changes" in documenter and "implicit SDD Unit" in documenter
+    context = (BUNDLE / "templates/current-context.md").read_text()
+    assert "DOMAIN, DESIGN and OPS" in context and "source changes invalidate" in context

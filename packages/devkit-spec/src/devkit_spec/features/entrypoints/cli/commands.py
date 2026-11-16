@@ -1,4 +1,4 @@
-"""``devkit spec entrypoints derive``: derive capability/use case entrypoints from spec bundles, and write chosen ones.
+"""``devkit spec entrypoints derive``: derive core-eligible document entrypoints from spec bundles, and write chosen ones.
 
 Text output (paths are workspace-relative):
 
@@ -55,7 +55,7 @@ DEFAULT_LIMIT = 20
 
 @click.group(name="entrypoints")
 def entrypoints_group() -> None:
-    """Code entrypoints of capabilities and use cases, derived from spec bundles."""
+    """Code entrypoints of core-eligible documents, derived from spec bundles."""
 
 
 @entrypoints_group.command(name="derive")
@@ -95,7 +95,7 @@ def derive_cmd(
     workspace_root: str | None,
     output_format: str,
 ) -> None:
-    """Join tasks.md _Boundary paths with reconcile.md capability/use case targets into document-code pairs.
+    """Join tasks.md _Boundary paths with reconcile.md core-eligible document targets into document-code pairs.
 
     Exactly one of --spec and --all. Pairs are declarations joined mechanically, not proof that the code
     implements the document: review them, then --apply with --target and --code for the chosen ones. --apply

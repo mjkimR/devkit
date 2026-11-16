@@ -45,8 +45,11 @@ size and experiment count never start it.
    destination, applicable check or usage observation, source identity and result. Mark it `verified`, `gap` or
    `excluded`; excluded items never count as verified coverage.
 2. Draft or correct current capabilities, use cases, architecture, retained-choice documents and run instructions
-   only where that coverage needs them, reusing accurate documents; a complete architecture set or one ADR per
+   and warranted DOMAIN, DESIGN and OPS documents only where that coverage needs them, reusing accurate documents; a complete architecture set or one ADR per
    experiment is not required.
+   Use the core role instructions and canonical destinations; retain accurate formal nodes instead of treating
+   them as legacy. Include conceptual meaning, mechanism/detail/artifact agreement and operational owner routing.
+   Record missing required documents or source evidence as gaps; an unwarranted role needs only a bounded reason.
 3. Run the applicable project commands and exercise representative retained user flows. Record exact commands or
    interactions, revision or dirty source identity, environment, observed outcome and limitations. A passing
    document-format check proves only its checked conditions, not semantic product readiness.

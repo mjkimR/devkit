@@ -28,6 +28,10 @@ Recovery rules, not part of the report:
 | --- | --- | --- | --- | --- | --- |
 | <behavior, structure, choice or verification method> | <location> | <file/symbol> | <observation> | <verified/gap/excluded> | <fact> |
 
+Assess warranted DOMAIN, DESIGN and OPS coverage alongside behavioral/structural owners. Record each affected
+ID, source identity, statement owner and detail/artifact agreement, or a bounded unaffected reason. Missing required
+documents/source evidence remain gaps; changed source invalidates affected observations before readiness.
+
 ## Executed verification
 
 | Command or interaction | Revision/dirty source | Environment | Actual outcome | Coverage and limits |

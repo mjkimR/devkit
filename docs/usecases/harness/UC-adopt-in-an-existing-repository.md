@@ -47,11 +47,11 @@ capabilities:
    violations in the legacy files (`CAP-GOV-spec-rules`).
 5. The developer asks the agent for the `brownfield-adoption` playbook, or confirms the one-line offer `spec` intake
    makes for a request to adopt devkit here (`CAP-HARN-agent-guidance`).
-6. The agent moves the legacy Markdown under `docs/materials/_legacy/`, which the spec rules leave free-form, without
+6. The agent retains canonical formal documents and their artifacts, then moves the selected legacy Markdown under `docs/materials/_legacy/`, which the spec rules leave free-form, without
    editing any rule (`CAP-HARN-agent-guidance`, `CAP-GOV-spec-rules`).
 7. The agent reruns the rules; the check passes (`CAP-GOV-spec-rules`).
 8. Later agent sessions read the constitution through the guidance pointer, route new work through the `spec` skill
-   and migrate legacy content as work touches it (`CAP-HARN-agent-guidance`).
+   and migrate legacy content to warranted formal owners as work touches it (`CAP-HARN-agent-guidance`).
 
 ---
 
@@ -128,3 +128,11 @@ capabilities:
 - **Given**: the developer asks to adopt SDD from the retained adaptive-development product
 - **When**: the agent selects the adoption path
 - **Then**: it uses the explicit baseline procedure, keeps adaptive development during preparation and performs no automatic legacy containment
+
+### Canonical formal content and useful legacy detail
+
+- **Given** canonical DOMAIN/DESIGN/OPS documents with supporting artifacts beside ID-free legacy detail,
+- **When** the agent inventories and later migrates the selected content,
+- **Then** canonical documents remain current, warranted detail receives the core formal destination and repaired ingress,
+  and actual history stays historical without invented delivery records.
+- **Covers**: main success scenario, steps 6–8 (`CAP-DLV-sdd-baseline-adoption`, `CAP-GOV-spec-rules`).

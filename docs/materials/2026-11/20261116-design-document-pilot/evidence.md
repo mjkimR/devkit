@@ -84,7 +84,7 @@ feedback in this unit; the architecture is outside this pilot's write scope.
 | Change recovery stop condition or accept another journal shape | Existing `CAP-DIST-sync-and-transactions` §3 Recovery plus advisory `RecoveryError`, transaction `recover_locked`/legacy-journal handling and reference Error codes. Update operations affected evidence discriminator/owner link, not a parallel procedure; detail only if its mechanism explanation changes. | Domain relationship view and projection matrix. Architecture only if responsibility/interaction changes; unrelated readiness and forward-write guarantees remain unchanged. |
 
 These are statement-level impact analyses, not applied source edits or successful rollback experiments. No change
-requires updating every layer. `PROP-design-document-lifecycle` owns eventual maintenance guidance after accepted
+requires updating every layer. `SPEC-design-document-lifecycle` owns eventual maintenance guidance after accepted
 representation decisions; this pilot adds no new approval or completeness metric.
 
 ## Independent representation recommendations
@@ -100,7 +100,7 @@ whether an extension is justified.
 
 `SPEC-design-document-foundation` consumes these drafts, ledger and trials, with source identity and limits above.
 `SPEC-domain-model-documents` owns domain representation; ~~`PROP-operations-documents`~~ (source Git `534ad541e9d1e87beffa6bbc4f1afa95c71f6106`) owns operations representation;
-`PROP-design-document-lifecycle` owns change-specific lifecycle integration; `SPEC-design-document-viewer` owns actual
+`SPEC-design-document-lifecycle` owns change-specific lifecycle integration; `SPEC-design-document-viewer` owns actual
 viewer verification after representation choices. All five existing IDs were resolved successfully. No follow-up
 proposal was created or modified. Restart each deferred implementation only after its Planning accepts representation
 and verifies the relevant missing discovery path; expected checks are owner uniqueness, useful question-specific

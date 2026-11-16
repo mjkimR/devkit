@@ -422,6 +422,28 @@ creates as plain text. Drop this subsection otherwise.>
 ## 5. System Before & After Comparison (Before & After)
 
 <Compare As-Is and To-Be structures, optionally with Mermaid diagrams.>
+
+---
+
+## 6. Formal Responsibility Impact and Maintenance
+
+<Assess domain, design and operations against this change. For each responsibility record affected canonical IDs
+or prospective destinations, changed statements, source identity, one statement owner, action and verification.
+For an unaffected responsibility give a bounded source-based reason; create no empty document or whole-layer prerequisite.>
+
+| Responsibility | IDs / destination or unaffected reason | Source identity and statement owner | Action / evidence |
+| --- | --- | --- | --- |
+| Domain | <conceptual meaning or bounded unaffected reason> | <source and owner> | <action/check> |
+| Design | <mechanism, independent detail/datasheet or bounded unaffected reason> | <source and owner> | <action/check> |
+| Operations | <symptom/evidence/action-owner route or bounded unaffected reason> | <source and owner> | <action/check> |
+
+<Use core per-kind instructions/templates and eligibility. Plan create/update/split/rename/root-move/reclassify/retire
+for warranted subjects, sole statement ownership, independent detail IDs and one canonical parent per support artifact.
+Composed rename/root moves carry the artifact subtree, preserve same-kind aliases and repair current references,
+ordinary artifact links and relative source links; aliases never legalize old orphan folders. Split/transfer leaves
+no duplicate/unowned support; cross-kind changes retire the old identity without cross-prefix aliases. Retire in the
+source-deleting change, removing/replacing obsolete DESIGN entrypoints; keep historical coordinates with commit provenance.
+Record modified/deleted canonical and support paths as prospective reconciliation targets and source-specific verification.>
 """
 
 

@@ -113,6 +113,10 @@ sequence.
    where it exists, when the change introduces or renames a domain term (`spec-sync`, first step), and, when `spec.md`
    has a Screens section, each drafted screen written to `docs/ux/`, its step citations in the use cases and its
    register rows in the owning root or namespace `steering/ux-objects.md`, each a `reconcile.md` target (`ADR-ux-screens`).
+   Reflection MUST include affected formal DOMAIN, DESIGN and OPS statements and source/detail/artifact maintenance
+   in existing plan/reconcile bodies, with changed/deleted canonical and support paths as targets. Each responsibility
+   has affected IDs, source identity, sole statement owner, action and evidence, or a bounded unaffected reason.
+   Core identity and role policy remain with `CAP-DOCS-document-model` and `CAP-DOCS-documentation-ownership`.
    Per-feature `spec-sync` reflects the core contract delta. The separately invoked maintenance playbook in
    `CAP-DLV-drift-reconciliation` reviews accumulated drift in a bounded batch; it adds no delivery stage or
    scheduler. Each mismatch needs the user's explicit disposition before corrections enter this workflow.
@@ -145,6 +149,9 @@ sequence.
 15. **`activity-effort` sets the review, never the floor**: Development of a spec unit reviews at `low` by the author
     (stated as self-review in the envelope), at `medium` with one mandatory initial `code-reviewer` pass regardless
     of size and a separate `reconcile-reviewer` check, at `high` with both reviewers in the bounded review loop below.
+    Review MUST compare the formal responsibility assessment with the actual implementation diff and retained
+    source identity, including composed artifact moves/transfers, ordinary links and obsolete source anchors.
+    Source changes invalidate affected comparison evidence; required mismatches cannot be documented away.
     Only medium permits omitting the initial reconcile reviewer when all affected contracts and documents are
     identified, agreement with the actual diff is directly demonstrated, and no unresolved contract interpretation or
     cross-component impact remains (behavior or agent-facing text changed in more than one package, in more than one
