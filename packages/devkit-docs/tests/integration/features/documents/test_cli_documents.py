@@ -40,6 +40,12 @@ def test_resolve(docs: Path) -> None:
     ]
 
 
+def test_resolve_help_names_the_workspace_relative_anchor(workspace: Path) -> None:
+    result = _docs("resolve", "--help", workspace=workspace)
+    assert result.exit_code == 0
+    assert "Print the workspace-relative path of each document ID." in result.stdout
+
+
 def test_resolve_reports_each_unresolved_id_after_the_resolved_ones(docs: Path) -> None:
     result = _docs("resolve", "UC-b", "UC-none", "UC-other", workspace=docs)
     assert result.exit_code == 2

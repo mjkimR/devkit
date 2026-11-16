@@ -188,6 +188,9 @@ def test_the_decomposer_returns_children_edges_and_an_exit_without_feedback_assi
 def test_support_roles_shell_access() -> None:
     scout = _contract("scout")[0]["hosts"]
     assert "Bash" in scout["claude-code"]["tools"]
+    # Procedure step 4 admits external sources: discovering them needs WebSearch, and the role stays read-only.
+    assert {"WebSearch", "WebFetch"} <= set(scout["claude-code"]["tools"])
+    assert not {"Write", "Edit"} & set(scout["claude-code"]["tools"])
     assert "run_command" in scout["antigravity"]["tools"]
     assert scout["antigravity"]["commandExecutionPolicy"] == "sandbox"
     challenger = _contract("challenger")[0]["hosts"]

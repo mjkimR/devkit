@@ -58,7 +58,9 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    `SPEC-` (`CAP-DOCS-document-model` section 3.5); milestone membership is not carried; the two origin fields are provenance and do not require the source to survive. The problem statement starts with `Handed off from proposal PROP-<slug> on <date>.` and the
    preserved materials and blueprint references, then the carried body), `plan.md` (target area, blueprint
    reference, planned and excluded boundaries) and `tasks.md` (one task whose boundary is `boundaries.owns`, else
-   `target_area`, and whose `_Requirements:` lists every acceptance criterion ID).
+   `target_area`, and whose `_Requirements:` lists every acceptance criterion ID). The carried planned boundaries
+   omit the proposal's own path, which the handoff removes: its bundle directory, with or without a trailing `/`,
+   or its single file, matched exactly so a sibling proposal sharing the prefix stays.
 2. **Workflow binding** of `spec.md` to `sdd-spec-<task_kind>`. For `task_kind: bugfix` the workflow MUST resolve
    and validate, or the handoff fails before writing (`SPEC_PROPOSAL_WORKFLOW_INVALID`, the devkit code in its
    details). For `feature` (or no field), `sdd-spec-feature` is bound when the project has it; otherwise `spec.md`

@@ -8,7 +8,7 @@ target: devkit docs resolve --help
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -44,3 +44,5 @@ selected ../../domain/grouping.md: success; correct distinction and validity own
 ```
 
 This is optional efficiency feedback. No D3 criterion is waived and no defective resolver behavior is asserted.
+
+- **Disposition**: `SPEC-open-feedback-fixes`: `devkit docs resolve --help` reads "Print the workspace-relative path of each document ID.", restating `CAP-DOCS-document-lookup` §3.1; output is unchanged.

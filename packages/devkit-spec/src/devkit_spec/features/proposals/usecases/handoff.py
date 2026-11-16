@@ -470,9 +470,10 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     )
     carried = carry_proposal_body(text) if is_bundle else CarriedProposal()
     bugfix = spec_only(binding)
+    scope_meta = _without_own_path(meta, proposal_rel, is_bundle=is_bundle)
     if bugfix:
         # No plan.md: what it would hold from the proposal is carried in spec.md's notes.
-        carried.notes += _scope_notes(meta)
+        carried.notes += _scope_notes(scope_meta)
     created = day.isoformat()
     files = spec_files(
         slug,
@@ -480,7 +481,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         created,
         origin=f"Handed off from proposal PROP-{slug} on {created}.{materials_ref}{target_docs_ref}\n",
         carried=carried,
-        meta=meta,
+        meta=scope_meta,
         namespace=namespace,
         summary=summary,
         target_docs_ref=target_docs_ref,
@@ -638,6 +639,24 @@ def _summary(meta: dict[str, Any], proposal_rel: str) -> str | None:
             " the handoff"
         ),
     )
+
+
+def _without_own_path(meta: dict[str, Any], proposal_rel: str, *, is_bundle: bool) -> dict[str, Any]:
+    """A copy of ``meta`` whose ``boundaries.owns`` omits the proposal's own path, which the handoff removes.
+
+    The path matches exactly: a bundle's directory with or without a trailing ``/``, or a single file. A sibling
+    such as ``PROP-<slug>-other/`` shares the prefix and stays. An ``owns`` this empties falls back to
+    ``target_area`` downstream.
+    """
+    boundaries = meta.get("boundaries")
+    if not isinstance(boundaries, dict) or not isinstance(owns := boundaries.get("owns"), list):
+        return meta
+    own = proposal_rel.rsplit("/", 1)[0] if is_bundle else proposal_rel
+    removed = {own, f"{own}/"}
+    kept = [item for item in owns if text_value(item) not in removed]
+    if len(kept) == len(owns):
+        return meta
+    return {**meta, "boundaries": {**boundaries, "owns": kept}}
 
 
 def _scope_notes(meta: dict[str, Any]) -> str:

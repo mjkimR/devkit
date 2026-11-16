@@ -29,10 +29,9 @@ sequenceDiagram
     Dev->>CLI: devkit sync
     CLI->>Dist: execute_sync()
     Dist->>Dist: Discover installed bundles & presets
-    Dist->>Journal: Open transaction journal
+    Dist->>Journal: Write journal of pending changes & previous state (flushed before any disk change)
     loop For each selected asset
         Dist->>Target: Write/update managed files & projections
-        Dist->>Journal: Record written paths & previous state
     end
     Dist->>Target: Update root AGENTS.md guidance block
     Dist->>Receipt: Commit installation receipt atomically

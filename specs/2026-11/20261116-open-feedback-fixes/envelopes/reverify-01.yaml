@@ -1,0 +1,16 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T11:48:52.120923Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified: test_a_single_file_proposal_drops_its_own_file_from_the_boundaries and test_a_bugfix_handoff_drops_the_proposal_directory_from_its_notes pass (86/86) and fail with the exclusion disabled; lint-check exit 0'
+findings:
+- issue: The own-path exclusion has no regression test for the bugfix carried notes or a single-file proposal
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:473-476; test_proposal_handoff.py:252-336
+  failure_condition: Passing meta instead of scope_meta to _scope_notes, or breaking the single-file match, would go unnoticed
+  suggested_action: Add a bugfix handoff assertion and a single-file proposal case
+  resolution: resolved
+  severity: P3
+checks: {}

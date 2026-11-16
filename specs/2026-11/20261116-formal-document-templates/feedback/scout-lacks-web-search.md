@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/scout
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -44,3 +44,5 @@ created_at: 2026-11-16
 scout.md hosts.claude-code: status: native, tools: [Read, Grep, Glob, WebFetch, Bash]
 scout.md Procedure 4: "Use external material only when task_goal asks for it: official and primary sources ..."
 ```
+
+- **Disposition**: `SPEC-open-feedback-fixes`: the scout's Claude Code tools add `WebSearch` and stay read-only; `test_support_roles_shell_access` asserts both.
