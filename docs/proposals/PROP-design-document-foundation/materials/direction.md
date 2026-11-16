@@ -91,3 +91,24 @@ Scout, the worker added only `envelopes/challenger-01.yaml`; compare the snapsho
 known worker-authored record to the read-only role. No support role reported writes or outside-worktree reads.
 The batch includes cost clarification outside the finding's section, so a fresh Challenger round 2 checks the
 whole fold rather than invoking the high-effort minor-fix shortcut.
+
+## Review closure and run coverage
+
+Fresh Challenger round 2 at `ae1b222adc3494339581fab9dcc3f12049cd2739` returned no findings. It verified the
+round-1 coverage fix, accurate new-Kind comparison and the single normative ownership contract. Before/after trees
+both equal `208c20d810f0a04356b31013e7b1234afc8093dd`. No role reported outside-worktree reads. Round-1 finding
+is resolved; no Decision needed finding or unresolved goal/scope question remains. Acceptance and handoff remain
+Host-owned ask gates, with no conversational acceptance assumed.
+
+Scoped proposal rules passed with 22 rules and zero errors/warnings after the fold. Whitespace checks passed.
+Envelope checks report unblocked and no pending questions. `spec proposal check` returned the expected
+`SPEC_PROPOSAL_IN_PLANNING` Backlog mutability refusal once; it was not retried or treated as a Planning pass.
+The first local YAML wrap and root ID-free routing-file defects were fixed; scoped rules and the ordinary commit
+gates then passed. These were ordinary authoring defects, not evidence for new governance.
+
+The per-run feedback sweep covered repository and upstream tools/assets, including navigation evidence, source
+asset conventions, support-role boundaries and scoped checks. No new reusable tool/asset defect was observed.
+The existing runtime-ordering feedback remains untouched and is not a newly observed issue in this run.
+No feedback file or follow-up proposal is added. Runtime tests, lint/type checks for product code and package/
+viewer/recovery trials are SKIP because this turn changes only the Planning bundle; required Development checks
+remain F1–F6 rather than claimed execution.
