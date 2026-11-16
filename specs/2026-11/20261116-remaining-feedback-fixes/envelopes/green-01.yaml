@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T12:19:31.313412Z'
+status: completed
+summary: Five documents now state the source behavior for all six feedback items; the override pin holds and source is unchanged
+findings: []
+checks:
+  resolved: PASS each AC section re-read against SearchIndex, the MCP and host error classes with the advisory mode derivation, the override use cases, the host observer and status, and the 18-area capabilities listing; override pin passes
+  preserved: PASS test_override_tracking.py and test_index.py 31 passed; just test-affected --base ad0d2f17f 41 passed; just lint-check exit 0; rules check --ci exit 0
+diff_scope:
+  base: ad0d2f17f7fb00151cddd0f6df038e993371bd55
+  head: 99b9a983b0ea8ecbd01d430b392d69cf4fe88115

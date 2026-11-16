@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T12:24:13.624035Z'
+status: completed
+summary: Six feedback items resolved by aligning five docs and the capabilities README with unchanged source; override removed-asset results pinned by one added test assertion
+findings: []
+checks:
+  tests: PASS just test-affected --base ad0d2f17f 41 passed; test_override_tracking.py 23 passed
+  build: PASS docs and test only, no build artifact; devkit sync --check matches selection
+  lint: PASS just lint-check exit 0; devkit rules check --ci --base ad0d2f17f 0 errors
+diff_scope:
+  base: ad0d2f17f7fb00151cddd0f6df038e993371bd55
+  head: a47baede4213d76b892a024b506ed1e073213e3d

@@ -8,7 +8,7 @@ target: docs/capabilities/README.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -31,3 +31,7 @@ search, host, integration, generated, advisory, cli.
 ls docs/capabilities/: advisory cli collaboration compact delivery distribution documents gate generated
 governance harness host integration mcp search traceability viewer worktree
 ```
+
+## Disposition
+
+- **Disposition**: Resolved in SPEC-remaining-feedback-fixes: the capabilities README Directory Structure tree lists all 18 areas, adding collaboration, documents, harness, mcp, traceability and viewer with their ID prefixes.

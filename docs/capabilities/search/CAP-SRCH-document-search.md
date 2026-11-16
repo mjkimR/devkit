@@ -32,7 +32,7 @@ The embedding model is English-only, so dense ranking reads only `metadata`. A r
 
 The lexical ranking keeps documents whose BM25 score is positive and at least `min_score`, the dense ranking those whose cosine similarity is positive and at least `min_similarity` (both `0` by default); a hybrid hit appears in at least one of the two, and its score is the fused value, `sum(1 / (60 + rank))`. Results are ordered by score, then id. A static model gives most unrelated texts a positive similarity, so a caller that shows hybrid results SHOULD set `min_similarity`; `devkit playbook search` uses `0.35`, which on the corpus below kept the hybrid gain while dropping the long tail.
 
-`auto` lets callers search without caring what is installed: `SearchIndex.resolve_mode` loads the model on the first `auto` search and resolves to `hybrid`, or to `lexical` when numpy, tokenizers or the model package is not installed (`SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND`). Only `auto` falls back: an explicit `dense` or `hybrid` without the extra MUST raise. A broken model package MUST raise `SEARCH_MODEL_INVALID` in every mode. A caller MUST report the resolved mode with its results, so the kind of ranking is never hidden.
+`auto` lets callers search without caring what is installed: `SearchIndex.resolve_mode` loads the model on the first `auto` search and resolves to `hybrid`, or to `lexical` when numpy, tokenizers or the model package is not installed (`SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND`). Only `auto` falls back: an explicit `dense` or `hybrid` without the extra MUST raise. A broken model package MUST raise `SEARCH_MODEL_INVALID` in every mode that loads the model (`auto`, `dense`, `hybrid`); `lexical` never loads it. A caller MUST report the resolved mode with its results, so the kind of ranking is never hidden.
 
 Dense ranking does not replace BM25. On devkit's and specrig's English documents (146 documents, 33 paraphrased queries, 2026-10-13), dense alone ranked slightly below BM25 (MRR 0.47 against 0.50), while hybrid raised recall at 5 from 0.70 to 0.76 and recall at 10 from 0.73 to up to 0.85, leaving the first hit unchanged. It finds documents whose wording differs from the query's.
 
@@ -70,8 +70,9 @@ Licensing: potion-base-8M and bge-base-en-v1.5 are MIT licensed; the package shi
 
 `devkit_dist.features.search` uses `devkit_core`, distribution project support and `devkit.advisory`; `devkit_dist.features.distribution` ranks `devkit playbook search` with it (`CAP-DIST-context-and-playbooks`).
 
-- `lexical.py`: `tokenize`, `Bm25`.
-- `dense.py`: `Embedder`, `load_embedder`, the model package layout.
-- `fusion.py`: `reciprocal_rank_fusion`.
-- `index.py`: `SearchIndex`, `SearchDocument`, `SearchHit`, `SearchMode`.
-- `errors.py`: the `SearchError` hierarchy, one class per code ([reference](../../development/reference/search.md#error-codes)).
+- `services/lexical.py`: `tokenize`, `Bm25`.
+- `services/dense.py`: `Embedder`, `load_embedder`, the model package layout.
+- `services/fusion.py`: `reciprocal_rank_fusion`.
+- `services/index.py`: `SearchIndex`.
+- `models/contracts.py`: `SearchMode`, `SearchDocument`, `SearchHit`.
+- `models/errors.py`: the `SearchError` hierarchy, one class per code ([reference](../../development/reference/search.md#error-codes)).

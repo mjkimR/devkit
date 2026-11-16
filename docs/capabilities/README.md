@@ -33,8 +33,20 @@ capabilities/
 │   └── CAP-GEN-<slug>.md
 ├── advisory/
 │   └── CAP-ADV-<slug>.md
-└── cli/
-    └── CAP-CLI-<slug>.md
+├── cli/
+│   └── CAP-CLI-<slug>.md
+├── collaboration/
+│   └── CAP-COLL-<slug>.md
+├── documents/
+│   └── CAP-DOCS-<slug>.md
+├── harness/
+│   └── CAP-HARN-<slug>.md
+├── mcp/
+│   └── CAP-MCP-<slug>.md
+├── traceability/
+│   └── CAP-TRACE-<slug>.md
+└── viewer/
+    └── CAP-VIEW-<slug>.md
 ```
 
 - File name is `CAP-<AREA>-<slug>.md` and frontmatter `id` matches the file stem without sequence numbers.

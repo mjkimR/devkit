@@ -8,7 +8,7 @@ target: docs/development/reference/host.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -37,3 +37,7 @@ created_at: 2026-11-16
 rg MCP_REGISTRATION_PENDING docs/development/reference/host.md -> no match
 CAP-MCP-runtime-registration: locked sync returns MCP_REGISTRATION_PENDING
 ```
+
+## Disposition
+
+- **Disposition**: Resolved in SPEC-remaining-feedback-fixes: the host reference MCP services table gives every row a Level and mode cell and adds the MCP_REGISTRATION_PENDING NOTICE row; rows stay without anchors, like every other table in that file.

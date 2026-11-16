@@ -128,8 +128,9 @@ The same optional file shape applies at `docs/packages/<name>/steering/glossary.
 | `DOCS_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | A selected global or registered namespace `steering/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`; target and fix name that actual file. Exit `2`. |
 | `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | PyYAML has no usable LibYAML binding when a YAML read begins; exit `2`, before glossary validation. |
 
-devkit's `SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND` and `SEARCH_MODEL_INVALID` pass through for explicit dense
-or hybrid searches; `ARGUMENT_INVALID` for a blank query, a negative `--limit` or an invalid namespace
+devkit's `SEARCH_EXTRA_MISSING` and `SEARCH_MODEL_NOT_FOUND` pass through for explicit dense or hybrid searches
+(`auto` falls back to lexical); `SEARCH_MODEL_INVALID` passes through for every mode that loads the model (`auto`,
+`dense`, `hybrid`), never for `lexical`; `ARGUMENT_INVALID` for a blank query, a negative `--limit` or an invalid namespace
 selection; `DOCS_CONFIG_INVALID` for a malformed `[tool.docs]` table. Unreadable documents are
 `DOCS_DOCUMENT_INVALID` warnings. Exit codes: `0` success (also with no hit for a non-blank query), `2` an error,
 warnings `1` only under `--strict`.

@@ -1,0 +1,18 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T12:24:23.547222Z'
+status: completed
+summary: 'Development complete through final-change-report: six formal-document-coverage feedback items resolved by doc fixes in CAP-DOCS-document-search, CAP-SRCH-document-search, CAP-DIST-workspace-ownership, CAP-HOST-lifecycle-observation, the host reference and the capabilities README, plus an override removed-asset test pin; no source change and no sync output; code-reviewer and reconcile-reviewer passed with no findings'
+findings: []
+assumptions:
+- green-01 preserved check records 31 passed for the override and search index test files; the run reported 33 passed
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base ad0d2f17f 41 passed; test_override_tracking.py 23 passed
+  lint: PASS just lint-check exit 0; rules check --ci --base ad0d2f17f 0 errors
+diff_scope:
+  base: ''
+  head: bd7845ce646f3bab362cb0ada4da9395ce562f7c
+activity_effort: medium

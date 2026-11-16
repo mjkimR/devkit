@@ -149,6 +149,10 @@ observations can overwrite the latest timestamp; counts and exactly-once deliver
 Codex process. Trust and execution permissions MUST always be reported as `unknown`. `devkit status` MUST include hook
 installation problems without loading service handlers. Neither status command establishes effective host enablement.
 
+Only the built-in `observe` handler writes the observation record. For a hook bound to another handler, `host status`
+reports `last_received: null` even after successful dispatches, so a missing observation does not show that the hook
+never ran. A failure of such a handler is reported only on hook stderr and is not recorded.
+
 The observer handler remains available to hook definitions supplied by installed bundles. Business approvals, setup
 and trust prompts, and execution-permission prompts are separate observations.
 
