@@ -420,6 +420,7 @@
       "paths": [
         ".devkit/managed/docs/templates/capability.md",
         ".devkit/managed/docs/templates/decision.md",
+        ".devkit/managed/docs/templates/design-template.md",
         ".devkit/managed/docs/templates/milestone.md",
         ".devkit/managed/docs/templates/usecase.md",
         ".devkit/managed/docs/templates/ux.md"
@@ -2020,7 +2021,7 @@
     },
     ".devkit/managed/docs/instructions/architecture-writing.md": {
       "mode": 420,
-      "sha256": "86f6cfbec13b1413b7031a18137789f2d3dc6163c11af17e41cd27a1749eb023"
+      "sha256": "f0aae4e5c63e38b5c85ff7704eb92610de794b3fc7106daddcd3ad72c5c9a863"
     },
     ".devkit/managed/docs/instructions/capability-writing.md": {
       "mode": 420,
@@ -2040,7 +2041,7 @@
     },
     ".devkit/managed/docs/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "cb57774c7ddc5f3a770be5aece45ce3281d187022b02793b52bdbdc4ea3b2e14"
+      "sha256": "0d82024c7cedadc2f5880cc2b70ef6773cf70a1d0206af64426e3f724a306c8b"
     },
     ".devkit/managed/docs/instructions/usecase-writing.md": {
       "mode": 420,
@@ -2177,6 +2178,10 @@
     ".devkit/managed/docs/templates/decision.md": {
       "mode": 420,
       "sha256": "55af65c63d80476cfcbeabb97e6a4591decbc7e2e5a31204a46a496d023181c9"
+    },
+    ".devkit/managed/docs/templates/design-template.md": {
+      "mode": 420,
+      "sha256": "a019ed9d97bbe84e1bf858487a3087072675ac75856213d956ee305148277984"
     },
     ".devkit/managed/docs/templates/milestone.md": {
       "mode": 420,

@@ -52,6 +52,7 @@ def test_inventory_and_guidance_have_independent_ownership() -> None:
         "ux",
         "decision",
         "milestone",
+        "design-template",
     }
     assert next(iter(entry_points(group="devkit.bundles", name="docs"))).value == "devkit_docs.bundles.docs"
     for parent in ["instructions", "templates", "seed"]:
@@ -79,6 +80,9 @@ def test_selection_round_trip_and_project_owned_seed_bytes(tmp_path: Path) -> No
     invoke(tmp_path, "sync")
     assert not (tmp_path / "docs").exists()
     assert (tmp_path / ".devkit/managed/docs/templates/decision.md").exists()
+    design = tmp_path / ".devkit/managed/docs/templates/design-template.md"
+    assert design.read_bytes() == (BUNDLE / "templates/design-template.md").read_bytes()
+    assert not design.read_text().startswith("---\n")
     invoke(tmp_path, "add", "docs:docs-skeleton")
     seed = tmp_path / "docs/README.md"
     seed.write_text(seed.read_text() + "\nProject-owned bytes.\n")

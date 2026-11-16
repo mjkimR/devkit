@@ -14,6 +14,20 @@ number the documents (`ARCH-<section>-<slug>`); C4 levels scope the diagrams.
   (section 12) is `docs/steering/glossary.md`.
 - Draw one diagram per C4 level the reader needs, showing only the elements its text discusses.
 
+## Responsibility boundary
+
+- Keep system structure, system interactions, deployment, architectural constraints, cross-cutting technical concepts,
+  quality scenarios and risk in architecture; place a local mechanism in design unless it establishes one of those boundaries.
+- State strategy and building-block responsibilities in architecture, and keep alternatives/rationale in decisions
+  and local algorithms in design.
+- Show system interactions in runtime views while keeping actor goals in use cases and observable guarantees in capabilities.
+- Distinguish cross-cutting technical concepts from domain meaning, which supplies a conceptual basis alongside
+  structure and contracts without a required authoring sequence.
+- Keep topology in deployment views; route operational symptoms/evidence through existing recovery owners to
+  normal-state observations without duplicating their procedures or permissions.
+- Read `living-spec-writing.md` when the question crosses documentation roles; route by responsibility rather than
+  document length, numeric content or arc42 chapter resemblance.
+
 ## Constraints
 
 - State each constraint as one rule with an RFC 2119 keyword and its boundary: "Models MUST NOT import use cases."

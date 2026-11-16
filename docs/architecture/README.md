@@ -21,3 +21,15 @@ The architecture of devkit in arc42 chapters, with C4 diagrams in Mermaid. Each 
 
 - Chapter documents are `ARCH-<NN>[-<n>]-<slug>.md`: `<NN>` is the arc42 chapter number (never 09 or 12).
 - The frontmatter `id` equals the file stem (`RULE-id-convention`); `summary` is required (`RULE-document-summary`).
+
+## 3. Responsibility boundary
+
+`CAP-DOCS-documentation-ownership` owns cross-role routing. Architecture retains system structure, interactions,
+deployment, constraints, cross-cutting technical concepts, quality and risk. A local mechanism belongs in design
+unless it establishes a system responsibility or architectural constraint; its amount of detail or numerical content
+does not decide placement. Building blocks locate responsibilities, while design explains their implementation.
+
+ADRs retain alternatives and rationale; capabilities retain observable guarantees; use cases retain actor goals.
+Domain models supply conceptual meaning alongside structure and contracts, without a required authoring sequence.
+Operations routes symptoms/evidence to existing action owners and normal-state observations; it does not duplicate
+recovery authority. Runtime and deployment views remain system views rather than recovery procedures.

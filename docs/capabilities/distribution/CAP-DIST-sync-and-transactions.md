@@ -362,6 +362,11 @@ usual warning.
 
 ## 3. Transaction Safety Guarantees
 
+For how a managed file becomes a directory or the reverse, read the
+[transaction mechanism](../../designs/distribution-transactions.md); it explains implementation while this section
+retains eligibility, safety and recovery authority.
+
+
 Every mutating command follows these steps:
 
 1. **Pre-flight**: computes the desired inventory, the seeded files whose targets are absent and the guidance

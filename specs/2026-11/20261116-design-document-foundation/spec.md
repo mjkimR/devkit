@@ -2,7 +2,7 @@
 id: SPEC-design-document-foundation
 title: Documentation ownership and minimal design foundation
 summary: Uses the completed pilot to settle documentation ownership and linked ID-free design entries, without new indexed kinds or runtime support.
-status: planned
+status: in-progress
 created: 2026-11-16
 depends_on:
   - SPEC-design-document-pilot
