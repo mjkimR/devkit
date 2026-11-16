@@ -4,11 +4,10 @@ title: Ordering claims between proposals checked when made
 summary: Has Backlog and the first Planning turn verify a draft's claims about other proposals' handoff order against base status and Development branches, so a stale ordering premise surfaces before it shapes the draft or its first decision.
 status: planned
 created: 2026-11-16
-related_capabilities: []
+related_capabilities: [CAP-HARN-agent-guidance]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-proposal-precedence-edges] Ordering claims between proposals checked when made
 
@@ -17,125 +16,91 @@ workflow: sdd-spec-feature
 Handed off from proposal PROP-proposal-precedence-edges on 2026-11-16.
 - **Preserved Materials**: `docs/materials/2026-11/20261116-proposal-precedence-edges`
 
-### 1. Background & Hypothesis
+A draft proposal stated in prose that its handoff precedes the handoff of two accepted proposals, and argued its
+change was cheap because neither had a spec yet. Nothing flagged the stale premise: `depends_on` is declared only by
+the dependent, the accepted proposals carried no edge to the draft, and `devkit spec proposal check` reported
+`editable=yes` with no notice.
 
-`FB-draft-precedence-claim-unenforced`: a draft proposal stated in prose that its handoff precedes the handoff of
-two accepted proposals, and argued its change was cheap because neither had a spec yet. Nothing flagged the stale
-premise: `depends_on` is declared only by the dependent, the accepted proposals carried no edge to the draft, and
-`devkit spec proposal check` reported `editable=yes` with no notice.
+The premise was false before the draft existed: both dependents were handed off two to five minutes before the
+draft was committed, and the base still showed them `accepted` because a handoff lives on `dev-<slug>` until
+integration (`docs/materials/2026-11/20261116-proposal-precedence-edges/observed-case-timeline.md`). No handoff-time
+edge could have fired.
 
-Planning found that the premise was false before the draft existed: both dependents were handed off two to five
-minutes before the draft was committed, and the base still showed them `accepted` because a handoff lives on
-`dev-<slug>` until integration (`docs/materials/2026-11/20261116-proposal-precedence-edges/observed-case-timeline.md`). No handoff-time edge could have fired.
-
-Hypothesis: checking each proposal a draft names as following it, by base `status` and by local or fetched
-`dev-<slug>` branches, when the claim is written and again at the first Planning turn, surfaces a stale ordering
-premise before it shapes the draft or its first decision; an ordering still in the future goes to the user as a
-sequencing decision.
+Checking each proposal a draft names as following it, by base `status` and by local or fetched `dev-<slug>`
+branches, when the claim is written and again at the first Planning turn, surfaces a stale ordering premise before
+it shapes the draft or its first decision; an ordering still in the future goes to the user as a sequencing
+decision.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Ordering claims between proposals checked when made so that system capabilities are extended.
+- **US-1**: As the Host writing a draft proposal that claims its handoff precedes another proposal's, I want the
+  guidance to have me check each named proposal's actual handoff state before I commit the draft, so that the draft
+  never rests on an ordering that already happened the other way.
+- **US-2**: As the runner of a draft's first Planning turn, I want the head-pinned recheck to include the
+  `dev-<slug>` state of each proposal the draft names as following it, so that a premise that went stale in Backlog
+  is updated before the first Planning decision.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: a `precedes:` field, a reverse `depends_on` written onto an accepted proposal, or any change to
+   `depends_on` semantics. Accepted proposals stay unedited.
+   - **Rationale**: the successor-declared edge of `ADR-roadmap-and-milestones-ledger` and the immutability of an
+     accepted proposal in `ADR-proposal-acceptance`; neither edge would have caught the observed case.
+2. **Scope Excluded**: a handoff, accept or `devkit spec proposal check` notice or refusal; any change under
+   `packages/devkit-spec/src/devkit_spec/features/`.
+3. **Scope Excluded**: parsing ordering claims out of proposal prose.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Backlog checks a draft's ordering claim before committing it
+- **Given** the rendered `skills/spec/references/backlog.md` of the spec bundle, in the local and the cloud
+  environment
+- **When** a bundle-text test reads its Requests and decomposition list
+- **Then** one list item states that a draft claiming its handoff precedes another proposal's, or whose cost depends
+  on another proposal's or spec's state, checks each named one before the draft is committed by its base `status`
+  and `git branch -a --list 'dev-<slug>' '*/dev-<slug>'`, fetching only within existing network authorization
+- **And** one list item states that a `dev-<slug>` branch or a `SPEC-<slug>` means the proposal was handed off and
+  the premise is rewritten, and that an ordering against a still-accepted proposal with no `dev-<slug>` branch is
+  sequenced by the user before the draft is committed and stated in its body
 
-## 5. Carried Proposal Notes
+### [AC-02] The first Planning turn rechecks ordering claims with the branch check
+- **Given** the rendered `skills/spec/references/planning.md` of the spec bundle, in the local and the cloud
+  environment
+- **When** a bundle-text test reads its Steps
+- **Then** one item states that the head-pinned recheck runs on the first turn as well as after a Host refresh, and
+  that for each proposal the draft names as following it the runner also runs the `dev-<slug>` branch check, because
+  a base or HEAD read shows a handed-off proposal as `accepted` until its Development integrates
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] The documented branch check tells a handed-off proposal apart
+- **Given** a Git fixture whose base lists a proposal as `status: accepted` and which holds that proposal's
+  `dev-<slug>` branch locally, or only as a fetched remote-tracking branch, and an unrelated `dev-<slug>-extra`
+  branch
+- **When** the documented `git branch -a --list 'dev-<slug>' '*/dev-<slug>'` runs
+- **Then** it lists exactly the matching local or remote-tracking branch, and lists nothing when no such branch
+  exists
 
-### Source feedback
+### [AC-04] The capability owns the two checks
+- **Given** `CAP-HARN-agent-guidance`, section "Repository Backlog and next work"
+- **When** it is read after the change
+- **Then** it states the check at draft authoring and at the first Planning turn (base status plus local or fetched
+  `dev-<slug>` branches), the rewrite of a stale premise and the user's sequencing decision, and that no ordering
+  field, edge on an accepted proposal or handoff check is added; `uv run devkit rules check --ci --base main` exits
+  `0`
 
-- `FB-draft-precedence-claim-unenforced`: the whole item (detection of a stale ordering premise between proposals).
+### [AC-05] No CLI or document-system change
+- **Given** the Development range from the handoff commit to the final head
+- **When** `git diff --stat <base>..HEAD -- packages/devkit-spec/src/devkit_spec/features/ packages/devkit-docs/`
+  runs
+- **Then** it lists no file
 
-### 2. Technical Spike Questions
+## 5. Source feedback
 
-- **Q1** (settled): Should a draft declare a prerequisite edge onto accepted proposals (for example a `precedes:`
-  list) that `devkit spec proposal handoff` checks, or should the existing `depends_on` on the dependents stay the
-  only edge? Answer: `depends_on` on the dependent stays the only edge; no new field, no edit of an accepted
-  proposal and no handoff check (Planning decision 1).
-- **Q2** (settled): Should Planning start or `devkit spec proposal check` report the current status of every proposal
-  or spec the draft names as following it? Answer: yes as a guidance step at draft authoring and at the first
-  Planning turn, reading base status and `dev-<slug>` branches; `proposal check` stays the editability guard
-  (Planning decisions 2 to 4).
+- `FB-draft-precedence-claim-unenforced` (scope: repo): the whole item (detection of a stale ordering premise
+  between proposals).
 
-### 3. Proposed Design & Impact
+## 6. Assumptions
 
-#### Planning decisions
-
-1. **No new ordering edge; accepted proposals stay unedited** (by: host, from repository evidence). A `precedes:` field
-   would reverse the successor-declared edge chosen in `ADR-roadmap-and-milestones-ledger` (the both-ways `after` edge
-   was rejected) and needs a new reference field in `devkit-docs`. A reverse `depends_on` written onto an accepted
-   proposal contradicts `ADR-proposal-acceptance` ("an accepted proposal is never edited") and rule 13 of
-   `CAP-DLV-proposal-planning`. Neither would have caught the observed case, because both handoffs ran before the
-   claim existed (`challenger-01.yaml` findings 1 and 2). An ordering a draft wants against an accepted proposal is a
-   sequencing decision for the user, made when the draft is written; when the premise no longer holds, the existing
-   routes apply (rewrite the draft, or return or close the accepted proposal through `CAP-DLV-delivery-workflows`).
-2. **Check named proposals when the claim is written** (by: host). Backlog guidance (`references/backlog.md`,
-   Requests and decomposition) adds one step: when a draft claims its handoff precedes, or its cost depends on the
-   state of, another proposal or spec, check each named one before committing the draft: its `status` on the base and
-   whether a local or fetched `dev-<slug>` exists (`git branch -a --list 'dev-<slug>' '*/dev-<slug>'`), within the
-   existing fetch authorization and never fetching implicitly. A `dev-<slug>` branch or a `SPEC-<slug>` means the
-   proposal was handed off: rewrite the premise. A still-accepted proposal with no `dev-` branch: ask the user to
-   sequence the two before committing the draft, and state the decision in the draft's body.
-3. **Recheck at the first Planning turn** (by: host). `references/planning.md`'s head-pinned recheck applies on the
-   first turn too, not only after a Host refresh, and for each proposal the draft names as following it adds the
-   same `dev-<slug>` check: a base or HEAD read alone shows a handed-off proposal as `accepted` until its Development
-   integrates (`challenger-01.yaml` finding 3). A stale premise is updated before the first Planning decision.
-4. **No CLI change** (by: host). `devkit spec proposal check` is the Backlog editability guard and refuses once
-   Planning starts, so it cannot report at Planning start; ordering claims live in prose with no mechanical edge to
-   read; the feedback is a non-recurring `workaround`. A handoff-time prerequisite notice would rarely fire (2 of 81
-   handoffs) and repeats the pickup override of the direct unit prerequisite procedure
-   (`challenger-01.yaml` findings 4 and 5). Planning records no PADR: the steps restate no lasting policy beyond the
-   accepted ADRs above.
-
-#### Design, domain and operations impact
-
-- **Design**: unaffected; no component, interface or structure changes (guidance text only).
-- **Domain**: `DOMAIN-delivery-relationships` unaffected; prerequisite, membership and provenance semantics are
-  unchanged and no edge is added.
-- **Operations**: unaffected; no runbook or operational procedure reads proposal ordering.
-- **Capability**: `CAP-HARN-agent-guidance` "Repository Backlog and next work" gains one statement owning the two
-  checks (statement owner); the bundle references carry the procedure.
-
-#### Assets
-
-- `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/backlog.md.jinja`: decision 2.
-- `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md`: decision 3.
-- `docs/capabilities/harness/CAP-HARN-agent-guidance.md`: the owning statement.
-- A bundle-text test under `packages/devkit-spec/tests/integration/bundles/spec/` (beside
-  `test_unit_dependency_guidance.py`), local and cloud.
-
-Before editing a bundle reference, run `uv run devkit get-context authoring` and apply `agent-asset-writing`; keep
-the bundle within `test_bundle_budgets.py`.
-
-#### Non-Goals
-
-- A `precedes:` field, a reverse `depends_on` on accepted proposals, or any change to `depends_on` semantics.
-- A handoff, accept or `proposal check` notice or refusal; any change under `packages/devkit-spec/src/devkit_spec/features/`.
-- Parsing ordering claims out of proposal prose.
-
-#### Expected acceptance evidence
-
-- **AC-01**: `references/backlog.md` (local and cloud) states that a draft claiming to precede another proposal's
-  handoff, or depending on its state, checks each named proposal's base `status` and local or fetched `dev-<slug>`
-  branch before the draft is committed, rewrites a premise a handoff made stale, and asks the user to sequence an
-  ordering against a still-accepted proposal. A bundle-text test asserts each clause.
-- **AC-02**: `references/planning.md` applies the head-pinned recheck on the first Planning turn and adds the
-  `dev-<slug>` check for proposals the draft names as following it. A bundle-text test asserts it.
-- **AC-03**: `CAP-HARN-agent-guidance` states the two checks; `devkit rules check` passes on the changed documents.
-- **AC-04**: no file under `packages/devkit-spec/src/devkit_spec/features/` or `packages/devkit-docs/` changes
-  (`git diff --stat` of the Development range).
-
-### 4. Lifecycle & Retirement Criteria
-
-Retired when the accepted design is handed off and `FB-draft-precedence-claim-unenforced` is marked promoted to it.
-
+- A named proposal still in `draft` or `reviewing` needs no new step: its own `depends_on` stays editable, and the
+  Planning recheck covers it. The settled design names only accepted proposals for the sequencing question.
+- The branch pattern `*/dev-<slug>` matches remote-tracking branches under any remote name; a local branch named
+  `<prefix>/dev-<slug>` would also match and is read the same way (a handoff branch by convention).
