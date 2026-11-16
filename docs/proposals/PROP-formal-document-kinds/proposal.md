@@ -2,7 +2,7 @@
 id: PROP-formal-document-kinds
 title: First-class design, domain and operations document kinds
 summary: "Registers design, domain and operations as formal document kinds with complete identity, governance, authoring, discovery and migration support, replacing the ID-free direction."
-status: draft
+status: reviewing
 created_at: 2026-11-16
 target_area: documents/
 priority: high
@@ -143,7 +143,7 @@ triggered only by a pilot failure. Their separate ownership keeps this proposal 
 
 ## 4. Lifecycle & Retirement Criteria
 
-Backlog records the corrected direction; this proposal remains draft. Planning settles the schemas and complete
+The corrected direction is in Planning review. Planning settles the schemas and complete
 implementation contract before acceptance and handoff. One L core integration spec is the intended handoff.
 Acceptance requires the planned formal-kind support matrix, migration inventory and superseding decision scope.
 Development retirement requires F1–F6 evidence and reconciliation of current contracts and shipped assets.
