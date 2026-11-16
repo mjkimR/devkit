@@ -38,9 +38,14 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
 
 ## 3. Proposed Design & Impact
 
-- Select small real examples for all three roles. Candidate domains are proposal/spec/milestone relationships
-  and bundle/asset/projection relationships. Inspect synchronization for a design mechanism and an operational
-  symptom; choose a better existing topic if its current owners already answer the question adequately.
+- Use one bounded distribution slice for all three roles. Domain explains bundle availability, selection,
+  projected asset paths and the installation receipt. Design explains journaled file-to-directory and
+  directory-to-file replacement. Operations starts from `TRANSACTION_PENDING` and distinguishes the
+  `RECOVERY_BLOCKED` branch. The selected sources and evidence protocol are in
+  [example selection](materials/example-selection.md).
+- Keep the pilot to one entry draft per role and one design detail draft. Supporting artifacts are source links
+  unless the chosen mechanism requires an authored diagram. Drafts are evaluation content, not current contracts.
+  Existing support may be the final recommendation for any of the three representation decisions.
 - Prototype readable entry documents and only the supporting files the selected content needs. Keep drafts and
   comparison evidence in this proposal's materials or dated materials until the selected approach permits their
   promotion. Use existing representations; no new kind or runtime behavior is a prerequisite for this pilot.
@@ -61,15 +66,33 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
   Name evidence for every proposed extension and the existing support that already works. Missing evidence may
   defer an extension; it does not remove the agreed documentation role.
 
+### Planning decisions and excluded scope
+
+- The Host's user decisions retain domain, design and operations as three roles. Architecture explains system
+  scope, building blocks, runtime interactions and cross-cutting structure within the whole documentation system;
+  detailed implementation explanations link back to it. Existing arc42 quality and risk ownership stays there.
+  The pilot does not teach arc42 or introduce a fourth role.
+- Start with composed views and source links. No normative ownership transfer is selected for this pilot.
+  A proposed transfer requires explicit source-statement identification, retirement of the old normative copy
+  and separate scope authority before editing that owner.
+- Content home, indexed kind/ID and runtime/UI remain independent decisions for foundation Planning. This pilot
+  recommends each from observed reader outcomes; it neither registers kinds nor builds final documentation homes.
+- No code, template, rule, authoring instruction, viewer, package, executable recovery or feature-edge change is
+  included. No recovery command is run against this repository. Recovery walkthroughs use documented states.
+- Pilot deliverables and deferred targets are listed in `PROP-design-document-pilot-target`. Development remains
+  `medium`: document evidence and independent review suffice; production tests and benchmarks are irrelevant.
+
 ### Expected acceptance evidence
 
-- Small domain, design and operations examples each identify their purpose, existing sources and added value.
-  A before/after ownership comparison identifies ambiguity, duplication and any proposed ownership transfer.
-- Reader walkthroughs exercise all three entry paths without requiring the full document corpus. Failed paths
+- **AC-PILOT-01**: Small domain, design and operations examples each identify their purpose, existing sources and added value.
+  A before/after ownership comparison identifies ambiguity and duplication, with no ownership transfer selected.
+- **AC-PILOT-02**: Reader walkthroughs exercise all three entry paths without requiring the full document corpus. Failed paths
   identify a concrete missing behavior; successful existing paths justify leaving those facilities unchanged.
-- A bounded change walkthrough identifies which owned statements need updating and which layers are unaffected.
+  Contract-only design discovery and supplied-entry navigation have separate results. Operations includes the
+  existing readiness owner and a no-journal state with desired-state drift that remains not ready.
+- **AC-PILOT-03**: A bounded change walkthrough identifies which owned statements need updating and which layers are unaffected.
   No implementation change is required to update every documentation layer.
-- Evidence distinguishes verified facts, open questions and illustrative content. The result states the minimal
+- **AC-PILOT-04**: Evidence distinguishes verified facts, open questions and illustrative content. The result states the minimal
   support needed by foundation and later proposals and preserves source contracts and historical evidence.
 
 ## 4. Lifecycle & Retirement Criteria
@@ -77,3 +100,6 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
 Run this proposal first. Planning selects the real examples; acceptance and handoff use the proposal gates.
 Retirement requires the content comparison and walkthrough evidence, not new document-system or viewer code.
 Final runtime and viewer verification belongs to their respective proposals after representation decisions.
+The evidence package can conclude that current facilities suffice. A failed navigation attempt is a finding to
+classify, not automatic authority to add runtime support. Foundation consumes recommendations with their source
+revision, limitations and retained example links.

@@ -1,0 +1,22 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T01:31:43.654546Z'
+status: completed
+review: challenger-01.yaml
+summary: Worker verified separate contract-only design discovery and supplied-entry navigation trials, plus existing readiness owner and no-journal/drift paper state.
+findings:
+- issue: The design trial bypasses the contract-to-entry hop it claims to test.
+  evidence: materials/example-selection.md:48-58; proposal.md:35-36,89-90
+  failure_condition: A supplied draft entry lets the reader pass detail navigation while contract readers cannot discover that entry.
+  suggested_action: Split contract-only discovery from supplied-entry navigation; record an unavailable hop as a gap without owner edits or tooling changes.
+  resolution: resolved
+  severity: P2
+- issue: Operations success omits the existing normal-state readiness criterion.
+  evidence: materials/example-selection.md:48-53; CAP-DIST-sync-and-transactions:518-536; docs/development/reference/distribution.md:234-235
+  failure_condition: A reader treats journal removal or clean status as normal operation while desired-state changes remain.
+  suggested_action: Require the existing sync --check exit-0 readiness owner and a no-journal but desired-state-drift paper scenario classified not ready.
+  resolution: resolved
+  severity: P2
+checks: {}
