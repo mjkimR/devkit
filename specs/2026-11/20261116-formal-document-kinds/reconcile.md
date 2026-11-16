@@ -108,7 +108,7 @@ DESIGN implementation explanation/datasheets and OPS evidence routing are equall
 behavioral/recovery permission authority. Its selected navigation imposes no reciprocal registry or reading order.
 The new ADR traces current restatements and confirmation; the earlier accepted ADRs already have exact matching
 partial pointers from handoff, so their rationale and historical evidence remain untouched. Architecture retains
-structure and the existing documents→governance dependency direction; there is no docs→spec import or new edge.
+structure and the existing governance→documents dependency direction; there is no docs→spec import or new edge.
 
 ## Current content and neutral source assets
 
@@ -137,7 +137,10 @@ validated by declaration/liveness/reverse tests; derive/apply consumer extension
 HIGH independent code review round1 found five defects; all were fixed with reproducing regression cases.
 Round2 passed34 formal tests, snapshot symlink replacement and22 governance rules independently. Developer checks
 on frozen9f4b9f70108178bc72a77b880b59726c10341fa8 passed2625 affected tests, docs-only installed-wheel E2E1,
-lint and Pyright0. Reconciliation remains pending until its separate independent reviewer verifies the full reflection.
+lint and Pyright0. The independent reconciliation reviewer matched all44 targets and identified three wording contradictions.
+The implementer applied its exact suggestions in the named locations and rechecked the whole reflection;
+accepted contract semantics and production code did not change. This is the HIGH minor-fix self-verification
+exception, not a waiver of a required mismatch.
 The evidence measures formal identity coverage0→5 from exact baseline bytes, not performance.
 
 ## Required dependent work

@@ -112,7 +112,7 @@ changes an argument, output, code or exit status.
      it, under it, or a directory containing it (whole path segments, case-sensitive; `CAP-TRACE-code-entrypoints`).
      The path need not exist, so a deleted file still finds its documents; a path that breaks the entrypoint path
      contract (absolute, a glob, a `..` segment) MUST fail with `DOCS_ENTRYPOINTS_PATH_INVALID` (exit `2`) before
-     any document is read. Only capabilities and use cases declare `entrypoints`.
+     any document is read. Only capabilities, use cases and canonical DESIGN documents declare `entrypoints`; DOMAIN/OPS do not.
    - `--namespace NAME` / `--all-namespaces`: the namespace selection (`CAP-DOCS-namespaces`). Default: the namespace
      of the current directory plus the global documents.
 3. **Order**: kind order (the table of `CAP-DOCS-document-model`), then, for feedback, `severity` (`critical`,

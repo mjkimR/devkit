@@ -74,7 +74,7 @@ commit.
    rules via `ctx.cache.get_or_compute`.
 2. **Targeting**: as with every devkit rule, a violation is reported only in the files the run targets: a commit
    checks the files it changes, `devkit rules check` without targets the whole workspace. A rule whose relation spans
-   several files (task coverage, lifecycle, traceability, entrypoints) states below where it reports when only one
+   several files (task coverage, lifecycle, traceability, entrypoints, role-artifact identity) states below where it reports when only one
    side is targeted.
 3. **History**: files of completed spec bundles, their `feedback/` aside, are work history: checked only when named as explicit targets, never
    rewritten by a fix. `RULE-spec-lifecycle` is the exception: its conditions concern completed bundles, so it checks
@@ -295,7 +295,7 @@ so this hint is a rule of its own (`SPEC-open-feedback-and-progress`).
 
 ### 3.11 `RULE-code-entrypoints`
 
-Every `entrypoints` item of a capability or use case (`docs/` and namespace docs roots) MUST be a string, a literal
+Every `entrypoints` item of a capability, use case or canonical DESIGN document (`docs/` and namespace docs roots) MUST be a string, a literal
 workspace-relative path, and an existing file or directory inside the workspace. In a snapshot run it also reports
 every current document that declares a path the diff deletes. Not fixable. The full contract is
 `CAP-TRACE-code-entrypoints`.
@@ -526,7 +526,8 @@ prior ownership through the generic rule repository, without requiring installed
 RULE-id-convention checks the flat DESIGN/DOMAIN/OPS path/stem/id/H1 grammar in global and registered roots and
 reports role IDs declared outside their canonical root. It validates the narrow parent-owned artifact exception:
 same-root/same-kind canonical parent, ID-free supporting Markdown naming the parent, no stray nested independent
-Markdown. Binary artifacts need an owner but no fake ID. These checks never move files.
+Markdown. Binary artifacts need an owner but no fake ID. In a snapshot, deleting a canonical parent checks its
+unchanged dependent artifacts too, while honoring explicit artifact exclusions. These checks never move files.
 
 RULE-spec-format requires nonempty string metadata, exact draft/active/retired status, double-quoted summary and
 rejects reserved/inapplicable role fields. DOMAIN/OPS entrypoints are rejected; DESIGN paths receive the existing

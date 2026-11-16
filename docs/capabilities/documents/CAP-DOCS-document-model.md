@@ -377,7 +377,7 @@ service, docs-to-spec import or implicit delivery lifecycle is introduced.
 | `proposal` | ID | Provenance of a handed-off spec. |
 | `aliases` | list of IDs | Previous or alternate IDs of the document itself (section 3.5); identity, not references. |
 | `namespace` | string | Namespace of a spec or proposal bundle (`CAP-DOCS-namespaces`). |
-| `entrypoints` | list of paths | Code entrypoints of a capability or use case (`CAP-TRACE-code-entrypoints`). |
+| `entrypoints` | list of paths | Code entrypoints of a capability, use case or canonical DESIGN document; DOMAIN/OPS omit the field (`CAP-TRACE-code-entrypoints`). |
 
 ### 4.2 Document Record (JSON)
 
