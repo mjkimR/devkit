@@ -2,7 +2,7 @@
 id: PROP-formal-document-coverage
 title: Formal document coverage across capability areas
 summary: Adds DESIGN, DOMAIN and OPS documents written from the current code and Living Spec for each capability area whose readers have a question no existing owner answers, using the delivered formal templates.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-16
 target_area: documents/
 priority: medium                      # critical | high | medium | low
