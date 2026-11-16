@@ -29,7 +29,7 @@ Read/Files panel. No latency or cost improvement is claimed.
 ## Executed checks before independent review
 
 - Frontend lint and svelte-check: PASS, zero errors/warnings.
-- Frontend Vitest: PASS 238 tests across20 files, including new-kind and existing behavior controls.
+- Frontend Vitest: PASS 239 tests across20 files, including new-kind and existing behavior controls.
 - Focused Python handbook/worktree/HTTP tests: PASS155.
 - Python viewer lint and Pyright: PASS, zero errors/warnings after the typed payload assertion.
 - Public pack and packed generic-host fixture: PASS1; external public declaration consumer: PASS.
@@ -61,3 +61,18 @@ Pre-code reviewer records are immutable Git5d1cb2661871cd3fe12cf806b58ac2515a3ff
 
 The Screens body-copy omission in specify is corrected in build-verify without pretending it preceded code;
 the accepted source drafts and independent reviews did precede implementation. No new arrangement was selected.
+
+
+## Committed-source verification and qualifications
+
+At e6aa9560b70c8d8b2569501c8833a85b62358a26, affected selection from the saved core base is partial20 paths,
+294 tests PASS. The first run's sole failure was the old repository UX inventory assuming only one screen-bearing
+use case. The Host authorized the exact docs test to add the approved formal UC→three UX mappings; the original
+decision mapping and strict no-screen else assertion remain. Its owning task boundary accompanies its first edit.
+Frontend239, lint and check0 pass; current runtime/package files match the generated/wheel/public-host proof.
+
+Machine-generated vendor-BDuvFx_u.js includes generator-produced trailing whitespace within minified output.
+The Host accepted exact generator bytes: source-only diff hygiene passes, and generated consistency plus wheel
+byte parity pass. Static output was never hand-edited. No selected bundle assets changed; sync output is empty.
+Viewer has no package E2E test tier; native HTTP integration, packed generic-host and wheel-content checks provide
+the required real transport/public/package evidence. Final combined landed-head verification belongs to the Host.
