@@ -19,6 +19,8 @@ boundaries:
     - docs/capabilities/documents/
     - docs/capabilities/distribution/
     - docs/capabilities/delivery/
+    - docs/capabilities/governance/CAP-GOV-spec-rules.md
+    - docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md
     - docs/usecases/
     - docs/architecture/
     - docs/decisions/
@@ -149,3 +151,14 @@ Acceptance requires the planned formal-kind support matrix, migration inventory 
 Development retirement requires F1–F6 evidence and reconciliation of current contracts and shipped assets.
 The milestone additionally requires the lifecycle and viewer phases. Neither small code size nor owner-linked
 ID-free navigation can substitute for formal support.
+
+## 5. Planning decisions
+
+The selected implementation contract is [core-contract](materials/core-contract.md). DESIGN/design,
+DOMAIN/domain and OPS/operations use flat prefixed filenames, required metadata and optional typed relations.
+Independent detail is a formal peer node. Status is draft, active or retired; only design accepts optional source
+entrypoints. Parent-owned artifacts have a narrow explicit path exception. The three formal templates/instructions,
+current migrations, public compatibility and required lifecycle/viewer interfaces are part of the core contract.
+PADR-formal-role-document-identities records the lasting schema and partial supersession choice. No unresolved
+user direction is inferred from the superseded ID-free sources. HIGH Development remains appropriate for public
+Kind/identity/output contracts. Implementation size is not a criterion for dropping required runtime or governance.
