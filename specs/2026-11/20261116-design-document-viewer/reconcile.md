@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-document-viewer
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified
@@ -79,7 +79,7 @@ static, document and cross-owner candidates are rejected rather than appended me
 No required acceptance criterion is deferred, and this unit has no explicitly linked open direct-fix feedback.
 All findings in code review rounds 1 and 2 are corrected; fresh round 3 has no findings. The review's independent
 probes and the worker's frontend250, affected294, backend/handbook155, public-host and exact wheel100 evidence
-remain distinguished by their recorded source identities. Independent reconcile verification is recorded next.
+remain distinguished by their recorded source identities. Independent reconcile round 1 verified all targets; its P2 read-budget wording finding is corrected exactly by qualifying the supersession-only trigger and citing the existing formal-context clause. The whole reflection is rechecked in reconcile-check-02; this wording-only correction changes no implementation or contract meaning.
 
 Integration, lifecycle reference transactions and combined landed-head verification remain Host-owned. This
 reflection does not close the documentation evolution milestone or adopt later unapproved layout/template work.
