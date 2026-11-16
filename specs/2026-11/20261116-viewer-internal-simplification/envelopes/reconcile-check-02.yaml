@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:04:34.393465Z'
+status: completed
+summary: 'Implementer verified the reconcile-check-01 fixes: the namespace-roadmap Confirmation is marked as verified at decision time, reconcile.md names the pointer ADRs, moves the entrypoints note and lists deferred wording as feedback; reconcile resolved and spec completed'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base 4bd757276
+diff_scope:
+  base: 4bd757276a1eff450365e273315d8a98537ee8cb
+  head: 835f82fd11f24ac9174df0aa53ab796dfa2e3cf4
+activity_effort: medium
