@@ -504,3 +504,14 @@ def test_commit_refusal_never_removes_a_committed_record(repo: Path) -> None:
     assert "Remove" not in fix
     assert "Keep [TARGET]: it is committed history. Write a new envelope" in fix
     assert "--stage" in fix
+
+
+def test_fixes_suggesting_a_reverify_pass_summary(repo: Path, tmp_path: Path) -> None:
+    """Fixes that suggest closing a round name a reverify command that is not itself refused for --summary."""
+    common = ("envelope", "review", "--workspace-root", str(repo), "--unit", UNIT, "--summary", "x")
+    findings = tmp_path / "findings.yaml"
+    findings.write_text("- {issue: a, evidence: b, resolution: resolved}\n")
+    result = run_cli(*common, "--findings-file", str(findings))
+    assert result.exit_code == 2 and "(ENVELOPE_FLAG_INVALID)" in result.stderr
+    fix = next(line for line in result.stderr.splitlines() if line.startswith("[FIX]"))
+    assert f"envelope reverify --unit {UNIT} --from latest --summary" in fix

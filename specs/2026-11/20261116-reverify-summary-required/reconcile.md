@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-reverify-summary-required
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
     resolution: modified
@@ -42,8 +42,12 @@ Agent-facing bundle text (not Living Spec, changed under Task 3): the `spec-revi
 - Design, domain and operations: no `DESIGN-`, `DOMAIN-` or `OPS-` document owns envelope authoring or the explicit
   commit refusal text (`devkit docs search "envelope commit"` lists only the two capabilities above and
   `ADR-explicit-envelope-commits`, whose decision is unchanged).
-- Decisions: `ADR-explicit-envelope-commits` requires a nonempty summary for an explicit commit; this change enforces
-  it earlier for `reverify` and names the field, without changing the decision. No ADR needed.
+- Decisions: the nonempty-summary rule of an explicit commit is `CAP-DLV-workflow-envelopes` section 5 item 3;
+  this change enforces it earlier for `reverify` and names the failing field. The decision of
+  `ADR-explicit-envelope-commits` (an explicit one-file commit command) is unchanged, so no ADR is needed.
+- Fix hints: the review `--from` refusal and the review/challenger "close the round" fix in `authoring.py` now
+  suggest `envelope reverify ... --summary "<judgment>"`, so following them is not refused (reconcile-check-01
+  finding 1).
 
 ## Entrypoints
 

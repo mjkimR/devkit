@@ -2,7 +2,7 @@
 id: SPEC-reverify-summary-required
 title: envelope reverify requires a summary that envelope commit accepts
 summary: Makes devkit workflow envelope reverify refuse a missing summary so every envelope it writes passes envelope commit, and makes the commit refusal name the failing field and its flag, closing FB-reverify-writes-envelope-commit-refuses.
-status: in-progress
+status: completed
 created: 2026-11-16
 related_capabilities: [CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output]
 related_usecases: []

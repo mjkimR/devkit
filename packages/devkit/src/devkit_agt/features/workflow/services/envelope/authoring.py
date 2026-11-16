@@ -217,8 +217,12 @@ def parse_findings(text: str, kind: str, unit: str = "") -> tuple[Finding, ...]:
 def _close_round(kind: str, unit: str) -> str:
     """How the round of a ``review`` or ``challenger`` envelope is closed, as the rest of a fix."""
     if kind == "review" and unit:
-        return f"close the round afterwards with `{workflow_command(f'envelope reverify --unit {unit} --from latest')}`"
-    return "close the round afterwards with `envelope reverify`, its --from naming the file this command writes"
+        reverify = f'envelope reverify --unit {unit} --from latest --summary "<judgment>"'
+        return f"close the round afterwards with `{workflow_command(reverify)}`"
+    return (
+        "close the round afterwards with `envelope reverify`, its --from naming the file this command writes and"
+        ' --summary "<judgment>"'
+    )
 
 
 def _items(text: str, flag: str, keys: tuple[str, ...]) -> list[Any]:
@@ -415,7 +419,7 @@ def _check_flag_combination(kind: str, source: str | None, closing: bool, head: 
             fix="Add --from latest to carry the findings being closed",
         )
     if kind == "review" and source is not None:
-        reverify = f"envelope reverify --unit {unit} --from latest" if unit else "envelope reverify --from latest"
+        reverify = "envelope reverify" + (f" --unit {unit}" if unit else "") + ' --from latest --summary "<judgment>"'
         raise EnvelopeFlagError(
             "a review records findings as found; a reverify carries findings forward with --from",
             target_files=["--from"],
