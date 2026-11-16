@@ -170,7 +170,14 @@ def test_invalid_present_or_missing_required_scope_record_is_not_run(repo: Path,
 
 def test_rules_keep_earlier_turn_target_in_cumulative_comparison(repo: Path) -> None:
     write(repo, "docs/contract.md", "created in first turn")
-    record = "---\nreconcile_id: REC-example\nstatus: pending\ntargets:\n  - file: docs/contract.md\n    resolution: modified\n---\n"
+    coverage = "".join(
+        f'  {role}: "none: the contract change touches no {role} statement"\n'
+        for role in ("design", "domain", "operations")
+    )
+    record = (
+        "---\nreconcile_id: REC-example\nstatus: pending\ntargets:\n  - file: docs/contract.md\n    resolution: modified\n"
+        f"formal_docs:\n{coverage}---\n"
+    )
     write(repo, f"{UNIT}/reconcile.md", record)
     previous = worker(repo, 1)
     write(repo, f"{UNIT}/reconcile.md", record.replace("pending", "resolved"))

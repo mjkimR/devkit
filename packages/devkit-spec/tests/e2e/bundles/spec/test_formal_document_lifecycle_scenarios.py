@@ -17,6 +17,7 @@ import pytest
 
 APPROACH = "sdd"
 ROLES = [("designs", "DESIGN", "design"), ("domain", "DOMAIN", "domain"), ("operations", "OPS", "operations")]
+ROLES_INDEXED = ("design", "domain", "operations")  # the reconcile record's formal_docs roles
 AREA = "core"
 AREA_DIRECTORIES = ("designs", "domain")
 DESIGN_ANCHOR = "design.md"
@@ -73,7 +74,11 @@ class Exercise:
         )
         self.write(
             "specs/2026-10/20261001-history/reconcile.md",
-            "---\nreconcile_id: REC-history\nstatus: resolved\ntargets: []\n---\n# Retained reconciliation\n",
+            "---\nreconcile_id: REC-history\nstatus: resolved\ntargets: []\nformal_docs:\n"
+            + "".join(
+                f'  {role}: "none: the historical delivery predates {role} documents"\n' for role in ROLES_INDEXED
+            )
+            + "---\n# Retained reconciliation\n",
         )
         self.history_bytes = self.history.read_bytes()
         self.cli("sync")
@@ -203,12 +208,22 @@ class Exercise:
             "---\nid: TASKS-maintenance\nspec: SPEC-maintenance\n---\n- [x] **Task 1**: retained maintenance\n  - **_Boundary**: `src/`\n  - _Requirements: AC-01_\n",
         )
         record = f"{bundle}/reconcile.md"
+        # The newly resolved record indexes its formal assessment: the maintained ID under its role, a reason elsewhere.
+        stem = Path(canonical).stem
+        maintained = Path(canonical).parent.name if stem == "design" else stem
+        fields = {"DESIGN-": "design", "DOMAIN-": "domain", "OPS-": "operations"}
+        role = next(name for prefix, name in fields.items() if maintained.startswith(prefix))
+        plural = {"design": "related_designs", "domain": "related_domains", "operations": "related_operations"}
+        coverage = f"{plural[role]}: [{maintained}]\nformal_docs:\n" + "".join(
+            f'  {other}: "none: the maintenance changes no {other} statement"\n' for other in plural if other != role
+        )
 
         def write_record(paths: list[str]) -> None:
             self.write(
                 record,
                 "---\nreconcile_id: REC-maintenance\nstatus: resolved\ntargets:\n"
                 + "".join(f"  - file: {path}\n    resolution: modified\n" for path in paths)
+                + coverage
                 + "---\n# Source-identified maintenance\nCanonical and support paths compared against actual source and staged changes.\n",
             )
             self.run("git", "add", bundle)

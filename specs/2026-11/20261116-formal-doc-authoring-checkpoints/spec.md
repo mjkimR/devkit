@@ -2,7 +2,7 @@
 id: SPEC-formal-doc-authoring-checkpoints
 title: 'Formal documentation checkpoints: route facts, review reimplementability, record assessments'
 summary: Make formal documentation get filled during ordinary delivery by adding fact-type routing, a reconcile formal-docs assessment field, reimplementability questions for the reconcile reviewer, a capability observable-contract rule and a reference template.
-status: planned
+status: in-progress
 created: 2026-11-16
 related_capabilities:
   - CAP-DOCS-documentation-ownership

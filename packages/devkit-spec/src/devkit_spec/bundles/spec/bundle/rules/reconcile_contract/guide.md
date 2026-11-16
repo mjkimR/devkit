@@ -20,6 +20,14 @@ time, backed by the diff.
   base branch), the staged diff alone is the evidence and earlier commits do not count. A record whose frontmatter is
   unchanged from the base claims nothing new and is not re-checked. A plain `devkit rules check` checks the form
   only.
+- **Formal-document assessment**: the record's frontmatter indexes the design, domain and operations assessment its
+  body details. A role is covered by affected IDs in its typed relation list (`related_designs`, `related_domains`,
+  `related_operations`) or by `formal_docs.<role>: "none: <reason>"`, never both; `RULE-document-reference` checks
+  that the listed IDs exist. A present `formal_docs` is checked for form in every run. In a snapshot run, a
+  `resolved` record that the diff changes and that no parent of the commit has `resolved` MUST cover every role. The
+  parents are the snapshot base and, in a staged run, each commit named by `MERGE_HEAD`, `CHERRY_PICK_HEAD` or
+  `REVERT_HEAD` when present, so concluding a merge never requires coverage of a record the other branch resolved.
+  A record resolved at the base, a `pending` record and every record in a plain run need no coverage.
 
 ## 2. Cause of Violation
 
@@ -38,6 +46,17 @@ Every violation is reported at line 1:
   <value>`.
 - A waiver whose `rationale` has fewer than 20 non-whitespace characters, since a waiver says why the file needs no
   change: `targets[<n>] waiver of <file> needs a rationale of at least 20 non-whitespace characters, has <count>`.
+- `formal_docs` not a mapping: `formal_docs must be a mapping of design, domain and operations to a none reason`.
+- A key other than `design`, `domain` or `operations`: `formal_docs.<key> is not a role: use design, domain or
+  operations`.
+- A value that is not a string starting `none: `: `formal_docs.<role> must be a string starting "none: " followed by
+  the reason`.
+- A reason after `none: ` with fewer than 20 non-whitespace characters: `formal_docs.<role> needs a reason of at
+  least 20 non-whitespace characters, has <count>`.
+- A role with both a nonempty relation list and a reason: `formal_docs.<role> conflicts with related_<roles>: give
+  affected IDs or a none reason, not both`.
+- In a snapshot run, a newly resolved record with a role covered by neither: `formal_docs role <role> is not covered:
+  list affected IDs in related_<roles> or give formal_docs.<role>: "none: <reason>"`.
 - In a snapshot run, a `modified` target the branch does not change: `target <file> is resolved as modified but
   absent from the staged diff or the branch's earlier commits` (commit time) or `... absent from the ci diff`.
 
@@ -45,7 +64,9 @@ Every violation is reported at line 1:
 
 Not fixable. Give `reconcile.md` a `reconcile_id`, `status` `pending` or `resolved` and `targets` as a list of
 `{file, resolution: modified|waived, rationale}` (`targets: []` when nothing in the Living Spec is affected), with a
-rationale of at least 20 non-whitespace characters for each waiver. For a missing diff evidence, change the Living
+rationale of at least 20 non-whitespace characters for each waiver. Cover each formal role: list the design, domain
+or operations IDs the change creates, changes or retires in its relation list, or give a bounded source-based reason
+`formal_docs.<role>: "none: <reason>"`. For a missing diff evidence, change the Living
 Spec file on the branch (with the record or in an earlier commit), or correct the target's resolution.
 
 ## 4. Configuration
@@ -69,5 +90,9 @@ targets:
   - file: docs/usecases/core/UC-find-docs.md
     resolution: waived
     rationale: The use case's acceptance criteria are unchanged by the new ranking mode.
+related_designs: [DESIGN-search-ranking]   # affected design IDs; a role is IDs or a reason, never both
+formal_docs:
+  domain: "none: ranking adds no concept, identity or lifecycle"
+  operations: "none: no new symptom or action owner for search"
 ---
 ```
