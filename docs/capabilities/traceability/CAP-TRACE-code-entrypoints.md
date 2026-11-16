@@ -186,11 +186,12 @@ supplied `relative` diagnostic path. It does not normalize paths or change the r
 ### 3.7 Review Before Apply
 
 A bundle that touched a capability only for wording still pairs it with every path its tasks named. The
-`spec-entrypoints` skill holds the review: drop documents touched only for metadata, keep directory candidates only
+`spec-entrypoints` skill holds the review: drop documents touched only for metadata, keep CAP/UC directory candidates only
 for documents that own the package, exclude hub files, then apply per document with `--target` and `--code`. Inside
 `spec-sync` it runs on the current bundle; as a backfill it runs over `--all` with a `--min-count` threshold.
 For CAP/UC select 1–3 implementation doorways; for DESIGN choose useful mechanism anchors, including a helper,
-model or schema when it is the subject's reading start. Core eligibility and path/liveness semantics stay in
+model or schema when it is the subject's reading start. A DESIGN directory may bound the described mechanism;
+exclude unrelated shared directories. Core eligibility and path/liveness semantics stay in
 §§3.1–3.3; they do not establish semantic correctness or public-adapter standing. Record meaningful rejected
 candidates and explicit ineligible-kind skips; do not manufacture source anchors for DOMAIN/OPS.
 

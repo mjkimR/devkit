@@ -43,3 +43,17 @@ scenarios execute real CLI/project checks. These scripted comparisons do not pro
 semantic judgment; independent code and reconcile review supplies the separate source-identified comparison.
 
 Exact check commands, source HEADs and observed outcomes are recorded in this unit's review/final worker envelopes.
+
+## Independent review closure evidence
+
+Round 1 found a universal directory-anchor heuristic that still restricted DESIGN and two proof gaps. The
+qualified-guidance regression failed before the fix, then passed. CAP/UC whole-package review remains guidance;
+DESIGN may select a bounded mechanism directory through actual target/code selection. Metadata-only eligible
+DESIGN candidates are deliberately rejected in review and remain byte-identical; malformed/unmatched source
+selectors still refuse before writes. No kind-specific runtime directory restriction is invented.
+
+Every SDD kind/root composed case now writes resolved reconciliation for actual staged modified/deleted canonical
+and support paths. Native RULE-reconcile-contract rejects an unchanged document falsely claimed modified, then
+accepts repaired records including removed paths and replacement destinations. Separate explicit author
+comparison rejects omitted canonical/removed targets; the native rule validates declared diff evidence and does
+not discover reverse impact. The strengthened nine SDD E2E cases and six focused regression cases passed.

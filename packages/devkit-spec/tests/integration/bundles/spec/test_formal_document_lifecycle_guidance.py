@@ -51,3 +51,10 @@ def test_adoption_reuses_canonical_roles_and_requires_evidence() -> None:
     report = (BUNDLE / "playbooks/sdd-baseline/references/report-template.md").read_text()
     assert "DOMAIN, DESIGN and OPS" in baseline and "missing required documents" in baseline.lower()
     assert "changed source invalidates" in report and "gaps" in report
+
+
+def test_directory_anchor_review_keeps_cap_uc_and_design_boundaries_distinct() -> None:
+    text = " ".join((BUNDLE / "skills/spec-entrypoints/SKILL.md").read_text().split())
+    assert "For CAP/UC, use a directory" in text and "owns the whole package" in text
+    assert "For DESIGN, use a directory when it bounds the described mechanism" in text
+    assert "excluding unrelated shared directories" in text

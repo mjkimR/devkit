@@ -110,6 +110,62 @@ class Exercise:
         self.run("git", "commit", "-qm", message)
         return self.run("git", "rev-parse", "HEAD").stdout.strip()
 
+    def reconcile_snapshot(self, require_removed: bool = False) -> None:
+        """Author checks completeness; the native rule checks each declared modified target's diff evidence."""
+        self.run("git", "add", "docs", "src")
+        targets = self.run("git", "diff", "--cached", "--name-only", "--no-renames", "--", "docs").stdout.splitlines()
+        removed = self.run(
+            "git", "diff", "--cached", "--name-only", "--no-renames", "--diff-filter=D", "--", "docs"
+        ).stdout.splitlines()
+        assert targets and any("/artifacts/" in path for path in targets)
+        canonical = next(path for path in targets if path.endswith(".md") and "/artifacts/" not in path)
+        if require_removed:
+            assert removed and any("/artifacts/" in path for path in removed)
+
+        def missing(selected: list[str]) -> set[str]:
+            return set(targets) - set(selected)
+
+        # Omissions are rejected by explicit author comparison, not a claimed reverse-discovery runtime rule.
+        assert canonical in missing([path for path in targets if path != canonical])
+        for path in removed:
+            assert path in missing([candidate for candidate in targets if candidate != path])
+        assert not missing(targets)
+        self.events.append(
+            {
+                "comparison": "author impact completeness",
+                "changed": targets,
+                "removed": removed,
+                "missing_canonical_control": "rejected",
+                "missing_removed_controls": "rejected",
+            }
+        )
+        bundle = "specs/2026-11/20261116-maintenance"
+        self.write(
+            f"{bundle}/spec.md",
+            '---\nid: SPEC-maintenance\nsummary: "Maintain formal statements and support."\nstatus: completed\n---\n# Maintenance\n\n## Acceptance Criteria\n\n### [AC-01] Maintained subject\n- Given a retained subject\n- When maintained\n- Then its actual links and owners agree\n',
+        )
+        self.write(
+            f"{bundle}/tasks.md",
+            "---\nid: TASKS-maintenance\nspec: SPEC-maintenance\n---\n- [x] **Task 1**: retained maintenance\n  - **_Boundary**: `src/`\n  - _Requirements: AC-01_\n",
+        )
+        record = f"{bundle}/reconcile.md"
+
+        def write_record(paths: list[str]) -> None:
+            self.write(
+                record,
+                "---\nreconcile_id: REC-maintenance\nstatus: resolved\ntargets:\n"
+                + "".join(f"  - file: {path}\n    resolution: modified\n" for path in paths)
+                + "---\n# Source-identified maintenance\nCanonical and support paths compared against actual source and staged changes.\n",
+            )
+            self.run("git", "add", bundle)
+
+        write_record([*targets, "docs/domain/DOMAIN-unrelated.md"])
+        negative = self.rules(expected=1, staged=True)
+        assert "RULE-reconcile-contract" in negative and "DOMAIN-unrelated.md" in negative
+        write_record(targets)
+        self.rules(staged=True)
+        assert all(f"file: {path}\n" in (self.root / record).read_text() for path in removed)
+
     def finish(self, identifier: str, source: str) -> None:
         self.rules()
         assert self.history.read_bytes() == self.history_bytes
@@ -306,6 +362,7 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
             assert "applied=0" in e.cli(*args).stdout and (e.root / new_parent).read_bytes() == before
         extra += "entrypoints: [src/mechanism.py, src/other.py]\n"
         e.doc(new_parent, renamed, body(new_parent, receiving_data, source_hash), extra)
+    e.reconcile_snapshot(require_removed=True)
     retained = e.commit("retain updated source and composed maintenance")
     # Retirement and real source-deletion snapshot; obsolete live declarations cannot be waived by status.
     (e.root / "src/mechanism.py").unlink()
@@ -321,6 +378,7 @@ def test_composed_formal_maintenance(tmp_path: Path, docs_root: str, directory: 
         extra = f"aliases: [{identifier}]\nentrypoints: [src/other.py]\n"
         e.doc(new_parent, renamed, history_body, extra, status="retired")
         e.run("git", "add", new_parent)
+    e.reconcile_snapshot()
     e.rules(staged=True)
     listed = e.json("docs", "list", kind, "--all-namespaces")["documents"]
     assert renamed not in {d["id"] for d in listed}

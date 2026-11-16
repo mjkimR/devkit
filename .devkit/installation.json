@@ -1224,7 +1224,7 @@
     },
     ".agents/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "0636ef9b9e8b45c4c97e479ff9703315ceaa20bd7c40b76bdbd6d931f0a7d059"
+      "sha256": "7997aa546953491d6d1fb19b5b9bebb7d73eaa2e97a63086cc543bbf15dfde80"
     },
     ".agents/skills/spec-entrypoints/references/backfill.md": {
       "mode": 420,
@@ -1560,7 +1560,7 @@
     },
     ".claude/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "0636ef9b9e8b45c4c97e479ff9703315ceaa20bd7c40b76bdbd6d931f0a7d059"
+      "sha256": "7997aa546953491d6d1fb19b5b9bebb7d73eaa2e97a63086cc543bbf15dfde80"
     },
     ".claude/skills/spec-entrypoints/references/backfill.md": {
       "mode": 420,
@@ -2400,7 +2400,7 @@
     },
     ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "0636ef9b9e8b45c4c97e479ff9703315ceaa20bd7c40b76bdbd6d931f0a7d059"
+      "sha256": "7997aa546953491d6d1fb19b5b9bebb7d73eaa2e97a63086cc543bbf15dfde80"
     },
     ".devkit/managed/spec/skills/spec-entrypoints/references/backfill.md": {
       "mode": 420,

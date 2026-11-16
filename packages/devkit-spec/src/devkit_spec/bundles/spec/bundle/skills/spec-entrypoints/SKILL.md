@@ -20,7 +20,8 @@ specs, read [backfill](references/backfill.md) instead.
    - For DESIGN, select useful mechanism file/directory anchors, including helpers/models/schemas when they are
      the subject's reading start; entrypoints do not prove correctness or public adapter standing. Consume core
      eligibility; DOMAIN/OPS and README/artifact paths are ineligible and produce no pairs.
-   - Use a directory (trailing `/`) only when the document owns the whole package, never a broad shared directory.
+   - For CAP/UC, use a directory (trailing `/`) only when the document owns the whole package, never a broad shared directory.
+   - For DESIGN, use a directory when it bounds the described mechanism, excluding unrelated shared directories.
 3. Apply only the chosen pairs:
    `devkit spec entrypoints derive --spec <dir> --apply --target <eligible-document-id> --code <path> [--code ...]`, with
    `--exclude` for hub paths (`AGENTS.md`, `README.md`). Without `--target` and `--code` it writes every candidate.
