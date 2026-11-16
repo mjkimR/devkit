@@ -1,0 +1,33 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:26:19.289566Z'
+status: completed
+summary: 'Closing check of reconcile-check-01: its three findings applied as suggested in fbd92ff1c (one document plus reconcile.md) and self-verified against spec_format.py and id_convention.py; no open findings.'
+findings:
+- issue: CAP-GOV-spec-rules attributed rejecting area on an operations document to RULE-id-convention.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md RULE-spec-format paragraph now names area on an operations document; the RULE-id-convention sentence no longer does
+  failure_condition: none after the fix
+  suggested_action: none
+  resolution: resolved
+  severity: P1
+- issue: The RULE-spec-format fix clause omitted the bundle directory title fallback.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md Fix clause now names the bundle directory name for a design bundle's design.md anchor, matching _default_title in spec_format.py
+  failure_condition: none after the fix
+  suggested_action: none
+  resolution: resolved
+  severity: P1
+- issue: reconcile.md lacked the PADR-to-ADR promotion and moved proposal records.
+  evidence: specs/2026-11/20261116-design-bundle-layout/reconcile.md Moved formal documents section now states the promotion and moves
+  failure_condition: none after the fix
+  suggested_action: none
+  resolution: resolved
+  severity: P3
+assumptions:
+- Self-verification is allowed because each fix applied a concrete suggested action to one document.
+checks:
+  rules: PASS rules check on CAP-GOV-spec-rules and the unit errors=0
+diff_scope:
+  base: 524970793157273fc7a27a3446e35e7d8d55b83c
+  head: fbd92ff1c1b05f4c7a30a4e23b8ca156acdd577a

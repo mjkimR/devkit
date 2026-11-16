@@ -2,7 +2,7 @@
 id: SPEC-design-bundle-layout
 title: Area-scoped directory bundles for formal design documents
 summary: Moves formal design documents from flat prefixed files to area-scoped directory bundles and places domain documents under area directories, before lifecycle and viewer integration consume the path grammar.
-status: in-progress
+status: completed
 created: 2026-11-16
 depends_on:
   - SPEC-formal-document-kinds
