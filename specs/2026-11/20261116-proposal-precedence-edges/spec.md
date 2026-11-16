@@ -2,7 +2,7 @@
 id: SPEC-proposal-precedence-edges
 title: Ordering claims between proposals checked when made
 summary: Has Backlog and the first Planning turn verify a draft's claims about other proposals' handoff order against base status and Development branches, so a stale ordering premise surfaces before it shapes the draft or its first decision.
-status: planned
+status: in-progress
 created: 2026-11-16
 related_capabilities: [CAP-HARN-agent-guidance]
 related_usecases: []

@@ -1355,7 +1355,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
+      "sha256": "eccf74eeac6f16519c7ac426e08c5234d1590f8e04707aeabde107b7f4c385e0"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1395,7 +1395,7 @@
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "1ae0dc85ab2645efe58f29bb6f5d0763740bfe83bc8fc26d06b9cf4826b85a2c"
+      "sha256": "618e42819a73920198c68e19f9d21375f6b314953fdd1d92d9a74408e0947594"
     },
     ".agents/skills/spec/references/playbooks.md": {
       "mode": 420,
@@ -1687,7 +1687,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
+      "sha256": "eccf74eeac6f16519c7ac426e08c5234d1590f8e04707aeabde107b7f4c385e0"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1727,7 +1727,7 @@
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "1ae0dc85ab2645efe58f29bb6f5d0763740bfe83bc8fc26d06b9cf4826b85a2c"
+      "sha256": "618e42819a73920198c68e19f9d21375f6b314953fdd1d92d9a74408e0947594"
     },
     ".claude/skills/spec/references/playbooks.md": {
       "mode": 420,
@@ -2523,7 +2523,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
+      "sha256": "eccf74eeac6f16519c7ac426e08c5234d1590f8e04707aeabde107b7f4c385e0"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
@@ -2563,7 +2563,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "1ae0dc85ab2645efe58f29bb6f5d0763740bfe83bc8fc26d06b9cf4826b85a2c"
+      "sha256": "618e42819a73920198c68e19f9d21375f6b314953fdd1d92d9a74408e0947594"
     },
     ".devkit/managed/spec/skills/spec/references/playbooks.md": {
       "mode": 420,
