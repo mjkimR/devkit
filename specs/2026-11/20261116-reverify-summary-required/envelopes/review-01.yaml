@@ -1,0 +1,25 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T10:35:53.852379Z'
+status: completed
+summary: 'round 1; isolated code-reviewer: AC-01..AC-05 hold, plan choices match, scope extension adjacent and necessary; one P2 (destructive fix for committed records) and one P3 (stale-branch test gap)'
+findings:
+- issue: The ENVELOPE_COMMIT_INVALID fix always says to remove the uncommitted [TARGET], but require_authored runs before preflight, so a record already committed and unchanged in HEAD with a stale identity, undeclared stage or empty summary gets an instruction to delete committed history.
+  evidence: packages/devkit/src/devkit_agt/features/workflow/usecases/commit_envelope.py:70-80; packages/devkit/src/devkit_agt/features/workflow/services/envelope/commit.py remove-and-rewrite fix
+  failure_condition: envelope commit on a tracked, unchanged record whose segment is stale, stage undeclared or summary empty
+  suggested_action: Use the remove-and-rewrite fix only for uncommitted files; give committed records a non-destructive fix, with a regression test
+  resolution: open
+  severity: P2
+- issue: No test covers the stale workflow/segment branch of the new require_authored message and fix.
+  evidence: packages/devkit/src/devkit_agt/features/workflow/services/envelope/commit.py stale branch; test_envelope_commit.py new tests
+  failure_condition: A later edit breaks the stale-identity wording and every test still passes
+  suggested_action: Assert the message names the workflow/segment mismatch and the fix says in the current segment with neither --summary nor --stage
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS 95 targeted tests rerun by reviewer
+diff_scope:
+  base: 22b28c936c4d4b05d8465178ac6175fb6dfa8b2b
+  head: 741cdf404b8e92c0fab02188677d888225c5d14f
