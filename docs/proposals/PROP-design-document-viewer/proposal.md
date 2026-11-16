@@ -2,7 +2,7 @@
 id: PROP-design-document-viewer
 title: First-class formal documentation in the repository viewer
 summary: "Provides complete navigation, identity, references, metadata, artifact access and packaged viewer support for formal design, domain and operations kinds."
-status: draft
+status: accepted
 created_at: 2026-11-16
 target_area: viewer/
 priority: high
@@ -14,11 +14,13 @@ boundaries:
   owns:
   - packages/devkit-viewer/
   - docs/capabilities/viewer/
+  - docs/capabilities/delivery/CAP-DLV-release-handbook.md
   - docs/usecases/
   - docs/ux/
   - docs/architecture/
   - docs/decisions/
   - docs/development/reference/
+  - docs/steering/ux-objects.md
   - docs/proposals/PROP-design-document-viewer/
   - scripts/handbook.py
   - tools/devkit-dev/tests/integration/test_handbook_script.py
@@ -72,7 +74,7 @@ The core proposal replaces the earlier operations prerequisite. `SPEC-design-doc
 - Extend `scripts/handbook.py` prefix/ID recognition and source lookup policy where applicable. State handbook
   inclusion/exclusion deliberately; an unrecognized prefix must not silently omit a supported source document.
   Update the owning reference/contract and focused script tests for the chosen inclusion policy.
-- Draft screens before code and perform UX review when interactions change. Reconcile use cases and UX contracts
+- Draft screens before code and offer optional UX review when interactions change. Reconcile use cases and UX contracts
   and their object register. A shared renderer/navigation can serve multiple kinds; no custom editor per kind or
   proprietary-format editing engine is required.
 - Declare any required cross-feature dependencies in Planning. Coordinate core schema changes with the core
@@ -100,3 +102,30 @@ verification. This remains one L feature proposal. Acceptance and handoff follow
 requires V1–V4, public/static package verification and complete support evidence for every formal kind.
 Core loading, generic rendering or a small/no-code diff alone cannot establish completion. The milestone also
 requires lifecycle integration and preserves its planned status until completion is reviewed.
+
+## 5. Planning decisions
+
+- Complete formal support is required. Select explicit browser-side presentation/recognition integration consuming
+  the core contract; compare the registry-transport alternative in `PROP-design-document-viewer-target`. Do not add a
+  server dependency on each repository's installed document engine.
+- Preserve the existing Read/book task and add Domain, Designs and Operations chapters. Use one shared formal
+  document relation panel with explicit incoming/outgoing references and provenance separation. Screen drafts and
+  contrasting arrangements are in the target blueprint. Optional UX review is offered; it is not a gate.
+- Handbook recognizes formal sources and aliases for citation/source lookup and staleness. Keep its generated
+  use-case/capability/decision sections and required coverage set unchanged. An author can cite a formal source;
+  no automatic handbook page per formal document is introduced. No release handbook refresh is authorized here.
+- Core owns the Kind grammar, migrated canonical documents and the ADR replacing ID-free standing. This phase
+  waits for that delivered contract before implementation verification. The selected core future contract is hash-pinned
+  in the blueprint and materials; delivered runtime parity remains a Development prerequisite.
+- No additional PADR is needed: the viewer retains browser parsing, generic repository reads and decision-only
+  supersession UI from its existing ADRs. Core owns the lasting identity decision and its supersession.
+- One L viewer feature spec remains coherent: frontend behavior, backend proof, handbook lookup and shipped output
+  verify one reading capability. No required surface is deferred to preserve that classification.
+
+### Planning evidence and limits
+
+Two read-only Scouts inspected source/public/static and current-contract/UX impact at
+`f75da999fcdff9e68559a01793efe620b3f2f570`. Their batch before/after tracked-plus-nonignored tree was
+`f6901151eecf483bfe62180c8622739e903e00bf`, with unchanged HEAD. This is an emulated boundary check, not native
+confinement. [Source support](materials/support-matrix.md) and [incoming references](materials/incoming-refs.md)
+separate inspection evidence from future Development checks. No implementation or frontend test pass is claimed.
