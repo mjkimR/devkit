@@ -2,7 +2,7 @@
 id: PROP-domain-model-documents
 title: Domain-model documentation
 summary: "Establishes maintained conceptual domain views with clear authoritative sources, reusing document discovery unless the early pilot demonstrates a gap."
-status: draft
+status: reviewing
 created_at: 2026-11-16
 target_area: documents/
 priority: high
