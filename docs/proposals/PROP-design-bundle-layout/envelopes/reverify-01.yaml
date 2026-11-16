@@ -1,0 +1,64 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T07:38:30.674460Z'
+status: completed
+review: challenger-01.yaml
+summary: ''
+findings:
+- issue: Bundle support subdirectories and nested-bundle depth are undefined.
+  evidence: docs/proposals/PROP-design-bundle-layout/decisions/PADR-area-scoped-design-bundles.md:49-51; packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:24
+  failure_condition: Workers disagree on nested support; nested DESIGN bundles have no depth rule.
+  suggested_action: Support at any depth; identified Markdown at any depth is a stray; add a nested case to B1.
+  resolution: resolved
+  severity: P2
+- issue: The new layout fact duplicates area_scoped and anchor without a precedence rule.
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/kinds.py:74-79,371-372
+  failure_condition: layout=area with area_scoped=False silently disables the area check.
+  suggested_action: Derive area_scoped from layout; keep the layout anchor separate from the summary anchor; add a table consistency test.
+  resolution: resolved
+  severity: P2
+- issue: Decided behaviors (rules fix ID and area, dead entrypoint in a bundle, search pin, orphan bundle, spec derive) lack acceptance criteria.
+  evidence: docs/proposals/PROP-design-bundle-layout/proposal.md:139-143,163-165
+  failure_condition: Regressions pass B1-B5.
+  suggested_action: Extend B1 and B2 with each behavior.
+  resolution: resolved
+  severity: P2
+- issue: 'Decision needed: the PADR names consumer migration but the proposal defines no migration path.'
+  evidence: docs/proposals/PROP-design-bundle-layout/decisions/PADR-area-scoped-design-bundles.md:70-71; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/brownfield-adoption/SKILL.md:22
+  failure_condition: A consumer tracking main gets path errors with no procedure, or the PADR promises an undelivered migration.
+  suggested_action: Either drop consumer migration as unreleased, or make the flat-path remediation name the target path and add a migration note.
+  resolution: open
+  severity: P2
+- issue: The viewer's delivered-core reconcile clause pulls the new grammar into its unit.
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:27,42-43,60-67
+  failure_condition: A viewer rebase onto moved documents forces adoption inside the viewer unit.
+  suggested_action: B5 names the reconcile clause as deferred and the viewer uses synthetic fixtures.
+  resolution: resolved
+  severity: P2
+- issue: README.md handling in bundles and area directories contradicts the exemption contract.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:186; packages/devkit-docs/src/devkit_docs/features/governance/usecases/id_convention.py:400
+  failure_condition: Workers disagree whether a bundle README must name its parent.
+  suggested_action: README.md stays exempt everywhere.
+  resolution: resolved
+  severity: P3
+- issue: The open-unit target rewrite needs specs/, which is unowned.
+  evidence: docs/proposals/PROP-design-bundle-layout/proposal.md:141-143
+  failure_condition: A rewrite falls outside the write scope.
+  suggested_action: State no open unit targets moved paths on the base; report any later one as a problem.
+  resolution: resolved
+  severity: P3
+- issue: Two prose files mentioning support are unowned.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/brownfield-adoption/SKILL.md:28-31; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/completion.md.jinja:8
+  failure_condition: A worker leaves stale text or writes out of scope.
+  suggested_action: Confirm both are grammar-neutral.
+  resolution: resolved
+  severity: P3
+- issue: B4 one-grammar-per-kind has no mechanical check.
+  evidence: docs/proposals/PROP-design-bundle-layout/proposal.md:169-170
+  failure_condition: A leftover flat design sentence passes review.
+  suggested_action: Add a search check over owned contract and asset paths.
+  resolution: resolved
+  severity: P3
+checks: {}
