@@ -2,7 +2,7 @@
 id: SPEC-design-document-viewer
 title: First-class formal documentation in the repository viewer
 summary: "Makes formal design, domain and operations directly readable through canonical and alias links, reference context, source-safe artifacts and shipped viewer output."
-status: in-progress
+status: completed
 created: 2026-11-16
 depends_on: [SPEC-formal-document-kinds]
 related_capabilities: [CAP-VIEW-repository-viewer, CAP-DLV-release-handbook]

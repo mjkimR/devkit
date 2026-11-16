@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-document-viewer
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     resolution: modified
@@ -95,5 +95,6 @@ Handoff references name their canonical spec IDs, and superseded proposal files 
 The documentation ownership capability routes delivery and viewer questions to their current capability owners.
 The formal-role ADR Confirmation now names both completed implementation evidence records instead of stale
 pending phase evidence. Its decision, partial supersession clauses and core schema remain unchanged.
-These two additional targets remain pending until independent integration reflection verification.
+Independent integration reflection verification confirmed both additional targets and all prior targets;
+`envelopes/reconcile-check-03.yaml` records the zero-finding result and matching full-tree snapshot.
 Viewer runtime and generated static bytes are unchanged from the accepted worker.
