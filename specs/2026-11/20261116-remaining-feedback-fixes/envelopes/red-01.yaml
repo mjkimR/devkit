@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T12:17:55.485148Z'
+status: completed
+summary: Six documentation defects reproduced by comparing each named section with its source and the capabilities directory listing
+findings: []
+assumptions:
+- The defects are documentation against intended source behavior, so no test fails before the fix; the added override pin passes on unchanged source and guards the stated behavior
+checks:
+  reproduced: PASS CAP-DOCS-document-search 4.5 and CAP-SRCH-document-search 2 disagree with SearchIndex.resolve_mode and test_auto_still_reports_a_broken_model; CAP-SRCH 6 omits services and models layers; host.md MCP table has five two-cell rows and no MCP_REGISTRATION_PENDING row; CAP-DIST-workspace-ownership 3 omits list diff accept results for a removed-upstream record; CAP-HOST-lifecycle-observation 5 omits the observe-only scope; capabilities README lists 12 of 18 areas
+diff_scope:
+  base: ad0d2f17f7fb00151cddd0f6df038e993371bd55
+  head: 7f98fcfa4a0682f94cfc8fa0de9a550d2f7518f4
