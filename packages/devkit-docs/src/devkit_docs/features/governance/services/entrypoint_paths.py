@@ -31,7 +31,7 @@ def entrypoint_bearing(path: str) -> bool:
     living = living_path(path, namespaces=None)
     directories = tuple(f"docs/{row.directory}/" for row in definitions() if row.entrypoints)
     for row in definitions():
-        if row.kind is Kind.DESIGN and living.startswith(f"docs/{row.directory}/"):
+        if row.kind is Kind.DESIGN and row.entrypoints and living.startswith(f"docs/{row.directory}/"):
             parts = living.split("/")
             stem = Path(living).stem
             return (

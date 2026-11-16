@@ -288,3 +288,21 @@ def test_all_roles_search_with_a_deterministic_local_embedding_model(
     )
     hits = search_documents(DocumentIndex.load(tmp_path), "sample", mode=mode).hits
     assert {hit.document.kind for hit in hits} == {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}
+
+
+@pytest.mark.parametrize(("directory", "prefix", "kind"), ROLES)
+def test_role_aliases_reject_own_repeated_cross_prefix_legacy_and_colliding_identity(
+    tmp_path: Path, directory: str, prefix: str, kind: Kind
+) -> None:
+    del kind
+    path = f"docs/{directory}/{prefix}-sample.md"
+    for aliases in [f"[{prefix}-sample]", f"[{prefix}-old, {prefix}-old]", "[UC-other]", f"[{prefix}-20261116]"]:
+        assert check(DocumentReferenceRule(), tmp_path, {path: doc(f"{prefix}-sample", f"aliases: {aliases}\n")})
+    assert check(
+        DocumentReferenceRule(),
+        tmp_path,
+        {
+            path: doc(f"{prefix}-sample", f"aliases: [{prefix}-other]\n"),
+            f"docs/{directory}/{prefix}-other.md": doc(f"{prefix}-other"),
+        },
+    )
