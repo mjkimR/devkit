@@ -102,7 +102,8 @@ change and names the receiving owner. This foundation selects no transfer of exi
    implementation is selected. `docs/` in boundaries names the nearest existing parent of the new designs home;
    it authorizes only those two new design paths, not unrelated documents.
 
-Source bundle changes contain consumer-generic rules and placeholders only. They cite no devkit repository IDs.
+Source bundle instructions implement the single shared ownership contract in consumer-generic form; they add no
+independent normative matrix. Source changes contain consumer-generic rules and placeholders only. They cite no devkit repository IDs.
 No package feature dependencies change; `.devkit/architecture.toml` needs no declaration. If subsequent evidence
 requires runtime behavior, stop and return the missing outcome to the Host for scope review rather than silently
 extending this plan. `dev_effort: medium` reflects content-only implementation with independent walkthrough and

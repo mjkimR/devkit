@@ -23,8 +23,8 @@ later edits, legacy journal and no-journal drift; preserve the last state's not-
 | --- | --- | --- |
 | A. ID-free `docs/designs/` entry and optional details, selected ordinary owner link | Separate maintained mechanism home; two real design files plus one contract link; existing owner search gets the starting contract; no runtime changes | Entries/details invisible to document search/resolve/refs; broken ordinary links need review. Selected with F3/F4 validation, not a promise of universal discovery. |
 | B. Existing ARCH entry in `docs/architecture/`, linked ID-free details | Indexed entry uses current kinds and existing lookup; useful for system responsibility/interaction deep dives; no model change | Makes implementation-only mechanisms architectural chapters or leaves their actual detail elsewhere. Retain for architecturally significant content, not the pilot's local transaction mechanism. |
-| C. New design Kind and ID under `docs/designs/` | Independent indexed design identity, stable lookup and graph nodes for entries | Coordinated enum/table, grammar, governance, discovery and consumers; no demonstrated required outcome that A cannot meet. Reconsider only after a required route cannot be satisfied with existing owner links. |
-| D. Existing CAP/reference entry, linked ID-free mechanism detail | Indexed contract/reference offers direct question routing at low cost | Useful routing alternative, but making a capability the current-design explanation owner mixes observable contract and mechanism responsibility. A retains this entry route while separating content ownership. |
+| C. New design Kind and ID under `docs/designs/` | Independent indexed design identity, stable lookup and graph nodes for entries | At least an enum member and definition row; many consumers derive behavior dynamically. Kind-specific path/lifecycle support and actual affected consumers require verification, not presumed edits everywhere. No demonstrated required outcome that A cannot meet. Reconsider only after a required route cannot be satisfied with existing owner links. |
+| D. Existing CAP/reference entry, linked ID-free mechanism detail | An indexed contract or existing reference offers direct question routing at low cost | Useful routing alternative, but making a capability the current-design explanation owner mixes observable contract and mechanism responsibility. A retains this entry route while separating content ownership. |
 
 A is recommended for clean responsibility boundaries and the smallest evidenced change. B and D remain valid for
 their own responsibilities; neither is forbidden by a blanket content-depth rule. No existing Kind can be declared
@@ -44,6 +44,7 @@ Read-only nested Scout ran before Challenger. `scout-01.yaml` records its return
 | `CAP-DOCS-namespaces` | 32 | All rows |
 | `ADR-document-system` | 67 | First 20 rows; decision inspected |
 | `ADR-kind-definition-table-keyed-on-the-declared-kind-enum` | 67 | Alias resolves to `ADR-document-system`; same bounded result |
+| `CAP-DIST-sync-and-transactions` | 87 | Supplemental Scout inventoried all rows; current capability, ARCH, use case, pilot, proposal and ordering-feedback consumers inspected; historical bodies not exhaustive |
 
 The namespace steering decisions `ADR-namespace-steering-directories` and `ADR-namespace-steering-registers`
 were inspected as adjacent context, not changed. Their constraints remain intact. No accepted decision is
@@ -64,3 +65,29 @@ Later support runs receive stable committed artifacts and exact before/after sna
 Planning executes no package fixture, consumer sync, recovery, runtime regression or viewer check. F3–F5 are
 required Development evidence. The documentation-only implementation has medium Development effort, with high
 Planning review due to common ownership and distributed authoring consequences.
+
+## Round 1 fold and alternative-cost precision
+
+`challenger-01.yaml` found missing Scout incoming-reference coverage for the transaction capability selected for
+the ordinary entry link. `scout-02.yaml` supplements that scope at `0adfa0169e05c4cd211b0cf0896ce9f1a5c5f3eb`.
+The 87-row inventory and relevant current consumers show no changed guarantee, responsibility or recovery action
+needed for the link. Existing `FB-runtime-journal-ordering` keeps its original owner. The Scout inspected source
+and records, not a future navigation result. The original finding is resolved by this concrete coverage addition.
+
+A new Kind is feasible. At minimum it adds a `Kind` enum member and a `KindDefinition` row:
+`packages/devkit-docs/src/devkit_docs/features/documents/models/kinds.py:25-42,65-89`.
+`CAP-DOCS-document-model` §3.2 says ID grammar derives from rows; many list/search/reference consumers already
+read those rows. Kind-specific path grammar and lifecycle are code, but this Planning does not assert that every
+consumer needs an edit. Namespace-only configuration cannot register kinds (`CAP-DOCS-namespaces` §3.1).
+The new-kind option loses because no required indexed outcome is evidenced, not because generic lookup must be
+rewritten. Exact grammar/rule/consumer edits would need inspection if that option is later authorized.
+
+The source instructions implement the single shared ownership contract in consumer-generic form; they do not
+establish a second normative matrix. The optional template is delivered by the existing `templates` document
+asset (`bundle.toml` source `templates`), requiring no new manifest entry.
+
+Challenger round 1 snapshots both equal `0c8e1a7d95c165b578f411a08c74e7f194632caa`. During the supplemental
+Scout, the worker added only `envelopes/challenger-01.yaml`; compare the snapshot diff rather than attributing that
+known worker-authored record to the read-only role. No support role reported writes or outside-worktree reads.
+The batch includes cost clarification outside the finding's section, so a fresh Challenger round 2 checks the
+whole fold rather than invoking the high-effort minor-fix shortcut.

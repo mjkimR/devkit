@@ -1,0 +1,17 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T02:36:09.116705Z'
+status: completed
+review: challenger-01.yaml
+summary: Round 1 finding resolved by supplemental Scout inventory of 87 transaction-capability incoming refs; relevant consumers show no changed authority. Fresh round 2 follows for broader cost wording clarification.
+findings:
+- issue: Incoming-reference inventory omits the selected CAP-DIST-sync-and-transactions edit.
+  evidence: docs/proposals/PROP-design-document-foundation/materials/direction.md:35-46
+  failure_condition: High-effort support coverage is declared complete without Scout inspection of incoming refs to the selected transaction capability.
+  suggested_action: Supplement Scout incoming-reference inspection and add bounded result and affected-consumer conclusion to Scout coverage without changing direction absent a substantive conflict.
+  resolution: resolved
+  severity: P2
+checks:
+  coverage: PASS inspected supplemental Scout return and actual materials fold

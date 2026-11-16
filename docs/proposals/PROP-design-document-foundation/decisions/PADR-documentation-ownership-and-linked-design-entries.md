@@ -28,7 +28,8 @@ clean boundaries with architecture and behavioral contracts. A separate role doe
   no design index identity. Recommended.
 - Existing ARCH entry plus optional details: indexed and appropriate for system responsibilities, but routes local
   implementation mechanisms through the architecture taxonomy.
-- New design Kind: independent indexed discovery at the cost of model/rule/consumer changes without demonstrated need.
+- New design Kind: independent indexed discovery with at least an enum member and definition row. Many consumers
+  are data-driven; exact kind-specific grammar/rule changes need inspection. No required indexed outcome is demonstrated.
 - Existing capability/reference as design entry: cheap routing, but mixes contract/reference and mechanism ownership
   if the explanation itself is made authoritative there.
 
