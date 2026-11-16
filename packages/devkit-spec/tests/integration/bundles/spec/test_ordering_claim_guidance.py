@@ -33,6 +33,8 @@ def test_first_planning_turn_rechecks_ordering_claims(environment: str) -> None:
     planning = raw("skills/spec/references/planning.md", environment)
     assert_rule(planning, "on the first turn", "after the host refreshes the branch", "head-pinned evidence")
     assert_rule(planning, "names as following it", BRANCH_CHECK, "`accepted`", "until its development integrates")
+    assert_rule(planning, "names as following it", "cost depends on", BRANCH_CHECK, "update the stale premise")
+    assert_rule(planning, BRANCH_CHECK, "still `accepted` with no branch", "ask the user to sequence", "question round")
     assert_rule(planning, "head-pinned evidence", "before the first planning decision")
 
 

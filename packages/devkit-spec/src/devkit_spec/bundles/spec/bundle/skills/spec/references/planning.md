@@ -5,7 +5,7 @@ Read this to run one Planning turn of a proposal on its `plan-<slug>` branch, fr
 ## Steps
 
 - On the first turn and after the Host refreshes the branch from the base, recheck the bundle's head-pinned evidence before the first Planning decision or folding answers: counts, inventories, cited IDs and claims about what exists. Update affected facts for the assigned worktree HEAD; make no claim about a base commit the worktree does not contain.
-  - For each proposal the draft names as following it, also run `git branch -a --list 'dev-<slug>' '*/dev-<slug>'`: a base or HEAD read shows a handed-off proposal as `accepted` until its Development integrates. If such a branch exists, update the stale premise.
+  - For each proposal the draft names as following it, or whose state its cost depends on, also run `git branch -a --list 'dev-<slug>' '*/dev-<slug>'`: a base or HEAD read shows a handed-off proposal as `accepted` until its Development integrates. If such a branch exists, update the stale premise. If it is still `accepted` with no branch and the draft states no sequencing decision, ask the user to sequence the two in the question round.
 
 1. On the first turn, set `status: reviewing` in `proposal.md` and commit.
    - If the proposal must be split (or has `needs_decompose: true`, or a `size` other than absent or exactly `S`, `M` or `L`), return it: set `status: draft` and `needs_decompose: true`, keep what you learned in `materials/`, close open questions with an `answer` envelope (`choice: null`, "Planning ended: returned to Backlog for decomposition"), commit and end. The Host continues with the [Backlog return procedure](backlog.md#return-from-planning-for-decomposition).

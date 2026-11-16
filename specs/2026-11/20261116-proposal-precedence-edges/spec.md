@@ -70,6 +70,9 @@ decision.
 - **Then** one item states that the head-pinned recheck runs on the first turn as well as after a Host refresh, and
   that for each proposal the draft names as following it the runner also runs the `dev-<slug>` branch check, because
   a base or HEAD read shows a handed-off proposal as `accepted` until its Development integrates
+- **And** the branch-check item covers each proposal the draft names as following it or whose state its cost depends
+  on, updates the premise when a branch exists, and asks the user to sequence a still-accepted proposal with no
+  branch in the question round when the draft states no sequencing decision
 
 ### [AC-03] The documented branch check tells a handed-off proposal apart
 - **Given** a Git fixture whose base lists a proposal as `status: accepted` and which holds that proposal's
