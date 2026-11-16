@@ -42,6 +42,11 @@ The tracked installation receipt is the only sync output; its digest reflects de
 Managed instruction and local render outputs are ignored and were produced by sync, not manually edited.
 No production runtime, feature dependency, test source, architecture or actor use-case contract changes.
 
+`devkit spec entrypoints derive --spec <unit>` proposed the source instruction for the three modified capabilities.
+All three candidates were rejected: the instruction is an authoring asset, not an executable doorway for lifecycle,
+transactions or document ownership; the two operation owners changed only navigation wording. Existing runtime
+entrypoints remain correct. No entrypoint field was written.
+
 ## Review and verification
 
 The independent medium code review confirmed D1–D6 and found one stale ADR confirmation (P3).
