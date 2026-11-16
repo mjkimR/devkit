@@ -1,0 +1,52 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T12:33:11.863114Z'
+status: completed
+review: challenger-01.yaml
+summary: 'All seven findings folded: ADR-proposal-acceptance dropped from supersession, retained decisions restated with traces, ADR path repairs and a path check added, A1 scoped to viewer paths, partial dashboard failure and ordering specified, initialView removal and book view id stated, architecture.toml edge removal owned.'
+findings:
+- issue: The PADR supersedes ADR-proposal-acceptance's viewer exception, which ADR-retire-native-approval-and-moved-ownership-clauses already superseded in part.
+  evidence: docs/decisions/2026-10/20261022-proposal-acceptance.md:23,252; docs/decisions/2026-11/20261102-retire-native-approval-and-moved-ownership-clauses.md:75-76,93
+  failure_condition: Development adds a second successor pointer to a retired clause; the supersession graph shows two successors for one dead decision.
+  suggested_action: Drop ADR-proposal-acceptance from the PADR supersedes and statements, proposal decision 8, task 8 and the evidence; the live review-route clause is in ADR-repository-viewer.
+  resolution: resolved
+  severity: P2
+- issue: 'Superseding ADR-repository-viewer whole drops retained decisions the PADR never restates: approvals out, browser parsing, stdlib http.server and no new dependency, registration by command options and unique IDs, checkout scope, roadmap.'
+  evidence: docs/decisions/2026-11/20261102-repository-viewer.md:141-167,197-224; PADR section 4
+  failure_condition: After the ADR becomes superseded, no current decision records these choices or their rejected options, and CAP-VIEW rules lose their decision trace.
+  suggested_action: Restate each retained decision as a PADR clause with its CAP-VIEW trace, or supersede in part.
+  resolution: resolved
+  severity: P2
+- issue: Decision 7 repairs only ADR-viewer-indexed-decision-supersession; ADR-release-handbook and ADR-viewer-namespace-roadmap-discovery stay accepted and cite frontend/src/lib test paths; no acceptance item detects leftover paths.
+  evidence: docs/decisions/2026-11/20261102-release-handbook.md:269; docs/decisions/2026-11/20261104-viewer-namespace-roadmap-discovery.md:72
+  failure_condition: After the collapse, accepted ADR Confirmation sections name deleted tests.
+  suggested_action: Add both ADRs to decision 7; add an rg check for frontend/src/(lib|app)/ in docs outside materials, proposals and the superseded ADR.
+  resolution: resolved
+  severity: P2
+- issue: A1's rg over all of docs/capabilities, docs/architecture and docs/development hits legitimate non-viewer autohub mentions.
+  evidence: docs/architecture/ARCH-04-1-ecosystem-boundaries.md; ARCH-01-introduction-and-goals.md:55; CAP-DLV-proposal-lifecycle.md:257; CAP-HARN-agent-guidance.md:416
+  failure_condition: A correct implementation still prints hits, so A1 becomes a judgment or prompts edits of unowned docs.
+  suggested_action: Scope the rg to viewer-owned paths.
+  resolution: resolved
+  severity: P2
+- issue: Removing paging and per-page Retry leaves partial body-read failure in a dashboard section unspecified, and the ordering rule loses its checks.
+  evidence: packages/devkit-viewer/frontend/src/lib/features/dashboard/loading.ts:196-207; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:133-134
+  failure_condition: A file moved or mid-save between dashboard-list and the blob read either hides the whole section or silently drops a card while the count includes it.
+  suggested_action: 'Add a 4.1 clause and test: show successful cards plus per-path errors, count includes failed entries, Refresh retries; keep the ordering rule with a test.'
+  resolution: resolved
+  severity: P2
+- issue: Decision 5 does not say whether initialView survives; the ADR-release-handbook statement can read as dropping the book view id.
+  evidence: proposal.md decision 5; frontend/src/app/App.svelte:57-63; PADR statement on ADR-release-handbook
+  failure_condition: The implementer keeps host-only generality or renames internal view ids, and A4, CAP-VIEW 4.3 and the PADR disagree.
+  suggested_action: State initialView's fate and that book stays the internal view id; word the statement as the host guarantee.
+  resolution: resolved
+  severity: P3
+- issue: 'Optional: .devkit/architecture.toml keeps the browse -> devkit_dist.features.shared feature edge after the shared code goes.'
+  evidence: .devkit/architecture.toml:172
+  failure_condition: The declaration keeps permitting an edge the PADR forbids; test_imports.py still enforces the ban.
+  suggested_action: Own .devkit/architecture.toml and drop the edge.
+  resolution: resolved
+  severity: P3
+checks: {}
