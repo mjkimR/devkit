@@ -1,0 +1,24 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T01:59:51.896265Z'
+status: completed
+summary: 'Independent Code Reviewer PASS: AC-01 through AC-04, four drafts and ledger audited; direct contract discovery gap retained separately from successful supplied-entry trials.'
+findings: []
+assumptions:
+- 'Codex emulated: explicit cwd, read-only commands, opened-path reporting and unchanged before/after tree 5fabe976c544a6fbcfe1efe1203572714c1f3751 substitute for native enforcement.'
+unverified_areas:
+- Reviewer initially read base-checkout response-style skill; disclosed to Host; subsequent content evidence came from assigned worktree.
+- Supplied entry repeats were fetched in one batch, not separately blinded; contract-only phase preceded draft names. Overbroad extracts and one truncated domain extraction were narrowed on follow-up.
+- No recovery, package-context, viewer, timing or exhaustive-corpus validation.
+checks:
+  diff: PASS reviewer verified 11 files confined to assigned directories and whitespace clean
+  ownership: PASS reviewer audited ledger, source symbols and byte-unchanged authorities
+  reader_trials: PASS repeated bounded contract-only, supplied design, domain and four-state operations trials; discovery gap recorded
+  search: PASS reviewer lexical search and resolve/refs reach indexed owners; no draft discovery claim
+  tests: SKIP reviewer did not rerun; implementer reports PASS 18 tests at 3a1a21701faf9c827088204b586aaf7a25e77359
+  rules: SKIP reviewer did not rerun; implementer reports PASS 22 CI rules at 3a1a21701faf9c827088204b586aaf7a25e77359
+diff_scope:
+  base: 3d21622a44ccb9fdf1388a33b360bf39c71a79a1
+  head: 3a1a21701faf9c827088204b586aaf7a25e77359
