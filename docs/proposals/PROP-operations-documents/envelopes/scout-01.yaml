@@ -1,0 +1,26 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T03:57:15.918689Z'
+status: completed
+summary: Scout; ID-free operations home with selected owner links; supplied-entry pilot useful, independent discovery unverified
+findings:
+- issue: Smallest supported home is a separate ID-free operations composition
+  evidence: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md:50; docs/proposals/PROP-operations-documents/materials/direction.md
+  failure_condition: Symptom classification needs a maintained next-owner route without duplicate recovery authority
+  suggested_action: Use docs/operations/distribution-sync.md with selected existing-owner links and Development independent trials
+  resolution: open
+- issue: Indexed discovery is unsupported for ID-free entries
+  evidence: docs/capabilities/documents/CAP-DOCS-document-search.md:39
+  failure_condition: A reader expects direct operations search/resolve/refs
+  suggested_action: Claim owner-linked navigation only; defer Kind/runtime unless required route failure is demonstrated
+  resolution: open
+assumptions:
+- Emulated read-only isolation; frozen before/after tree d8581e4d92c523abd2449ad88f8b366462587a4f and HEAD unchanged; no outside-worktree reads
+unverified_areas:
+- Unsupplied global/package operations discovery; exhaustive historical bodies; real recovery; viewer
+checks: {}
+diff_scope:
+  base: e2531f8cde8e365a09bca60f74a287827d15a82f
+  head: 989ecd5f4d43436fbf3146ed7c3640940d227d30
