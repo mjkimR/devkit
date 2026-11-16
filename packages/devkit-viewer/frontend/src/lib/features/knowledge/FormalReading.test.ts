@@ -12,6 +12,12 @@ const roles = [
 const page = (id: string, body = '', extra = '') =>
 	`---\nid: ${id}\ntitle: ${id} title\nsummary: "${id} example"\nstatus: active\n${extra}---\n# [${id}] ${id} title\n\n${body}`;
 function repository(files: Record<string, string>): RepositoryDataSource {
+	if (Object.keys(files).some((path) => path.startsWith('docs/packages/registered/'))) {
+		files['.devkit/config.toml'] =
+			'[[tool.docs.namespaces]]\nname="registered"\npath="packages/registered"\n';
+		files['packages/registered/README.md'] = '# Registered source package';
+	}
+
 	const listing = (path: string) => ({
 		items: Object.keys(files)
 			.filter((file) => file.startsWith(path + '/'))
@@ -23,7 +29,11 @@ function repository(files: Record<string, string>): RepositoryDataSource {
 		treeRecursive: vi.fn(async (path) => listing(path)),
 		blob: vi.fn(async (path) => {
 			if (!(path in files)) throw new Error('HTTP 404: Not Found');
-			return { path, content: files[path], encoding: 'utf-8' };
+			return {
+				path,
+				content: files[path],
+				encoding: /\.(png|bin)$/.test(path) ? 'base64' : 'utf-8'
+			};
 		})
 	};
 }
@@ -102,13 +112,13 @@ describe.each(roles)('%s real reading surfaces', (prefix, dir) => {
 			(screen.getByRole('checkbox', { name: 'Include retired' }) as HTMLInputElement).checked
 		).toBe(false);
 	});
-	it('reads a moved parent by alias, independent detail, supporting CSV, missing old artifact and raw/Back', async () => {
+	it('reads a moved parent by alias, independent detail, supporting formats, missing old artifact and raw/Back', async () => {
 		const path = `docs/packages/registered/${dir}/${prefix}-new.md`,
 			artifact = `docs/packages/registered/${dir}/${prefix}-new/artifacts/data sheet.csv`;
 		const files = {
 			[path]: page(
 				`${prefix}-new`,
-				`[Data sheet](${prefix}-new/artifacts/data%20sheet.csv#row%202)\n\n[Gone](${prefix}-old/artifacts/data%20sheet.csv)\n\n[${prefix}-detail]`,
+				`![Chart](${prefix}-new/artifacts/chart.png)\n\n[Example](${prefix}-new/artifacts/example.md)\n\n[Binary](${prefix}-new/artifacts/data.bin)\n\n[Data sheet](${prefix}-new/artifacts/data%20sheet.csv#row%202)\n\n[Gone](${prefix}-old/artifacts/data%20sheet.csv)\n\n[${prefix}-detail]`,
 				`aliases: [${prefix}-old]\n`
 			),
 			[`docs/packages/registered/${dir}/${prefix}-detail.md`]: page(
@@ -116,19 +126,38 @@ describe.each(roles)('%s real reading surfaces', (prefix, dir) => {
 				'Independent detail.'
 			),
 			[artifact]: 'name,value\nalpha,42',
-			[`docs/packages/registered/${dir}/${prefix}-new/artifacts/example.md`]:
-				'# Parent-owned example\n'
+			[`docs/packages/registered/${dir}/${prefix}-new/artifacts/example.md`]: `# Parent-owned example\n\nSupport owned by ${prefix}-new.\n\n\`\`\`mermaid\ngraph TD\nA-->B\n\`\`\``,
+			[`docs/packages/registered/${dir}/${prefix}-new/artifacts/chart.png`]:
+				'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
+			[`docs/packages/registered/${dir}/${prefix}-new/artifacts/data.bin`]: btoa(
+				String.fromCharCode(255, 254)
+			)
 		};
 		const source = repository(files);
 		render(KnowledgeViews, props(source, `${prefix}-old`));
 		await waitFor(() => expect(document.querySelectorAll('.chapter')).toHaveLength(2));
 		const chapter = document.getElementById(documentAnchor(path))!;
+		await waitFor(() =>
+			expect(within(chapter).getByRole('img', { name: 'Chart' }).getAttribute('src')).toMatch(
+				/^blob:/
+			)
+		);
 		await fireEvent.click(within(chapter).getByRole('button', { name: 'View raw' }));
 		expect(chapter.textContent).toContain('aliases:');
 		await fireEvent.click(within(chapter).getByRole('button', { name: 'Rendered' }));
 		await fireEvent.click(within(chapter).getByRole('link', { name: 'Data sheet' }));
 		await screen.findByText(/name,value\s+alpha,42/);
 		expect(source.blob).toHaveBeenCalledWith(artifact, 'main', expect.anything());
+		await fireEvent.click(screen.getByRole('button', { name: `Back to ${prefix}-new` }));
+		await fireEvent.click(within(chapter).getByRole('link', { name: 'Example' }));
+		await screen.findByRole('heading', { name: 'Parent-owned example' });
+		expect(document.querySelector('.supporting-artifact .language-mermaid')?.textContent).toContain(
+			'A-->B'
+		);
+		await fireEvent.click(screen.getByRole('button', { name: `Back to ${prefix}-new` }));
+		await fireEvent.click(within(chapter).getByRole('link', { name: 'Binary' }));
+		await screen.findByText(/Unsupported preview format/);
+		expect(screen.getByRole('link', { name: 'Download file' })).toBeTruthy();
 		await fireEvent.click(screen.getByRole('button', { name: `Back to ${prefix}-new` }));
 		await fireEvent.click(within(chapter).getByRole('link', { name: 'Gone' }));
 		await screen.findByText(/File unavailable:.*old\/artifacts/);

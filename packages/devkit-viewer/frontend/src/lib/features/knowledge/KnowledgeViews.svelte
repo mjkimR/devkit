@@ -80,12 +80,12 @@
 			scroll: number;
 		}[]
 	>([]);
+	let artifactFragment = $state('');
 	let artifact = $state.raw<{
 		path: string;
 		parent: string;
 		source: RepositoryDataSource;
 		label: string;
-		fragment: string;
 		scroll: number;
 	} | null>(null);
 	$effect(() => {
@@ -158,6 +158,7 @@
 				.catch((error: unknown) => {
 					if (!controller.signal.aborted) {
 						errors = [String(error)];
+						loadedContext = { source: repository, branch: ref };
 						loading = false;
 						relationLoading = false;
 					}
@@ -349,7 +350,7 @@
 			anchor = requestedAnchor,
 			currentView = view,
 			available = merged;
-		if (loading || !available.length || handbookMode) return;
+		if (loading || relationLoading || !loadedContext || handbookMode) return;
 		untrack(() => {
 			const key = `${currentView}\n${path}\n${anchor}`;
 			if (resolvedRequest === key) return;
@@ -357,7 +358,8 @@
 			const doc = available.find((d) => d.path === path) ?? result.document;
 			if (!doc) {
 				if (path) {
-					requestError = `${path} — unavailable (${ID_PATTERN.test(path) ? result.unavailable : 'missing'})`;
+					const reason = ID_PATTERN.test(path) ? result.unavailable : 'missing';
+					requestError = `${path} — unavailable (${reason === 'missing' && errors.length ? 'index incomplete' : reason})`;
 					if (currentView === 'book') resolvedRequest = key;
 				}
 				return;
@@ -431,11 +433,18 @@
 	const findDocument = (path: string) =>
 		bundle.find((d) => d.path === path) ?? merged.find((d) => d.path === path);
 
-	async function jump(path: string, anchor = documentAnchor(path), remember = true) {
-		if (remember && activePath && (activePath !== path || currentAnchor !== anchor))
+	async function jump(
+		path: string,
+		anchor = documentAnchor(path),
+		remember = true,
+		originPath = activePath
+	) {
+		if (remember && originPath && originPath !== path)
 			history.push({
-				path: activePath,
-				anchor: currentAnchor,
+				path: originPath,
+				anchor: currentAnchor.startsWith(documentAnchor(originPath))
+					? currentAnchor
+					: documentAnchor(originPath),
 				namespace,
 				query,
 				includeRetired,
@@ -467,7 +476,7 @@
 		onLocation(path, anchor, view, findDocument(path)?.meta ?? {});
 	}
 
-	async function openRelation(path: string) {
+	async function openRelation(path: string, originPath = activePath) {
 		if (view !== 'book') {
 			onOpen(path);
 			return;
@@ -479,7 +488,7 @@
 				: [...documents, fresh];
 			await tick();
 		}
-		await jump(path);
+		await jump(path, documentAnchor(path), true, originPath);
 	}
 
 	function linkNavigation(node: HTMLElement) {
@@ -509,12 +518,12 @@
 			requestError = `${path} — Planning source unavailable`;
 			return;
 		}
+		artifactFragment = fragment;
 		artifact = {
 			path,
 			parent: String(merged.find((doc) => doc.path === origin)?.meta.id ?? origin),
 			source: entry ? planningDataSource(source, entry.source.id) : source,
 			label: entry?.source.label ?? branch,
-			fragment,
 			scroll: root.querySelector('.reading-content')?.scrollTop ?? 0
 		};
 	}
@@ -531,7 +540,13 @@
 				link.dataset.originPath ?? activePath,
 				link.dataset.fragment
 			);
-		else void jump(link.dataset.docPath!, link.getAttribute('href')!.slice(1));
+		else
+			void jump(
+				link.dataset.docPath!,
+				link.getAttribute('href')!.slice(1),
+				true,
+				link.dataset.originPath ?? activePath
+			);
 	}
 
 	function select(doc: RepositoryDocument) {
@@ -592,6 +607,7 @@
 					{rendered}
 					onJump={(path, anchor) => jump(path, anchor)}
 					onSelect={select}
+					onFiltersChanged={() => (pinnedPath = '')}
 					onHandbook={() => {
 						bookRequested = false;
 					}}
@@ -603,7 +619,7 @@
 							path={artifact.path}
 							parent={artifact.parent}
 							sourceLabel={artifact.label}
-							fragment={artifact.fragment}
+							fragment={artifactFragment}
 							documents={merged}
 							{diagrams}
 							onBack={async () => {
@@ -617,7 +633,10 @@
 								if (merged.some((doc) => doc.path === path && !isArtifactPath(path))) {
 									artifact = null;
 									void jump(path, documentAnchor(path) + (fragment ? '--' + fragment : ''));
-								} else if (artifact) artifact = { ...artifact, path, fragment: fragment ?? '' };
+								} else if (artifact) {
+									artifactFragment = fragment ?? '';
+									if (path !== artifact.path) artifact = { ...artifact, path };
+								}
 							}}
 						/>{/if}
 					<div class:artifact-hidden={Boolean(artifact)}>
@@ -663,7 +682,7 @@
 								{relationLoading}
 								relationErrors={errors}
 								onReloadRelations={reloadRelations}
-								onRelationOpen={openRelation}
+								onRelationOpen={(path) => openRelation(path, doc.path)}
 							/>
 						{/each}
 						{#if !visibleDocs.length}

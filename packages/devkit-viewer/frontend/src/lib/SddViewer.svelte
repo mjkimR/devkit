@@ -1,7 +1,13 @@
 <script lang="ts">
 	import SupportingArtifact from './features/document/SupportingArtifact.svelte';
 	import { ID_PATTERN, hasFormalContext, isArtifactPath } from './api/identity';
-	import { indexDocuments, parseBlob, renderDocument, type DocumentIndex } from './api/documents';
+	import {
+		indexDocuments,
+		parseBlob,
+		renderDocument,
+		documentAnchor,
+		type DocumentIndex
+	} from './api/documents';
 	import { clearRepositoryCache } from './api/cache';
 	import { isDecision } from './features/document/supersession';
 	import { tick, untrack, type Snippet } from 'svelte';
@@ -96,6 +102,13 @@
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let rawMode = $state(false);
+	let fileAnchor = $state('');
+	$effect(() => {
+		initialPath;
+		source;
+		branch;
+		fileAnchor = initialAnchor;
+	});
 	let hostEl: HTMLElement | null = null;
 	let generation = 0;
 	let repoInfo = $state<RepositoryInfo | null>(null);
@@ -343,10 +356,12 @@
 	);
 
 	function navigateTo(path: string, isTree: boolean) {
+		fileAnchor = '';
 		currentPath = isTree ? (path.endsWith('/') ? path : path + '/') : path;
 	}
 
 	function navigateParent() {
+		fileAnchor = '';
 		const parts = currentPath.replace(/\/+$/, '').split('/');
 		if (parts.length > 1) {
 			parts.pop();
@@ -358,9 +373,47 @@
 
 	const currentHtml = $derived(
 		relationSubject
-			? renderDocument(relationSubject, relationIndex.documents).html
+			? renderDocument(relationSubject, [
+					relationSubject,
+					...relationIndex.documents.filter((doc) => doc.path !== relationSubject.path)
+				]).html
 			: (currentBlob?.html ?? '')
 	);
+	async function scrollFileFragment(fragment: string) {
+		if (!fragment) return;
+		const path = currentPath,
+			ref = branch,
+			repository = source;
+		await tick();
+		if (
+			view !== 'files' ||
+			rawMode ||
+			fileSupport ||
+			path !== currentPath ||
+			ref !== branch ||
+			repository !== source ||
+			fragment !== fileAnchor
+		)
+			return;
+		const target = [
+			...(hostEl?.querySelectorAll<HTMLElement>('.content-viewport [id]') ?? [])
+		].find((node) => node.id === fragment || node.id === documentAnchor(path) + '--' + fragment);
+		target?.scrollIntoView({ block: 'start', behavior: 'instant' });
+	}
+	function navigateDocument(path: string, fragment = '') {
+		fileAnchor = fragment;
+		currentPath = path;
+		void scrollFileFragment(fragment);
+	}
+	$effect(() => {
+		currentHtml;
+		currentBlob;
+		fileAnchor;
+		view;
+		rawMode;
+		if (currentBlob && fileAnchor && view === 'files' && !rawMode)
+			void scrollFileFragment(fileAnchor);
+	});
 	const breadcrumbs = $derived(currentPath ? currentPath.split('/').filter(Boolean) : []);
 </script>
 
@@ -479,9 +532,11 @@
 								relationIndex.documents.some((doc) => doc.path === path && !isArtifactPath(path))
 							) {
 								fileSupport = null;
-								navigateTo(path, false);
-							} else if (fileSupport)
-								fileSupport = { ...fileSupport, path, fragment: fragment ?? '' };
+								navigateDocument(path, fragment ?? '');
+							} else if (fileSupport) {
+								fileSupport.path = path;
+								fileSupport.fragment = fragment ?? '';
+							}
 						}}
 					/>
 				{:else}
@@ -506,7 +561,7 @@
 						relationDocuments={relationIndex.documents}
 						{relationLoading}
 						relationErrors={relationIndex.errors}
-						onRelationOpen={(path) => navigateTo(path, false)}
+						onRelationOpen={navigateDocument}
 						onReloadRelations={reloadRelations}
 					/>
 				{/if}

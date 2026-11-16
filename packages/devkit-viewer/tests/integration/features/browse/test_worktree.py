@@ -190,6 +190,12 @@ def test_formal_documents_and_parent_artifacts_use_existing_byte_and_guard_contr
     from devkit_viewer.features.browse.models.repository import Repository
     from devkit_viewer.features.browse.usecases.read import ReadRepositoryUseCase
 
+    if docs_root != "docs":
+        (repo / "packages/registered").mkdir(parents=True, exist_ok=True)
+        registry = repo / ".devkit/config.toml"
+        registry.write_text(
+            registry.read_text() + '\n[[tool.docs.namespaces]]\nname = "registered"\npath = "packages/registered"\n'
+        )
     parent = f"{docs_root}/{directory}/{prefix}-example.md"
     artifact = f"{docs_root}/{directory}/{prefix}-example/artifacts/data.csv"
     image = f"{docs_root}/{directory}/{prefix}-example/artifacts/chart.png"

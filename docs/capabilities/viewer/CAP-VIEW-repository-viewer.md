@@ -263,7 +263,7 @@ The local source supports recursive metadata requests to avoid one HTTP call per
 4. **Retirement**: Normal book navigation MUST hide retired formal nodes until Include retired is selected.
    Check: `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
 5. **Direct targets**: WHEN an explicit path, canonical ID, alias or reference selects a filtered or retired node,
-   the viewer MUST materialize that target with status without enabling unrelated history. Check:
+   the viewer MUST materialize that target with status without enabling unrelated history; a later explicit filter change expires that selection override. Check:
    `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
 6. **Current context**: Rendered formal nodes and identified documents declaring related_designs, related_domains or related_operations in Read and Files MUST share outgoing/incoming typed and visible
    prose references over the loaded index, including references from any indexed kind. Rows retain direction,

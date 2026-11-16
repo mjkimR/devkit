@@ -66,12 +66,6 @@
 						urls.push(preview);
 					}
 					loading = false;
-					await tick();
-					if (!controller.signal.aborted && fragment)
-						root?.querySelectorAll('[id]').forEach((node) => {
-							if (node.id.endsWith('--' + fragment) || node.id === fragment)
-								node.scrollIntoView({ block: 'start' });
-						});
 				})
 				.catch((reason) => {
 					if (!controller.signal.aborted) {
@@ -100,6 +94,24 @@
 		}
 	});
 	const html = $derived(rendered.html);
+	$effect(() => {
+		const requested = fragment,
+			content = file;
+		html;
+		if (!requested || !content || raw) return;
+		let cancelled = false;
+		void tick().then(() => {
+			if (cancelled || file !== content || fragment !== requested) return;
+			root?.querySelectorAll('[id]').forEach((node) => {
+				if (node.id.endsWith('--' + requested) || node.id === requested)
+					node.scrollIntoView({ block: 'start' });
+			});
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
+
 	function assets(node: HTMLElement) {
 		const a = repositoryImages(node, { source, branch }),
 			d = diagrams(node);

@@ -76,3 +76,21 @@ The Host accepted exact generator bytes: source-only diff hygiene passes, and ge
 byte parity pass. Static output was never hand-edited. No selected bundle assets changed; sync output is empty.
 Viewer has no package E2E test tier; native HTTP integration, packed generic-host and wheel-content checks provide
 the required real transport/public/package evidence. Final combined landed-head verification belongs to the Host.
+
+## Review 1 navigation corrections
+
+All four P1 findings are fixed together: Files retains same-document and peer heading fragments; Read records the
+actual body/panel origin and restores filters, anchor and scroll on Back; an explicit search/scope/history change
+expires the preceding selection override; completed empty and failed scans retain the written requested target
+and retry. `NavigationRegression.test.ts` supplies seven permanent cases, including same-artifact fragment changes
+without another blob request or history entry. Reviewer probes reproduced the original failures before these fixes.
+
+The composed per-kind fixtures now read genuine raster bytes, CSV, Markdown/Mermaid and unsupported bytes after
+parent/root moves. Backend package fixtures explicitly register their namespaces rather than relying on structural
+discovery. The focused registered-namespace test selection passes12 cases; the unchanged handbook/backend suite
+retains its earlier155-test evidence. No additional backend production behavior was needed.
+
+On the complete fix batch: frontend lint PASS, svelte-check0 errors/warnings, Vitest246/21 files PASS; public pack
+and actual packed-host probe PASS; generated viewer-assets stale0; wheel100 files exact set/bytes PASS; Python
+viewer lint/type checks and scoped rules PASS. Static bytes come only from the declared generator. These checks
+supersede the earlier frontend239 count. A fresh independent HIGH round reviews the full batch and affected routes.

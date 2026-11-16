@@ -252,17 +252,20 @@ export function renderDocument(
 				? rawTitle.slice(selfPrefix.length).trim()
 				: rawTitle;
 		if (title !== rawTitle) node.textContent = title;
-		const slug = headingSlug(rawTitle) || 'section';
+		const slug = node.id || headingSlug(rawTitle) || 'section';
 		const n = counts.get(slug) ?? 0;
 		counts.set(slug, n + 1);
 		const id = `${documentAnchor(doc.path)}--${slug}${n ? `-${n}` : ''}`;
 		node.id = id;
 		headings.push({ id, title, level: Number(node.tagName.slice(1)) });
 	}
+	for (const node of wrapper.querySelectorAll<HTMLElement>('[id]'))
+		if (!/^H[1-6]$/.test(node.tagName)) node.id = documentAnchor(doc.path) + '--' + node.id;
 	const byId = idIndex(documents);
 	function linkNode(node: HTMLElement, target: RepositoryDocument, fragment = '') {
 		node.setAttribute('href', `#${documentAnchor(target.path)}${fragment ? `--${fragment}` : ''}`);
 		node.dataset.docPath = target.path;
+		node.dataset.originPath = doc.path;
 		node.dataset.fragment = fragment;
 	}
 	for (const a of wrapper.querySelectorAll<HTMLAnchorElement>('a[href]')) {

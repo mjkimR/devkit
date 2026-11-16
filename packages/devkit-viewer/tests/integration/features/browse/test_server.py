@@ -442,6 +442,12 @@ def test_http_formal_documents_and_artifacts_preserve_bytes_and_missing_paths(
     from urllib.parse import quote
 
     root = server.repositories["alpha"].root
+    if docs_root != "docs":
+        (root / "packages/registered").mkdir(parents=True, exist_ok=True)
+        registry = root / ".devkit/config.toml"
+        registry.write_text(
+            registry.read_text() + '\n[[tool.docs.namespaces]]\nname = "registered"\npath = "packages/registered"\n'
+        )
     parent = f"{docs_root}/{directory}/{prefix}-http.md"
     files = {
         parent: f"---\nid: {prefix}-http\n---\n# HTTP\n".encode(),

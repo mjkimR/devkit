@@ -23,6 +23,7 @@
 		rendered,
 		onJump,
 		onSelect,
+		onFiltersChanged = () => {},
 		onHandbook = undefined
 	}: {
 		view: 'book' | 'proposals' | 'specs';
@@ -46,6 +47,7 @@
 		rendered: Map<string, RenderedDocument>;
 		onJump: (path: string, anchor?: string) => void;
 		onSelect: (doc: RepositoryDocument) => void;
+		onFiltersChanged?: () => void;
 		/** Returns the reading tab to the handbook; the book's index stays loaded. */
 		onHandbook?: () => void;
 	} = $props();
@@ -58,7 +60,7 @@
 		{/if}
 		<label>
 			Scope
-			<select aria-label="Scope" bind:value={namespace}>
+			<select aria-label="Scope" bind:value={namespace} onchange={onFiltersChanged}>
 				<option value="all">All</option>
 				{#each namespaces as name}
 					<option value={name}>{name === 'global' ? 'Global' : name + ' + Global'}</option>
@@ -70,9 +72,10 @@
 				aria-label="Search documents"
 				placeholder="Search ID, alias or text"
 				bind:value={query}
+				oninput={onFiltersChanged}
 			/>
 			<label class="checkbox-label"
-				><input type="checkbox" bind:checked={includeRetired} /> Include retired</label
+				><input type="checkbox" bind:checked={includeRetired} onchange={onFiltersChanged} /> Include retired</label
 			>
 			<p class="count">{book.length} documents</p>
 		{/if}

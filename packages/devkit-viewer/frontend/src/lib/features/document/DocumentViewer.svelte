@@ -47,7 +47,7 @@
 		relationDocuments?: RepositoryDocument[];
 		relationLoading?: boolean;
 		relationErrors?: string[];
-		onRelationOpen?: (path: string) => void;
+		onRelationOpen?: (path: string, fragment?: string) => void;
 		onReloadRelations?: () => void;
 	} = $props();
 	function assets(node: HTMLElement) {
@@ -67,7 +67,12 @@
 			);
 			if (!a || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
 			event.preventDefault();
-			if (a.dataset.docPath) onRelationOpen(a.dataset.docPath);
+			if (a.dataset.docPath) onRelationOpen(a.dataset.docPath, a.dataset.fragment ?? '');
+			else if (
+				/\.(?:md|markdown)$/i.test(a.dataset.repoPath!) &&
+				!/\/artifacts\//.test(a.dataset.repoPath!)
+			)
+				onRelationOpen(a.dataset.repoPath!, a.dataset.fragment ?? '');
 			else onSupportingOpen(a.dataset.repoPath!, a.dataset.fragment ?? '');
 		};
 		node.addEventListener('click', follow);
