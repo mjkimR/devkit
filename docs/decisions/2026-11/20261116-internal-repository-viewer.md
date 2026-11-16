@@ -58,7 +58,8 @@ Node.
 - **Internal single-host viewer, keeping every current feature**: removes the library surface and generic-host
   fallbacks; the Shared tab, `/review` page, dashboard paging and the full overlay stay without a producer or need.
 - **Internal single-host viewer with the unused features trimmed** (selected): removes the library surface and
-  fallbacks and trims the features the Planning decisions of `SPEC-viewer-internal-simplification` select.
+  fallbacks and trims the Shared tab, the `/review` page, dashboard paging and the overlay extras, as
+  `SPEC-viewer-internal-simplification` specifies.
 - **Drop the committed static build as well**: Git installs would need Node to build the page; rejected because the
   build exists for Git installs, not for autohub.
 
