@@ -1,7 +1,11 @@
 ---
 reconcile_id: REC-design-document-viewer
-status: resolved
+status: pending
 targets:
+  - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
+    resolution: modified
+  - file: docs/decisions/2026-11/20261116-formal-role-document-identities.md
+    resolution: modified
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-release-handbook.md
@@ -83,3 +87,13 @@ remain distinguished by their recorded source identities. Independent reconcile 
 
 Integration, lifecycle reference transactions and combined landed-head verification remain Host-owned. This
 reflection does not close the documentation evolution milestone or adopt later unapproved layout/template work.
+
+## Host integration reflection
+
+The base merge preserves the delivered lifecycle and the independently accepted layout/template Planning.
+Handoff references name their canonical spec IDs, and superseded proposal files remain removed.
+The documentation ownership capability routes delivery and viewer questions to their current capability owners.
+The formal-role ADR Confirmation now names both completed implementation evidence records instead of stale
+pending phase evidence. Its decision, partial supersession clauses and core schema remain unchanged.
+These two additional targets remain pending until independent integration reflection verification.
+Viewer runtime and generated static bytes are unchanged from the accepted worker.

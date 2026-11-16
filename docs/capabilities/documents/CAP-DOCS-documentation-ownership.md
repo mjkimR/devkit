@@ -19,7 +19,7 @@ composition are distinct roles alongside architecture and behavioral contracts. 
 - **In-Scope**: shared semantic ownership, architecture overlap and question-specific formal design, domain and operations navigation.
 - **Out-of-Scope**: identity/index/placement grammar (`CAP-DOCS-document-model`), search
   (`CAP-DOCS-document-search`), lookup (`CAP-DOCS-document-lookup`) and namespaces (`CAP-DOCS-namespaces`).
-  Lifecycle and viewer integration remain with `SPEC-design-document-lifecycle` and `SPEC-design-document-viewer`.
+  Delivery integration belongs to `CAP-DLV-delivery-workflows`; viewer reading belongs to `CAP-VIEW-repository-viewer`.
 
 ## 3. Business Rules & Policies
 
