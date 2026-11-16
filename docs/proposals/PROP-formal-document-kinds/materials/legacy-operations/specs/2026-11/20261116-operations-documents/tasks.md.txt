@@ -1,0 +1,14 @@
+---
+id: TASKS-operations-documents
+spec: SPEC-operations-documents
+plan: PLAN-operations-documents
+---
+
+# Task Breakdown: `SPEC-operations-documents`
+
+## Phase 1: Implementation
+
+- [x] **Task 1**: Maintain operations composition, selected ingress, ownership and generic source guidance with O1–O5 evidence
+  - **_Boundary**: `docs/operations/distribution-sync.md`, `docs/capabilities/documents/CAP-DOCS-documentation-ownership.md`, `docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md`, `docs/development/reference/distribution.md`, `docs/decisions/2026-11/20261116-linked-symptom-led-operations.md`, `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md`, `.devkit/installation.json` (sync output), `docs/materials/2026-11/20261116-operations-documents/`, `specs/2026-11/20261116-operations-documents/`
+  - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
+  - **Verification**: O1–O5 independent reader/fixture evidence, scoped rules, source distribution, lint/type checks, affected tests and installed-consumer E2E as specified in the plan.

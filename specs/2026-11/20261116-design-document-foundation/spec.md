@@ -32,7 +32,7 @@ and operational composition alongside contracts and architecture. The accepted
 **Scope Excluded**: New Kind, ID grammar, registry, metadata, runtime or UI; domain/operations final homes;
 lifecycle integration; recovery execution; unrelated architecture corrections; new package or feature dependency.
 Existing pilot evidence and `FB-runtime-journal-ordering` remain unchanged. Domain, operations, lifecycle and viewer
-work remain with `PROP-domain-model-documents`, `PROP-operations-documents`, `PROP-design-document-lifecycle`
+work remain with `PROP-domain-model-documents`, ~~`PROP-operations-documents`~~ (source Git `534ad541e9d1e87beffa6bbc4f1afa95c71f6106`), `PROP-design-document-lifecycle`
 and `PROP-design-document-viewer`.
 
 ## 4. Acceptance Criteria & Behavioral Contracts

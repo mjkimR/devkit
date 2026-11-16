@@ -1,0 +1,83 @@
+---
+id: SPEC-operations-documents
+title: Operations and recovery documentation
+summary: Establishes symptom-led operational guidance that routes to existing recovery owners, adding document tooling only for gaps demonstrated by the early pilot.
+status: in-progress
+created: 2026-11-16
+depends_on:
+  - SPEC-design-document-foundation
+related_capabilities:
+  - CAP-DOCS-documentation-ownership
+  - CAP-DIST-sync-and-transactions
+related_usecases: []
+workflow: sdd-spec-feature
+---
+
+# [SPEC-operations-documents] Operations and recovery documentation
+
+## 1. Problem Statement & Motivation
+
+Operational readers need a maintained symptom/evidence map to the existing recovery and normal-state owners.
+The accepted direction is `ADR-linked-symptom-led-operations`; the exact targets are
+`PROP-operations-documents-target`. Historical direction and pilot inventories remain in
+[Planning evidence](../../../docs/materials/2026-11/20261116-operations-documents/direction.md).
+
+## 2. User Stories
+
+- **US-1**: As an agent investigating sync symptoms, I want evidence to select the existing action and readiness
+  owners without having to infer recovery authority from implementation details.
+- **US-2**: As a documentation author, I want the same ID-free operations convention available in global and
+  registered package documentation without extending indexed identity or permissions.
+
+## 3. Non-Goals
+
+- **Scope Excluded**: recovery execution, copied recovery procedures, new permissions, runtime behavior, new Kind,
+  identity/search/namespace changes, templates, lifecycle/viewer work, topology or incident history.
+- **Scope Excluded**: edits to existing domain/design entries or their conventions, unrelated feedback or proposals.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] O1 maintained symptom composition
+- **Given** pending-journal TRANSACTION_PENDING, later-edit RECOVERY_BLOCKED, legacy journal lacking directories,
+  and no-journal desired-state drift documented paper states,
+- **When** an independent reader uses the maintained operations entry,
+- **Then** all four states select the existing applicable action/stop owner and Readiness Gate; no-journal drift
+  remains not ready, with sync --check exit 0 ready and exits 1/2 not ready under that owner.
+
+### [AC-02] O2 withheld-entry global discovery
+- **Given** a fresh independent reader starts at the existing distribution reference Error codes/status passage,
+  or separately at the transaction capability found by lexical TRANSACTION_PENDING owner search, without the entry path,
+- **When** the reader follows the selected ordinary links,
+- **Then** each route reaches the entry and a useful next authority without domain/design prerequisites; materials
+  retain actual search results, opened sections, traversals, avoidable turns, conclusions and qualitative before/after
+  with ingress withheld in a disposable fixture at the Development head.
+
+### [AC-03] O3 package-context discovery
+- **Given** a disposable registered package fixture with its own owner/reference and a package-local operations entry,
+- **When** a fresh independent reader starts at that owner/reference with the entry path withheld,
+- **Then** existing namespace/search context and the ordinary relative link reach that entry; materials retain exact
+  contents, context, paths, baseline with ingress withheld and support limits without claiming production package demand.
+
+### [AC-04] O4 unique authority and maintenance
+- **Given** all substantive entry passages, unknown evidence and a paper journal-compatibility change,
+- **When** the author and independent reviewer compare them with capability, actual advisory, reference and executable guidance,
+- **Then** operations owns evidence/applicability routing only; guarantees, compatibility, stop/readiness, ACTION/FIX,
+  steps and permissions retain their owners; unmatched evidence invents no recovery branch; the paper change identifies
+  discriminators and links to revisit without changing recovery sources or executing recovery.
+
+### [AC-05] O5 generic distribution and document checks
+- **Given** the source docs instruction and an isolated consumer with no repository documents,
+- **When** existing instruction distribution, scoped document/source rules, ordinary links and index-negative checks run,
+- **Then** the consumer receives identical generic instruction bytes and no operations scaffold; global/package entries
+  remain ID-free and absent from indexed lookup/search/refs; materials retain commands, output and destinations.
+
+## 5. Assumptions & Evidence Boundaries
+
+The accepted premises still hold after the landed domain §3.4 and generic guidance: operations adds §3.5 and selected
+ingress, preserving those owners. No new domain term or architecture/dependency edge is introduced. Medium effort
+requires independent code and reconcile reviews. O1–O5 are documentary/fixture coverage, not recovery outcomes,
+universal discovery, production package demand, historical all-body audit or viewer support.
+The baseline is this head with selected ingress withheld in ignored disposable fixtures, never a base checkout.
+Claim no timing or read-count improvement. Source feedback is unchanged; unrelated `FB-runtime-journal-ordering`
+remains outside scope. Deferred lifecycle/viewer work remains `PROP-design-document-lifecycle` and
+`PROP-design-document-viewer`.

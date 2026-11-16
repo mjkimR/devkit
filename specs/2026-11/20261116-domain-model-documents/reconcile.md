@@ -56,7 +56,7 @@ agreement are Review only; applicable rules do not prove them.
 
 ## Deferred work and limitations
 
-`PROP-operations-documents` owns operations composition and will run sequentially after this unit lands.
+~~`PROP-operations-documents`~~ (source Git `534ad541e9d1e87beffa6bbc4f1afa95c71f6106`) owns operations composition and will run sequentially after this unit lands.
 `PROP-design-document-lifecycle` owns lifecycle automation; `PROP-design-document-viewer` owns viewer support.
 All three destinations were confirmed by `devkit docs list proposal`. No destination file was changed.
 `FB-runtime-journal-ordering` is unchanged and outside this unit.

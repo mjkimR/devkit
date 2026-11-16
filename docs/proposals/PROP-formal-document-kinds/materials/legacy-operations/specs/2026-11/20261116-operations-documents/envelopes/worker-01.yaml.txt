@@ -1,0 +1,30 @@
+kind: worker
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T04:41:14.323548Z'
+status: failed
+summary: Stopped on the user's correction superseding the ID-free direction with formal design/domain/operations kinds, prefixes and IDs. Preserved committed implementation and historical O1-O5 evidence; all nested roles joined. Tracked .devkit/installation.json is the sole additional sync output, annotated task 1; no scope extension, reconciliation, completion or integration.
+findings: []
+assumptions:
+- 'Emulated boundaries only: explicit own-worktree cwd and absolute scopes, per-operation escalation, exact-path audit and frozen HEAD/full-file snapshots; no native confinement guarantee.'
+unverified_areas:
+- Formal design/domain/operations kinds, IDs/prefixes and runtime/tooling integration are not implemented or verified. New objective remains unfinished.
+- Independent reconcile review, resolved reconciliation, feedback stage and final change report were not reached after user correction. No integration executed.
+checks:
+  sync_start: PASS exit=0 before first edit
+  historical_tests: PASS at f5bada02058c25eb15ffb13b8a7b37cb6f5e8eae affected 2591 and built-wheel consumer E2E 1
+  historical_lint: PASS just lint-check and just check; scoped rules22/sourcehygiene25 and CI rules22; sync/check exit0
+  historical_readers: PASS independent O1/O2 reference and lexical routes, O3 repaired fixture rerun and namespace controls; O4 owner ledger/paper walkthrough; O5 generic byte-identical consumer and links/index negatives
+  historical_review: PASS independent old-direction review at ba5efff61ff26697297174fd9dd4910d5f6351d8 with zero findings; not a review of formal-kind correction
+  new_direction: SKIP no implementation or verification authorized in this turn's original boundaries
+diff_scope:
+  base: 85a79e22f74fbd4175be0a6c635285de8dbb342a
+  head: ba5efff61ff26697297174fd9dd4910d5f6351d8
+problem:
+  cause: The user superseded the accepted ID-free representation direction during review and requires first-class formal document kinds with prefixes, IDs and existing system integration. That changes the agreed goal and denied runtime/identity scope of this worker turn.
+  attempts:
+  - Stopped production work immediately; joined active read-only Code Reviewer. It returned PASS with no findings only against the superseded ID-free scope, not the corrected objective. No passing review envelope was recorded.
+  - Verified author HEAD ba5efff61ff26697297174fd9dd4910d5f6351d8 and clean status; pre/post whole tracked and nonignored snapshot a50dd1ceff00888b0adcf4824eeba0f3a6d77e92 matched. All nested roles reported no outside-worktree document reads.
+  recovery: Host should route and scope the user's corrected formal-kind direction, preserve the old evidence as historical, and decide the treatment of existing implementation. Do not integrate the superseded ID-free result.
+activity_effort: medium

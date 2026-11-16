@@ -1,0 +1,43 @@
+---
+id: PLAN-operations-documents
+spec: SPEC-operations-documents
+---
+
+# Technical Plan: `SPEC-operations-documents`
+
+## 1. Constitution & Invariant Review
+
+No conflict. Preserve `CAP-DOCS-documentation-ownership` §§3.1–3.4, the full
+`CAP-DIST-sync-and-transactions` recovery/readiness contract and existing advisory/executable authority.
+`ADR-linked-symptom-led-operations` supplies the accepted representation decision. No feature, package, layer,
+test tier, runtime or dependency is added.
+
+## 2. Architecture Overview & Impact
+
+One ID-free operations entry composes symptom/evidence/applicability → existing action owner → normal-state owner.
+Add selected Recovery and reference Error codes/status links, operations §3.5 in shared ownership, and consumer-generic
+operations directions in the existing docs instruction. Confirm the accepted ADR's actual restatement and evidence.
+Use exact targets in `PROP-operations-documents-target`; preserve historical Planning materials.
+
+## 3. Component & Interface Design
+
+The entry's four rows distinguish pending journal, subsequent edit, legacy journal lacking directories and no-journal
+drift. Cite full indexed owner IDs and ordinary links for ID-free reference/consumer guidance. Explain coverage limits
+for unmatched evidence by the actual advisory reporting/stop owner. Do not copy FIX sequences or grant permission.
+The same relative operations home applies under a registered package docs root; no indexed Kind is introduced.
+
+The choice of a concise table keeps the distinct evidence selectors together. Domain §3.4 remains intact; operations
+uses §3.5 so previously landed representation and links remain stable. The documentation baseline is a disposable copy
+of head bytes with only selected ingress withheld; this isolates navigation change without another checkout.
+
+## 6. Verification & Test Plan
+
+- AC-01/04: independent documentary reader, source-owner ledger and counterfactual compatibility walkthrough.
+- AC-02/03: fresh withheld-entry global and package readers, exact observed lexical results, before/after fixtures.
+- AC-05: isolated consumer sync and byte comparison; no scaffold, index-negative and ordinary-link checks.
+- Native: `uv run devkit rules check` for scoped targets and source hygiene; `uv run devkit rules check --ci --base main`;
+  `uv run devkit sync`, then `uv run devkit sync --check`; `just lint-check`; `just check`;
+  `just test-affected --base 534ad541e9d1e87beffa6bbc4f1afa95c71f6106` with full fallback retained;
+  `uv run --no-active --no-sync pytest packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py -q`.
+- Record exact commands, source identity and coverage in Development materials. Semantics/navigation remain review-only;
+  automated document rules do not establish recovery correctness or ordinary-link semantics.

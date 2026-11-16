@@ -1,14 +1,14 @@
 ---
 id: PROP-design-document-lifecycle
-title: Documentation-layer authoring and reconciliation lifecycle
-summary: "Integrates impact-based authoring and reconciliation for domain, design and operations, reusing existing lifecycle mechanisms and avoiding mandatory updates to unaffected layers."
+title: Formal documentation authoring and reconciliation lifecycle
+summary: "Integrates complete authoring, Planning, review, reconciliation and maintenance for formal design, domain and operations kinds under SDD and adaptive-dev."
 status: draft
 created_at: 2026-11-16
 target_area: delivery/
 priority: high
 size: L
 planning_effort: high
-dev_effort: medium
+dev_effort: high
 milestone: MS-documentation-system-evolution
 boundaries:
   owns:
@@ -26,51 +26,75 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 depends_on:
-- SPEC-design-document-foundation
-- SPEC-domain-model-documents
-- PROP-operations-documents
+- PROP-formal-document-kinds
 ---
 
-# [PROP-design-document-lifecycle] Documentation-layer authoring and reconciliation lifecycle
+# [PROP-design-document-lifecycle] Formal documentation authoring and reconciliation lifecycle
 
 ## 1. Background & Hypothesis
 
-Maintained domain, design and operational views need clear create/update/split/retire decisions. Existing SDD
-and adaptive-dev guidance already owns delivery lifecycle. Extend it only where the early examples reveal an
-unhandled impact or discovery path, without creating parallel records or requiring every layer for every feature.
+`PROP-formal-document-kinds` supplies formal identity, core governance, neutral authoring assets and migration.
+Delivery integration must treat design, domain and operations as first-class impact targets throughout their
+lifecycle. Existing SDD and adaptive-dev mechanisms own delivery authority; extend their concrete integration
+points so every supported formal kind participates completely without an unrelated workflow engine.
+
+The core proposal replaces the earlier operations prerequisite. `SPEC-design-document-foundation` and
+`SPEC-domain-model-documents` are historical context, not substitutes for the formal core prerequisite.
+This phase and `PROP-design-document-viewer` are required to complete `MS-documentation-system-evolution`.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: When should an agent consult or maintain each role, and when is the existing authoritative source enough?
-- **Q2**: Which current review and reconciliation mechanisms already cover entry documents and supporting files?
-- **Q3**: How can the same document semantics work under SDD and adaptive-dev without imposing SDD records on the latter?
+- **Q1**: Which Planning, review and reconciliation boundaries must consult each formal kind, and how does impact
+  assessment select affected statements without requiring unaffected layers for every change?
+- **Q2**: How do create, update, split, rename and retire preserve canonical identity, aliases, references and
+  source/detail/artifact relationships under the core schema?
+- **Q3**: Which kinds and role-specific rows permit source entrypoints? How do spec-plan, spec-sync and
+  spec-entrypoints consume that policy without extending CAP/UC reciprocity to every kind?
+- **Q4**: How do proposal target-docs scaffolds, brownfield adoption and SDD baseline coverage expose the formal
+  roles? How does adaptive-dev maintain the same documents without implicit SDD Units, envelopes or gates?
 
 ## 3. Proposed Design & Impact
 
-- Use the foundation matrix and conventions delivered by domain and operations proposals. Provide concise
-  routing guidance: read conditions, authoritative owner, affected statements and supporting-file dependencies.
-- Reuse existing review, reconciliation and metadata. Add guidance or deterministic checks only for an observed
-  failure; do not add a parallel registry, approval cycle or always-loaded inventory of all documents.
-- Keep one entry document for small topics. Split independently readable or maintained detail when needed and
-  state when a reader needs it. Non-indexed examples, diagrams and datasheets remain reachable through the entry.
-- Review changes by their owned content: a rendering algorithm change may affect design without changing domain;
-  a relationship policy change may affect domain explanation and capability enforcement without requiring ops.
-- Keep generation source relationships explicit. Update or regenerate supporting artifacts from their source;
-  retain historical measurements in materials and unresolved alternatives in proposal records.
-- Integrate impact assessment into SDD and adaptive-dev at their existing boundaries. Preserve each approach's
-  lifecycle and authority. Declare any necessary cross-feature dependency during Planning.
+- Use the formal core schemas and Kind definitions. Document when an agent reads or creates each role, identifies
+  its authoritative owner, and selects affected formal documents as required impact/reconciliation targets.
+  Preserve concise question-directed traversal and useful independent details.
+- Cover create, update, split, rename and retire explicitly. Define how ID/alias/reference maintenance and
+  applicable supersession work for each kind, including independently identified details and parent-owned
+  supporting Markdown or non-Markdown artifacts. Keep artifact regeneration tied to its actual source.
+- Update `packages/devkit-spec` source assets for spec-plan, spec-sync and spec-entrypoints, bundle AGENTS
+  guidance and pointers. Update proposal `target-docs.md` scaffold sections in
+  `features/proposals/usecases/scaffold.py` so Planning records prospective formal docs, migrations and impacts.
+  Update brownfield-adoption and sdd-baseline guidance/coverage for these canonical kinds.
+- Extend Planning, implementation review and reconciliation checks at their existing boundaries. Affected formal
+  documents must be accounted for alongside existing contracts. A mechanism-only change may affect design while
+  leaving domain/operations unchanged; an explicit applicability assessment records that result without empty work.
+- Update adaptive-dev `references/documents.md`, `roles/documenter.md` and related source pointers so the same
+  authoring and maintenance paths work without SDD change records. Docs bundle neutral guidance remains neutral.
+- Coordinate neutral docs asset adjustments with the core owner. Keep source assets, seed/pointers, guides and
+  exact distribution/integration inventories consistent. Declare cross-feature dependencies in Planning.
+- Preserve materials as historical evidence and decisions under the selected approach. Do not create a parallel
+  registry, fixed whole-layer reading order or additional approval/recovery engine.
 
 ### Expected acceptance evidence
 
-- Retained early examples demonstrate create, update, split and retirement routing. Every affected statement and
-  support artifact has one source; unchanged layers need no edits or new records.
-- Walkthroughs cover one multi-view change and one single-view change, including source-to-detail navigation and
-  uncertainty/evidence handling. SDD reconciliation accounts for supporting files without IDs where affected.
-- An adaptive-dev walkthrough uses the same roles without acquiring SDD envelopes or gates. Existing mechanisms
-  that already satisfy these outcomes pass unchanged; test only changed runtime behavior where applicable.
+- **L1 — Authoring and maintenance**: All three kinds have verified create/update/split/rename/retire paths using
+  the formal schemas. Real migrated documents and supporting artifacts retain correct IDs, aliases, references,
+  owner boundaries and source agreement. Lifecycle applicability is explicit for every kind.
+- **L2 — SDD integration**: A multi-role change and a single-role change traverse proposal target-docs, Planning,
+  review and reconciliation. Required affected documents appear in impact targets; unaffected layers need no
+  edits. Tests verify scaffold sections and changed workflow/runtime integration, including source-entrypoint
+  policy and appropriate spec-entrypoints rows.
+- **L3 — Adoption and adaptive-dev**: Brownfield adoption and SDD baseline account for formal role documents.
+  An adaptive-dev walkthrough maintains the same kinds without acquiring SDD Units, envelopes or approvals.
+  Applicable integration tests verify documenter guidance and source-asset delivery.
+- **L4 — Distribution and regression**: Source guidance, seed/pointers and installed assets agree. Sync,
+  `get-context` and affected bundle/integration tests pass with existing lifecycle and CAP/UC behavior preserved.
+  Reused mechanisms have complete new-kind evidence; their existence alone does not establish support.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Start after the three role conventions are delivered. Acceptance and handoff use the proposal gates. Retirement
-requires verified authoring and maintenance paths using retained examples; new lifecycle mechanics are conditional
-on a concrete gap. This supplies post-implementation integration evidence alongside the viewer proposal.
+Start Planning against the required formal core contract; handoff ordering must make its delivered schemas
+available before integration depends on them. This remains one L feature proposal covering delivery integration.
+Acceptance and handoff follow existing gates. Retirement requires L1–L4, current contract reconciliation and
+verified SDD/adaptive authoring and maintenance paths for every formal kind. Core completion alone does not retire
+this phase or complete the milestone.

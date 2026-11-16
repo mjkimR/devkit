@@ -46,7 +46,7 @@ ordinary supplied-entry navigation and indexed-owner lookup remain distinct succ
 
 `PROP-design-document-foundation` consumes retained drafts and selects representation/routing after testing the
 contract-to-entry gap. `PROP-domain-model-documents` owns a maintained conceptual home and unsupplied domain-entry
-discovery. `PROP-operations-documents` owns maintained symptom guidance and unsupplied operations-entry discovery.
+discovery. ~~`PROP-operations-documents`~~ (source Git `534ad541e9d1e87beffa6bbc4f1afa95c71f6106`) owns maintained symptom guidance and unsupplied operations-entry discovery.
 `PROP-design-document-lifecycle` owns change-specific authoring/reconciliation integration.
 `PROP-design-document-viewer` owns actual viewer verification after representation decisions. Existing IDs resolve;
 no proposal was created or modified. Restart conditions and expected owner/navigation/runtime checks are in the

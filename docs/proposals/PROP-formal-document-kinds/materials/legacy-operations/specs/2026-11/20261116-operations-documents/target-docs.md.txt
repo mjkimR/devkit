@@ -1,0 +1,57 @@
+---
+id: PROP-operations-documents-target
+title: Target Living Spec Structure for Operations Documents
+status: draft
+proposal: SPEC-operations-documents
+created_at: 2026-11-16
+targets:
+- file: docs/operations/distribution-sync.md
+- file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
+- file: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
+- file: docs/development/reference/distribution.md
+- file: docs/decisions/2026-11/20261116-linked-symptom-led-operations.md
+---
+
+# [Blueprint] PROP-operations-documents: Target Living Spec Structure
+
+## 1. Maintained operations entry
+
+Create `docs/operations/distribution-sync.md`, an ID-free question-specific entry. Adapt the four pilot states into
+current symptom/evidence/applicability → existing action owner → normal-state observations. Keep a useful overview
+and next action in this entry. Create no detail directory, incident history, copied recovery procedure or template.
+For this new file the nearest existing boundary is `docs/`; `docs/operations/` is the planned child.
+
+## 2. Capabilities and selected entry routes
+
+- `CAP-DOCS-documentation-ownership`: extend Summary/Scope and add an Operations entries section, preserving existing
+  design and domain boundaries. This is the only normative owner of operations representation: ID-free global and
+  registered-package home, independently useful question entry, selected ordinary owner links, no identity borrowing.
+- `CAP-DIST-sync-and-transactions`: add only a concise classification link in Recovery. Keep guarantee, legacy-version
+  compatibility, recovery stop, procedure and Readiness Gate unchanged.
+- `docs/development/reference/distribution.md`: add a question-specific ordinary link in Error codes and the status
+  discussion if needed for the O2 starting passage. Preserve syntax, code mappings, diagnostic/readiness and actions.
+
+No use case, UX, deployment or runtime architecture change is needed for documentation routing.
+
+## 3. Decision and source guidance
+
+Promote `ADR-linked-symptom-led-operations` at handoff to
+`docs/decisions/2026-11/20261116-linked-symptom-led-operations.md` (the handoff date owns the actual date directory).
+It extends the previously deferred operations home; no accepted ADR is superseded.
+
+Modify only the operational-question/representation guidance in
+`packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md`.
+Keep it consumer-generic, conditionally loaded and consistent with the shared ownership capability; do not copy a
+second normative matrix or repository IDs into shipped assets. No bundle manifest/version change is selected in
+this content turn; release-version selection remains the release workflow.
+
+## 4. Verification and exact exclusions
+
+O1–O5 in `SPEC-operations-documents` govern the independent reader, owner review and disposable package/consumer
+fixtures. Retain their content and commands in the Development spec's materials. This blueprint is not a mandatory
+reading registry. No runtime, new Kind/ID grammar, search/index/refs, namespace, relation, CLI/MCP, advisory,
+executable procedure, permission, template, lifecycle or viewer changes are selected.
+
+Shared future edits to the two capabilities and source guidance are sequential Host work, alongside
+`SPEC-domain-model-documents`; reconcile each named section against the then-current owners. Current Planning
+writes only this proposal bundle.

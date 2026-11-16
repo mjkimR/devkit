@@ -45,7 +45,7 @@ consumer-byte/ID-free checks, preserving all prior assertions. Receipt is the so
 
 ## Deferred work destinations
 
-Existing `PROP-domain-model-documents` retains domain homes and unsupplied discovery; `PROP-operations-documents`
+Existing `PROP-domain-model-documents` retains domain homes and unsupplied discovery; ~~`PROP-operations-documents`~~ (source Git `534ad541e9d1e87beffa6bbc4f1afa95c71f6106`)
 retains operations homes and unsupplied discovery; `PROP-design-document-lifecycle` retains lifecycle integration;
 `PROP-design-document-viewer` retains viewer verification. All four remain existing draft destinations, confirmed
 by proposal list; their scopes and restart criteria remain unchanged. This implementation fulfills F1–F6 rather
