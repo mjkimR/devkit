@@ -1,0 +1,47 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T12:26:01.398840Z'
+status: completed
+summary: 'The proposal''s audit inventory holds at HEAD 3fa5d0120 (no viewer path changed since b0b4e2a09). Corrections: added pack touchpoints (tests and docs), dead refs? and further optional members, sdd:item-selected host event, about 320 direct paging lines, proposal-review still producible by CLI and MCP, two more ADRs with host or review clauses.'
+findings:
+- issue: 'npm library packaging confirmed: package.json files/svelte/types/exports/package script/peerDependencies/@sveltejs/package; scripts/viewer.sh pack 56-81 with tarball checks; CI pack step ci.yml:85; affected_tests.py:129. The justfile item is a comment only (72-74).'
+  evidence: packages/devkit-viewer/frontend/package.json:10-41; scripts/viewer.sh:12-14,56-81; .github/workflows/ci.yml:85; scripts/affected_tests.py:127-131; justfile:72-74
+  resolution: open
+- issue: 'Pack touchpoints missing from the draft: test_viewer_script.py parametrizes pack; test_affected_tests.py hard-codes the FRONTEND_CHECK line; ci-cd.md, setup.md, reference/viewer.md, both viewer READMEs, ARCH-05-1, ARCH-07 describe it.'
+  evidence: packages/devkit/tests/integration/package/test_viewer_script.py:14-24; packages/devkit/tests/e2e/package/test_affected_tests.py:348-378; docs/development/ci-cd.md:28,119-132; docs/development/setup.md:50
+  resolution: open
+- issue: lib/index.ts barrel 23 lines; one-line shims repository.ts, documents.ts, roadmap.ts; wrappers KnowledgeViews.svelte and RoadmapView.svelte are used by SddViewer. app/ imports only SddViewer and the repository shim. lib/ 9,445 source and 4,991 test lines.
+  evidence: packages/devkit-viewer/frontend/src/lib/index.ts; src/app/App.svelte:2; src/app/api.ts:1
+  resolution: open
+- issue: httpDataSource provides every optional member except refs?, which nothing implements or calls; planningTree?, planningBlob?, sharedList?, sharedBlob? are also optional. The no-dashboardList fallback (loadDashboardSection, scanDocuments and milestone six-worker pumps) is dead for the local host. The server ignores ref; 16 frontend call sites still pass it.
+  evidence: frontend/src/lib/api/repository.ts:68-127; features/dashboard/loading.ts:119-137; api/documents.ts:92; api/milestones.ts:69; src/devkit_viewer/features/browse/http/server.py:15
+  resolution: open
+- issue: The local app passes only initialView dashboard and keeps only the repo in its URL; no listener for sdd:path-change or sdd:item-selected exists outside tests; bookRequested is bound only inside SddViewer and the wrapper. Book deep links are host-only (ADR-release-handbook 194).
+  evidence: frontend/src/app/App.svelte:57-63; src/app/api.ts:24-30; src/lib/SddViewer.svelte:342-352,490,504-509
+  resolution: open
+- issue: Shared tab about 1.3k frontend lines with test; backend review.py, shared.py, shared_space.py about 156 lines plus routes and about 180 test lines; codes VIEWER_REVIEW_* and VIEWER_SHARED_* only there; devkit_dist shared imports only in these modules. No in-repo workflow produces proposal-review since 5d2efdefd, but devkit shared put and MCP shared_put still accept the kind.
+  evidence: frontend/src/lib/features/shared/SharedArtifactsView.svelte; src/devkit_viewer/features/browse/usecases/review.py; usecases/shared.py; repositories/shared_space.py; packages/devkit-dist/src/devkit_dist/features/shared/models/api.py:67-79
+  resolution: open
+- issue: 'Dashboard paging and caches: page sizes loading.ts:61-65; Load more/Retry DashboardView.svelte; page queue loading.ts:170-218; 30 s TTL and eight-entry purpose cap in cache.ts (shared with overlay, index and roadmap). Directly attributable source about 320 lines, not 600-900.'
+  evidence: frontend/src/lib/features/dashboard/loading.ts; frontend/src/lib/api/cache.ts:3-46
+  resolution: open
+- issue: 'Overlay backend planning.py 281 lines: precedence 123-126, merged-ref exclusion --no-merged=HEAD 106, own slug 127, batched cat-file 131-149; frontend api/planning.ts 91 lines with overlay cache and order seeding (loading.ts:138-150).'
+  evidence: src/devkit_viewer/features/browse/repositories/planning.py; frontend/src/lib/api/planning.ts
+  resolution: open
+- issue: 'Small items: --scan and repo picker are local multi-repository features (register.py, App.svelte picker); Mermaid fullscreen modal 201 lines, untested; Mermaid is imported lazily, so the 5.5 MB static build affects the wheel size, not page load.'
+  evidence: src/devkit_viewer/features/browse/usecases/register.py:38-79; frontend/src/lib/features/diagrams/FullscreenDiagramModal.svelte; diagrams/mermaid.ts:13
+  resolution: open
+- issue: 'Docs to change: CAP-VIEW 19-21, 114, 129-170, 208-231, 350-390; ADR-repository-viewer; ADR-release-handbook 67-69,190-200; ADR-viewer-namespace-roadmap-discovery 45-53; ADR-proposal-acceptance 253-256; ARCH-05-1 34,65,151-160; ARCH-07 21,102; reference/viewer.md 62-110; setup.md; ci-cd.md; package and frontend READMEs. ADR-viewer-indexed-decision-supersession mentions hosts only in drivers and consequences.'
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md; docs/decisions/2026-11/20261102-release-handbook.md; docs/architecture/ARCH-05-1-containers.md; docs/architecture/ARCH-07-deployment.md
+  resolution: open
+- issue: 'viewer-assets: .devkit/generated.toml command runs npm run build:app; regenerate with just viewer build, check with devkit generated check viewer-assets.'
+  evidence: .devkit/generated.toml:4-7
+  resolution: open
+assumptions:
+- Static grep and wc counts; no tests or builds were run
+unverified_areas:
+- Mermaid diagram-type restriction feasibility and chunk identities
+- autohub's own consumption (outside the repository)
+checks: {}
