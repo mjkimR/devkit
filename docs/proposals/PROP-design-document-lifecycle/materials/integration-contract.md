@@ -17,7 +17,7 @@ Formal kinds are mandatory in every option. ID-free ownership and optional gap-o
 ## 2. Core interface consumed
 
 The Host's selected future core interface is pinned and hash-verified in
-[core consumption record](core-interface-pin.md), source ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d. Core remains the
+[core consumption record](core-interface-pin.md), source 504e2e12006ab3e2aad2b8ce470607646ad4c4ac. Core remains the
 single schema/ownership authority; the consumption record names exact applicable integration values and tests.
 Development handoff requires its delivered implementation revision and prerequisite evidence, not this design pin.
 
@@ -45,10 +45,10 @@ Apply the following operations separately to each of the three kinds in global a
 | Read | Search/list/resolve full canonical IDs and aliases, incoming/outgoing refs and needed core writing instruction; traverse only useful owner/detail links |
 | Create | Use core template/grammar, unique primary owner, actual implemented subject and source identity; add warranted typed relations and incoming routes |
 | Update | Compare changed statements with the retained source; update applicable summary/relations/source anchors and regenerate only artifacts whose actual source changed |
-| Split | Allocate each transferred statement one resulting owner; assign independent formal detail its own core-compliant ID, leave parent-owned support unindexed, replace old normative duplicate with orientation link |
-| Rename | Move canonical path/H1/ID together; preserve old ID aliases including moved independent details; repair current prose and structured references, entrypoints and relative support links; check collisions and namespace-qualified destinations |
-| Reclassify | Retire the old same-kind identity, create the receiving kind's canonical node, transfer sole statement ownership and repair current refs; cross-prefix aliases remain invalid |
-| Retire | Set retired, retain resolve/refs identity and applicable replacement links, remove/repair obsolete source entrypoints, preserve required provenance; repair incoming current refs and owner/detail/artifact links; do not borrow ADR supersession fields |
+| Split | Allocate each transferred statement one resulting owner; give independent formal detail its own ID. Assign every retained support artifact exactly one resulting canonical parent, move its subtree/path and repair links; leave no stale duplicate or unowned subtree. Replace old normative duplicate with orientation link |
+| Rename / root move | Move canonical path/H1/ID and ID-owned artifact subtree together; preserve same-kind old-ID aliases on rename. An unchanged-ID root move needs no alias. Repair current prose/structured references, all ordinary artifact links and relative source links in moved docs/artifacts; reject orphan old-parent folders even when an alias resolves; check collisions and namespace destinations |
+| Reclassify | Retire the old same-kind identity, create the receiving kind's canonical node, transfer sole statement ownership and assign each retained artifact exactly one receiving canonical parent under its role directory; move support and repair current refs/ordinary links without stale duplicates; cross-prefix aliases remain invalid |
+| Retire | Set retired, retain resolve/refs identity and applicable replacement links, remove/replace obsolete DESIGN entrypoints in the same change as source deletion, retain still-live useful anchors and keep removed coordinates only as explicitly historical prose plus commit; retained retired nodes remain rule-checked; preserve required provenance; repair incoming current refs and owner/detail/artifact links; do not borrow ADR supersession fields |
 
 Do not alias one old ID to multiple split destinations. Retain the original active ID only if it still owns a
 maintained subject; otherwise retire it and name useful successors through core relations/prose. Repair current
@@ -78,7 +78,7 @@ conflict/unverified result. It creates no implicit Unit, envelope, gate, retrosp
   supporting artifacts change; no empty CAP/UC/domain/operations document is required.
 - Adaptive: retained implementation changes each warranted role; documenter receives exact source identity and
   governing IDs, uses formal templates, compares source, updates context map and runs project/document checks.
-  Exercise create/update/split/rename/reclassify/retire for each kind. Assert no implicit specs/, workflow/envelope/gate files
+  Exercise create/update/split/rename/root-move/reclassify/retire for each kind in global and package roots. Assert no implicit specs/, workflow/envelope/gate files
   or approach change; preserve explicitly pre-existing SDD history if fixture includes it.
 - Adoption: brownfield canonical ID-free input migrates once through core formal policy; legacy history remains
   historical. Baseline includes all warranted retained formal docs and missing-source/required-doc gaps; no gap
@@ -86,19 +86,42 @@ conflict/unverified result. It creates no implicit Unit, envelope, gate, retrosp
 - Maintenance: per kind, rename and retire a document referenced by prose and relation fields, aliases, independent
   detail and ordinary support links. Repair references/relative paths and retain shared support; verify resolve,
   incoming/outgoing refs, actual file destinations and source agreement after every operation.
+- Composed rename/root-move plus artifacts: for each of DESIGN/DOMAIN/OPS under both SDD and adaptive, in global
+  and registered package roots, start with a canonical parent, one ID-free Markdown support artifact, non-Markdown
+  support, independent formal detail and ordinary incoming/source links. Rename the parent and move its subtree;
+  then move it between global/package roots in both directions, preserving the ID for the root move. Resolve the
+  old same-kind alias to the renamed parent, prove old parent folders absent, and check links from outside and
+  inside the moved subtree. Run core path/identity/reference checks, including a deliberately orphaned old-ID
+  subtree control which must remain invalid despite the alias. Derive/apply DESIGN anchors via the core API;
+  DOMAIN/OPS remain ineligible. The independent detail retains its own identity.
+- Composed retire plus source deletion: for each kind × approach × root, remove the supported source/subject and
+  retire the retained canonical document in the same change. For DESIGN remove/replace dead entrypoints while
+  retaining useful live anchors; retain removed source coordinates only in historical prose with commit. For
+  DOMAIN/OPS repair body source/action-owner links without adding entrypoints. Repair incoming current routes and
+  ordinary support links, assign retained support one live or retired canonical parent or explicitly historical
+  materials with provenance, and leave no stale duplicate/unowned subtree. Assert default browse omission,
+  history/resolve/refs access and full core rule validity of the retired node. A retired DESIGN with a deleted
+  live entrypoint must fail liveness checking; retirement cannot waive the check.
+- Composed split/cross-kind transfer plus artifacts: each kind × approach × root allocates statements, independent
+  detail and every retained artifact to one canonical owner, repairs ingress and relative links and verifies no
+  stale duplicate. Cross-kind transfer retains the retired old identity and replacement reference, rejects
+  cross-prefix aliases and validates applicable entrypoints for the receiving kind using core policy.
 - Controls: metadata-only document target yields no selected source anchor; core-ineligible kind yields no pair;
   unregistered/unsupported input follows existing contract; unrelated formal role remains byte-identical. CAP/UC
   derivation/reciprocity, registered namespace selection, malformed metadata and alias collisions retain behavior.
 
 ## 5. Verification matrix
 
-Every row applies separately to design, domain and operations. Execution reports name actual core kind/ID/path,
+The L1 operation matrix is DESIGN/DOMAIN/OPS × read/create/update/split/rename/root-move/reclassify/retire ×
+SDD/adaptive × global/registered-package roots. The composed scenarios above are required in addition to
+standalone operators; split and transfer include one-parent artifact allocation. All other applicable rows
+are exercised separately for design, domain and operations, with explicit ineligible controls. Execution reports name actual core kind/ID/path,
 source revision, owner, command and observed outcome per row; an unexecuted or generic-only assertion is a gap.
 Tests implement scripted procedures, not proof an autonomous agent made semantic judgments.
 
 | Requirement / surface | Runtime or source owner | Exact verification owner / command |
 | --- | --- | --- |
-| L1 each kind × read/create/update/split/rename/reclassify/retire × SDD/adaptive; source and detail/artifact agreement | Core schemas reused; spec/adaptive procedures changed | New files packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py and packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py; run `uv run pytest packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py`. Script actual docs commands/reference fixes and assert final file content/links/source hashes; label semantic review evidence separately |
+| L1 full kind × operation × approach × root matrix above, including composed artifact moves and source-deletion retirement; source and detail/artifact agreement | Core schemas reused; spec/adaptive procedures changed | New files packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py and packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py; run `uv run pytest packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py`. Script actual docs commands/reference fixes and assert final file content/links/source hashes; label semantic review evidence separately |
 | L2 generated formal impact/migration/applicability sections | proposals/usecases/scaffold.py | packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py; `uv run pytest packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py` |
 | L2 core eligibility and per-kind source anchors; alias/namespace/apply idempotence/skip controls | Existing entrypoints derive/apply/CLI feature | packages/devkit-spec/tests/integration/features/entrypoints/{test_derive,test_apply,test_cli}.py; `uv run pytest packages/devkit-spec/tests/integration/features/entrypoints` |
 | L2 multi-role and single-role through plan/review/reconcile; no unrelated edits | spec-plan/review/sync/planning/completion assets | Existing packages/devkit-spec/tests/integration/bundles/spec/ with focused test_formal_document_lifecycle_guidance.py; scripted E2E file above generates blueprint and exercises target handling with core kinds |
@@ -162,3 +185,16 @@ The structural `UC-keep-the-living-spec-consistent` is not a semantic drift/reco
 restates formal impact at those existing delivery rules and only adds structural scenarios to that use case.
 No outside-tree reads/writes reported; before/after content+mode inventory matched
 9b28830282a954a95c22edcea325a2684f48aa810f55c6ba83b5847dfc810a1b at unchanged HEAD306b30e.
+
+## 7. Updated-input consumer consistency
+
+Continuation base is aa8413847220cc9dc6528a267505954c727837f8; source inventories and both Scout records
+remain valid for unchanged sources. The only new source input is the immutable core contract at
+504e2e12006ab3e2aad2b8ce470607646ad4c4ac, verified as 22110 bytes with SHA256
+1d724834426991e04904fd9f1677f60235de49764d9a1863ad9c8d112c55f413. Adapter/namespace/source metadata
+match the Host payload. Its new composed invariants affect spec-plan/planning/scaffold impact selection,
+spec-review/completion comparison, spec-sync maintenance and adaptive documents/documenter returns. These already
+own the same responsibilities in target-docs; their planned acceptance now explicitly includes the composed
+scenarios in section 4 and matrix in section 5. Entrypoint derive/apply continues to call the core API; no duplicated
+applicability table, new feature edge or neutral-docs lifecycle obligation is introduced. PADR option 1 and L1–L4
+are unchanged. This is contract consistency evidence, not delivered runtime or semantic execution proof.

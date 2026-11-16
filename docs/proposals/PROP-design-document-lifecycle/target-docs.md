@@ -110,9 +110,13 @@ Core/viewer completion is separate required milestone evidence; these comparison
 
 ## 6. Selected core interface dependency
 
-[Core consumption record](materials/core-interface-pin.md) pins source ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d and
+[Core consumption record](materials/core-interface-pin.md) pins source 504e2e12006ab3e2aad2b8ce470607646ad4c4ac and
 verified content hash. Use flat canonical role IDs and peer independent details; parent-owned artifacts live under
-PARENT-ID/artifacts. DESIGN has optional entrypoints; DOMAIN/OPS are explicitly ineligible. All three support
+PARENT-ID/artifacts. Same-kind rename/root moves carry that subtree and repair ordinary links; aliases do not
+legalize old orphan folders. Split/cross-kind transfer assigns every retained artifact exactly one canonical
+parent without stale duplicates. Retired nodes remain rule-checked; DESIGN retirement with source deletion
+removes/replaces obsolete entrypoints in the same change and retains historical coordinates only as prose plus
+commit. The composed global/package × SDD/adaptive scenarios in materials are mandatory. DESIGN has optional entrypoints; DOMAIN/OPS are explicitly ineligible. All three support
 complete lifecycle operations, same-kind aliases, typed optional relations and retired identity without ADR
 supersession fields. Consumer guidance points to the core definitions rather than copying an applicability matrix.
 This is a reviewed future contract; delivered core runtime/assets are a prerequisite to Development handoff.

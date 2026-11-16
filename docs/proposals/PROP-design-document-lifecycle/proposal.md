@@ -126,7 +126,7 @@ this phase or complete the milestone.
 
 ### Dependency readiness
 
-The selected future core interface is pinned at ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d with verified artifact hash
+The selected future core interface is pinned at 504e2e12006ab3e2aad2b8ce470607646ad4c4ac with verified artifact hash
 in [core interface](materials/core-interface-pin.md). It settles schema consumption for Planning. Handoff still
 requires delivered core definitions, templates, writing instructions, migration ledger and entrypoint policy at an
 identified implementation revision; the selected contract is not runtime evidence.

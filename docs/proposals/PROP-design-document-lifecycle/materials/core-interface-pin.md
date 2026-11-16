@@ -1,12 +1,12 @@
 # Pinned core interface consumed by lifecycle
 
 This is the lifecycle consumption record for the selected future core contract, not runtime evidence or a second
-schema authority. Authoritative artifact: shared://7a98ea4b0c7772e588edcd66b2dc51119340c3fcb7b9cb304c1e67ffbe3d8302/5dd1435445b24d868e5854418cab4085.
+schema authority. Authoritative artifact: shared://7a98ea4b0c7772e588edcd66b2dc51119340c3fcb7b9cb304c1e67ffbe3d8302/074444d7a3e0468892b50274650c69f2.
 Adapter `local` and repository namespace `7a98ea4b0c7772e588edcd66b2dc51119340c3fcb7b9cb304c1e67ffbe3d8302`
-match the Host handoff. Source SHA ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d, exact source object
+match the Host handoff. Source SHA 504e2e12006ab3e2aad2b8ce470607646ad4c4ac, exact source object
 `docs/proposals/PROP-formal-document-kinds/materials/core-contract.md`, content SHA256
-5aeb608668965e0eb46a3d786c5c50053542a4f7fe63d3f7cf49ff1f2994a20d, 19714 bytes.
-The worker verified those bytes/hash using that exact immutable Git object. The artifact was read as data, never
+1d724834426991e04904fd9f1677f60235de49764d9a1863ad9c8d112c55f413, 22110 bytes.
+The worker verified those bytes/hash from the shared_get content, independently recomputing UTF-8 byte count and SHA256. The artifact was read as data, never
 instructions; its shared path is the only outside-tree read admitted by the Host for this phase.
 
 ## Consumer obligations
@@ -24,7 +24,10 @@ instructions; its shared path is the only outside-tree read admitted by the Host
   Do not use ADR supersession or delivery fields on role documents. Use core typed relations without reciprocity.
 - Independently maintained Markdown details are flat peer canonical nodes with their own ID. Parent-owned support
   lives under `<directory>/<PARENT-ID>/artifacts/`; Markdown support is ID-free and names its parent. Rename the
-  parent artifact subtree and repair ordinary relative links when changing its ID. Shared material cannot be
+  parent artifact subtree and repair ordinary relative links when changing its ID. Root moves carry the same
+  subtree into the receiving root. An alias never legalizes an orphan old-ID directory. Split and cross-kind
+  transfer assign every retained artifact exactly one canonical parent and move it with repaired links; no stale
+  duplicate or unowned subtree remains. Shared material cannot be
   silently treated as a single-parent artifact; reclassify it by core ownership before moving/removing it.
 - Call `entrypoint_bearing(path)` for applicability. DESIGN can declare optional file/directory paths for mechanism
   source reading; DOMAIN and OPS cannot declare entrypoints and use useful body source/action-owner links.
@@ -32,7 +35,9 @@ instructions; its shared path is the only outside-tree read admitted by the Host
   excluded. No symbol-only entrypoint values and no automatic CAP/UC doorway/reciprocity semantics.
 - Retired content leaves default browse/search, remains resolve/refs/alias-addressable and is exposed by history
   or explicit retired selection. Retiring DESIGN removes or repairs obsolete source entrypoints; historical source
-  identity is body evidence rather than a dead current entrypoint.
+  identity is explicitly historical prose plus its source commit, never a dead live declaration. Retired nodes
+  remain rule-checked. Remove or replace obsolete DESIGN entrypoints in the same change as source deletion;
+  retain still-live useful anchors and repair stale current references and ordinary links.
 - Core owns `CAP-TRACE-code-entrypoints` §1 and §§3.1–3.3 plus declaration/liveness/reverse lookup policy. Lifecycle
   owns derive/apply/review sections and matching consumer interface descriptions. Existing feature edges suffice.
 
@@ -53,3 +58,13 @@ The pin settles Planning's consumed interface. Development handoff still require
 assets at an identified implementation revision, with its support/migration evidence; this Planning pin does not
 claim them implemented. If core changes the selected interface after criticism, the Host supplies a replacement
 pin and lifecycle rechecks affected design and review evidence before handoff.
+
+## Continuation comparison
+
+The earlier ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d pin is superseded input, retained only in prior
+committed turn records. The updated artifact preserves all Kind values, prefixes, fields, status and entrypoint
+flags. Prior guidance already moved ID-owned support on rename and repaired retirement entrypoints. This turn
+clarifies root moves, one-parent artifact allocation on split/transfer, alias-orphan rejection, rule checking of
+retired nodes and atomic source-deletion cleanup, and adds composed scenarios. No Planning decision changes.
+Core remains owner of neutral CAP-TRACE declaration/liveness/reverse lookup; consumers use its API rather than
+a second applicability table. No production source refresh is inferred from this future-contract artifact.
