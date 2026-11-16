@@ -154,6 +154,8 @@ consumers itself, and the viewer adopts it after it lands.
   devkit-spec entrypoint and baseline fixtures are rebuilt on the bundle and area paths; lifecycle behavior does
   not change. The brownfield adoption skill and the spec completion reference mention supporting artifacts
   without a path and stay as written. The work stays one feature spec, so the size rises to L instead of a split.
+- **Consumer migration.** Formal kinds are unreleased and no consumer repository holds flat design or domain
+  documents, so consumer repository migration is out of scope (user decision).
 
 ### Non-Goals
 
@@ -164,6 +166,7 @@ consumers itself, and the viewer adopts it after it lands.
 - No area or bundle for operations documents, and no bundle for domain documents.
 - No change to template sections or authoring guidance; `PROP-formal-document-templates` owns that alignment and
   follows this proposal.
+- No consumer repository migration path, remediation for flat paths or migration note.
 - No registry or validation of area names beyond the directory and `area` field match.
 
 ### Expected acceptance evidence

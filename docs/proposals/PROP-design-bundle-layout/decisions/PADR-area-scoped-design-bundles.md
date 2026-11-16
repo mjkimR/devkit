@@ -68,8 +68,10 @@ ownership and entrypoint clauses stay in force.
 - Good: design and domain work can be scoped by an area prefix.
 - Good: IDs, aliases and ID references survive an area move; the index and resolution are unchanged.
 - Bad: the rules gain layout-aware grammar, support classification and entrypoint eligibility code.
-- Bad: existing designs, domain documents, lifecycle fixtures and consumer repositories migrate once; the viewer
+- Bad: this repository's designs, domain documents and lifecycle fixtures migrate once; the viewer
   adopts the grammar in a follow-up.
+- Neutral: formal kinds are unreleased and no consumer repository holds flat design or domain documents, so no
+  consumer migration path is needed.
 - Neutral: an area move edits the `area` field with the path; `devkit rules fix` repairs a stale value.
 
 ## 6. Confirmation
