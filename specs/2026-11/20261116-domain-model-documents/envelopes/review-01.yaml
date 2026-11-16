@@ -1,0 +1,24 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T04:18:48.785503Z'
+status: completed
+summary: Independent medium review confirms D1-D6; stale ADR discovery conclusion requires correction.
+findings:
+- issue: ADR confirmation still says domain discovery has not been demonstrated
+  evidence: docs/decisions/2026-11/20261116-linked-domain-relationship-views.md:67 contradicts development-evidence.md D2/D3
+  failure_condition: Reader assessing whether Development discharged the conditional discovery requirement receives an incorrect conclusion
+  suggested_action: Replace stale conclusion with bounded demonstrated routes and ordinary evidence link, retaining limitations
+  resolution: open
+  severity: P3
+assumptions:
+- Emulated role; no native confinement. Author HEAD and full tracked/nonignored snapshot unchanged e8b670c7b72f1ea93f14ed764736009ca743aa2e9f1453295332636d76d5be07; no outside document reads.
+checks:
+  rules: PASS independent reviewer ran rules check --ci --base main zero errors/warnings
+  whitespace: PASS independent reviewer checked committed range
+  links: PASS independent reviewer checked 8 ordinary destinations
+  tests: SKIP reviewer did not rerun supplied970fa15 affected2591/E2E1 passes
+diff_scope:
+  base: c9f293a16339f56c0413ee16dc25efca2b22e7b6
+  head: e0f166f77b5ffa1fdd8217c4334ef866a9dd50ac

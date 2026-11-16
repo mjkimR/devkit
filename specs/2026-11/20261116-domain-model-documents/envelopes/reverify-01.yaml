@@ -1,0 +1,18 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T04:19:07.332850Z'
+status: completed
+review: review-01.yaml
+summary: Implementer verified corrected ADR confirmation against recorded D2/D3 reader evidence; decision unchanged and all review findings resolved.
+findings:
+- issue: ADR confirmation still says domain discovery has not been demonstrated
+  evidence: docs/decisions/2026-11/20261116-linked-domain-relationship-views.md:67 contradicts development-evidence.md D2/D3
+  failure_condition: Reader assessing whether Development discharged the conditional discovery requirement receives an incorrect conclusion
+  suggested_action: Replace stale conclusion with bounded demonstrated routes and ordinary evidence link, retaining limitations
+  resolution: resolved
+  severity: P3
+checks:
+  adr: PASS stale assertion replaced with bounded evidence and explicit baseline/timing/universal limitations; ordinary relative evidence link resolves
+  rules: PASS scoped ADR check zero errors/warnings

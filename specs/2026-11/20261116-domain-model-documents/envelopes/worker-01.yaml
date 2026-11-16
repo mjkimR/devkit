@@ -1,0 +1,29 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T04:23:44.367226Z'
+status: completed
+summary: 'Completed one Development turn through final report: two maintained conceptual entries, selected ingress, generic source guidance and D1-D6 evidence; independent review P3 resolved and reconcile all9targets passed. Only tracked sync output .devkit/installation.json (sync output); no scope extensions. Clean committed scope returned before Host integration.'
+findings: []
+assumptions:
+- 'Emulated host supplies no native boundary guarantee: explicit absolute cwd/read/write scopes, per-operation sibling/shared-Git escalation, changed-path audit and immutable full tracked/nonignored snapshots substitute; no outside document reads reported.'
+- No normative transfer, Kind/runtime, production namespace configuration, test source or feature edge changed. Derived authoring-instruction entrypoint candidates rejected; existing runtime entrypoints retained.
+- User authorized sequential domain then operations Development; this worker performed no merge/push/integration. CLI reports dev-integration auto policy passed, but only Host owns integration and postlanding verification.
+unverified_areas:
+- No independent base route measurement; Planning supplied-entry pilot is historical baseline only. No timing/read-count improvement or universal-discovery claim.
+- Optional resolver-root clarity is FB-resolve-package-path-anchor; D3 route fully passes without waiver. PROP-operations-documents, PROP-design-document-lifecycle and PROP-design-document-viewer retain deferred work; FB-runtime-journal-ordering unchanged. Consumer optional MCP runtime integration unexercised.
+checks:
+  sync_start: PASS exit=0 uv run devkit sync --check before first edit
+  sync: PASS source sync then sync --check; ignored managed instruction and local render updated; only tracked output .devkit/installation.json admitted task2
+  readers: PASS two fresh global readers and fresh alpha reader; actual namespace list/search controls and D4 identity/owner/ordinary-links controls; immutable author HEAD/fulltree snapshots matched, no outside document reads
+  consumer: PASS D5 exact delivered guidance bytes f35ba865a4daed31a7b52445cfc5f437f44b34b692b84a2a1da0bfc3bf6d7f24 generic wording no domain scaffold
+  tests: PASS just test-affected --base 19baca429e39d691c9ceee1b1b7b7b67ee738634 at 970fa15cb336703ff60e9d4e8796be0b37d867dc; partial mode 157 paths unit/integration 2591 passed; mode=full fallback retained
+  e2e: PASS uv run --no-active --no-sync pytest packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py -q at 970fa15cb336703ff60e9d4e8796be0b37d867dc; 1 passed; separate selected built-wheel consumer
+  lint: PASS just lint-check devkit-docs Ruff/format155files and just check devkit-docs Pyright0errors; source instruction hygiene0errors/warnings and no repository IDs
+  rules: PASS uv run devkit rules check --ci --base main at 2def7805843b7b3e0e3fe5f5d19579cea4e72f60 zero errors/warnings; scoped rules/envelope/whitespace passed
+  review: PASS nested code-reviewer initial confirmed D1-D6 and one P3 stale ADR; implementer fixed/reverified in reverify-01; nested independent reconcile-reviewer passed9targets with no findings
+diff_scope:
+  base: c9f293a16339f56c0413ee16dc25efca2b22e7b6
+  head: f60db5b67e88dc79ba7ba368bc94a98aed030eae
+activity_effort: medium

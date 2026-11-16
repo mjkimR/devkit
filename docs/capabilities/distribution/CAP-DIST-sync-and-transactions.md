@@ -110,6 +110,10 @@ rules: `files` may only name managed or projected destinations, and asset `paths
 
 ## 2. Asset Selection Model
 
+For how availability, requested selection, conceptual assets, projected paths and receipt evidence relate, read
+[Bundle selection and installation](../../domain/bundle-selection-and-installation.md). Selection and receipt
+contracts remain in this capability.
+
 Installing a package makes its bundle **available**. A bundle that declares `auto_select`
 (`CAP-DIST-manifest-spec`) is also **selected** with its
 `default_preset` from then on, whether the package was added directly or arrived as a runtime dependency of another

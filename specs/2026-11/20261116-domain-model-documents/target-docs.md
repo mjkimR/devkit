@@ -3,7 +3,7 @@ id: PROP-domain-model-documents-target
 title: Target Living Spec Structure for Domain-model documentation
 summary: "Defines the two maintained domain relationship entries, selected discovery links, generic source guidance and independent global and package validation."
 status: draft
-proposal: PROP-domain-model-documents
+proposal: SPEC-domain-model-documents
 created_at: 2026-11-16
 targets:
 - file: docs/domain/delivery-relationships.md

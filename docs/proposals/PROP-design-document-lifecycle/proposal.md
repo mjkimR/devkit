@@ -27,7 +27,7 @@ task_kind: feature
 workflow: sdd-proposal
 depends_on:
 - SPEC-design-document-foundation
-- PROP-domain-model-documents
+- SPEC-domain-model-documents
 - PROP-operations-documents
 ---
 

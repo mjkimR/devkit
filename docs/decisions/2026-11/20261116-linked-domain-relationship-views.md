@@ -1,15 +1,15 @@
 ---
-id: PADR-linked-domain-relationship-views
+id: ADR-linked-domain-relationship-views
 title: Linked domain relationship views
 summary: "For maintained conceptual relationships, we use linked ID-free domain entries with existing contract owners, to give question-specific understanding, accepting owner-led discovery and review-only link checks."
-proposal: PROP-domain-model-documents
-status: draft
+proposal: SPEC-domain-model-documents
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-linked-domain-relationship-views] Linked domain relationship views
+# [ADR-linked-domain-relationship-views] Linked domain relationship views
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---
@@ -40,12 +40,12 @@ Foundation retains domain as a distinct role and leaves its maintained home open
 Choose linked ID-free domain entries, conditional on independent global/package domain route validation in Development.
 
 - Conceptual relationship entries use `docs/domain/<slug>.md`, or analogous `domain/` under a registered package
-  docs root. → `CAP-DOCS-documentation-ownership` planned Domain representation subsection (SHOULD).
+  docs root. → `CAP-DOCS-documentation-ownership` §3.4 Domain representation (SHOULD).
 - An entry gives its question, relationship overview, authority boundary and next useful step; only useful detail
   is split. Selected owner links provide question-specific discovery without whole-layer prerequisites.
-  → `CAP-DOCS-documentation-ownership` planned Domain representation subsection (SHOULD).
+  → `CAP-DOCS-documentation-ownership` §3.4 Domain representation (SHOULD).
 - ID-free domain files do not borrow indexed identity or promise search/resolve/refs nodes.
-  → `CAP-DOCS-documentation-ownership` planned Domain representation subsection (MUST).
+  → `CAP-DOCS-documentation-ownership` §3.4 Domain representation (MUST).
 - Validity/transformation contracts retain their current owners; no normative statement transfers.
 - No Kind, runtime, namespace schema, template, viewer or lifecycle automation is selected.
 
@@ -64,4 +64,7 @@ to the Host before any runtime scope expansion. New Kind work needs its own evid
 
 Review only for semantic owner uniqueness, source agreement and ordinary navigation. D1–D6 in the blueprint require
 independent withheld-entry global/package walkthroughs, negative identity controls, source asset delivery and scoped
-checks. Domain discovery has not yet been demonstrated; Foundation's validated routes concern DESIGN only.
+checks. The bounded independent global and registered-package routes passed in
+[Development evidence](../../materials/2026-11/20261116-domain-model-documents/development-evidence.md).
+No independent baseline route measurement, timing improvement or universal discovery claim is established;
+Foundation's validated routes concern DESIGN only.

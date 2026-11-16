@@ -53,5 +53,5 @@ reading registry. No runtime, new Kind/ID grammar, search/index/refs, namespace,
 executable procedure, permission, template, lifecycle or viewer changes are selected.
 
 Shared future edits to the two capabilities and source guidance are sequential Host work, alongside
-`PROP-domain-model-documents`; reconcile each named section against the then-current owners. Current Planning
+`SPEC-domain-model-documents`; reconcile each named section against the then-current owners. Current Planning
 writes only this proposal bundle.
