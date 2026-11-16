@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T10:39:52.064383Z'
+status: completed
+summary: 'round 1; isolated reconcile-reviewer: all three targets match compose_envelope and require_authored incl. the committed-record branch; no other Living Spec statement stale; FB resolution justified; two P3 findings'
+findings:
+- issue: Two [FIX] hints still suggest `envelope reverify --unit <unit> --from latest` without --summary, which the contract now refuses.
+  evidence: packages/devkit/src/devkit_agt/features/workflow/services/envelope/authoring.py:220 (_close_round); authoring.py:418-422 (review --from refusal fix)
+  failure_condition: An agent follows either fix exactly and is refused for a missing --summary
+  suggested_action: Add --summary "<judgment>" to both suggested reverify commands and assert it in a test
+  resolution: open
+  severity: P3
+- issue: The reconcile names ADR-explicit-envelope-commits as owner of the nonempty-summary rule; the rule is CAP-DLV-workflow-envelopes section 5 item 3.
+  evidence: specs/2026-11/20261116-reverify-summary-required/reconcile.md:43-44
+  failure_condition: A reader looks in the ADR for the rule and does not find it
+  suggested_action: Reword the Decisions reason to name the capability section; the ADR decision is unchanged
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS rules check --ci errors=0
+diff_scope:
+  base: 22b28c936c4d4b05d8465178ac6175fb6dfa8b2b
+  head: e733ecd2fd950eecd2139b73b6a4a104fffbfd43
