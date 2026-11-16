@@ -2,7 +2,7 @@
 id: SPEC-formal-document-coverage
 title: Formal document coverage across capability areas
 summary: Adds one DESIGN, one DOMAIN and four OPS documents, written from the current code and Living Spec, for the delivery, host, mcp, distribution and search reader questions no existing owner answers, in three parallel Development units.
-status: planned
+status: in-progress
 created: 2026-11-16
 related_capabilities: []
 related_usecases: []
@@ -26,16 +26,16 @@ operations routing beyond capabilities, architecture and reference.
 `CAP-DOCS-documentation-ownership` §3.3 asks for one reader question per formal document and to drop a document that
 has none. The accepted Planning inventory
 ([inventory](../../../docs/materials/2026-11/20261116-formal-document-coverage/inventory.md)) found six reader
-questions no existing owner answers (IDs are plain text until the documents exist); the other areas are answered by their listed owners.
+questions no existing owner answers; the other areas are answered by their listed owners.
 
 | ID | Kind and path | Unit | One reader question (short) |
 | --- | --- | --- | --- |
-| DESIGN-workflow-stage-evaluation | DESIGN, `docs/designs/delivery/` | A | In what order does `devkit workflow next` evaluate one sample Unit, and why does it report only the first unmet stage? |
-| OPS-assignment-attention-routing | OPS, `docs/operations/` | A | Which evidence and owner fit an adaptive assignment `list` attention value? |
-| OPS-host-hook-dispatch-routing | OPS, `docs/operations/` | B | A configured host hook shows no warning and no observation: which evidence selects the owner? |
-| OPS-mcp-runtime-refusals | OPS, `docs/operations/` | B | Some MCP tools run while others refuse, or a registration is inactive: which surface's evidence selects the owner? |
-| DOMAIN-override-lifecycle | DOMAIN, `docs/domain/distribution/` | C | Which capability state is a project override in, how does it differ from `ORPHAN_LEFT`, and what changes it? |
-| OPS-search-mode-and-model-routing | OPS, `docs/operations/` | C | Search ran lexical-only or failed with a `SEARCH_*` model error: which evidence selects the owner? |
+| `DESIGN-workflow-stage-evaluation` | DESIGN, `docs/designs/delivery/` | A | In what order does `devkit workflow next` evaluate one sample Unit, and why does it report only the first unmet stage? |
+| `OPS-assignment-attention-routing` | OPS, `docs/operations/` | A | Which evidence and owner fit an adaptive assignment `list` attention value? |
+| `OPS-host-hook-dispatch-routing` | OPS, `docs/operations/` | B | A configured host hook shows no warning and no observation: which evidence selects the owner? |
+| `OPS-mcp-runtime-refusals` | OPS, `docs/operations/` | B | Some MCP tools run while others refuse, or a registration is inactive: which surface's evidence selects the owner? |
+| `DOMAIN-override-lifecycle` | DOMAIN, `docs/domain/distribution/` | C | Which capability state is a project override in, how does it differ from `ORPHAN_LEFT`, and what changes it? |
+| `OPS-search-mode-and-model-routing` | OPS, `docs/operations/` | C | Search ran lexical-only or failed with a `SEARCH_*` model error: which evidence selects the owner? |
 
 ## 2. User Stories
 
@@ -73,11 +73,11 @@ questions no existing owner answers (IDs are plain text until the documents exis
 ### [AC-04] Writing conditions
 - **Given** the inventory writing conditions
 - **When** each document is read
-- **Then** DESIGN-workflow-stage-evaluation is a worked example on one sample Unit; OPS-assignment-attention-routing
-  prescribes no action choice; OPS-host-hook-dispatch-routing has exactly 1 trust/PATH row with evidence "devkit
-  reports `unknown`"; OPS-mcp-runtime-refusals has only cross-surface rows naming owners by code row or ID;
-  DOMAIN-override-lifecycle uses only the capability's states and codes and distinguishes `ORPHAN_LEFT`;
-  OPS-search-mode-and-model-routing has the explicit `--mode hybrid` row, or is absent with the drop reported
+- **Then** `DESIGN-workflow-stage-evaluation` is a worked example on one sample Unit; `OPS-assignment-attention-routing`
+  prescribes no action choice; `OPS-host-hook-dispatch-routing` has exactly 1 trust/PATH row with evidence "devkit
+  reports `unknown`"; `OPS-mcp-runtime-refusals` has only cross-surface rows naming owners by code row or ID;
+  `DOMAIN-override-lifecycle` uses only the capability's states and codes and distinguishes `ORPHAN_LEFT`;
+  `OPS-search-mode-and-model-routing` has the explicit `--mode hybrid` row, or is absent with the drop reported
 
 ### [AC-05] Current facts
 - **Given** the Development head
