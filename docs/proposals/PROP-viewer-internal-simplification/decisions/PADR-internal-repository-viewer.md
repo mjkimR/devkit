@@ -3,7 +3,7 @@ id: PADR-internal-repository-viewer
 title: Internal single-host repository viewer
 summary: "For a viewer only devkit's local server hosts, we drop the Svelte library, generic-host fallbacks and remote-host features but keep the committed-build wheel and read-only working-tree server, to cut code and contract surface, accepting that no other host can embed it."
 proposal: PROP-viewer-internal-simplification
-supersedes: [ADR-repository-viewer, ADR-release-handbook, ADR-viewer-namespace-roadmap-discovery, ADR-proposal-acceptance]
+supersedes: [ADR-repository-viewer, ADR-release-handbook, ADR-viewer-namespace-roadmap-discovery]
 status: draft
 created_at: 2026-11-16
 ---
@@ -89,19 +89,37 @@ The viewer is an internal tool with one host, `devkit viewer serve`, and no publ
   a resolved path outside the registered root is never served. → `CAP-VIEW-repository-viewer` §2 (MUST).
 - The server binds `127.0.0.1` only, refuses a non-loopback `Host` header, sends no CORS headers, answers GET only and
   has no write endpoint. → `CAP-VIEW-repository-viewer` §3 (MUST).
+- `devkit viewer serve [--repo PATH]... [--scan DIR]... [--port N]` runs in the foreground until interrupted, with no
+  daemon; repositories are registered by command options, not a configuration file, and a repository's ID is its
+  directory name, with duplicates refused. → `CAP-VIEW-repository-viewer` §1 (MUST).
+- The server is the standard library `ThreadingHTTPServer` with GET handlers; no web framework or other new runtime
+  dependency is added.
+- The browser parses the documents, so the viewer needs no `devkit-docs` or `devkit-spec` code and repositories
+  pinning different versions stay readable. → `CAP-VIEW-repository-viewer` §4 (MUST).
+- Approvals stay out: the viewer records no answer, grants no gate or integration approval and shows no open workflow
+  request. → `CAP-VIEW-repository-viewer` §3 (MUST).
+- Apart from proposals under Planning, the page and the roadmap read only the registered checkout.
+  → `CAP-VIEW-repository-viewer` §2 (MUST).
+- The roadmap shows milestones by status (`done` and `dropped` behind a history toggle), `depends_on` order and
+  readiness, and member proposals and specs. → `CAP-VIEW-repository-viewer` §5 (MUST).
 - The page uses one data source, the local HTTP API; recursive tree listing, dashboard header listing, Planning
   proposals and source-scoped Planning reads are required members, there is no `refs` member or `ref` argument, and
   the frontend keeps no discovery path for a source without them. The frontend is one application source tree without
   a `lib/` re-export layer.
   → `CAP-VIEW-repository-viewer` §2 and §4.1 (MUST).
 - The viewer reads no shared artifacts: the Shared tab and the `/review/<repo>/<generation>` page are removed, and
-  the viewer has no dependency on `devkit_dist` shared-artifact APIs. → `CAP-VIEW-repository-viewer` §4 (MUST).
+  the viewer has no dependency on `devkit_dist` shared-artifact APIs; its `.devkit/architecture.toml` feature edge to
+  `devkit_dist.features.shared` goes. → `CAP-VIEW-repository-viewer` §4 (MUST).
 
 ### Dashboard
 
 - A dashboard section lists frontmatter through `dashboard-list`, reads the bodies of its eligible entries, and shows
   all of them; there is no body paging, Load more, per-page Retry or dashboard list or page cache. Refresh clears the
   source's caches and reloads the sections. → `CAP-VIEW-repository-viewer` §4.1 (MUST).
+- IF some body reads of a section fail, THEN the section shows the cards that read successfully and the per-path
+  errors, and its count includes the failed entries; Refresh is the retry. The existing ordering (milestones active
+  then planned; proposals review, draft then accepted; open feedback by severity; then ID and path) is kept.
+  → `CAP-VIEW-repository-viewer` §4.1 (MUST).
 - The document index and roadmap keep their 30-second reuse within a page, because tab switches reuse them.
   → `CAP-VIEW-repository-viewer` §4.1 (MUST).
 
@@ -119,20 +137,18 @@ The viewer is an internal tool with one host, `devkit viewer serve`, and no publ
 
 ### Host surface
 
-- The page opens on the Dashboard and keeps only the repository in its address; `initialPath` book deep links, the
-  `sdd:path-change` and `sdd:item-selected` events and the bindable book request for a standalone `KnowledgeViews`
-  host are removed.
+- The page always opens on the Dashboard and keeps only the repository in its address; the `initialView` and
+  `initialPath` props, the `sdd:path-change` and `sdd:item-selected` events and the bindable book request for a
+  standalone `KnowledgeViews` host are removed. `book` stays the internal view id of the Read tab.
   → `CAP-VIEW-repository-viewer` §4.3 (MUST).
 
 ### Supersession
 
 Supersedes in part `ADR-repository-viewer`: every decision (distribution and frontend, autohub consumption, server, working-tree reads, proposal-review route and Planning proposal overlay); the ADR becomes superseded after handoff.
 
-Supersedes in part `ADR-release-handbook`: the library-host clauses (library hosts keep their `RepositoryDataSource`; hosts keep the `book` view id, `initialView` and the `sdd:path-change` event; the standalone `KnowledgeViews` binding of the book request; the library-host deep links).
+Supersedes in part `ADR-release-handbook`: the library-host clauses (library hosts keep their `RepositoryDataSource`; the host guarantee of the `book` view id, `initialView` and the `sdd:path-change` event; the standalone `KnowledgeViews` binding of the book request; the library-host deep links).
 
 Supersedes in part `ADR-viewer-namespace-roadmap-discovery`: the generic-host clauses (generic discovery trusting host tree/blob representation; generic hosts keeping their tree/blob interface; one helper serving both generic routes).
-
-Supersedes in part `ADR-proposal-acceptance`: the viewer exception permitting registered-local-adapter, exact-generation `proposal-review` artifact reads.
 
 - Removing every foreign-host accommodation and the features without a producer meets "remove contracts and code
   no consumer exercises" while the kept list meets "keep what the repository uses"; the committed build keeps

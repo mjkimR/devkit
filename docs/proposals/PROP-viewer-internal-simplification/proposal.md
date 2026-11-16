@@ -27,6 +27,7 @@ boundaries:
     - scripts/affected_tests.py
     - .github/workflows/ci.yml
     - justfile
+    - .devkit/architecture.toml
   excludes:
     - handbook/
     - packages/devkit-dist/
@@ -67,8 +68,9 @@ Accommodations that exist only for the external host:
   in its URL.
 - Documentation: CAP-VIEW §6, its autohub mentions and its library-host fallback text; `ARCH-05-1-containers` and
   `ARCH-07-deployment`; `ADR-repository-viewer`; the host clauses of `ADR-release-handbook` and
-  `ADR-viewer-namespace-roadmap-discovery`; the viewer exception in `ADR-proposal-acceptance`; the package and
-  frontend READMEs, the viewer reference, `setup.md` and `ci-cd.md`.
+  `ADR-viewer-namespace-roadmap-discovery`; the package and frontend READMEs, the viewer reference, `setup.md` and
+  `ci-cd.md`. The viewer exception of `ADR-proposal-acceptance` is already superseded by
+  `ADR-retire-native-approval-and-moved-ownership-clauses`; the live review-route clause is in `ADR-repository-viewer`.
 
 Kept regardless:
 
@@ -116,23 +118,30 @@ The user settled every question at the recommended option; Planning settled the 
    deleted. The overlay request, in-place card update, Planning-only append, source badges and source-scoped reads
    with their refusal codes stay. The overlay cache, order seeding and withdrawn-source reconciliation go: each
    dashboard or Proposals load asks again.
-5. **Host surface removed** (user). `initialPath`, `sdd:path-change`, `sdd:item-selected` and the bindable
-   `bookRequested` go. The page opens on the Dashboard as today, and the book-request state stays internal to
-   `SddViewer`. The URL hash keeps only the repository.
+   If some body reads of a dashboard section fail (a file moved or mid-save after `dashboard-list`), the section shows
+   the cards that read successfully and the per-path errors, and its count includes the failed entries; Refresh is the
+   retry. The existing ordering rule stays a CAP-VIEW §4.1 clause with its own test, since `loading.test.ts` changes.
+5. **Host surface removed** (user). The `initialView` and `initialPath` props, `sdd:path-change`, `sdd:item-selected`
+   and the bindable `bookRequested` go. The page always opens on the Dashboard, as today; `book` stays the Read tab's
+   internal view id, and the book-request state stays internal to `SddViewer`. The URL hash keeps only the
+   repository.
 6. **Small items on evidence** (Planning). `--scan`, repeated `--repo` and the repository picker stay: they serve
    local multi-repository use and do not exist for a foreign host. The Mermaid fullscreen modal stays as a local
    reading aid. The Mermaid diagram types stay unrestricted: Mermaid loads lazily, so a restriction would shrink only
    the wheel and could leave a document diagram unrendered.
 7. **Source layout** (user). `frontend/src/lib/` collapses into the application tree under `frontend/src/`, so no
    `lib/`/`app/` split or re-export layer remains. Check paths in CAP-VIEW, the viewer use cases' `entrypoints`, and
-   the Confirmation paths in `ADR-viewer-indexed-decision-supersession` are repaired to the new paths. The repairs
-   leave every decision unchanged. Completed specs and `docs/materials/` keep their historical paths.
-8. **Decision record** (Planning). `PADR-internal-repository-viewer` restates the retained decisions and supersedes
-   `ADR-repository-viewer` whole. It also supersedes in part the library-host clauses of `ADR-release-handbook`, the
-   generic-host clauses of `ADR-viewer-namespace-roadmap-discovery` and the viewer exception of
-   `ADR-proposal-acceptance`. A whole replacement leaves one current viewer decision instead of an ADR full of
-   partial pointers. After handoff, Development sets `ADR-repository-viewer` to `superseded` with `superseded_by` and
-   adds the three partial pointers, which `RULE-decision-supersession` checks.
+   the Confirmation paths in `ADR-viewer-indexed-decision-supersession`, `ADR-release-handbook` and
+   `ADR-viewer-namespace-roadmap-discovery` are repaired to the new paths. The repairs leave every decision
+   unchanged. Completed specs and `docs/materials/` keep their historical paths.
+8. **Decision record** (Planning). `PADR-internal-repository-viewer` supersedes `ADR-repository-viewer` whole and
+   restates each retained decision with its CAP-VIEW trace. The retained decisions are distribution and the committed
+   build, working-tree reads, server safety, registration and repository IDs, the stdlib server, browser parsing,
+   approvals out, checkout scope, the roadmap and the reduced overlay. The PADR also supersedes in part the
+   library-host clauses of `ADR-release-handbook` and the generic-host clauses of
+   `ADR-viewer-namespace-roadmap-discovery`. A whole replacement leaves one current viewer decision instead of an ADR
+   full of partial pointers. After handoff, Development sets `ADR-repository-viewer` to `superseded` with
+   `superseded_by` and adds the two partial pointers, which `RULE-decision-supersession` checks.
 9. **Split** (Planning). One feature spec, size L. The work is one package and its contract and has one task kind.
    Its tasks are ordered: library and fallbacks, collapse, trims, then docs. A split would leave CAP-VIEW and the ADR
    half-updated between units. `dev_effort` stays `medium`: nothing irreversible changes, and no consumer remains.
@@ -151,7 +160,8 @@ The user settled every question at the recommended option; Planning settled the 
 7. Regenerate `viewer-assets`.
 8. Update the docs: CAP-VIEW §§1-6 and the review-page section, the viewer use cases' `entrypoints`,
    `ARCH-05-1-containers`, `ARCH-07-deployment`, `docs/development/reference/viewer.md`, `setup.md`, `ci-cd.md`, and
-   the package and frontend READMEs. Also make the ADR status and pointer changes of decision 8.
+   the package and frontend READMEs. Also make the ADR status and pointer changes of decision 8, and remove the
+   `browse` edge to `devkit_dist.features.shared` from `.devkit/architecture.toml`.
 
 ### Design, domain and operations impact
 
@@ -160,30 +170,36 @@ The user settled every question at the recommended option; Planning settled the 
 - **Domain**: unaffected. No document kind, identity or relation semantics change; the viewer only renders them.
 - **Operations**: unaffected. No operations document covers the viewer. `just viewer` loses its `pack` action, and
   `docs/development/ci-cd.md` and `setup.md` record that.
-- **Architecture**: the viewer drops its `devkit_dist.features.shared` imports. No package, feature or feature edge is
-  added. `.devkit/architecture.toml` is unchanged.
+- **Architecture**: the viewer drops its `devkit_dist.features.shared` imports, and Development removes
+  `devkit_dist.features.shared` from `feature_dependencies.browse` in `.devkit/architecture.toml`. The `devkit-dist`
+  public module list is unchanged. No package, feature or feature edge is added.
 
 ### Expected acceptance evidence
 
 - **A1 Library gone**: no `exports`, `files`, `svelte`, `types`, `package` script or peer dependency remains in
   `package.json`. `scripts/viewer.sh pack` is an unknown action. CI and `FRONTEND_CHECK` run no pack.
-  `rg -n 'autohub|npm pack|svelte-package' docs/capabilities docs/architecture docs/development packages/devkit-viewer`
-  finds no viewer-library mention (the frontend lockfile excepted).
+  `rg -n 'autohub|npm pack|svelte-package' docs/capabilities/viewer docs/usecases/viewer
+  docs/architecture/ARCH-05-1-containers.md docs/architecture/ARCH-07-deployment.md docs/development/reference/viewer.md
+  docs/development/setup.md docs/development/ci-cd.md packages/devkit-viewer --glob '!package-lock.json'
+  --glob '!**/static/**'` prints nothing.
 - **A2 One data source**: the required members type-check (`just viewer check`). No frontend file passes `ref` or
   calls a fallback discovery path. Dashboard, roadmap and overlay tests run against the required members.
 - **A3 Trims**: `test_server.py` proves `/review/...` and the removed shared endpoints answer
   `404 VIEWER_NOT_FOUND`. No `VIEWER_REVIEW_*` or `VIEWER_SHARED_*` code remains. Dashboard tests prove that every
-  eligible card renders without Load more and that Refresh reloads. `test_planning.py` proves the worktree-then-local
+  eligible card renders without Load more, in the kept order. They also prove that a failed body read shows the
+  other cards, the per-path error and the full count, and that Refresh reloads. `test_planning.py` proves the worktree-then-local
   precedence, merged-branch exclusion, no remote-tracking source, and the source refusals.
-- **A4 Host surface**: the frontend contains no `sdd:path-change`, `sdd:item-selected` or `initialPath`, and the
-  local app still opens on the Dashboard.
+- **A4 Host surface**: the frontend contains no `sdd:path-change`, `sdd:item-selected`, `initialView` or
+  `initialPath`. The local app still opens on the Dashboard, and `book` remains the Read tab's view id.
 - **A5 Checks**: `just viewer lint`, `check`, `test` and `build`; `uv run devkit generated check viewer-assets`;
   `just test-affected`; and `uv run devkit rules check` pass.
+  `rg -n 'frontend/src/(lib|app)/' docs --glob '!docs/materials/**' --glob '!docs/proposals/**'
+  --glob '!docs/decisions/2026-11/20261102-repository-viewer.md'` prints nothing.
 
 ## 4. Lifecycle & Retirement Criteria
 
 - Planning settled Q1-Q5 at the recommended options. The Host asks for `plan-accept`, then hands off to one
   `sdd-spec-feature` unit, which is integrated locally under `dev-integration=auto`.
 - At handoff, `PADR-internal-repository-viewer` becomes an ADR. Development then sets `ADR-repository-viewer` to
-  `superseded` and adds the partial pointers in the three other ADRs.
+  `superseded` and adds the partial pointers in the two other ADRs.
 - Retire the proposal when the trimmed viewer lands and A1-A5 hold.

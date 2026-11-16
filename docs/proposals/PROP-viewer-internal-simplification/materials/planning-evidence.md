@@ -55,7 +55,10 @@ reader.
 
 CAP-VIEW 19-21, 114, §4.1 (129-139), §4.2 (140-170), 208-231, §6 (350-376) and the review page (377-390).
 `ADR-repository-viewer` is superseded whole. The clauses superseded in part are `ADR-release-handbook` 67-69 and
-190-200, `ADR-viewer-namespace-roadmap-discovery` 45-53 and `ADR-proposal-acceptance` 253-256.
+190-200 and `ADR-viewer-namespace-roadmap-discovery` 45-53. `ADR-proposal-acceptance`'s viewer exception (253-256) is
+already superseded by `ADR-retire-native-approval-and-moved-ownership-clauses`. Confirmation paths to repair after the
+collapse are `ADR-release-handbook` 269 and `ADR-viewer-namespace-roadmap-discovery` 72. The `browse` feature edge to
+`devkit_dist.features.shared` is in `.devkit/architecture.toml:172`.
 `ADR-viewer-indexed-decision-supersession` mentions hosts only in its drivers and consequences, so it needs a
 reference repair only (its Confirmation path). Other files: `ARCH-05-1-containers` 34, 65 and 151-160;
 `ARCH-07-deployment` 21 and 102; `docs/development/reference/viewer.md` 62-110; `docs/development/setup.md` 42-50;
