@@ -2,7 +2,7 @@
 id: PROP-formal-doc-authoring-checkpoints
 title: 'Formal documentation checkpoints: route facts, review reimplementability, record assessments'
 summary: Make formal documentation get filled during ordinary delivery by adding fact-type routing, a reconcile formal-docs assessment field, reimplementability questions for the reconcile reviewer, a capability observable-contract rule and a reference template.
-status: reviewing                       # draft | reviewing | accepted | rejected
+status: accepted                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-16
 target_area: documents/
 priority: high                        # critical | high | medium | low
