@@ -1,0 +1,33 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T05:15:50.180214Z'
+status: completed
+summary: Read-only Scout verified core model/source integration and four canonical migrations; 374 incoming-ref source rows across nine targets, bounded body coverage in materials/scout-evidence.md.
+findings:
+- issue: Explicit Kind rows and Living Spec grammar are required for all three formal roles.
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/kinds.py:64; packages/devkit-docs/src/devkit_docs/features/governance/usecases/id_convention.py:301
+  suggested_action: Use exact per-kind schema, prefix and governance contracts in materials/core-contract.md.
+  resolution: open
+- issue: Reference shape fields and target-prefix definitions are separate; aliases and provenance already have distinct semantics.
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/model.py:12; packages/devkit-docs/src/devkit_docs/features/documents/models/parse.py:64
+  suggested_action: Add three typed optional related_* lists in both mechanisms; keep aliases and provenance separate.
+  resolution: open
+- issue: Independent design detail requires its own formal identity, and current canonical inventory is four files.
+  evidence: docs/designs/distribution-transactions/file-directory-replacement.md:1; docs/proposals/PROP-formal-document-kinds/materials/scout-evidence.md
+  suggested_action: Migrate both design and both domain files and create archived-input OPS node under the exact migration ledger.
+  resolution: open
+- issue: Bundle instructions/templates, manual CLI help and consumer inventories need explicit integration despite generic index behavior.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/bundle.toml:124; packages/devkit-docs/src/devkit_docs/features/documents/cli/commands.py:192
+  suggested_action: Execute the complete per-kind support and consumer matrix in Development; no new core feature edge needed.
+  resolution: open
+assumptions:
+- Codex emulated; explicit own-tree scopes and frozen author writes; complete before/after tree ca60f585836c42fb3005bc9eb02267ab671cce45 and unchanged HEAD verified.
+unverified_areas:
+- No runtime implementation/tests; incoming refs complete but not every returned body read; sibling lifecycle/viewer implementation outside Scout scope.
+checks:
+  tests: SKIP source inspection only
+diff_scope:
+  base: bde0a923192aaea7f6a467bb6a575db4ca447f9e
+  head: c8ef8ba1e71c3bbe6423052e3e28a4874efecf0a

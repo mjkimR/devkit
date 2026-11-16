@@ -59,3 +59,19 @@ historical-path ingress closure is specified in the target blueprint.
 No runtime/test behavior is verified by this audit. The selected contract intentionally differs from Scout's
 initial no-terminal/all-entrypoints-false suggestion: strict retired semantics and DESIGN optional source anchors
 are explicit choices in core-contract §8, with new governance/query tests required.
+
+## Added neutral owners before Challenger
+
+Caller ran complete incoming-ref queries for CAP-TRACE-code-entrypoints (42 source rows) and CAP-GOV-spec-rules
+(90 source rows) at ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d. Bounded metadata aggregation avoided treating
+truncated console bodies as full inspection. TRACE status counts: accepted 1, active 8, promoted 1, dismissed 1,
+empty 8, draft 2, planned 1, resolved 10, completed 10. GOV: accepted 11, active 10, resolved 24, done 1, empty 13,
+draft 8, completed 23. Body reads covered the two capabilities and relevant current model/lookup/namespace/rule
+contracts; the full returned source bodies were not read. Those current contracts are in the exact target scope;
+other callers retain generic path/rule contracts unchanged. Completed Unit children with empty status are not
+asserted current merely because their frontmatter status is blank. `docs list spec --limit 0` returned zero current
+specs and 249 hidden historical specs. Counts are inspection inputs, not test counts or distinct-source claims.
+
+The source/path ingress sweep and exact historical preservation paths are in target-docs §3. No external source
+was needed. The pre-existing missing PATH guesses during caller reads were corrected using rg discovery; no source
+content was inferred from nonexistent files.
