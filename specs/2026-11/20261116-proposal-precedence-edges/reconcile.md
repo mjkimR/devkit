@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-proposal-precedence-edges
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
@@ -12,7 +12,8 @@ targets:
 
 - `CAP-HARN-agent-guidance`, section "Repository Backlog and next work": a new paragraph owns the two checks. A
   draft claiming its handoff precedes another proposal's, or whose cost depends on another proposal's or spec's
-  state, is checked before it is committed and again on its first Planning turn as part of the head-pinned recheck:
+  state, is checked before it is committed and again on its first Planning turn as part of the head-pinned recheck, which
+  now runs on the first turn as well as after each Host refresh (reconcile-check-01 finding 1):
   each named unit's base `status` and any local or already fetched `dev-<slug>` branch, fetching only within existing
   network authorization. A handoff (a `dev-<slug>` branch or a `SPEC-<slug>`) makes the premise stale and it is
   rewritten; an ordering against a still-accepted proposal with no branch is the user's sequencing decision stated
