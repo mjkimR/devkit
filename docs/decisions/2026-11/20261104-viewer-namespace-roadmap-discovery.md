@@ -69,6 +69,9 @@ working-tree reads, independent parsing and Planning-overlay clauses remain in f
 
 ## 6. Confirmation
 
+As verified when this decision was made; the paging, cache and generic-host checks below describe behavior that
+`ADR-internal-repository-viewer` later removed.
+
 - `tests/integration/features/browse/test_namespace_roadmap.py` verifies global/two-package and configuration
   matrices, saved untracked content, header-only reads, local symlinks and partial errors.
 - `frontend/src/api/milestones.test.ts` verifies shared generic discovery, host-returned types, cross-root

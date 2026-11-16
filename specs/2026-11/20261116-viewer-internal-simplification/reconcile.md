@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-viewer-internal-simplification
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified
@@ -59,9 +59,6 @@ targets:
   path and count in the total; Refresh clears the caches and reloads; the document index and roadmap keep their
   30-second reuse. CAP-VIEW §4.1 restates these as All eligible cards, Ordering, Partial failure, No dashboard cache
   and Freshness.
-
-`devkit spec entrypoints derive` proposed no pair worth writing: the capability and use-case `entrypoints` already name
-`frontend/src/` paths, and the other candidates are configuration, lockfiles or READMEs.
 - **Planning overlay**: sources are another worktree, else the local branch; merged local branches and
   remote-tracking refs are no source; source refusals are unchanged. The overlay is requested on every dashboard or
   Proposals load and seeds no order. CAP-VIEW §2.1 and §4.2 are updated; Ordering seed, Withdrawn source and Overlay
@@ -70,13 +67,17 @@ targets:
   and `sdd:item-selected` events, the bindable `bookRequested` and the handbook page request props are gone; the page
   opens on the Dashboard and `book` remains the Read tab's id. CAP-VIEW §4.3 drops Host deep links and Location.
 - **Supersession records**: `ADR-repository-viewer` is `superseded` with `superseded_by:
-  ADR-internal-repository-viewer`; the two partial pointers written at handoff stand. Its statement in the new ADR
+  ADR-internal-repository-viewer`; the partial pointers written at handoff in `ADR-release-handbook` and
+  `ADR-viewer-namespace-roadmap-discovery` stand. Its statement in the new ADR
   and the repeated pointer drop the clause that it would become superseded after handoff, and the new ADR's option
   text no longer names the proposal's Planning decisions as its origin.
 
 `ARCH-05-1-containers` and `ARCH-07-deployment` drop the vendored library and its npm policy. The development
 reference, `setup.md` and `ci-cd.md` drop the pack action and describe the dashboard and overlay as delivered; the
 package and frontend READMEs (derived documents, not Living Spec targets) follow.
+
+`devkit spec entrypoints derive` proposed no pair worth writing: the capability and use-case `entrypoints` already name
+`frontend/src/` paths, and the other candidates are configuration, lockfiles or READMEs.
 
 ## Removed paths
 
@@ -100,7 +101,14 @@ package and frontend READMEs (derived documents, not Living Spec targets) follow
 
 ## Deferred work
 
-Stale wording outside this unit's boundaries is reported to the Host as feedback, not edited here:
-`UX-view-decision` host wording, `ADR-package-ownership-and-release-version`'s frontend npm library version clause,
-and the decision text of `ADR-viewer-namespace-roadmap-discovery` and `ADR-viewer-indexed-decision-supersession` that
-mentions library hosts, paging and caches beyond what the partial pointers cover.
+Stale wording outside this unit's boundaries is reported to the Host as feedback, not edited here; none is a
+contract mismatch:
+
+- `UX-view-decision` keeps host wording ("host screens", "Existing host navigation", "where the host offers it").
+- `ADR-viewer-namespace-roadmap-discovery` keeps its "Both dashboard routes" decision bullet and library-host
+  drivers; its generic-host clauses are covered by the partial pointer, and its Confirmation is now marked as verified
+  at decision time.
+- `ADR-viewer-indexed-decision-supersession` mentions library hosts only in its drivers and consequences.
+- The frontend npm library version clause of `ADR-package-ownership-and-release-version` is already superseded by
+  `ADR-selective-package-versions`; it is wording cleanup only.
+- `.gitignore` keeps `dist`/`dist-pack` entries of the removed library build (outside every task boundary).
