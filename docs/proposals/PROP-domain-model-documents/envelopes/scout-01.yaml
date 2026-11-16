@@ -1,0 +1,31 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T03:56:10.626786Z'
+status: completed
+summary: Scout before first Challenger; corrected incoming inventories distinguish document counts from occurrences; ID-free domain entries reuse owner routes, while domain discovery remains unproven.
+findings:
+- issue: Existing ownership and Foundation leave domain home independent of Kind
+  evidence: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md:14-24; docs/decisions/2026-11/20261116-documentation-ownership-and-linked-design-entries.md:38-60
+  suggested_action: Choose domain home, identity and tooling separately
+  resolution: open
+- issue: Supplied domain pilot establishes understanding, not independent discovery
+  evidence: docs/materials/2026-11/20261116-design-document-pilot/reader-trials.md:54; docs/materials/2026-11/20261116-design-document-foundation/development-evidence.md:40-93
+  suggested_action: Require independent withheld-entry domain global and package routes
+  resolution: open
+- issue: Bounded incoming inventories do not establish consumer-body coverage
+  evidence: docs/proposals/PROP-domain-model-documents/materials/incoming-references.txt; ownership 2, Foundation ADR 4, lifecycle 19, transactions 88 incoming documents
+  suggested_action: Preserve inventories and read only affected contract passages
+  resolution: open
+- issue: New Kind costs at least enum and definition; exact consumers require inspection if selected
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/kinds.py:25-42,64-82
+  suggested_action: Reuse existing identity facilities unless a required indexed outcome is demonstrated
+  resolution: open
+unverified_areas:
+- No exhaustive incoming-body review; new Kind consumer cost beyond enum and definition uninspected; independent unsupplied domain discovery deferred to D2-D4.
+checks:
+  scope: PASS Scout reports no writes or outside-worktree reads
+diff_scope:
+  base: 5ff227fbb6a903539ba842661de14b3bba2370b1
+  head: 5ff227fbb6a903539ba842661de14b3bba2370b1
