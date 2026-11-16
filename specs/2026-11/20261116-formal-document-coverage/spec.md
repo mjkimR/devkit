@@ -1,36 +1,23 @@
 ---
-id: PROP-formal-document-coverage
+id: SPEC-formal-document-coverage
 title: Formal document coverage across capability areas
-summary: "Adds one DESIGN, one DOMAIN and four OPS documents, written from the current code and Living Spec, for the delivery, host, mcp, distribution and search reader questions no existing owner answers, in three parallel Development units."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-16
-target_area: documents/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - docs/designs/
-    - docs/domain/distribution/
-    - docs/operations/
-    - docs/proposals/PROP-formal-document-coverage/
-  excludes:
-    - packages/
-    - docs/capabilities/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/development/
-    - docs/steering/
-    - docs/domain/delivery/
-    - docs/designs/distribution/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Adds one DESIGN, one DOMAIN and four OPS documents, written from the current code and Living Spec, for the delivery, host, mcp, distribution and search reader questions no existing owner answers, in three parallel Development units.
+status: planned
+created: 2026-11-16
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-formal-document-coverage] Formal document coverage across capability areas
+# [SPEC-formal-document-coverage] Formal document coverage across capability areas
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-formal-document-coverage on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-formal-document-coverage`
+
+### 1. Background & Hypothesis
 
 The formal kinds (DESIGN, DOMAIN, OPS), their area-scoped paths (`ADR-area-scoped-design-bundles`) and their
 templates and writing instructions (`ADR-problem-first-formal-document-openings`) are delivered. Five formal
@@ -46,27 +33,46 @@ Hypothesis: an inventory of reader questions per area, answered from the current
 bounded set of formal documents that agents and maintainers use instead of reading source to recover mechanisms,
 concept distinctions and symptom routing.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Formal document coverage across capability areas so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which areas have a reader question that only a DESIGN (local mechanism), DOMAIN (concepts readers
   confuse) or OPS (symptom → owner routing) document answers, and which existing owner already answers the rest?
 - **Q2**: How should the work split into Development units (by area group, disjoint `docs/` paths) so workers run in
   parallel, and is any unit XL?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Documentation only. Each new document follows its kind's delivered template and writing instruction
 (`design-writing`, `domain-writing`, `operations-writing`), states its authority boundary by full ID and moves no
 normative statement out of its current owner (`CAP-DOCS-documentation-ownership` §3.1). No code, capability,
 architecture, reference or ADR changes; a gap found in those is recorded as feedback.
 
-### 3.1 Inventory (answers Q1)
+#### 3.1 Inventory (answers Q1)
 
 IDs of documents this proposal creates are written without code spans until they exist.
 Four parallel scouts covered all 18 capability areas plus architecture, reference and source; one challenger round
 tested the result. Six documents survive; the other 13 areas have no reader question an existing owner leaves open.
 The full table, sources, owners not to duplicate, writing conditions and the dropped list (with each owner) are in
-[the inventory](materials/inventory.md).
+[the inventory](../../../docs/materials/2026-11/20261116-formal-document-coverage/inventory.md).
 
 | ID | Kind | Unit | One reader question (short) |
 | --- | --- | --- | --- |
@@ -77,7 +83,7 @@ The full table, sources, owners not to duplicate, writing conditions and the dro
 | DOMAIN-override-lifecycle | DOMAIN, `docs/domain/distribution/` | C | Which capability state is a project override in, how does it differ from `ORPHAN_LEFT`, and what changes it? |
 | OPS-search-mode-and-model-routing | OPS | C | Search ran lexical-only or failed with a `SEARCH_*` model error: which evidence selects the owner? |
 
-### 3.2 Development split (answers Q2)
+#### 3.2 Development split (answers Q2)
 
 One spec (`sdd-spec-feature`, size M, not XL: one task kind and one contract kind). Three units with disjoint paths
 run as parallel workers inside that spec's Development; each unit is one task group whose `_Boundary:_` is its files.
@@ -91,7 +97,7 @@ run as parallel workers inside that spec's Development; each unit is one task gr
 A unit's `related_*` fields name only IDs that already exist or that the same unit writes; cross-unit links are
 optional and are added only after the units are integrated.
 
-### 3.3 Planning decisions
+#### 3.3 Planning decisions
 
 - DESIGN-envelope-return-timestamp-ordering is dropped: `CAP-DLV-human-interaction` §5 already states timestamp
   precision and same-second voiding; its example becomes one step of DESIGN-workflow-stage-evaluation.
@@ -105,14 +111,14 @@ optional and are added only after the units are integrated.
 - No PADR: no decision meets the `decision-writing` admission criteria; these are inclusion choices within the
   approved intent.
 
-### 3.4 Design, domain and operations impact
+#### 3.4 Design, domain and operations impact
 
 The change adds one design, one domain and four operations documents as listed; it edits no existing formal document.
 `DOMAIN-delivery-relationships`, `DOMAIN-bundle-selection-and-installation`, `OPS-distribution-sync` and both
 distribution designs are unaffected: no new document changes their statements, and links to them are optional
 `related_*` entries. Each statement in a new document keeps its existing owner named by full ID.
 
-### 3.5 Acceptance criteria
+#### 3.5 Acceptance criteria
 
 - **AC-1**: Each of the six documents exists at its §3.2 path with its kind's delivered template structure: a
   problem-first lead paragraph without a question section, the kind's required section (`## Relationship overview`
@@ -133,6 +139,7 @@ distribution designs are unaffected: no new document changes their statements, a
 - **AC-6**: `uv run devkit rules check` passes on each new document, `git diff --check` is clean, and no file outside
   the §3.2 boundaries changes except spec records and feedback.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Retired when the accepted inventory's documents are delivered by the handed-off spec units.
+
