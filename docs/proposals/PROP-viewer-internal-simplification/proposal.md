@@ -2,7 +2,7 @@
 id: PROP-viewer-internal-simplification
 title: 'Viewer as an internal tool: drop the library surface and trim unused features'
 summary: autohub no longer vendors the viewer library, so remove the npm library surface and generic-host fallbacks and trim viewer features nothing in the repository uses.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-16
 target_area: viewer/
 priority: high                        # critical | high | medium | low
