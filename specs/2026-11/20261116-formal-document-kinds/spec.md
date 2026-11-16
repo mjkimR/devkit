@@ -9,155 +9,68 @@ related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-formal-document-kinds] First-class design, domain and operations document kinds
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-formal-document-kinds on 2026-11-16.
-- **Preserved Materials**: `docs/materials/2026-11/20261116-formal-document-kinds`
-- Target Docs Blueprint: `PROP-formal-document-kinds-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-The intended change is the documentation hierarchy as a supported system. Design, domain and operations require
-formal Kind, prefix and ID standing with the existing document toolchain. Linked ID-free entries do not satisfy
-this requirement. Their useful content and responsibility boundaries remain inputs to migration.
-
-`SPEC-design-document-foundation` and `SPEC-domain-model-documents` delivered ID-free current entries.
-`ADR-documentation-ownership-and-linked-design-entries` and `ADR-linked-domain-relationship-views` encode that
-identity restriction. Planning must produce a new ADR superseding those clauses; it must preserve unique owners
-and existing capability guarantees. The superseded operations proposal's Development work is unmerged and halted
-at commit 55bc46fb5ce350e0a84666d6df338f8947e54e1b. Its copied source and evidence in
-[materials](../../../docs/materials/2026-11/20261116-formal-document-kinds/README.md) are historical inputs, not current main implementation or formal-kind proof.
-
-One coherent core Kind integration spec can deliver the model, governance, authoring, discovery and migration
-contract. Required lifecycle and viewer integration remain separately owned by `PROP-design-document-lifecycle`
-and `PROP-design-document-viewer`. The milestone is complete only when all three phases are verified.
+Design, domain and operations need formal identity, discovery, governance and neutral authoring support.
+The selected [core contract](../../../docs/materials/2026-11/20261116-formal-document-kinds/core-contract.md)
+F1–F6 and `PROP-formal-document-kinds-target` define the accepted schema and migration. The previous ID-free
+entries retain useful content but do not satisfy formal standing. `ADR-formal-role-document-identities` records
+the partial supersession of the earlier identity restrictions while preserving responsibility boundaries.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement First-class design, domain and operations document kinds so that system capabilities are extended.
+- **US-1**: As an agent, I can identify, search, resolve and reference each formal role directly in global and package roots.
+- **US-2**: As an author, I can maintain independent detail and parent-owned supporting artifacts using shipped neutral templates and checks.
+- **US-3**: As a maintainer, I can migrate existing content without losing incoming navigation or changing behavioral authority.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Lifecycle derivation/apply and adaptive/SDD workflow integration belong to `PROP-design-document-lifecycle`.
+2. **Scope Excluded**: Viewer rendering and handbook policy belong to `PROP-design-document-viewer`; both phases remain required for milestone completion.
+3. **Scope Excluded**: New packages, feature edges, MCP services, recovery commands, reciprocal reference obligations or transfers of existing behavioral guarantees.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Formal identities and schema
+- **Given** each role in global and registered namespace roots
+- **When** documents are parsed and their identity/format/summary rules run
+- **Then** DESIGN/design, DOMAIN/domain and OPS/operations use the exact flat prefixed grammar and required nonempty string metadata; draft/active/retired are the only statuses; invalid path/H1/status/reserved fields fail existing rules.
 
-## 5. Carried Proposal Notes
+### [AC-02] Discovery, aliases and typed references
+- **Given** real nodes of all three kinds, same-prefix aliases and related_designs/related_domains/related_operations fields
+- **When** list, search, resolve, refs and canonical rewriting run
+- **Then** all kinds are directly reachable; retired nodes require history/status for browsing but still resolve; namespace selection and repository-wide identity work; malformed, duplicate and unresolved relations fail; existing JSON keys and kind ordering remain compatible.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Detail and artifact governance
+- **Given** independent detail and parent-owned Markdown/non-Markdown support artifacts
+- **When** identity and format rules run
+- **Then** independent details require formal peer IDs; only an ID-free artifact under a same-root same-kind canonical parent's artifacts subtree is exempt; orphan, ID-bearing and stray nested Markdown fail. Rename/root-move/split/reclassification retain one artifact owner and repaired ordinary links in maintenance fixtures.
 
-### 2. Technical Spike Questions
+### [AC-04] Applicable source entrypoints
+- **Given** canonical DESIGN, DOMAIN and OPS documents and source changes
+- **When** entrypoint applicability, liveness and reverse file lookup run
+- **Then** optional safe workspace-relative DESIGN paths participate; artifact/README paths do not; DOMAIN/OPS reject the field; deletion/escape controls fail, and retirement with removed source clears obsolete declarations.
 
-- **Q1**: What exact directory, prefix, stem/H1 grammar, frontmatter, status and relation schema fits each kind?
-  Proposed prefixes are DESIGN, DOMAIN and OPS. Each kind must receive a formal prefix; Planning confirms spelling
-  and namespace behavior rather than making identity optional.
-- **Q2**: Which independently maintained Markdown details deserve their own formal node, and which supporting
-  Markdown or non-Markdown artifacts belong to an identified parent? Define canonical identity, nesting,
-  navigation and migration without assigning IDs to CSV files or images.
-- **Q3**: Which structured reference fields express the useful relationships, and how do identity aliases,
-  current references, provenance and supersession remain distinct? Define source-entrypoint applicability per
-  kind; do not copy CAP/UC reciprocal relation or code-entrypoint requirements without a role-specific reason.
-- **Q4**: Which existing generic mechanisms already support the three kinds, and which explicit prefix, grammar,
-  schema, help, rule or distribution inventories need extension? Produce and verify a complete support matrix.
-- **Q5**: How can migration preserve incoming links, details and historical evidence while retaining public Python,
-  CLI and JSON compatibility and docs-only built-wheel operation without a spec package dependency?
+### [AC-05] Neutral authoring and installed delivery
+- **Given** the selected docs core bundle
+- **When** it is synchronized and consumed from built wheels without devkit-spec
+- **Then** eleven instructions and nine template files include the three formal templates/instructions and a compatibility pointer; get-context exposes the instructions; authored examples pass applicable rules without imposing SDD records or gates.
 
-### 3. Proposed Design & Impact
+### [AC-06] Canonical migration and authoritative navigation
+- **Given** four existing role documents and the archived operations input
+- **When** migration completes
+- **Then** all five exact active IDs in core-contract §7 exist, old canonical paths are absent, current ingress and source/detail links work, historical bytes remain intact, and current role boundaries/architecture/public references agree with implementation.
 
-#### Formal model and governance
+### [AC-07] Complete support and regression evidence
+- **Given** the accepted F1–F6 support matrix
+- **When** owned unit/integration/rule and installed-consumer checks run
+- **Then** every applicable surface has real new-kind proof and existing-kind compatibility; lint/type/affected checks pass, the matrix records actual evidence, and required lifecycle/viewer phases remain explicitly pending.
 
-- Extend `packages/devkit-docs` Kind enum and definitions, coverage assertions and Living Spec path grammars for
-  all three kinds. Declare appropriate directory, area policy, H1 token, summary, status and relation semantics.
-- Extend parsing, aliases, namespace indexing, structured references and provenance wherever required by the
-  selected schema. Define supported relations and applicable source entrypoints explicitly in current contracts.
-- Provide identity, prefix/path/H1, metadata, alias, reference, format, summary and applicable code-entrypoint
-  rule coverage. Preserve existing codes, deterministic actions and published output contracts.
-- Audit index/list/filter/order, search modes and exact-ID pinning, resolve and incoming/outgoing refs. Update
-  public Python APIs, serialized kind values, CLI choices/help and reference documentation consistently.
-  Generic paths count when tested with actual new-kind nodes, not merely because an old owner links to content.
-- Verify parity across existing published surfaces. `devkit-docs` registers bundles, commands, config templates
-  and context documents; it has no document MCP service. Do not invent a new service to satisfy an assumed API.
-  Planning may include runtime/core/CLI boundary changes actually needed for existing contracts; it must name any
-  cross-package boundary extension and feature dependency rather than excluding runtime work by habit.
+## 5. Assumptions and measurement
 
-#### Authoring assets and migration
-
-- Replace ID-free design authoring with formal design guidance and template; add domain and operations writing
-  instructions and templates. Update docs bundle registration/core selection, source AGENTS pointers,
-  seed/docs/README.md, repository docs/README.md and relevant architecture-writing boundaries.
-- Verify template directory distribution and exact instruction/template inventories, source sync, `get-context`
-  discovery and installed-consumer built-wheel tests. Docs assets remain delivery-approach neutral.
-- Migrate every canonical current document in the three role directories. Initial retained inputs are
-  `docs/designs/distribution-transactions.md`, its `distribution-transactions/file-directory-replacement.md`
-  detail, `docs/domain/delivery-relationships.md` and `docs/domain/bundle-selection-and-installation.md`.
-  Reuse the archived operations sync composition as content input and create a canonical formal operations node.
-- Repair selected capability/reference/glossary ingress, relative detail/artifact links and ID references in the
-  same migration. Inventory the full current directories during Planning so these examples do not cap coverage.
-- Preserve archived pilot materials and completed records as evidence. Publish a new superseding ADR and update
-  the current documentation-ownership and document-model contracts to formal standing. Do not silently rewrite
-  the accepted historical decisions or retain ID-free canonical entries as an optional parallel route.
-
-#### Ownership and integration
-
-`packages/devkit-docs` owns core behavior and shipped neutral assets. The `docs/` boundary permits creation of
-`docs/operations/`; other documentation changes remain limited to the role directories and current owners named
-above, plus exact relevant contracts identified during Planning. Its existing CLI, governance, document
-features and tests are in scope for Planning. Current owner documents may change only for the formal support and
-migration contract; their distribution/recovery/delivery guarantees remain unchanged. The target blueprint lists
-source interfaces and prospective canonical documents. Planning declares required feature dependencies.
-
-`PROP-design-document-lifecycle` owns spec/adaptive workflow integration, lifecycle skill guidance and proposal
-scaffolding. `PROP-design-document-viewer` owns viewer frontend/backend, public frontend libraries, generated
-assets and handbook prefix/source lookup policy. These integrations are required phases, not optional fixes
-triggered only by a pilot failure. Their separate ownership keeps this proposal one L feature integration.
-
-#### Expected acceptance evidence
-
-- **F1 — Identity and schema**: Real design, domain and operations nodes load in global and registered namespace
-  roots. Positive and negative tests cover metadata, status, prefix, path, H1, aliases and each supported relation.
-  Detail identity and support-artifact policy are demonstrated with the retained transaction design.
-- **F2 — Discovery and references**: Each kind passes list/filter, search and exact-ID/pinned lookup, resolve,
-  incoming/outgoing prose and structured refs, rename/alias handling and namespace selection. Assert public
-  Python/CLI/JSON kind values and compatibility, including legacy kinds and malformed/unresolved controls.
-- **F3 — Governance**: Kind coverage/grammar assertions, ID, format, summary, reference and applicable entrypoint
-  rules exercise all three kinds; invalid documents produce the expected stable codes and repair/action behavior.
-- **F4 — Authoring and delivery**: Template-to-document authoring, source registration, sync and `get-context`
-  visibility pass for all kinds. Distribution inventories and installed docs-only built-wheel consumption pass
-  without importing `devkit-spec`. A neutral consumer acquires no implicit SDD lifecycle.
-- **F5 — Migration and maintenance**: Every canonical current role document has its formal identity and all ingress,
-  reference and artifact destinations remain usable. A create/update/rename/retire maintenance walkthrough and
-  source-to-detail change retain one authoritative owner. Historical pilot evidence remains intact.
-- **F6 — Coverage and regression**: A support matrix names every relevant existing surface, applicability,
-  implementation owner and verification. Generic mechanisms have new-kind test proof. Existing kinds and package
-  compatibility pass appropriate regression checks. Required lifecycle/viewer evidence is tracked in their
-  dependent proposals and prevents milestone completion until delivered.
-
-### 4. Lifecycle & Retirement Criteria
-
-The corrected direction is in Planning review. Planning settles the schemas and complete
-implementation contract before acceptance and handoff. One L core integration spec is the intended handoff.
-Acceptance requires the planned formal-kind support matrix, migration inventory and superseding decision scope.
-Development retirement requires F1–F6 evidence and reconciliation of current contracts and shipped assets.
-The milestone additionally requires the lifecycle and viewer phases. Neither small code size nor owner-linked
-ID-free navigation can substitute for formal support.
-
-### 5. Planning decisions
-
-The selected implementation contract is [core-contract](../../../docs/materials/2026-11/20261116-formal-document-kinds/core-contract.md). DESIGN/design,
-DOMAIN/domain and OPS/operations use flat prefixed filenames, required metadata and optional typed relations.
-Independent detail is a formal peer node. Status is draft, active or retired; only design accepts optional source
-entrypoints. Parent-owned artifacts have a narrow explicit path exception. The three formal templates/instructions,
-current migrations, public compatibility and required lifecycle/viewer interfaces are part of the core contract.
-PADR-formal-role-document-identities records the lasting schema and partial supersession choice. No unresolved
-user direction is inferred from the superseded ID-free sources. HIGH Development remains appropriate for public
-Kind/identity/output contracts. Implementation size is not a criterion for dropping required runtime or governance.
-
+The handoff base already includes the two dependent accepted plans. No new feature edge is needed. There is no
+performance claim. Measure coverage as formal nodes recognized before/after (baseline: zero recognized role nodes;
+head: all five migrated nodes) and record exact commands/results in development evidence. Preserve pinned contract bytes.
