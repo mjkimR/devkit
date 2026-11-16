@@ -1,0 +1,13 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T11:43:51.205336Z'
+status: completed
+summary: Scout lacks WebSearch, handoff carries the removed proposal directory, resolve help omits the workspace-relative anchor; runtime-view order read against apply_changes
+findings: []
+checks:
+  reproduced: PASS test_support_roles_shell_access, test_carries_the_proposal_body and test_resolve_help_names_the_workspace_relative_anchor fail as characterized; ARCH-06-runtime-view §1 loop writes files before journal recording
+diff_scope:
+  base: a627466bb2451fa7bc6466ab2b309c1711b570ca
+  head: 7d40adba7d32aa58551a49e5c3a6c1293c45d760
