@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:11:03.678955Z'
+status: completed
+review: review-02.yaml
+summary: Review 2 direct-host anchor corrected with encoded/raw target and no-reread regression; Host adjacent inline/supporting SVG fragment loss also reproduced and fixed; request/render changes require fresh HIGH round 3
+findings:
+- issue: Direct Files artifact requests discard the requested heading fragment.
+  evidence: packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:247 initializes fileSupport.fragment to empty; review-02/navigation.test.ts:201-205 fails to scroll despite rendered requested heading, one failed nine passed
+  failure_condition: A host opens initialView files with supporting Markdown initialPath and initialAnchor section; the artifact renders but never scrolls, violating AC-04.
+  suggested_action: Carry the host-requested fragment into SupportingArtifact for direct Files requests including later host anchor changes, without adding blob reads for same-path fragment changes; retain a permanent regression.
+  resolution: resolved
+  severity: P1
+- issue: Relative image view fragments were dropped from managed previews.
+  evidence: packages/devkit-viewer/frontend/src/lib/api/artifacts.test.ts SVG view regression and features/knowledge/NavigationRegression.test.ts supporting SVG link regression both failed before the corrections
+  failure_condition: Inline relative SVG image or supporting-image link names a URI fragment; preview dropped that view while source bytes loaded correctly, violating AC-04.
+  suggested_action: Keep the validated fragment separate from the source path and attach it only to the managed preview URL, preserving source guards and base-URL cleanup.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS frontend249/21; direct-host and two SVG fragment regressions red before green
+  package: PASS pack/public-host/generated-stale0/wheel100 exact
+diff_scope:
+  base: 2840118340f653d930940216befa488677f0dbdd
+  head: e04ace5f66f88ab925c9732202a2c91205829c58
+activity_effort: high
