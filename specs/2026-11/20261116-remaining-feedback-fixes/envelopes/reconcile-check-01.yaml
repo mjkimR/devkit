@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T12:23:29.945573Z'
+status: completed
+summary: 'reconcile-reviewer pass with no findings: six docs targets match the diff and source; design, domain and operations no-impact and the entrypoint rejection hold; six source feedback dispositions correct; no other Living Spec document contradicts the changes'
+findings: []
+checks:
+  reconcile: PASS reconcile-reviewer at 992d3961e; rules check --ci --base ad0d2f17f errors=0
+diff_scope:
+  base: ad0d2f17f7fb00151cddd0f6df038e993371bd55
+  head: 992d3961ed0750eeea035e03ef888c03f146531a

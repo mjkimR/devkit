@@ -2,7 +2,7 @@
 id: SPEC-remaining-feedback-fixes
 title: Remaining formal-document-coverage feedback fixes
 summary: Align search, host reference, override, observation and capabilities README docs with current behavior from six open feedback items
-status: in-progress
+status: completed
 created: 2026-11-16
 related_capabilities: [CAP-DOCS-document-search, CAP-SRCH-document-search, CAP-DIST-workspace-ownership, CAP-HOST-lifecycle-observation, CAP-MCP-runtime-registration]
 related_usecases: []
