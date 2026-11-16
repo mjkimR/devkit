@@ -22,10 +22,14 @@ boundaries:
     - docs/decisions/
     - docs/README.md
     - docs/proposals/PROP-design-bundle-layout/
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-entrypoints/
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-plan/
+    - packages/devkit-spec/tests/
+    - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/documents.md
+    - packages/devkit-adaptive/tests/
+    - .devkit/installation.json
   excludes:
     - packages/devkit-viewer/
-    - packages/devkit-spec/
-    - packages/devkit-adaptive/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
 ---
@@ -64,10 +68,11 @@ project name those groups itself.
 Hypothesis: an area-scoped directory bundle gives each design one path for the document and its support, and gives
 delivery work an area prefix, without changing design identity, references or the ownership model.
 
-`PROP-design-document-lifecycle` and `PROP-design-document-viewer` are accepted and pin the flat grammar in their
-blueprints. Neither has a spec. A path grammar change after their Development would require migrating the rules,
-the lifecycle tooling, the viewer and every consumer repository; before it, the change touches the rules and five
-documents.
+`SPEC-design-document-lifecycle` has completed on the flat grammar: its spec and adaptive guidance and its
+end-to-end scenarios name `<ID>/artifacts/` and flat design and domain paths. `PROP-design-document-viewer` is in
+Development and pins the flat grammar in its core contract material, with no viewer code written yet. Each further
+delivery on the flat grammar adds migration work, so the grammar change lands now: it migrates the landed lifecycle
+consumers itself, and the viewer adopts it after it lands.
 
 ## 2. Technical Spike Questions
 
@@ -80,8 +85,8 @@ documents.
   stray identified document?
 - **Q3**: How do pins, aliases, namespace roots and `entrypoints` reverse lookup behave when a design or domain
   document moves between areas or docs roots while keeping its ID?
-- **Q4**: Who updates the flat-grammar pins of `PROP-design-document-lifecycle` and `PROP-design-document-viewer`,
-  and do both proposals take a prerequisite edge to this proposal before their handoff?
+- **Q4**: Which landed lifecycle consumers in the spec and adaptive bundles, and their tests, assume the flat
+  grammar or the stem-is-ID rule, and what is the narrowest edit that makes them grammar-neutral or bundle-aware?
 
 ## 3. Proposed Design & Impact
 
@@ -108,14 +113,19 @@ documents.
   `CAP-DOCS-namespaces` and `CAP-TRACE-code-entrypoints`, the kind definition rows, the affected rules and their
   tests, `docs/README.md`, and the design and domain templates and writing instructions in the docs bundle. These
   asset edits change path, `area` and support-file statements only.
-- **Dependent proposals.** `PROP-design-document-lifecycle` and `PROP-design-document-viewer` consume the grammar
-  this proposal delivers; Q4 settles how their pins change.
+- **Landed lifecycle consumers.** This proposal updates the spec and adaptive bundle guidance and the lifecycle
+  tests that state the flat grammar (Q4). Those edits change path and support-file statements only, not lifecycle
+  behavior.
+- **Viewer.** `PROP-design-document-viewer` continues its Development on the flat grammar. When this proposal lands,
+  it records a follow-up for the viewer to adopt the bundle grammar; the viewer's own unit or a later proposal does
+  that work.
 
 ### Non-Goals
 
 - No change to DESIGN, DOMAIN or OPS identity, prefixes, status vocabulary, `related_*` fields or the ownership
   boundaries between roles.
-- No viewer or lifecycle implementation; those stay with their proposals.
+- No viewer change; the viewer adopts the grammar in a follow-up after this proposal lands.
+- No change to lifecycle behavior; only the path and support-file statements of landed lifecycle assets change.
 - No area or bundle for operations documents, and no bundle for domain documents.
 - No change to template sections or authoring guidance; `PROP-formal-document-templates` owns that alignment and
   follows this proposal.
@@ -129,11 +139,14 @@ documents.
 - **B2 — Identity preserved**: `devkit docs resolve`, `devkit docs refs`, search, list and `entrypoints` reverse
   lookup return the migrated design and domain documents under unchanged IDs; an area move test keeps the ID and its references.
 - **B3 — Migration**: The delivered design and domain documents pass `devkit rules check` at their canonical paths with ordinary links repaired.
-- **B4 — Contracts**: The superseding ADR, the capability documents, templates and instructions state one path
-  grammar per kind, and the dependent proposals' pins agree with it.
+- **B4 — Contracts**: The superseding ADR, the capability documents, templates and instructions, and the landed
+  spec and adaptive lifecycle assets state one path grammar per kind; the lifecycle end-to-end scenarios pass on it.
+- **B5 — Viewer follow-up**: A recorded follow-up names the viewer's flat-grammar pins and the bundle grammar to
+  adopt.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning settles Q1–Q4 and records the layout choice as a PADR. This stays one M feature proposal. Acceptance and
-handoff follow the existing gates, and handoff precedes the handoff of `PROP-design-document-lifecycle` and
-`PROP-design-document-viewer`. Retirement requires B1–B4.
+Planning settles Q1–Q4 and records the layout choice as a PADR. This stays one M feature proposal; if Q4 finds
+the lifecycle migration larger than path statements and fixtures, Planning raises the size or splits it. Acceptance
+and handoff follow the existing gates. It runs in parallel with the viewer's Development. Retirement requires
+B1–B5.
