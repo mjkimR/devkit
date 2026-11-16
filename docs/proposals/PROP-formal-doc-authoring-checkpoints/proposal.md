@@ -22,6 +22,8 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/features/governance/usecases/reconcile_contract.py
     - packages/devkit-spec/tests/integration/features/governance/
     - packages/devkit-spec/tests/integration/bundles/spec/
+    - packages/devkit-spec/tests/integration/features/worker/test_worker_inspect.py
+    - packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py
     - docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     - docs/capabilities/documents/CAP-DOCS-document-model.md
     - docs/capabilities/governance/CAP-GOV-spec-rules.md
@@ -78,12 +80,16 @@ Each question is settled; the reasons are under Planning decisions.
   canonical and gains a fact-type table beside the responsibility table; `living-spec-writing` carries the same rows
   as its agent-facing projection without citing the capability, because the bundle ships to projects that lack it.
 - **Q2**: What shape does a `formal_docs` assessment take, what checks it, and how do existing records stay valid?
-  **Answer**: a frontmatter mapping with exactly the keys `design`, `domain` and `operations`; each value is a
-  nonempty list of affected IDs with the role's prefix or the string `none: <reason>`. `RULE-reconcile-contract`
-  checks it. It is required only in a snapshot run, for a record that the diff newly resolves; anywhere else a present
-  value is checked for form and an absent one is accepted, so the 260 existing records stay valid.
+  **Answer**: each of the design, domain and operations roles is covered either by affected IDs in the record's
+  existing typed `related_designs`, `related_domains` or `related_operations` list, or by
+  `formal_docs.<role>: "none: <reason>"`; never both. `RULE-reconcile-contract` checks the coverage and the reason
+  form; `RULE-document-reference` already checks that the listed IDs exist, and `devkit rules fix` repairs them on a
+  rename. Coverage is required only in a snapshot run, for a record that the commit newly resolves (no parent of the
+  commit has it `resolved`); anywhere else a present `formal_docs` is checked for form and absence is accepted, so
+  the 260 existing records stay valid.
 - **Q3**: Which reviewer finding classes carry severity, and do they block `resolved`? **Answer**: four classes on
-  what `diff_scope` adds or changes, never on older gaps: a `formal_docs` value the diff contradicts (P1, the existing
+  what `diff_scope` adds or changes, never on older gaps: a role's recorded coverage (IDs or `none:` reason) the diff
+  contradicts (P1, the existing
   contradicted no-impact class); a new persisted format, identity derivation or ordering without a statement in its
   owner (P2); a new code without a documented trigger condition (P2); new capability text that restates mechanism
   (P3). Severity changes no check: like every reconcile finding they hold the `living-spec-draft` exit until fixed,
@@ -135,24 +141,26 @@ Each question is settled; the reasons are under Planning decisions.
 
 ### Spec bundle (`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/`)
 
-- `skills/spec-sync/SKILL.md`: step 1 records the design/domain/operations assessment in `formal_docs`; step 2's
-  schema shows it:
+- `skills/spec-sync/SKILL.md`: step 1 records the design/domain/operations coverage in the record's frontmatter;
+  step 2's schema shows it:
 
   ```yaml
+  related_designs: [DESIGN-<slug>]   # affected IDs created, changed or retired by the change
   formal_docs:
-    design: [DESIGN-<slug>]      # affected IDs created, changed or retired by the change
     domain: "none: <bounded source-based reason>"
     operations: "none: <bounded source-based reason>"
   ```
 
-  The body keeps the detailed assessment (statements, source identity, owner, action, evidence); the field is its
-  index.
+  The body keeps the detailed assessment (statements, source identity, owner, action, evidence); the frontmatter is
+  its index.
 - `rules/reconcile_contract/guide.md` and the implementation
-  (`features/governance/usecases/reconcile_contract.py`): new causes, in every run for a present value: not a
-  mapping; a missing or unknown key; a value that is neither a nonempty list nor a string starting `none: `; an item
-  without the role's prefix (`DESIGN-`, `DOMAIN-`, `OPS-`) or repeated; a reason under 20 non-whitespace characters.
-  In a snapshot run, a `resolved` record that the diff changes and whose base version is absent or not `resolved`
-  MUST carry `formal_docs`. ID existence is not checked by the rule; the reviewer checks it against the diff.
+  (`features/governance/usecases/reconcile_contract.py`): new causes, in every run for a present value: `formal_docs`
+  not a mapping; an unknown key; a value that is not a string starting `none: ` with a reason of at least 20
+  non-whitespace characters; a role with both a nonempty `related_*` list and a `none:` reason. In a snapshot run,
+  a `resolved` record that the diff changes and that no parent of the commit has `resolved` (the base, and in a
+  staged run also `MERGE_HEAD`, `CHERRY_PICK_HEAD` or `REVERT_HEAD` when present, as
+  `devkit_agt.features.generated` already detects) MUST cover every role. A merge that brings in a record resolved on
+  the base branch therefore never requires the field of a record the branch did not author.
 - `subagents/reconcile-reviewer.md` step 2: the four Q3 classes with their severities, scoped to `diff_scope`.
 - `skills/spec-plan/SKILL.md` step 3 and `skills/spec-review/SKILL.md` step 4: one sentence each naming the persisted
   formats, identity derivations, orderings and codes the change introduces, routed by the fact-type table.
@@ -162,16 +170,17 @@ Each question is settled; the reasons are under Planning decisions.
 
 - `CAP-DOCS-documentation-ownership` §3.1: the fact-type table (Q1) and an "Observable contract" SHOULD rule (Q4).
 - `CAP-DOCS-document-model`: the template inventory names the reference template beside the eight formal templates.
-- `CAP-GOV-spec-rules`: the `RULE-reconcile-contract` row names the `formal_docs` check.
-- `CAP-DLV-delivery-workflows` rule 9 (the assessment is recorded in `reconcile.md` `formal_docs`) and rule 15 (the
-  reviewer's reimplementability classes).
+- `CAP-GOV-spec-rules`: the `RULE-reconcile-contract` row names the role-coverage check.
+- `CAP-DLV-delivery-workflows` rule 9 (the assessment is indexed in `reconcile.md` by `related_*` IDs or
+  `formal_docs` reasons) and rule 15 (the reviewer's reimplementability classes).
 - New ADR from `PADR-recorded-formal-docs-assessment`.
 
 ### Out of scope
 
 - Migrating existing reference pages, capability text or formal documents; a sweep of older gaps.
 - A rule that every declared code has a documented condition (Q7).
-- `docs/development/reference/` and `.devkit/managed/` (regenerated by `devkit sync`, never edited).
+- `docs/development/reference/`: existing pages are not migrated (Q5). `.devkit/managed/` is regenerated by
+  `devkit sync`, never edited.
 
 ## Planning decisions
 
@@ -180,14 +189,22 @@ Each question is settled; the reasons are under Planning decisions.
   have devkit's capability. Ordering is split by observability: an order a consumer sees is a capability rule (the
   rule violation order, search ties, a generated order consumers diff), internal order is design.
 - **Q2, check owner and validity of old records**: `RULE-reconcile-contract` owns the record form; `RULE-spec-progress`
-  is a warning-level progress hint on another file. Requiring the field only for a record the diff newly resolves
+  is a warning-level progress hint on another file. Requiring coverage only for a record the commit newly resolves
   reuses the rule's snapshot comparison with the base, so no date cutoff, setting or migration is needed. A historical
   record edited by a link or path repair keeps `resolved` at its base and stays exempt; an explicitly targeted plain
   run of a completed record checks form only. All 260 existing bundles are completed, so no in-flight record is
   affected.
-- **Q2, shape**: a fixed three-key mapping makes a skipped role visible to the rule while `none: <reason>` keeps the
-  existing "bounded unaffected reason" without requiring an empty document. The detailed assessment stays in the body,
-  as `CAP-DLV-delivery-workflows` rule 9 already requires.
+- **Q2, shape**: reusing the typed `related_*` fields gives the IDs existence checks, alias repair and incoming
+  references in `devkit docs refs` and the viewer, which IDs inside a new field would lack; `formal_docs` then holds
+  only what no existing field can, the per-role `none:` reason, and keeps the "bounded unaffected reason" model
+  without requiring an empty document. The detailed assessment stays in the body, as `CAP-DLV-delivery-workflows`
+  rule 9 already requires.
+- **Q2, merges**: the commit gate runs when a conflicted merge is concluded, with the HEAD tree as its base; checking
+  every parent keeps a record resolved on the base branch from refusing that merge.
+- **Q2, relation to `ADR-formal-document-delivery-integration`**: compatible. That decision keeps the assessment in
+  existing records under semantic review and rejected a separate impact manifest as a second registry. The coverage
+  lives in the existing record and existing relation fields, and it only makes a skipped role visible; semantic
+  agreement stays with the author and `reconcile-reviewer`.
 - **Q3, severity**: the classes reuse the existing reconcile severity meanings (contradiction P1, incomplete
   reflection P2, improvement P3), so no new blocking mechanism is added; the formal-document steps are new and a P1
   for an omission would make them a hard gate before any ordinary spec has run under them.
@@ -200,8 +217,9 @@ Each question is settled; the reasons are under Planning decisions.
 - **PADR**: `PADR-recorded-formal-docs-assessment` records the record field, its check and the reviewer classes,
   because it changes an existing rule contract and spans the spec and docs bundles. The guidance changes (Q1, Q4, Q5,
   Q6) change no contract or check and stay here.
-- **Concurrent work**: `PROP-handoff-rewrite-overlap-scheduling` (draft) shares only `packages/devkit-spec/tests/`
-  at the directory level; no sequencing decision is needed while it is a draft.
+- **Concurrent work**: `PROP-handoff-rewrite-overlap-scheduling` (draft) owns `packages/devkit-spec/tests/`, which
+  contains this proposal's owned test paths, including `test_worker_inspect.py` and
+  `test_formal_document_lifecycle_scenarios.py`, whose fixtures resolve records in snapshot runs and gain coverage; no sequencing decision is needed while it is a draft.
 
 ## Spec boundaries, acceptance evidence and size
 
@@ -209,18 +227,20 @@ One spec, `sdd-spec-feature`, size M, `dev_effort: medium`. No split: the guidan
 reviewer classes describe one fact-type model and land together; four tasks fit one spec:
 
 1. Docs bundle guidance and templates (Q1, Q4, Q5, Q6) with the template-list pins.
-2. `RULE-reconcile-contract`: `formal_docs` form and the newly-resolved requirement, guide and tests.
+2. `RULE-reconcile-contract`: role coverage, `formal_docs` form and the newly-resolved requirement, guide, tests
+   and the two existing fixtures that resolve records in snapshot runs.
 3. Spec bundle: `spec-sync`, `reconcile-reviewer`, `spec-plan`, `spec-review` wording.
-4. Living Spec capabilities and the promoted ADR; the spec's own `reconcile.md` carries `formal_docs`.
+4. Living Spec capabilities and the promoted ADR; the spec's own `reconcile.md` covers every role.
 
 Acceptance evidence:
 
-- Rule tests: in `--staged` and `--ci` snapshot runs, a new or newly resolved record without `formal_docs` is
-  reported; a record `resolved` at the base and edited, a `pending` record, and a plain explicitly targeted completed
-  record without the field are not; each malformed form (not a mapping, missing or unknown key, empty list, wrong or
-  repeated prefix, short reason) is reported; a well-formed value passes.
-- `uv run devkit rules check --ci --base <base>` reports no `RULE-reconcile-contract` violation over the 260
-  existing records, and the spec's own record passes with `formal_docs` set.
+- Rule tests: in `--staged` and `--ci` snapshot runs, a new or newly resolved record with a role uncovered is
+  reported; a record `resolved` at the base and edited, a `pending` record, a record resolved in a merge parent
+  (`MERGE_HEAD`) and a plain explicitly targeted completed record without coverage are not; each malformed form (not a
+  mapping, unknown key, missing `none: ` prefix, short reason, a role with both IDs and a reason) is reported; full
+  coverage through `related_*` lists, `none:` reasons or a mix passes.
+- `uv run devkit rules check specs/` (every record an explicit target) reports no new `RULE-reconcile-contract`
+  violation over the 260 existing records, and the spec's own record passes `--ci` with every role covered.
 - The template distribution and constitution tests list `reference`; `devkit sync` projects `templates/reference.md`.
 - Reviewed text: `reconcile-reviewer` names the four classes with severities and the `diff_scope` limit; the
   fact-type rows in `CAP-DOCS-documentation-ownership` and `living-spec-writing` agree.
