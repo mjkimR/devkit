@@ -1,0 +1,18 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:21:41.445533Z'
+status: completed
+summary: 'Round 3: review-02 fixes hold and finding 4''s waiver is recorded; no new findings and no recurrences. Pass.'
+findings: []
+assumptions:
+- The dotfile exemption covers file names, not dot directories, as the guide and CAP-GOV-spec-rules state.
+unverified_areas:
+- Staged or diff mode and runs outside a Git work tree.
+checks:
+  tests: PASS off-grammar rule tests 2 passed; host test-affected 2663 passed
+diff_scope:
+  base: 1f706c6a9de738319078519d485c5be34316db1a
+  head: 255ed39841b84fd293588bfa822e894e5ab913a3
+activity_effort: high
