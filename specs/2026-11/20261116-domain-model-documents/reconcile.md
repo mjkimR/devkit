@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-domain-model-documents
-status: pending
+status: resolved
 targets:
   - file: docs/domain/delivery-relationships.md
     resolution: modified
@@ -51,7 +51,7 @@ entrypoints remain correct. No entrypoint field was written.
 
 The independent medium code review confirmed D1–D6 and found one stale ADR confirmation (P3).
 The implementer corrected it and verified the bounded evidence link and limitations in reverify-01.
-The independent reconcile reviewer verifies these targets separately. Ordinary link semantics and authority
+The independent reconcile reviewer verified all nine targets separately with no findings in reconcile-check-01. Ordinary link semantics and authority
 agreement are Review only; applicable rules do not prove them.
 
 ## Deferred work and limitations
