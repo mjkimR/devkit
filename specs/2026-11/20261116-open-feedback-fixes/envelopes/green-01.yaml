@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T11:46:46.727281Z'
+status: completed
+summary: Runtime view orders the journal first, scout gains WebSearch, handoff drops the proposal's own path, resolve help names the workspace-relative anchor
+findings: []
+checks:
+  resolved: PASS the three regression tests pass; ARCH-06-runtime-view §1 journal step precedes the write loop
+  preserved: PASS just test-affected --base a627466bb 2664 passed (partial selection); test_proposal_handoff, test_role_contracts, test_cli_documents 192 passed; lint-check, check and rules check --ci --base main clean
+diff_scope:
+  base: a627466bb2451fa7bc6466ab2b309c1711b570ca
+  head: cc42066c8d85062488ec93fad61832a8a6d0d69c
