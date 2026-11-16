@@ -1,0 +1,26 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:05:15.127641Z'
+status: completed
+summary: round 2; REVISE one new direct artifact deep-link defect; original four P1 failure conditions pass
+findings:
+- issue: Direct Files artifact requests discard the requested heading fragment.
+  evidence: packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:247 initializes fileSupport.fragment to empty; review-02/navigation.test.ts:201-205 fails to scroll despite rendered requested heading, one failed nine passed
+  failure_condition: A host opens initialView files with supporting Markdown initialPath and initialAnchor section; the artifact renders but never scrolls, violating AC-04.
+  suggested_action: Carry the host-requested fragment into SupportingArtifact for direct Files requests including later host anchor changes, without adding blob reads for same-path fragment changes; retain a permanent regression.
+  resolution: open
+  severity: P1
+assumptions:
+- 'Codex emulated boundaries: explicit own-tree paths, frozen author writes, matching snapshots; no native guarantee'
+unverified_areas:
+- Separate reconcile verification remains pending; reviewer did not repeat browser visuals or packaging
+checks:
+  probes: FAIL one new direct-host-anchor case; nine controls pass
+  tests: PASS frontend246/21 and refreshed affected294
+  boundary: PASS clean unchanged HEAD and full snapshot fbe091e2
+diff_scope:
+  base: 94e4920abe589af956978dcdce90a473e5f45fc5
+  head: 2840118340f653d930940216befa488677f0dbdd
+activity_effort: high
