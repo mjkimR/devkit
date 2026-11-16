@@ -2,7 +2,7 @@
 id: PROP-design-document-foundation
 title: Documentation ownership and minimal design foundation
 summary: "Uses the early content pilot to define documentation ownership and choose the smallest design representation, adding runtime support only for demonstrated gaps."
-status: draft
+status: reviewing
 created_at: 2026-11-16
 target_area: documents/
 priority: high
