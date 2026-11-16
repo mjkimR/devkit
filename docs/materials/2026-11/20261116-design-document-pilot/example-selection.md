@@ -83,7 +83,7 @@ Any repeated normative statement is replaced with an owner reference before acce
 - **AC-PILOT-04 recommendation**: produce one row per role with separate content-home, kind/ID and runtime/UI
   recommendations. Each extension cites a failed trial and the smallest missing behavior; a successful existing
   path can recommend reuse. Mark facts, hypothetical maintenance scenarios, illustrative artifacts and unverified
-  claims separately. Give `PROP-design-document-foundation` the retained draft links and outstanding limits.
+  claims separately. Give `SPEC-design-document-foundation` the retained draft links and outstanding limits.
 
 The Development reviewer repeats all reader trials with their specified starting information and audits the ledger.
 Its evidence records the reader, revision, observed path, result and unresolved gap for each trial. No invented

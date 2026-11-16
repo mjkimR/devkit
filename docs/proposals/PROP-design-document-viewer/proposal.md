@@ -26,7 +26,7 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 depends_on:
-- PROP-design-document-foundation
+- SPEC-design-document-foundation
 - PROP-domain-model-documents
 - PROP-operations-documents
 ---

@@ -20,6 +20,28 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
   searches related decisions. Exception: a minimum operational rule an agent needs before it can search, when its absence
   causes a named failure.
 
+## Responsibility and design navigation
+
+- Assign each normative statement one owner by responsibility: contracts to capabilities, actor goals to use cases,
+  interactions to UX, system structure/constraints to architecture, conceptual meaning to domain models, local
+  mechanisms to design, rationale to decisions, evidence to materials and syntax to references.
+- Keep domain meaning, implementation design and operational composition distinct without a fixed authoring order.
+- For operational questions, route symptom/evidence to the existing action owner and normal-state observation;
+  keep recovery steps and permissions with that owner.
+- If transferring a normative statement, replace its previous normative restatement in the same change and name
+  the receiving owner; otherwise use a concise non-normative summary citing the owner.
+- For a current mechanism question, write an ID-free `docs/designs/<slug>.md` entry, or `designs/<slug>.md` under
+  the registered package docs root, with question, overview, authority boundary and next useful action.
+- Add only useful supporting detail, examples, diagrams or datasheets; make each detail directly understandable,
+  and keep a small design in its entry without an empty hierarchy.
+- Link selected owners to the entry for the reader's question; use full IDs for indexed owners and ordinary links
+  for ID-free content without borrowing indexed identity or promising search/resolve/refs coverage.
+- Load only the owner or linked detail needed for the current question; require no reciprocal registry, all-pairs
+  links, whole-layer reading or fixed hop count.
+- Review owner uniqueness, source agreement and ordinary link destinations; choose content by responsibility,
+  never by length or numerical detail.
+- Use `../templates/design-template.md` only as an optional authoring aid; adapt its prompts to useful content.
+
 ## Completed Specs and Traceability
 
 - Link use cases and capabilities both ways through YAML `usecases:` and `capabilities:`; never nest one inside the

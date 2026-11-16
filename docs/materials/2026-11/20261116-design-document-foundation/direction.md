@@ -4,10 +4,10 @@
 
 Planning base: `fab44e919c5d516adfa4666fff444096be14300c`; reviewing-status head:
 `196af9770a513253f555c18436eb5f2bd99de6c8`. `SPEC-design-document-pilot` and its retained
-[evidence](../../../materials/2026-11/20261116-design-document-pilot/evidence.md),
-[reader trials](../../../materials/2026-11/20261116-design-document-pilot/reader-trials.md),
-[reviewer trials](../../../materials/2026-11/20261116-design-document-pilot/reviewer-trials.md) and
-[passage ledger](../../../materials/2026-11/20261116-design-document-pilot/statement-ledger.md)
+[evidence](../20261116-design-document-pilot/evidence.md),
+[reader trials](../20261116-design-document-pilot/reader-trials.md),
+[reviewer trials](../20261116-design-document-pilot/reviewer-trials.md) and
+[passage ledger](../20261116-design-document-pilot/statement-ledger.md)
 are present at this base. The completed pilot still supplies the evidence; Planning performs no new reader trial.
 No assumption about a newer base, timing or exhaustive corpus inspection is made.
 
@@ -87,7 +87,7 @@ establish a second normative matrix. The optional template is delivered by the e
 asset (`bundle.toml` source `templates`), requiring no new manifest entry.
 
 Challenger round 1 snapshots both equal `0c8e1a7d95c165b578f411a08c74e7f194632caa`. During the supplemental
-Scout, the worker added only `envelopes/challenger-01.yaml`; compare the snapshot diff rather than attributing that
+Scout, the worker added only historical Git `6aaddb58a48aa81c6a0c23417801e9b4542f758a:docs/proposals/PROP-design-document-foundation/envelopes/challenger-01.yaml`; compare the snapshot diff rather than attributing that
 known worker-authored record to the read-only role. No support role reported writes or outside-worktree reads.
 The batch includes cost clarification outside the finding's section, so a fresh Challenger round 2 checks the
 whole fold rather than invoking the high-effort minor-fix shortcut.

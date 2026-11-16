@@ -1,13 +1,13 @@
 ---
-id: PADR-documentation-ownership-and-linked-design-entries
+id: ADR-documentation-ownership-and-linked-design-entries
 title: Documentation ownership and linked design entries
 summary: "For distinct documentation responsibilities, we retain unique owners and linked ID-free design entries, to expose mechanisms without widening identity contracts, accepting discovery through selected owner links."
-proposal: PROP-design-document-foundation
-status: draft
+proposal: SPEC-design-document-foundation
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-documentation-ownership-and-linked-design-entries] Documentation ownership and linked design entries
+# [ADR-documentation-ownership-and-linked-design-entries] Documentation ownership and linked design entries
 
 ## 1. Context & Problem Statement
 
@@ -39,14 +39,13 @@ Choose linked ID-free design entries, conditional on required independent global
 Development. Failed navigation is corrected or returned for scope review; it does not imply new runtime authority.
 
 - Each normative statement retains one primary owner; concise orientation cites that owner. Domain, design and
-  operations remain separate responsibilities, with no rigid authoring order. → CAP-DOCS-documentation-ownership
-  (planned), Ownership rules (MUST/SHOULD).
+  operations remain separate responsibilities, with no rigid authoring order. → `CAP-DOCS-documentation-ownership` §3.1 (MUST/SHOULD).
 - Architecture retains structure, system interactions, deployment, architectural constraints, cross-cutting
   technical concepts, quality and risk. Local mechanisms use design unless they establish an architectural boundary.
-  → CAP-DOCS-documentation-ownership (planned), ARCH boundary rule (SHOULD).
+  → `CAP-DOCS-documentation-ownership` §3.2 (SHOULD).
 - Current mechanism explanations use ID-free `docs/designs/<slug>.md` entries with optional supporting files, and
   selected question-specific owner links. Package-local examples use the analogous namespace docs root.
-  → CAP-DOCS-documentation-ownership (planned), Representation rules (SHOULD).
+  → `CAP-DOCS-documentation-ownership` §3.3 (SHOULD/MUST).
 - No new Kind, identity grammar, relation, registry, CLI/MCP/runtime feature or viewer support is selected.
 - Domain and operations homes remain with `PROP-domain-model-documents` and `PROP-operations-documents`.
 
@@ -63,7 +62,7 @@ remain with their existing proposals.
 
 ## 6. Confirmation
 
-Review only for semantic owner uniqueness and question-specific navigation. Execute F1–F6 in the proposal,
+Review only for semantic owner uniqueness and question-specific navigation. Execute F1–F6 in `SPEC-design-document-foundation`,
 including withheld-entry global and package-fixture paths, source asset distribution and relative-link checks.
 Scoped document rules verify applicable identity/frontmatter/reference contracts; they do not prove ID-free link
-integrity or ownership semantics. CAP-DOCS-documentation-ownership (planned) restates the lasting clauses.
+integrity or ownership semantics. `CAP-DOCS-documentation-ownership` restates the lasting clauses.
