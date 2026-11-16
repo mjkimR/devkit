@@ -63,8 +63,14 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
             .replace("<Title>", "Sample")
             .replace("<English sentence stating the subject and boundary.>", "Sample formal role content.")
         )
-        # Template body prompts are author guidance; create one focused current explanation.
-        authored = authored.split("## 1.", 1)[0] + "Current example content.\n"
+        # Template body prompts are author guidance; keep frontmatter and H1, then one focused current explanation.
+        heading = f"# [{prefix}-sample] Sample\n"
+        assert heading in authored, authored
+        authored = authored.split(heading, 1)[0] + heading + "\nCurrent example content.\n"
+        frontmatter, body = authored.split("\n---\n", 1)
+        values = [line.split(" #", 1)[0] for line in frontmatter.splitlines() if not line.startswith("#")]
+        assert not [value for value in values if "<" in value], values
+        assert "<" not in body, body
         target = consumer / "docs" / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(authored)

@@ -8,11 +8,11 @@ plan: PLAN-formal-document-templates
 
 ## Phase 1: Bundle assets
 
-- [ ] **Task 1.1**: Revise the design, domain and operations templates, remove the design-template pointer and update the distribution tests and sync outputs
+- [x] **Task 1.1**: Revise the design, domain and operations templates, remove the design-template pointer and update the distribution tests and sync outputs
   - **_Boundary**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/, packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py, packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py, .devkit/installation.json
   - _Requirements: AC-01, AC-02, AC-06, AC-07_
   - **Verification**: `uv run pytest packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py`
-- [ ] **Task 1.2**: Revise the design, domain and operations writing instructions
+- [x] **Task 1.2**: Revise the design, domain and operations writing instructions
   - **_Boundary**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/design-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/domain-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/operations-writing.md
   - _Requirements: AC-03_
   - **Verification**: `uv run devkit rules check --phase hygiene packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions`
