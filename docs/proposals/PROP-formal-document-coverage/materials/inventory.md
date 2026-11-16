@@ -8,81 +8,94 @@ at the Planning head, not contracts.
 
 ## Kept candidates
 
-| # | Kind | ID | Area / path | One reader question |
-| --- | --- | --- | --- | --- |
-| 1 | DESIGN | `DESIGN-envelope-return-timestamp-ordering` | delivery, `docs/designs/delivery/` | Why is an envelope stamped in the same second as a return voided, and when does a return reopen an earlier round? |
-| 2 | DESIGN | `DESIGN-workflow-stage-evaluation` | delivery, `docs/designs/delivery/` | For one Unit's records, which stage does `devkit workflow next` report, and why are later stages' checks, approvals and holds not shown? |
-| 3 | OPS | `OPS-assignment-attention-routing` | flat, `docs/operations/` | An adaptive assignment `list` row carries an attention value: which evidence distinguishes the case, and which existing owner acts? |
-| 4 | OPS | `OPS-host-hook-dispatch-routing` | flat, `docs/operations/` | A configured host hook shows no observation or visible effect: which evidence separates not registered, invalid, sync interrupted, not trusted or not on PATH, handler failed and not dispatched, and which owner acts? |
-| 5 | OPS | `OPS-mcp-runtime-refusals` | flat, `docs/operations/` | A devkit MCP tool refuses a call or a registration is not active: which symptom is it, which owner acts, and what observation shows the normal state? |
-| 6 | OPS | `OPS-search-mode-and-model-routing` | flat, `docs/operations/` | Document search returned lexical-only results or failed with a `SEARCH_*` model error: which evidence selects the owner, and what output confirms the normal state? |
-| 7 | DOMAIN | `DOMAIN-override-lifecycle` | distribution, `docs/domain/distribution/` | Which state is a project override in (tracked, drifted, reconciled, removed, retained, orphaned), and which command or sync moves it? |
+Folded after `challenger-01`: candidate "envelope-return timestamp ordering" moved to the dropped list (F1); every
+kept candidate carries the writing condition its row names (F2-F7).
 
-### 1. `DESIGN-envelope-return-timestamp-ordering`
+| # | Kind | ID | Area / path | Unit | One reader question |
+| --- | --- | --- | --- | --- | --- |
+| 1 | DESIGN | `DESIGN-workflow-stage-evaluation` | delivery, `docs/designs/delivery/` | A | On one sample Unit, in what order does `devkit workflow next` apply stage policy, exit checks, the gate, holds and return voiding, and why does it report only the first unmet stage? |
+| 2 | OPS | `OPS-assignment-attention-routing` | flat, `docs/operations/` | A | An adaptive assignment `list` row carries an attention value: which evidence distinguishes the case, and which existing owner acts? |
+| 3 | OPS | `OPS-host-hook-dispatch-routing` | flat, `docs/operations/` | B | A configured host hook shows no visible warning and no observation: which evidence separates invalid registration, an interrupted sync, a failed handler and what devkit cannot see, and which owner acts? |
+| 4 | OPS | `OPS-mcp-runtime-refusals` | flat, `docs/operations/` | B | Some devkit MCP tools run while others refuse, or a registration is not active: which surface's evidence identifies the case, and which owner acts? |
+| 5 | DOMAIN | `DOMAIN-override-lifecycle` | distribution, `docs/domain/distribution/` | C | After a project override is created, which capability state is it in (recorded, drifted, not deployed, retained, bundle mismatch, removed upstream), how does it differ from an `ORPHAN_LEFT` file, and which command or sync changes it? |
+| 6 | OPS | `OPS-search-mode-and-model-routing` | flat, `docs/operations/` | C | Document search ran lexical-only or failed with a `SEARCH_*` model error: which evidence, including an explicit `--mode hybrid` run, selects the owner, and what output confirms the normal state? |
 
-- Sources: `packages/devkit/src/devkit_agt/features/workflow/models/decision_records.py` (`Instant`, `record_instant`,
-  `returns_end`), `.../workflow/services/envelope/authoring.py` (`envelope_timestamp`), `.../workflow/usecases/evaluate.py`
-  (`current_envelopes`, `_after_returns`); `CAP-DLV-workflow-envelopes`, `CAP-DLV-human-interaction` §5.
-- Must not duplicate: `CAP-DLV-human-interaction` §5 (return voids approvals), `CAP-DLV-workflow-envelopes` (rounds,
-  authoring), `docs/development/reference/workflow.md` (library usage).
-- Gap evidence: no document states the timestamp-precision rule; only source docstrings do. The worked example must be
-  checked against a test or the source before quoting.
+### 1. `DESIGN-workflow-stage-evaluation`
 
-### 2. `DESIGN-workflow-stage-evaluation`
+- Sources: `packages/devkit/src/devkit_agt/features/workflow/usecases/evaluate.py` (`_Evaluator`, `_held_from`,
+  `_waiting_for`, `evaluate_definition`, `current_envelopes`); `.../workflow/models/decision_records.py`;
+  `CAP-DLV-workflow-orchestration` §1, §3; `CAP-DLV-workflow-envelopes` §4; `CAP-DLV-human-interaction` §5.
+- Must not duplicate: `CAP-DLV-workflow-orchestration`, `CAP-DLV-workflow-envelopes`, `CAP-DLV-human-interaction` §5
+  (return voiding and timestamp precision, lines 101 and 113), `CAP-DLV-cli-and-output` (sentinels),
+  `docs/development/reference/workflow.md`.
+- Condition: a worked example over one sample Unit state showing evaluation order; it cites the capability for every
+  rule and states no MUST. It absorbs the return-voiding example as one step, citing `CAP-DLV-human-interaction` §5.
+- Why kept while the DOMAIN stage-passing comparison is dropped (F2): that DOMAIN would restate the list of gate
+  sources `CAP-DLV-human-interaction` §5 already gives; no owner shows the order in which `next` combines them on a
+  concrete Unit, which is the DESIGN worked-example role (`CAP-DOCS-documentation-ownership` §3.1).
 
-- Sources: `.../workflow/usecases/evaluate.py` (`_Evaluator`, `_held_from`, `_waiting_for`, `evaluate_definition`);
-  `CAP-DLV-workflow-orchestration` §1, §3; `CAP-DLV-workflow-envelopes` §4.
-- Must not duplicate: `CAP-DLV-workflow-orchestration`, `CAP-DLV-workflow-envelopes`, `CAP-DLV-human-interaction` §5,
-  `CAP-DLV-cli-and-output` (sentinels), `docs/development/reference/workflow.md`.
-- Condition: a worked example over a sample Unit state that cites the capability for every rule and states no MUST.
+### 2. `OPS-assignment-attention-routing`
 
-### 3. `OPS-assignment-attention-routing`
-
-- Sources: `CAP-DLV-adaptive-assignments` §4 (`list`, attention values, `return`, `verify`, `close`); adaptive-dev
-  references `current-context.md` and `delegation.md` under `packages/devkit-adaptive/src/devkit_adaptive/bundles/`.
+- Sources: `CAP-DLV-adaptive-assignments` §4 (`list`, attention values, `return`, `verify`, `close`);
+  `packages/devkit-adaptive/src/devkit_adaptive/features/assignment/services/verification.py`; adaptive-dev references
+  `current-context.md` and `delegation.md` under `packages/devkit-adaptive/src/devkit_adaptive/bundles/`.
 - Must not duplicate: `CAP-DLV-adaptive-assignments`, `CAP-WT-task-worktrees`, `ADR-adaptive-assignment-commands`.
-- Gap evidence: guidance says to inspect attention but maps no value to an owner.
-- Check before writing: the empty-attention encoding in `list` JSON (normal-state observation).
+- Gap evidence: the five values are defined (`CAP-DLV-adaptive-assignments` §4) and guidance lists actions, but no
+  owner maps a value to its evidence and owner.
+- Condition (F7): each row routes a value to its evidence (`verify` base/head checks, `show`, worktree state) and owner;
+  the choice among actions stays with `current-context.md`; no row prescribes an action.
+- Normal state: JSON `attention: []` (`CAP-DLV-adaptive-assignments` §4), text `attention=-`.
 
-### 4. `OPS-host-hook-dispatch-routing`
+### 3. `OPS-host-hook-dispatch-routing`
 
 - Sources: `CAP-HOST-lifecycle-observation` §1, §3-§5; `docs/development/reference/host.md`;
   `packages/devkit-dist/src/devkit_dist/features/host/usecases/status.py`, `.../host/services/observation.py`,
-  `.../host/usecases/runner.py` (no dispatch while a sync journal exists).
+  `.../host/usecases/runner.py` (a sync journal makes dispatch fail with `HOST_HOOK_DISPATCH_FAILED`).
 - Must not duplicate: `CAP-HOST-lifecycle-observation`, `OPS-distribution-sync`, `CAP-DIST-sync-and-transactions`,
   the `host.md` code table.
-- Gap evidence: dispatch failures are silent to the host conversation by contract; the reference is keyed by emitted
-  codes and has no row for silent dispatch.
+- Gap evidence (F3): failures warn on stderr by contract (`CAP-HOST-lifecycle-observation` §4), but whether the host
+  shows that warning is host-defined; no owner routes "no visible warning and no observation" through `host status`
+  validity and last `received_at`.
+- Condition: trust and PATH form one row whose evidence is "devkit reports `unknown`" and whose owner is the host;
+  `HOST_HOOK_DISPATCH_FAILED` routes to the `host.md` row by reference.
 
-### 5. `OPS-mcp-runtime-refusals`
+### 4. `OPS-mcp-runtime-refusals`
 
-- Sources: `CAP-MCP-runtime-registration` (Runtime and Registration contracts); `docs/development/reference/host.md`
-  MCP rows; `packages/devkit-mcp/src/devkit_mcp/features/runtime/` (`usecases/loaded_code.py`, `mcp/server.py`,
-  `cli/output.py`); `packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py` (runtime field).
+- Sources: `CAP-MCP-runtime-registration` (Runtime and Registration contracts, `mcp status`);
+  `docs/development/reference/host.md` MCP rows; `packages/devkit-mcp/src/devkit_mcp/features/runtime/`;
+  `packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py` (runtime field).
 - Must not duplicate: `CAP-MCP-runtime-registration`, `ADR-mcp-runtime-and-shared-artifacts`,
   `CAP-DIST-sync-and-transactions`, `OPS-distribution-sync`, the `host.md` code rows.
-- Condition: rows stay discriminators across the three surfaces (tool-call payload, sync/setup notice, `status`
-  runtime field) and point to owners; no recovery text is copied.
+- Condition (F4): rows only for symptoms that cross the tool-call payload, sync/setup notice and `mcp status` runtime
+  field (for example read-only tools running while mutating tools refuse); the next owner is "`host.md` MCP row for
+  `<CODE>`" or a capability ID, never action text. Kept separate from item 3: different symptom and capability owner.
+
+### 5. `DOMAIN-override-lifecycle`
+
+- Sources: `CAP-DIST-workspace-ownership` §3 (create, receipt record, drift, not deployed, `remove`, bundle mismatch,
+  reconciliation, removed upstream; `ORPHAN_LEFT`); `CAP-DIST-sync-and-transactions` §1 (receipt);
+  `docs/development/reference/distribution.md`;
+  `packages/devkit-dist/src/devkit_dist/features/distribution/usecases/override_commands.py`.
+- Must not duplicate: `CAP-DIST-workspace-ownership`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-agent-projections`,
+  `DOMAIN-bundle-selection-and-installation`, glossary "Project override".
+- Condition (F5): use the capability's own states and codes; coin no state name ("orphaned" is forbidden: it means an
+  undesired owned file); "reconciled" is a command outcome, not a state; definitions point to the glossary.
 
 ### 6. `OPS-search-mode-and-model-routing`
 
-- Sources: `CAP-SRCH-document-search` §2, §5; `CAP-DOCS-document-search` §4.2;
-  `docs/development/reference/search.md`; `packages/devkit-dist/src/devkit_dist/features/search/models/errors.py`,
-  `.../search/services/index.py`; `justfile` `model-build`.
+- Sources: `CAP-SRCH-document-search` §2, §5; `CAP-DOCS-document-search` §3 rule 5, §4.2;
+  `docs/development/reference/search.md`; `packages/devkit-dist/src/devkit_dist/features/search/services/index.py`,
+  `.../search/models/errors.py`.
 - Must not duplicate: `CAP-SRCH-document-search`, `CAP-DOCS-document-search`, the reference error rows, advisory FIX text.
-- Check before writing: the `SEARCH_MODEL_INVALID` message and the editable-install case.
-
-### 7. `DOMAIN-override-lifecycle`
-
-- Sources: `CAP-DIST-workspace-ownership` §3 (create, drift, reconciliation); `CAP-DIST-sync-and-transactions` §1
-  (receipt); `docs/development/reference/distribution.md`; `packages/devkit-dist/src/devkit_dist/features/distribution/usecases/override_commands.py`.
-- Must not duplicate: `CAP-DIST-workspace-ownership`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-agent-projections`,
-  `DOMAIN-bundle-selection-and-installation`, glossary "Project override".
+- Condition (F6): the discriminating row is an explicit `--mode hybrid` run (auto falls back silently); without it the
+  table repeats `CAP-SRCH-document-search` §2 and the document is dropped. Normal state: `[SEARCH: ... mode=hybrid]`
+  (`CAP-DOCS-document-search` §4.2).
 
 ## Dropped candidates
 
 | Candidate | Already answered by |
 | --- | --- |
+| DESIGN envelope-return timestamp ordering (F1) | `CAP-DLV-human-interaction` §5 (precision and same-second voiding), `CAP-DLV-workflow-envelopes` §1-§2 |
 | DOMAIN stage-passing records (approval, `--given`, policy, hold) | `CAP-DLV-human-interaction` §5, `CAP-DLV-workflow-envelopes` §4, `CAP-DLV-workflow-orchestration` §3, `ARCH-04-2-delivery-policy` §7 |
 | OPS stuck Unit (`BLOCKED`, `PENDING_QUESTION`, waiting gate, stale approval) | spec-next `workflow-signals` reference, spec `worker-records` reference, `CAP-DLV-cli-and-output` |
 | OPS/DESIGN envelope commit (`ENVELOPE_COMMIT_*`) | `CAP-DLV-workflow-envelopes` §5, `ADR-explicit-envelope-commits` |
@@ -115,12 +128,12 @@ at the Planning head, not contracts.
 
 ## Count per kind and area
 
-| Area | DESIGN | DOMAIN | OPS (flat; topic area) |
-| --- | --- | --- | --- |
-| delivery | 2 | 0 | 1 |
-| distribution | 0 | 1 | 0 |
-| host | 0 | 0 | 1 |
-| mcp | 0 | 0 | 1 |
-| search | 0 | 0 | 1 |
-| other 13 areas | 0 | 0 | 0 |
-| Total (7) | 2 | 1 | 4 |
+| Area (OPS: topic) | DESIGN | DOMAIN | OPS | Unit |
+| --- | --- | --- | --- | --- |
+| delivery | 1 | 0 | 1 | A |
+| host | 0 | 0 | 1 | B |
+| mcp | 0 | 0 | 1 | B |
+| distribution | 0 | 1 | 0 | C |
+| search | 0 | 0 | 1 | C |
+| other 13 areas | 0 | 0 | 0 | - |
+| Total (6) | 1 | 1 | 4 | |
