@@ -1,16 +1,16 @@
 ---
-id: PADR-formal-role-document-identities
+id: ADR-formal-role-document-identities
 title: Formal role documents with canonical identities
 summary: "For independently maintained role documents, we register design, domain and operations with canonical IDs and complete tool support, to enable direct discovery and references, accepting schema and migration work."
-proposal: PROP-formal-document-kinds
+proposal: SPEC-formal-document-kinds
 supersedes: [ADR-documentation-ownership-and-linked-design-entries, ADR-linked-domain-relationship-views]
-status: draft
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-formal-role-document-identities] Formal role documents with canonical identities
+# [ADR-formal-role-document-identities] Formal role documents with canonical identities
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---
@@ -43,7 +43,7 @@ All viable options register formal Kind/prefix/ID. ID-free canonical content is 
 - Topic-grouped formal filenames with independent stem IDs: physical detail cohesion; path and pin migrations
   are needed on regrouping, and the folder taxonomy adds classification separate from globally unique identity.
 
-Status, relation-field and source-entrypoint comparisons are recorded in [the contract](../materials/core-contract.md).
+Status, relation-field and source-entrypoint comparisons are recorded in [the contract](../../materials/2026-11/20261116-formal-document-kinds/core-contract.md).
 No option is selected for implementation minimization.
 
 ## 4. Decision Outcome
@@ -52,32 +52,32 @@ Choose flat formal role documents with independent detail IDs and complete exist
 
 - Design, domain and operations have DESIGN, DOMAIN and OPS prefixes, public kind values design, domain and
   operations, flat canonical prefixed stems under designs, domain and operations in every docs root, and equal
-  direct identity/discovery/reference support. → `CAP-DOCS-document-model` §§3.1–3.2,4 (planned MUST).
+  direct identity/discovery/reference support. → `CAP-DOCS-document-model` §§3.1–3.2,4 (MUST).
 - All canonical role documents have required id/title/status/summary and first-H1 identity; draft/active/retired
   is their strict vocabulary, retired is browsing-terminal, and aliases retain same-prefix rename identity.
-  → `CAP-DOCS-document-model` §§3.2,3.5,4 (planned MUST).
+  → `CAP-DOCS-document-model` §§3.2,3.5,4 (MUST).
 - Target-typed optional related_designs, related_domains and related_operations fields carry current references;
   identity aliases, delivery provenance and ADR supersession retain distinct meanings. → `CAP-DOCS-document-model`
-  §§3.3,3.5 (planned MUST).
+  §§3.3,3.5 (MUST).
 - Independent Markdown details own formal identities; parent-owned support artifacts use the explicit identified
-  parent artifact subtree and no fake IDs. → `CAP-DOCS-documentation-ownership` §§3.3–3.5 (planned MUST/SHOULD).
+  parent artifact subtree and no fake IDs. → `CAP-DOCS-documentation-ownership` §3.3 (MUST/SHOULD).
 - Domain owns conceptual knowledge, design owns implementation explanation and operations owns evidence routing;
   existing behavioral/action authorities remain until an explicit same-change transfer removes duplicate
   restatements. No reciprocal registry, fixed reading order or whole-layer prerequisite is required.
-  → `CAP-DOCS-documentation-ownership` §§3.1–3.5 (planned MUST/SHOULD).
+  → `CAP-DOCS-documentation-ownership` §§3.1–3.3 (MUST/SHOULD).
 - Design accepts optional source file/directory entrypoints for liveness and reverse lookup; domain and operations
   use body/owner links. Entrypoints establish neither behavioral correctness nor public adapter standing.
-  → `CAP-TRACE-code-entrypoints` §§3.1–3.3 (planned MAY/MUST).
+  → `CAP-TRACE-code-entrypoints` §§3.1–3.3 (MAY/MUST).
 - Neutral formal templates/instructions ship in docs independently of spec; lifecycle and viewer integration are
   required separately owned phases of the milestone. → `CAP-DOCS-document-model` Document asset distribution
-  (planned MUST).
+  (MUST).
 
 Supersedes in part `ADR-documentation-ownership-and-linked-design-entries`: the ID-free design representation, exclusion from indexed identity and selected absence of Kind, identity grammar, relations and runtime support.
 
 Supersedes in part `ADR-linked-domain-relationship-views`: the ID-free domain representation, exclusion from indexed identity and selected absence of Kind, template, namespace and runtime support.
 
 Both earlier ADRs retain unique authority, conceptual/implementation separation and selective navigation clauses.
-They remain accepted and gain matching partial-supersession pointers at Development reconciliation. Their past
+They remain accepted with matching partial-supersession pointers. Their past
 choice and evidence remain historical; their denial of viewer/lifecycle selection is superseded for these roles
 by the required dependent phases, not permission to rewrite their rationale. The archived unmerged operations
 choice is historical input; no nonexistent accepted main operations ADR is claimed or superseded.
@@ -93,9 +93,11 @@ Lifecycle and viewer phases must consume this contract before milestone completi
 
 ## 6. Confirmation
 
-Development executes F1–F6 and the support matrix in the target blueprint, including new-kind positive/negative
-rules, global/package fixtures, public compatibility, all five migration nodes, installed docs-only wheel and
-existing-kind regression. RULE-id-convention, RULE-spec-format, RULE-document-summary, RULE-document-reference
-and RULE-code-entrypoints enforce applicable structure. Semantic ownership, source agreement, independent-detail
-classification and ordinary artifact links remain Review only. The dependency proposals supply L1–L4 and V1–V4
-proof; no current generic implementation or historical pilot test is passing formal-kind evidence.
+`SPEC-formal-document-kinds` verifies F1–F6 through actual global/package role nodes, positive/negative schema and
+reference tests, composed artifact maintenance, real snapshot parent/source deletion, public compatibility,
+separate-process persistent memo and a docs-only installed-wheel consumer. The [core development evidence](../../materials/2026-11/20261116-formal-document-kinds/development-evidence.md)
+records the five canonical migrations and ordinary-link checks. RULE-id-convention, RULE-spec-format,
+RULE-document-summary, RULE-document-reference and RULE-code-entrypoints enforce applicable structure.
+Semantic ownership, source agreement, independent-detail classification and ordinary artifact links remain Review
+only. Required `PROP-design-document-lifecycle` L1–L4 and `PROP-design-document-viewer` V1–V4 proof remains pending;
+core verification alone does not complete the milestone.

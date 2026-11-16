@@ -77,7 +77,7 @@ become graph edges.
    The index keeps every declaration of an ID, so a duplicate is detectable (`DOCS_ID_DUPLICATE`). Aliases share
    this namespace (section 3.5).
 6. **Summary**: `summary` is one or two English sentences saying what the document defines. It is REQUIRED on
-   capabilities, use cases, UX documents, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
+   capabilities, use cases, UX documents, design, domain and operations documents, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
    and is the main signal of document search (`CAP-DOCS-document-search`). Titles and bodies MAY use any language.
 7. **Historical documents**: The files of a spec bundle (`specs/<YYYY-MM>/<bundle>/...`) whose `spec.md` has
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
@@ -87,7 +87,7 @@ become graph edges.
    feedback stays current, and feedback of a terminal status is historical by rule 8. Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted. A user-decided merge into a broader theme milestone MAY delete one; its ID then resolves as an alias of the theme (`ADR-roadmap-and-milestones-ledger`).
 8. **Terminal statuses**: a document whose own status is terminal for its kind, compared case-insensitively, is
    historical for browsing and search whatever bundle holds it: feedback `resolved`, `promoted`, `dismissed` and
-   `forwarded`, decision `superseded`, proposal `rejected` (`ADR-terminal-statuses-are-historical`). Browsing and
+   `forwarded`, decision `superseded`, proposal `rejected`, design/domain/operations `retired` (`ADR-terminal-statuses-are-historical`). Browsing and
    search MUST hide it unless `--history` is passed (or `list --status` names its status, `CAP-DOCS-document-lookup`);
    its ID stays resolvable and its references queryable while the document exists. Eligible resolved feedback may be deleted during consolidation (`ADR-feedback-lifecycle-ledger`). Unlike rule 7, the rules keep checking it on every run.
 
@@ -209,6 +209,9 @@ live; the index itself does not check it.
 | `FB` | `feedback` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`, `specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`, `docs/proposals/PROP-<slug>/feedback/<slug>.md` |
 | `MAT` | `material` | `docs/materials/...` |
 | `MS` | `milestone` | `<root>/MS-<slug>.md` (planned/active) or `<root>/_archive/MS-<slug>.md` (done/dropped), where `<root>` is `docs/roadmap/` or a registered namespace's `docs/packages/<name>/roadmap/` |
+| `DESIGN` | `design` | `<docs-root>/designs/DESIGN-<word-led-slug>.md` |
+| `DOMAIN` | `domain` | `<docs-root>/domain/DOMAIN-<word-led-slug>.md` |
+| `OPS` | `operations` | `<docs-root>/operations/OPS-<word-led-slug>.md` |
 
 The table order is the kind order: `devkit docs list` sorts by it. Living Spec documents of a namespace live under
 `docs/packages/<name>/` with the same layout (`CAP-DOCS-namespaces`).
@@ -231,10 +234,39 @@ token, no `entrypoints`, no terminal status (statuses `draft`, `active`, `deprec
 takes its IDs: a use case cites a UX ID in step prose, and `RULE-ux-links` and `RULE-ux-coverage` check those
 citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
 
+### Formal role schema
+
+Design/domain/operations MUST declare nonempty string id, title, status and double-quoted English summary, and
+first H1 `# [ID] title` matching stem and metadata. Slugs are lowercase ASCII kebab case with a letter in the first
+segment. All three are unscoped Living Spec kinds in every docs root; area is inapplicable. Status MUST be exactly
+draft, active or retired, with draft the template/fix default. Retirement hides default browse/search but keeps
+resolve/refs/aliases and governance checks active. Use prose and optional related_* successor edges for retirement,
+not ADR supersession. DOMAIN/OPS MUST omit entrypoints; DESIGN MAY declare safe existing workspace-relative paths.
+Role documents MUST omit proposal, decomposed_from, depends_on, milestone, supersedes and superseded_by. Existing
+spec/plan current-reference semantics and descriptive metadata remain available.
+
+related_designs, related_domains and related_operations MAY appear on every indexed kind as typed ID lists. Each
+MUST contain existing targets of its declared prefix without repeated canonical targets; resolving same-prefix
+aliases are rewritten as current references. Aliases remain same-prefix identity, not edges. No generic reciprocal
+or cycle constraint is introduced. IDs and aliases remain repository-wide across namespace roots.
+
+Independent Markdown detail has a formal peer ID. Parent-owned support under `<ROLE-ID>/artifacts/` has one same-root
+canonical parent; supporting Markdown names that parent and MUST NOT declare any parser-recognized identity field
+(`id` or `reconcile_id`) or an H1 ID token. CSV/images need
+no fake IDs. Canonical artifacts are ID-free and unindexed; invalid/orphan/identified artifacts and stray nested
+independent Markdown fail identity governance. README remains optional navigation. Same-kind rename/root move carries
+the artifact subtree and repairs ordinary links; split/reclassification assigns every retained artifact one parent.
+Cross-kind reclassification retains the old node retired; cross-prefix aliases remain invalid.
+
+`ADR-formal-role-document-identities` owns this lasting schema decision. Existing public Kind values/order and
+Document/Reference JSON keys remain unchanged; design/domain/operations rows are appended. Templates include
+three formal role files and the legacy design-template compatibility pointer, for nine total files. No docs MCP
+service, docs-to-spec import or implicit delivery lifecycle is introduced.
+
 ### 3.3 References
 
 1. **Full IDs only**: A document MUST reference another by its full ID, never by a Markdown path.
-2. **Relation fields** (frontmatter): `usecases`, `capabilities`, `related_usecases`, `related_capabilities` hold a list
+2. **Relation fields** (frontmatter): `usecases`, `capabilities`, `related_usecases`, `related_capabilities`, `related_designs`, `related_domains`, `related_operations` hold a list
    of IDs; `spec` and `plan` hold one ID. A UX document declares `usecases` (the use cases whose steps cite it) and
    `capabilities` (the capabilities whose state or operations it presents), and a scalar `element` (`screen`, `modal`
    or `panel`) that is not a reference. Proposal anchors may declare `milestone`, one MS ID; SPEC milestone metadata is ignored and yields no membership reference. Milestones may declare `depends_on`, a list of MS IDs; proposal/spec anchors may declare a list of exact PROP/SPEC anchor IDs. Omit an empty optional field; an explicit empty list is valid. Auxiliary documents cannot declare unit prerequisites. Completed SPEC targets remain resolvable and are terminal for unit cycle traversal; the MS and unit graphs stay separate. A field of the wrong shape (a scalar where a list is expected, a non-string
@@ -341,12 +373,12 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
 | `summary` | string | One or two English sentences; embedded by search. |
 | `area` | string | Area of a capability, use case or UX document (its directory). |
 | `element` | string | What a UX document describes: `screen`, `modal` or `panel` (read by `RULE-ux-links`). |
-| `usecases`, `capabilities`, `related_usecases`, `related_capabilities` | list of IDs | Relation fields. |
+| `usecases`, `capabilities`, `related_usecases`, `related_capabilities`, `related_designs`, `related_domains`, `related_operations` | list of IDs | Relation fields. |
 | `spec`, `plan` | ID | Relation fields. |
 | `proposal` | ID | Provenance of a handed-off spec. |
 | `aliases` | list of IDs | Previous or alternate IDs of the document itself (section 3.5); identity, not references. |
 | `namespace` | string | Namespace of a spec or proposal bundle (`CAP-DOCS-namespaces`). |
-| `entrypoints` | list of paths | Code entrypoints of a capability or use case (`CAP-TRACE-code-entrypoints`). |
+| `entrypoints` | list of paths | Code entrypoints of a capability, use case or canonical DESIGN document; DOMAIN/OPS omit the field (`CAP-TRACE-code-entrypoints`). |
 
 ### 4.2 Document Record (JSON)
 
@@ -394,8 +426,8 @@ file selection.
 
 ## Document asset distribution
 
-The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eight writing instructions,
-ten document rule assets, five shared templates and the docs-pointer. Only docs declares the `docs/steering`
+The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eleven writing instructions,
+ten document rule assets, eight formal templates plus the design-template compatibility pointer and the docs-pointer. Only docs declares the `docs/steering`
 context directory and registers the `devkit.context_documents` provider that adds a registered namespace's steering
 directory for the working directory. `devkit get-context docs` lists steering summaries and document instructions.
 `docs:docs-skeleton` seeds absent files only when selected; seeded files remain project-owned.

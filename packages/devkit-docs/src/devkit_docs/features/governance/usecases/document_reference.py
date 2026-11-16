@@ -1,6 +1,7 @@
 """``RULE-document-reference``: documents reference each other by exact, resolvable full IDs.
 
-Checks every current document that is not a material (``rules.is_material``):
+Checks every current document that is not a material (``rules.is_material``), plus the three explicitly declared
+typed role relation fields on indexed materials:
 
 - a relation field of the wrong shape, or holding something that is not a full ID, or an ID of the wrong kind
   (``usecases`` and ``related_usecases`` take ``UC``, ``capabilities`` and ``related_capabilities`` ``CAP``, ``spec``
@@ -151,13 +152,32 @@ class DocumentReferenceRule(BaseRule):
                         )
         self._identity(ctx, index, add)
         for document in index.documents:
-            if is_material(document) or not reportable(ctx, index, document):
+            if not reportable(ctx, index, document):
                 continue
             historical = index.is_historical(document)
+            material = is_material(document)
+            role_fields = {"related_designs", "related_domains", "related_operations"}
             for issue in document.issues:
+                if material and issue.message.split(" ", 1)[0] not in role_fields:
+                    continue
                 add(document, issue.line, issue.message, "Use the documented relation field type")
+            seen_role_relations: set[tuple[str, str]] = set()
             for ref in document.references:
+                if material and ref.field not in role_fields:
+                    continue
+                if ref.field in role_fields:
+                    key = (ref.field, index.canonical_id(ref.target))
+                    if key in seen_role_relations:
+                        add(
+                            document,
+                            ref.line,
+                            f"{ref.field} repeats target {key[1]}",
+                            "Keep each canonical target once in the relation list",
+                        )
+                    seen_role_relations.add(key)
                 self._reference(index, document, ref, historical, add)
+            if material:
+                continue
             for ref in document.provenance:
                 if ref.field in {"decomposed_from", "supersedes"} and (
                     not is_id(ref.target) or not ref.target.startswith("PROP-")
@@ -463,10 +483,16 @@ class DocumentReferenceRule(BaseRule):
         index = document_index(ctx)
         changed: list[str] = []
         for document in index.documents:
-            if is_material(document) or index.is_historical(document) or not ctx.is_file_targeted(document.path):
+            if index.is_historical(document) or not ctx.is_file_targeted(document.path):
                 continue
+            references = [
+                ref
+                for ref in document.references
+                if not is_material(document)
+                or ref.field in {"related_designs", "related_domains", "related_operations"}
+            ]
             mapping: dict[str, str] = {}
-            for ref in document.references:
+            for ref in references:
                 spec = _handed_off(index, ref.target)
                 if spec is None:
                     spec = _alias_target(index, document, ref.target)
@@ -481,7 +507,7 @@ class DocumentReferenceRule(BaseRule):
             text = ctx.cache.read_text_strict(document.path)
             if text is None:
                 continue
-            updated = rewrite(text, document.references, mapping)
+            updated = rewrite(text, references, mapping)
             if updated != text:
                 ctx.cache.write_text(document.path, updated, dry_run=ctx.dry_run)
                 changed.append(document.path)

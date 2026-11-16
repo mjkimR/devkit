@@ -9,6 +9,9 @@ Use the document formats to describe the implementation and choices the project 
 | **`capabilities/`** | Behavior and business rules |
 | **`usecases/`** | Actor goals, steps and acceptance scenarios |
 | **`ux/`** | UX Documents |
+| **`designs/`** | Implementation Design | Formal DESIGN IDs for mechanisms, worked examples and datasheets; independent details are peer nodes, parent-owned support lives under ID/artifacts/ |
+| **`domain/`** | Domain Models | Formal DOMAIN IDs for concepts, identities, relationships and lifecycles |
+| **`operations/`** | Operations | Formal OPS IDs for symptom/evidence → existing action owner → normal-state observation |
 | **`materials/`** | Research evidence and experiments |
 | **`development/`** | Setup, verification and collaboration |
 | **`steering/`** | Background: `glossary.md`, `glossary.yaml` and project topics |

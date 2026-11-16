@@ -1,0 +1,38 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:10:38.115136Z'
+status: completed
+summary: round 1; independent reviewer matched all44 targets and found three wording contradictions; no production or schema change needed
+findings:
+- issue: Existing entrypoint applicability statements omit or explicitly exclude DESIGN.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-lookup.md:115; docs/capabilities/documents/CAP-DOCS-document-model.md:380; docs/capabilities/governance/CAP-GOV-spec-rules.md:298
+  failure_condition: An agent reads the established file contract that excludes DESIGN rather than the appended paragraph.
+  suggested_action: Include canonical DESIGN alongside capabilities and use cases in these three statements, retaining DOMAIN/OPS exclusion and path semantics.
+  resolution: open
+  severity: P1
+- issue: The governance targeting contract omits the implemented dependent-artifact exception.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:75-78 and 526-529
+  failure_condition: A snapshot removes a canonical parent and identity governance reports an unchanged artifact, contrary to the incomplete targeting description.
+  suggested_action: Add role-artifact identity to cross-file targeting cases and state unchanged dependent artifact checks on parent deletion, honoring explicit exclusions.
+  resolution: open
+  severity: P1
+- issue: The reconciliation record reverses the preserved feature dependency.
+  evidence: specs/2026-11/20261116-formal-document-kinds/reconcile.md:111
+  failure_condition: A reader uses the reconciliation explanation to understand the retained dependency.
+  suggested_action: Replace documents-to-governance with governance-to-documents in that sentence.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated; before/after authored tree270bd265556367ed0c31163cf54f759cfd5998d6 and HEAD unchanged
+unverified_areas:
+- Ordinary destinations and archived historical bytes inspected through developer evidence; lifecycle/viewer pending
+checks:
+  target_coverage: PASS independent all44 targets match changed paths
+  governance: PASS independent rules22 zero violations
+  pinned_contract: PASS independent SHA256 unchanged
+diff_scope:
+  base: bb0192c549888dc7d34c98a60304480283d32c56
+  head: bb235e916fb4a0402819abd3c646d60b2ab61c76
+activity_effort: high

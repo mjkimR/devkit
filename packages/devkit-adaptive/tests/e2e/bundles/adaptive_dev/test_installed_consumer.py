@@ -99,7 +99,7 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
     inspected = json.loads(cli("config", "show"))
     assert inspected["configuration"]["development"]["approach"] == "adaptive-dev"
     assert inspected["sources"]["development.approach"] == ".devkit/config.toml"
-    assert len(json.loads(cli("get-context", "docs"))["instructions"]) == 8
+    assert len(json.loads(cli("get-context", "docs"))["instructions"]) == 11
     assert not (consumer / ".devkit/managed/spec").exists()
     assert not (consumer / ".agents/skills/spec").exists()
     assert (consumer / ".agents/skills/adaptive-dev/SKILL.md").is_file()

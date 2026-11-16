@@ -144,7 +144,7 @@ The proposal CLI group calls the delivery acceptance and handoff use cases;
 proposal state operations remain in the proposals feature. Shared branch conventions and
 Git branch queries belong to the policy feature, keeping proposal state independent of delivery
 orchestration. `devkit_docs.features.documents` owns the document kind definitions, including the delivery
-kinds, that every `devkit_spec` feature reads; `devkit_docs.features.governance` owns the document rules'
+kinds and the first-class design/domain/operations definitions, that every `devkit_spec` feature reads; `devkit_docs.features.governance` owns the document rules'
 implementations, and `devkit_spec.features.governance` the lifecycle rules. `devkit_docs` MUST NOT import
 `devkit_spec`; a delivery-specific status reaches `devkit docs list` only through the
 `devkit.docs.status_overlay` entry-point group (`RULE-architecture` over `.devkit/architecture.toml`).

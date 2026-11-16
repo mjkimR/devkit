@@ -9,6 +9,8 @@ created_at: 2026-11-16
 
 # [ADR-documentation-ownership-and-linked-design-entries] Documentation ownership and linked design entries
 
+Superseded in part by `ADR-formal-role-document-identities`: the ID-free design representation, exclusion from indexed identity and selected absence of Kind, identity grammar, relations and runtime support.
+
 ## 1. Context & Problem Statement
 
 A contract-only reader lacks a direct route to the retained transaction mechanism detail. Supplied design entries

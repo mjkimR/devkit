@@ -3,7 +3,7 @@ id: PROP-formal-document-kinds-target
 title: Formal document kinds target blueprint
 summary: "Fixes exact formal role schemas, complete existing-system support, canonical migrations and required lifecycle and viewer interfaces."
 status: draft
-proposal: PROP-formal-document-kinds
+proposal: SPEC-formal-document-kinds
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
@@ -30,7 +30,7 @@ targets:
 
 # [PROP-formal-document-kinds-target] Formal role document target blueprint
 
-The [selected contract](materials/core-contract.md) is normative for Development planning of this proposal.
+The [selected contract](../../../docs/materials/2026-11/20261116-formal-document-kinds/core-contract.md) is normative for Development planning of this proposal.
 Current source is unchanged. Planned new IDs in this blueprint are plain text until created. All support cells
 below require implementation evidence; none claims a current passing implementation or inherits old pilot tests.
 
@@ -178,8 +178,8 @@ Viewer owns its screens/interaction draft/review and frontend verification. Core
 
 ## 6. Planning evidence and limits
 
-[Scout evidence](materials/scout-evidence.md) distinguishes source inspection, incoming-ref counts, body sampling,
-read scopes and full snapshot verification. [Support audit](materials/support-audit.md) is the earlier baseline
-inspection; it is not formal-kind runtime proof. [Core contract](materials/core-contract.md) §8 compares formal
+[Scout evidence](../../../docs/materials/2026-11/20261116-formal-document-kinds/scout-evidence.md) distinguishes source inspection, incoming-ref counts, body sampling,
+read scopes and full snapshot verification. [Support audit](../../../docs/materials/2026-11/20261116-formal-document-kinds/support-audit.md) is the earlier baseline
+inspection; it is not formal-kind runtime proof. [Core contract](../../../docs/materials/2026-11/20261116-formal-document-kinds/core-contract.md) §8 compares formal
 layout/schema alternatives and assigns deterministic schema enforcement. The PADR records partial supersession.
 Development tests, all five migrations and dependent lifecycle/viewer evidence remain unimplemented in Planning.

@@ -40,7 +40,7 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
 
     cli("sync")
     context = json.loads(cli("get-context", "docs"))
-    assert len(context["instructions"]) == 8
+    assert len(context["instructions"]) == 11
     assert not (consumer / ".devkit/managed/spec").exists()
     assert not (consumer / ".agents/skills/spec").exists()
     assert not (consumer / ".devkit/managed/docs/workflows").exists()
@@ -49,6 +49,27 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
     receipt = json.loads((consumer / ".devkit/installation.json").read_text())
     assert '"spec"' not in json.dumps(receipt)
     cli("add", "docs:docs-skeleton")
+    for kind, directory, prefix in [
+        ("design", "designs", "DESIGN"),
+        ("domain", "domain", "DOMAIN"),
+        ("operations", "operations", "OPS"),
+    ]:
+        template = consumer / f".devkit/managed/docs/templates/{kind}.md"
+        authored = (
+            template.read_text()
+            .replace("<slug>", "sample")
+            .replace("<word-led-lowercase-kebab-slug>", "sample")
+            .replace("<Title>", "Sample")
+            .replace("<English sentence stating the subject and boundary.>", "Sample formal role content.")
+        )
+        # Template body prompts are author guidance; create one focused current explanation.
+        authored = authored.split("## 1.", 1)[0] + "Current example content.\n"
+        target = consumer / f"docs/{directory}/{prefix}-sample.md"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(authored)
+        assert f"kind={kind}" in cli("docs", "resolve", f"{prefix}-sample")
+        assert f"{prefix}-sample" in cli("docs", "list", kind)
+        assert f"{prefix}-sample" in cli("docs", "search", "Sample", "--kind", kind, "--mode", "lexical")
     for args in [
         ("docs", "list"),
         ("docs", "resolve", "ARCH-01-introduction-and-goals"),

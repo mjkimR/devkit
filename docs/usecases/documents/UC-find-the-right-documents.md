@@ -18,14 +18,15 @@ created_at: 2026-10-13
 
 ## 1. Goal
 
-- **Goal**: find the capabilities, use cases, decisions and specs that govern the code and the intent in front of the
+- **Goal**: find the capabilities, use cases, decisions and specs that govern the code and intent, plus the relevant
+  design, domain and operations explanations in front of the
   agent, and follow their references, without reading the whole `docs/` tree, so that the agent changes code against
   the current contract, cites documents by their exact IDs and spends its context budget only on documents that
   matter
 - **Scope**: `devkit docs resolve`, `refs`, `supersession`, `list` and `search` over the document index
 - **Trigger**: the agent starts or continues development work holding one handle: an ID quoted in a task or a review,
   a code path it is about to change, a free-text description of the intent, or a document it already has open
-- **Preconditions**: the project uses the `spec` bundle with devkit-spec installed; the Living Spec documents may be
+- **Preconditions**: the project has devkit-docs installed and the `docs` bundle selected; the Living Spec documents may be
   written in any language and spread over several packages of a monorepo
 
 ---
@@ -47,7 +48,8 @@ created_at: 2026-10-13
 ## 3. Extensions
 
 - **1a.** The agent knows only the intent: it searches by meaning; the system ranks the current documents by ID and
-  English summary, and by title, area and body lexically, and pins a document whose ID, alias, path or file name
+  English summary, and by title, area and body lexically, optionally filtering design/domain/operations for an
+  implementation/conceptual/operational question, and pins a document whose ID, alias, path or file name
   equals the query first; resumes at step 3 with the chosen hit (`CAP-DOCS-document-search`).
 - **1b.** The agent holds a code path it is about to change: it lists the documents whose `entrypoints` equal the
   path, lie under it or contain it, which works for a deleted file too; resumes at step 3 with the listed document
@@ -60,11 +62,15 @@ created_at: 2026-10-13
   the listing (`CAP-DOCS-namespaces`).
 - **1e.** The agent names a namespace that is not registered, or combines a namespace with all namespaces: the system
   refuses with `ARGUMENT_INVALID`, listing the valid names; resumes at 1d.
+- **1f.** The desired role document is retired: the agent includes history or selects its retired status when
+  browsing; its direct ID and aliases still resolve; resumes at step 2 (`CAP-DOCS-document-lookup`).
 - **2a.** No document declares the ID: the system reports the resolved IDs first, then fails with
   `DOCS_ID_UNRESOLVED`; the agent searches by meaning; resumes at 1a.
 - **2b.** Several documents declare the ID: the system fails with `DOCS_ID_DUPLICATE` and lists them; the use case
   ends, because a duplicate ID is fixed by hand.
 
+- **3b.** A role document links a needed source or parent-owned artifact: the agent follows only that ordinary
+  destination or selected related full ID, then resumes at step 5 (`CAP-DOCS-document-model`).
 - **3a.** The document is a decision and the agent needs its replacements: it requests supersession; the system lists
   the earlier and later decisions with whole or partial scope and the replaced clauses; resumes at step 5
   (`CAP-DOCS-document-lookup`).
@@ -75,7 +81,7 @@ created_at: 2026-10-13
 
 - **Success guarantee**: the agent holds the exact IDs and workspace-relative paths of the governing documents and of
   the documents linked to them; historical documents (completed spec bundles, done or dropped milestones and
-  terminal-status feedback, decisions and proposals) stayed out of the results unless the agent asked for history or
+  terminal-status feedback, decisions, proposals and role documents) stayed out of the results unless the agent asked for history or
   named their status, and `list` reported how many it left out (`hidden=` with a `[HISTORY_CMD: ...]` line).
 - **Minimal guarantee**: every lookup reads only and changes no file; a file the index cannot read is left out with a
   `DOCS_DOCUMENT_INVALID` warning while every other document stays usable; an unresolved or duplicated ID is reported
@@ -145,3 +151,15 @@ created_at: 2026-10-13
 - **Given**: an ADR that is superseded in part
 - **When**: the agent runs `devkit docs supersession <ID>`
 - **Then**: it receives a `[SUPERSEDED_BY: ...]` line with `scope=partial` and the statement text and exits `0`
+
+### Scenario 10: Finds a formal role and its useful detail
+- **Covers**: 1a, 3b
+- **Given**: current DESIGN, DOMAIN and OPS nodes with summaries and selected related IDs or parent-owned artifacts
+- **When**: the agent searches its question with the appropriate role filter, resolves the chosen ID and follows the needed detail
+- **Then**: search and resolve return the formal kind/ID/path, refs expose declared current relationships, and the ordinary artifact destination exists without requiring whole-layer reading
+
+### Scenario 11: Reaches a retired formal role
+- **Covers**: 1f
+- **Given**: a retired role node with a same-prefix alias
+- **When**: the agent browses its kind with history and resolves the former ID
+- **Then**: history includes the node and resolve returns its canonical ID; default browsing omits it

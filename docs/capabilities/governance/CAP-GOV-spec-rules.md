@@ -59,7 +59,7 @@ commit.
 | `RULE-spec-lifecycle` | A spec's `status`, its task checklist and its `reconcile.md` status agree. | Sets `status: completed` on a stale `spec.md`. |
 | `RULE-spec-progress` | A `draft` or `planned` spec with a checked task is marked `in-progress`. | Sets `status: in-progress`. |
 | `RULE-reconcile-contract` | A `reconcile.md` is well formed; in a snapshot run its `modified` targets changed in the diff. | none |
-| `RULE-code-entrypoints` | Every `entrypoints` path of a capability or use case is a valid, existing workspace path. | none |
+| `RULE-code-entrypoints` | Every `entrypoints` path of a capability, use case or canonical DESIGN document is a valid, existing workspace path. | none |
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
 | `RULE-steering-documents` | `docs/steering/` and each registered namespace's `docs/packages/<name>/steering/` are flat and hold ID-free files with a `title` and a short English `summary`, within the per-directory file-count and body-size caps; optional namespace glossary and UX registers follow the root contract, and legacy package glossaries receive manual migration findings. | none |
@@ -74,13 +74,14 @@ commit.
    rules via `ctx.cache.get_or_compute`.
 2. **Targeting**: as with every devkit rule, a violation is reported only in the files the run targets: a commit
    checks the files it changes, `devkit rules check` without targets the whole workspace. A rule whose relation spans
-   several files (task coverage, lifecycle, traceability, entrypoints) states below where it reports when only one
+   several files (task coverage, lifecycle, traceability, entrypoints, role-artifact identity) states below where it reports when only one
    side is targeted.
 3. **History**: files of completed spec bundles, their `feedback/` aside, are work history: checked only when named as explicit targets, never
    rewritten by a fix. `RULE-spec-lifecycle` is the exception: its conditions concern completed bundles, so it checks
    them in every run.
 4. **Materials**: `docs/materials/` (and any `/materials/` directory, including `docs/packages/<name>/materials/`)
-   is free-form and exempt from every authoring rule.
+   is free-form and exempt from authoring rules, except identity declarations and the explicitly declared
+   related_designs/related_domains/related_operations typed metadata contract. Freeform material prose stays exempt.
 5. **Namespaces**: `docs/packages/<name>/` follows the conventions of `docs/` (`CAP-DOCS-namespaces`); IDs and
    references stay repository-wide.
 6. **Malformed `[tool.docs]`**: a malformed `[tool.docs]` table is not a violation. It MUST fail the run
@@ -294,7 +295,7 @@ so this hint is a rule of its own (`SPEC-open-feedback-and-progress`).
 
 ### 3.11 `RULE-code-entrypoints`
 
-Every `entrypoints` item of a capability or use case (`docs/` and namespace docs roots) MUST be a string, a literal
+Every `entrypoints` item of a capability, use case or canonical DESIGN document (`docs/` and namespace docs roots) MUST be a string, a literal
 workspace-relative path, and an existing file or directory inside the workspace. In a snapshot run it also reports
 every current document that declares a path the diff deletes. Not fixable. The full contract is
 `CAP-TRACE-code-entrypoints`.
@@ -519,3 +520,17 @@ keys have the same meaning as plain keys. Current rules use run-scoped cached ow
 prior ownership through the generic rule repository, without requiring installed workflow definitions.
 `packages/devkit-spec/tests/integration/features/policy/test_adaptive_dev.py` and
 `packages/devkit/tests/integration/features/rules/test_ownership.py` cover applicability and normal binding spellings.
+
+### Formal role validation
+
+RULE-id-convention checks the flat DESIGN/DOMAIN/OPS path/stem/id/H1 grammar in global and registered roots and
+reports role IDs declared outside their canonical root. It validates the narrow parent-owned artifact exception:
+same-root/same-kind canonical parent, ID-free supporting Markdown naming the parent, no stray nested independent
+Markdown. Binary artifacts need an owner but no fake ID. In a snapshot, deleting a canonical parent checks its
+unchanged dependent artifacts too, while honoring explicit artifact exclusions. These checks never move files.
+
+RULE-spec-format requires nonempty string metadata, exact draft/active/retired status, double-quoted summary and
+rejects reserved/inapplicable role fields. DOMAIN/OPS entrypoints are rejected; DESIGN paths receive the existing
+liveness and snapshot deletion checks. RULE-document-reference checks the three typed related_* role lists,
+including canonical-target duplicates and alias rewriting. RULE-document-summary applies the existing English and
+length checks. Retired role nodes remain checked; semantic ownership and ordinary artifact/source links are reviewed.

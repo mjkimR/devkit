@@ -106,3 +106,7 @@ No settings. Namespaces come from `[[tool.docs.namespaces]]` in `.devkit/config.
 
 No inline suppression. Quote an old date- or number-based identifier inside inline code or a code block, or keep it
 in a `materials/` directory; `[rules] exclude` removes a file from every rule.
+
+## Formal roles
+
+Formal DESIGN/DOMAIN/OPS documents use flat prefixed stems in their respective designs/domain/operations roots, globally or in a registered namespace. Their first H1 is # [ID] title matching metadata. Independent Markdown details require peer IDs. Parent-owned support under PARENT-ID/artifacts needs one same-root/same-kind canonical parent; Markdown is ID-free and names it. Orphans, ID-bearing artifacts and stray nested independent Markdown fail. Binary support needs no fake ID. Fix never moves files.

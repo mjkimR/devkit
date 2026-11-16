@@ -30,14 +30,14 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 depends_on:
-- PROP-formal-document-kinds
+- SPEC-formal-document-kinds
 ---
 
 # [PROP-design-document-viewer] First-class formal documentation in the repository viewer
 
 ## 1. Background & Hypothesis
 
-`PROP-formal-document-kinds` establishes formal design, domain and operations identities and core contracts.
+`SPEC-formal-document-kinds` establishes formal design, domain and operations identities and core contracts.
 The repository viewer must expose these as first-class kinds throughout existing relevant supported surfaces.
 Generic backend loading or Markdown rendering alone does not prove frontend navigation, ID recognition,
 metadata, reference graph or packaged-static support.

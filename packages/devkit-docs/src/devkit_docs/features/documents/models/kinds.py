@@ -39,6 +39,9 @@ class Kind(StrEnum):
     FEEDBACK = "feedback"
     MATERIAL = "material"
     MILESTONE = "milestone"
+    DESIGN = "design"
+    DOMAIN = "domain"
+    OPERATIONS = "operations"
 
 
 class Summary(StrEnum):
@@ -296,6 +299,51 @@ ROWS: tuple[KindDefinition, ...] = (
         terminal_statuses=_NONE,
         default_status="planned",
         relation_fields=("milestone", "depends_on"),
+    ),
+    KindDefinition(
+        Kind.DESIGN,
+        "DESIGN",
+        "designs",
+        living_spec=True,
+        area_scoped=False,
+        format_scope=FormatScope.EVERY_ROOT,
+        heading_token=True,
+        summary=Summary.ALWAYS,
+        anchor="",
+        entrypoints=True,
+        terminal_statuses=frozenset({"retired"}),
+        default_status="draft",
+        relation_fields=("related_designs",),
+    ),
+    KindDefinition(
+        Kind.DOMAIN,
+        "DOMAIN",
+        "domain",
+        living_spec=True,
+        area_scoped=False,
+        format_scope=FormatScope.EVERY_ROOT,
+        heading_token=True,
+        summary=Summary.ALWAYS,
+        anchor="",
+        entrypoints=False,
+        terminal_statuses=frozenset({"retired"}),
+        default_status="draft",
+        relation_fields=("related_domains",),
+    ),
+    KindDefinition(
+        Kind.OPERATIONS,
+        "OPS",
+        "operations",
+        living_spec=True,
+        area_scoped=False,
+        format_scope=FormatScope.EVERY_ROOT,
+        heading_token=True,
+        summary=Summary.ALWAYS,
+        anchor="",
+        entrypoints=False,
+        terminal_statuses=frozenset({"retired"}),
+        default_status="draft",
+        relation_fields=("related_operations",),
     ),
 )
 

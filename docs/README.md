@@ -13,6 +13,9 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 | **`decisions/`** | Architecture Decisions (ADR) | Context and rationale for critical technology selection and structural decisions (`ADR-<slug>`) |
 | **`usecases/`** | Use Cases | How each actor reaches a goal: main success scenario, extensions, postconditions, acceptance criteria (`UC-<slug>`) |
 | **`ux/`** | UX Documents | What a person sees and operates: one screen, modal or panel per document, linked from the use case steps it serves (`UX-<slug>`) |
+| **`designs/`** | Implementation Design | Formal DESIGN IDs for mechanisms, worked examples and datasheets; independent details are peer nodes, parent-owned support lives under ID/artifacts/ |
+| **`domain/`** | Domain Models | Formal DOMAIN IDs for concepts, identities, relationships and lifecycles |
+| **`operations/`** | Operations | Formal OPS IDs for symptom/evidence → existing action owner → normal-state observation |
 | **`materials/`** | Reference & Spikes | Technical spikes, benchmarks, external libraries, competitor analysis reports |
 | **`proposals/`** | Proposals | Pre-spec proposals that plan uncertain work (`PROP-<slug>`) |
 | **`development/`** | Development & Collaboration | Local environment setup, Git workflow, commit/PR conventions, CI/CD pipelines, and CLI/API quick references in `development/reference/` |

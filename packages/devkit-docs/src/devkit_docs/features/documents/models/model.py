@@ -8,8 +8,20 @@ from typing import Any
 from devkit_docs.base.layout import PROPOSALS, bundle_of, is_proposal_anchor, is_spec_anchor, unnamespaced
 from devkit_docs.features.documents.models.ids import Kind
 
+# Frontmatter fields the parser recognizes as document identity, in precedence order.
+IDENTITY_FIELDS = ("id", "reconcile_id")
+
 # Frontmatter fields that reference other documents. A list field holds IDs, a scalar field one ID.
-LIST_FIELDS = ("usecases", "capabilities", "related_usecases", "related_capabilities", "depends_on")
+LIST_FIELDS = (
+    "usecases",
+    "capabilities",
+    "related_usecases",
+    "related_capabilities",
+    "depends_on",
+    "related_designs",
+    "related_domains",
+    "related_operations",
+)
 SCALAR_FIELDS = ("spec", "plan", "milestone")
 # Where a document came from: an edge of its history, not of the current contract.
 PROVENANCE_FIELDS = ("proposal", "decomposed_from", "supersedes")

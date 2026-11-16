@@ -18,7 +18,7 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-Capabilities and use cases MAY declare `entrypoints` in their frontmatter: the files and directories where their
+Capabilities, use cases and formal DESIGN documents MAY declare `entrypoints` in their frontmatter: the files and directories where their
 implementation starts. An entrypoint is an anchor for finding code from a document and documents from code. devkit-docs owns
 the path contract (`devkit_docs.utils.paths` and `devkit_docs.features.governance.services.entrypoint_paths`), keeps the declarations alive
 (`RULE-code-entrypoints`) and finds documents by path (`devkit docs list --file`, `CAP-DOCS-document-lookup`)
@@ -61,7 +61,8 @@ entrypoints:
    with `DOCS_ENTRYPOINTS_PATH_INVALID`.
 4. Paths compare by whole segments, case-sensitively: `src/a` covers `src/a/b.py`, not `src/ab`.
 5. **Entrypoint-bearing documents** are the Markdown files under `docs/capabilities/` and `docs/usecases/`, and under
-   the same directories of a namespace docs root `docs/packages/<name>/` (`CAP-DOCS-namespaces`).
+   the same directories of a namespace docs root `docs/packages/<name>/` (`CAP-DOCS-namespaces`). Canonical flat
+   `designs/DESIGN-<slug>.md` files also qualify; role README/artifact paths do not. DOMAIN/OPS reject entrypoints.
 
 The same contract governs the code paths of the work-scope registry (`CAP-COLL-work-scope-registry`).
 
@@ -69,7 +70,7 @@ The same contract governs the code paths of the work-scope registry (`CAP-COLL-w
 
 Phase `linter`, severity `error`, not fixable (`CAP-GOV-spec-rules`).
 
-1. For each targeted capability or use case that declares `entrypoints`: the field MUST be a list of strings, each a
+1. For each targeted capability, use case or canonical DESIGN document that declares `entrypoints`: the field MUST be a list of strings, each a
    valid path (section 3.1), each an existing file or directory inside the workspace with symbolic links resolved (a
    link pointing outside counts as missing: "Dead code entrypoint").
 2. `check --staged` and `--ci` resolve paths in the snapshot's tree, where an empty directory does not exist.
@@ -81,9 +82,13 @@ Phase `linter`, severity `error`, not fixable (`CAP-GOV-spec-rules`).
 
 ### 3.3 Reverse Query
 
-`devkit docs list [capability|usecase] --file <path>` lists the documents whose `entrypoints` equal the path, lie under
+`devkit docs list [capability|usecase|design] --file <path>` lists the documents whose `entrypoints` equal the path, lie under
 it, or are a directory containing it (`CAP-DOCS-document-lookup`). The path need not exist, so a deleted file still
 finds its documents; it MUST follow the path contract (`DOCS_ENTRYPOINTS_PATH_INVALID`).
+
+Retired DESIGN nodes remain subject to liveness checks; remove or replace obsolete declarations in the same change
+that deletes their source. Historical coordinates belong in prose with a source commit. Paths identify where to
+read and do not prove semantic correctness or a public adapter boundary.
 
 ### 3.4 Derivation Inputs
 

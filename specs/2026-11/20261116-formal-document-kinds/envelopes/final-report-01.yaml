@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:14:22.892929Z'
+status: completed
+summary: First-class DESIGN/DOMAIN/OPS core F1–F6 delivered and reconciled; independent code review2 passed and all reconcile wording findings resolved; required lifecycle/viewer phases remain pending
+findings: []
+assumptions:
+- Codex delegation emulated through explicit worktree paths, scoped commits and unchanged authored-state snapshots for independent reviewers
+unverified_areas:
+- Host integration and landed-head batch verification remain pending; lifecycle L1–L4 and viewer V1–V4 are required separate implementations, not claimed by core
+checks:
+  tests: PASS affected unit-integration2625 at9f4b9f7010; runtime/package/test subtrees unchanged through report head; formal34 independently passed
+  build: PASS built-wheel docs-only installed consumer1 at9f4b9f7010 and adaptive installed consumer1 atbb235e916; no devkit-spec in docs-only runtime
+  lint: PASS just lint-check docs; just check docs Pyright0; latest rules check --ci --base main22 at2e51f71177
+  sync: PASS sync_start exit0; final sync --check exit0; only tracked output .devkit/installation.json declared
+  generated: PASS generated check stale0
+  compatibility_probes: PASS all3 roles ADR-only supersession refuses ARGUMENT_INVALID, default-status fixer draft and retired search/history behavior
+diff_scope:
+  base: bb0192c549888dc7d34c98a60304480283d32c56
+  head: 2e51f71177cd03be04fadfe4156d57a8637360e6
+activity_effort: high

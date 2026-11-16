@@ -111,7 +111,7 @@ rules: `files` may only name managed or projected destinations, and asset `paths
 ## 2. Asset Selection Model
 
 For how availability, requested selection, conceptual assets, projected paths and receipt evidence relate, read
-[Bundle selection and installation](../../domain/bundle-selection-and-installation.md). Selection and receipt
+`DOMAIN-bundle-selection-and-installation`. Selection and receipt
 contracts remain in this capability.
 
 Installing a package makes its bundle **available**. A bundle that declares `auto_select`
@@ -367,7 +367,7 @@ usual warning.
 ## 3. Transaction Safety Guarantees
 
 For how a managed file becomes a directory or the reverse, read the
-[transaction mechanism](../../designs/distribution-transactions.md); it explains implementation while this section
+`DESIGN-distribution-transactions`; it explains implementation while this section
 retains eligibility, safety and recovery authority.
 
 

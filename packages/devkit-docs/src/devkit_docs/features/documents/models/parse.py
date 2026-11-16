@@ -30,6 +30,7 @@ from devkit_docs.features.documents.models.markdown import visible_lines
 from devkit_docs.features.documents.models.model import (
     ALIASES,
     BODY,
+    IDENTITY_FIELDS,
     LIST_FIELDS,
     PROVENANCE_FIELDS,
     SCALAR_FIELDS,
@@ -41,7 +42,7 @@ from devkit_docs.features.documents.models.model import (
 
 _CODE_SPAN_ID = re.compile(rf"`({ID_SOURCE})`")
 _BRACKET_ID = re.compile(rf"\[({ID_SOURCE})\]")
-_STRING_FIELDS = ("id", "reconcile_id", "status")
+_STRING_FIELDS = (*IDENTITY_FIELDS, "status")
 
 
 def parse_document(path: str, text: str) -> Document | None:
@@ -58,7 +59,7 @@ def parse_document(path: str, text: str) -> Document | None:
     for name in _STRING_FIELDS:
         if name in data and not isinstance(data[name], str):
             raise FrontmatterError(f"{path}: frontmatter {name} must be a string", target_files=[path])
-    document_id = data.get("id") or data.get("reconcile_id") or ""
+    document_id = next((data[name] for name in IDENTITY_FIELDS if data.get(name)), "")
     kind = kind_of(document_id)
     if kind is None:
         return None

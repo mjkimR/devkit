@@ -34,7 +34,8 @@ created_at: 2026-10-13
 
 ## 2. Main Success Scenario
 
-1. The agent runs the spec rules over the workspace or the files it changed (`CAP-GOV-spec-rules`).
+1. The agent authors formal role documents from their matching neutral templates where needed, then runs the
+   applicable rules over the workspace or the files it changed (`CAP-GOV-spec-rules`).
 2. The system reads the document index and reports each inconsistency in the targeted files with its rule ID, its
    status (`open` or `fixable`) and its remediation, leaving completed spec bundles alone unless they are named
    (`CAP-GOV-spec-rules`, `CAP-DOCS-document-model`).
@@ -55,10 +56,13 @@ created_at: 2026-10-13
 - **3a.** A violation is `open` (no deterministic repair: a reference to an ID no document declares, a dead
   entrypoint, missing reconcile evidence): the fix leaves it unchanged and never guesses; the agent repairs it by hand
   following its remediation; resumes at step 4.
-- **5a.** The commit deletes code that a capability declares in `entrypoints` without updating the capability:
-  `RULE-code-entrypoints` reports the capability although the commit does not touch it, and the gate refuses the
+- **5a.** The commit deletes code that a capability, use case or canonical DESIGN declares in `entrypoints` without updating its document:
+  `RULE-code-entrypoints` reports the declaring document although the commit does not touch it, and the gate refuses the
   commit; the agent restores the code, points the declaration at the moved code or removes it; resumes at step 5
   (`CAP-TRACE-code-entrypoints`).
+- **5c.** The commit deletes a canonical role parent while unchanged support artifacts remain: `RULE-id-convention`
+  reports the dependent artifacts despite their unchanged bytes; the agent moves them with their canonical parent
+  and repairs ordinary links or preserves them as identified historical material; resumes at step 5.
 - **5b.** The commit marks a `reconcile.md` `resolved` with a `modified` target the commit does not change:
   `RULE-reconcile-contract` reports the target, and the gate refuses the commit; the agent stages the Living Spec edit
   with the record; resumes at step 5.
@@ -108,3 +112,15 @@ created_at: 2026-10-13
 - **Given**: a commit marks a spec's `reconcile.md` `resolved` with a `modified` target that the commit does not change
 - **When**: the commit gate runs `devkit rules check --staged`
 - **Then**: `RULE-reconcile-contract` reports the target, and committing the Living Spec edit with the record clears it
+
+### Scenario 6: Validates formal role authoring
+- **Covers**: main success scenario, 3a
+- **Given**: an independent detail has a formal role ID and a role node declares an invalid status or inapplicable field
+- **When**: the agent runs applicable document rules
+- **Then**: RULE-spec-format reports the invalid metadata without guessing a value; after the author corrects it, validation passes and semantic ownership/artifact destinations remain reviewed separately
+
+### Scenario 7: Rejects an orphaned support subtree in a snapshot
+- **Covers**: 5c
+- **Given**: a canonical role parent owns a CSV artifact
+- **When**: a commit stages only parent deletion and the gate checks the snapshot
+- **Then**: RULE-id-convention reports the unchanged orphan artifact; a composed rename that moves the artifact with its new canonical parent passes

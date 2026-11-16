@@ -25,6 +25,8 @@ number the documents (`ARCH-<section>-<slug>`); C4 levels scope the diagrams.
   structure and contracts without a required authoring sequence.
 - Keep topology in deployment views; route operational symptoms/evidence through existing recovery owners to
   normal-state observations without duplicating their procedures or permissions.
+- Route local implementation detail to formal DESIGN documents, domain concepts to DOMAIN and operational
+  evidence/action-owner composition to OPS; read the respective writing instruction before authoring.
 - Read `living-spec-writing.md` when the question crosses documentation roles; route by responsibility rather than
   document length, numeric content or arc42 chapter resemblance.
 

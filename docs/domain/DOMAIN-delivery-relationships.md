@@ -1,4 +1,11 @@
-# Delivery relationships
+---
+id: DOMAIN-delivery-relationships
+title: "Delivery relationships"
+status: active
+summary: "Distinguishes proposal and spec identity, milestone membership, prerequisites and provenance across delivery."
+---
+
+# [DOMAIN-delivery-relationships] Delivery relationships
 
 ## Question
 

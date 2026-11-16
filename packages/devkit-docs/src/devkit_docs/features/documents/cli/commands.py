@@ -197,7 +197,7 @@ def _present(entry: dict[str, object]) -> dict[str, object]:
     is_flag=True,
     help="Include historical documents: completed spec bundles (their open feedback is always included), done or "
     "dropped milestones, and terminal statuses (feedback resolved, promoted, dismissed, forwarded; decision "
-    "superseded; proposal rejected). --status shows the statuses it names without it",
+    "superseded; proposal rejected; design/domain/operations retired). --status shows the statuses it names without it",
 )
 @click.option(
     "--where",
@@ -239,7 +239,7 @@ def list_cmd(
     --file finds the documents that own a code path through their ``entrypoints``; --where filters by any
     frontmatter field, such as a feedback document's severity or scope. Feedback is ordered by severity. KIND is one
     of: capability, usecase, ux, architecture, decision, proposal, proposal-decision, spec, plan, tasks, reconcile,
-    feedback, material, milestone. In a workspace with namespaces, the namespace of the current directory (plus the
+    feedback, material, milestone, design, domain, operations. In a workspace with namespaces, the namespace of the current directory (plus the
     global documents) is shown unless --namespace or --all-namespaces says otherwise.
     """
     result = ListDocumentsUseCase().execute(

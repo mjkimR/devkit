@@ -27,14 +27,14 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 depends_on:
-- PROP-formal-document-kinds
+- SPEC-formal-document-kinds
 ---
 
 # [PROP-design-document-lifecycle] Formal documentation authoring and reconciliation lifecycle
 
 ## 1. Background & Hypothesis
 
-`PROP-formal-document-kinds` supplies formal identity, core governance, neutral authoring assets and migration.
+`SPEC-formal-document-kinds` supplies formal identity, core governance, neutral authoring assets and migration.
 Delivery integration must treat design, domain and operations as first-class impact targets throughout their
 lifecycle. Existing SDD and adaptive-dev mechanisms own delivery authority; extend their concrete integration
 points so every supported formal kind participates completely without an unrelated workflow engine.
@@ -79,7 +79,7 @@ This phase and `PROP-design-document-viewer` are required to complete `MS-docume
 ### Planning decisions
 
 1. Extend existing delivery boundaries, consuming the shared ownership and Kind policy from
-   `PROP-formal-document-kinds`. The comparison and source evidence are in
+   `SPEC-formal-document-kinds`. The comparison and source evidence are in
    [integration contract](materials/integration-contract.md); the lasting choice is
    `PADR-formal-document-delivery-integration`. No parallel applicability registry or workflow engine is added.
 2. Planning, implementation review and reconciliation assess all three formal responsibilities against the actual

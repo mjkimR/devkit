@@ -36,6 +36,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+import yaml
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
@@ -56,8 +57,10 @@ from devkit_docs.features.documents import (
     Document,
     DocumentIndex,
     FormatScope,
+    Kind,
     by_prefix,
     definitions,
+    field_node,
     in_source_directory,
     is_document_file,
 )
@@ -71,6 +74,7 @@ from devkit_docs.features.governance import (
     namespaces,
     reportable,
 )
+from devkit_docs.features.governance.services.role_artifacts import ROLE_DIRECTORIES, artifact_state
 
 RULE_ID = "RULE-spec-format"
 NAMESPACE_FIELD = "namespace"
@@ -152,6 +156,35 @@ def _problems(ctx: RuleContext, path: str, registered: tuple[Namespace, ...]) ->
             )
         elif not isinstance(value, str):
             problems.append(_Problem(f"frontmatter field '{name}' must be a string", REMEDIATION[name]))
+    local = living_path(path, namespaces=registered).split("/")
+    row = by_prefix(str(data.get("id", "")))
+    is_role = (len(local) > 1 and local[1] in ROLE_DIRECTORIES) or (
+        row is not None and row.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}
+    )
+    if is_role:
+        status = data.get("status")
+        if isinstance(status, str) and status.strip() and status not in {"draft", "active", "retired"}:
+            problems.append(_Problem("role status must be draft | active | retired", "Set an exact role status"))
+        forbidden = {"area", "proposal", "decomposed_from", "depends_on", "milestone", "supersedes", "superseded_by"}
+        if not (row is not None and row.kind is Kind.DESIGN):
+            forbidden.add("entrypoints")
+        for field in sorted(forbidden & data.keys()):
+            problems.append(
+                _Problem(
+                    f"frontmatter field '{field}' is inapplicable to this role",
+                    f"Remove {field}; use role content or typed related_* references",
+                )
+            )
+        summary = data.get("summary")
+        if not isinstance(summary, str) or not summary.strip():
+            problems.append(
+                _Problem("role summary must be a nonempty string", "Write an English double-quoted summary")
+            )
+        else:
+            block = locate(ctx.cache.read_text(path))
+            node = field_node(block.header, "summary") if block else None
+            if node is None or not isinstance(node[1], yaml.ScalarNode) or node[1].style != '"':
+                problems.append(_Problem("role summary must be double-quoted", "Quote summary with YAML double quotes"))
     if is_proposal_anchor(path):
         for field in EFFORT_FIELDS:
             if field not in data:
@@ -209,12 +242,21 @@ def _scope(ctx: RuleContext, registered: tuple[Namespace, ...]) -> list[str]:
             relative = ctx.cache.relative_name(path)
             if (
                 is_document_file(path.name)
+                and artifact_state(ctx, relative, registered) != (True, "")
                 and in_source_directory(relative)
                 and "/materials/" not in relative
                 and ctx.is_file_targeted(relative)
                 and (relative not in historical or explicitly_targeted(ctx, relative))
             ):
                 paths.append(relative)
+    for document in document_index(ctx).documents:
+        if (
+            document.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}
+            and document.path not in paths
+            and ctx.is_file_targeted(document.path)
+            and artifact_state(ctx, document.path, registered) != (True, "")
+        ):
+            paths.append(document.path)
     return paths
 
 

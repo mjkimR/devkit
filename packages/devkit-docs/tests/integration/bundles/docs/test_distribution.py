@@ -44,7 +44,7 @@ def test_inventory_and_guidance_have_independent_ownership() -> None:
     bundle = load_bundle(BUNDLE)
     assert bundle.auto_select and bundle.name == "docs" and bundle.default_preset == "core"
     assert {a.id for a in bundle.assets if a.kind == "rule"} == RULES
-    assert len([a for a in bundle.assets if a.kind == "instruction"]) == 8
+    assert len([a for a in bundle.assets if a.kind == "instruction"]) == 11
     assert not {"docs-skeleton"} & set(bundle.select(["core"]))
     assert {p.stem for p in (BUNDLE / "templates").glob("*.md")} == {
         "capability",
@@ -53,6 +53,9 @@ def test_inventory_and_guidance_have_independent_ownership() -> None:
         "decision",
         "milestone",
         "design-template",
+        "design",
+        "domain",
+        "operations",
     }
     assert next(iter(entry_points(group="devkit.bundles", name="docs"))).value == "devkit_docs.bundles.docs"
     for parent in ["instructions", "templates", "seed"]:

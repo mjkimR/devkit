@@ -19,6 +19,9 @@ INSTRUCTIONS = {
     "usecase-writing",
     "ux-writing",
     "architecture-writing",
+    "design-writing",
+    "domain-writing",
+    "operations-writing",
 }
 
 

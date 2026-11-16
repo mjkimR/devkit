@@ -34,7 +34,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   comments, escapes, link labels, `~~strikethrough~~` (a historical mention of a removed document stays allowed
   there) and a heading's own ID. External URLs, images, code files, documents without IDs, links with a fragment or
   query and root-relative links keep Markdown links. Materials (`docs/materials/`, any `/materials/` directory) are
-  free-form and not checked.
+  free-form; their prose and unrelated fields are not checked, while explicitly declared related_designs,
+  related_domains and related_operations retain the typed role-reference contract.
 - **Completed specs**: files of a spec bundle whose `spec.md` is `completed` (and `done` or `dropped` milestones) are
   history: checked only when named as explicit targets, without the `[ID]`, handoff and alias findings, and never
   rewritten. A handed-off `PROP-<slug>` there, in prose or in `depends_on`, resolves silently through its spec: the
@@ -89,7 +90,7 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   quote style; decision records (ADRs and PADRs) are rewritten like any current document, and so are the code-span
   alias citations of steering files and quick references. It also replaces aliases in root and registered namespace glossary Owner cells,
   preserving backtick or bracket delimiters and table layout. It never changes a spec's `proposal:` provenance field, an `aliases` entry,
-  a plain-text ID, skips completed specs, materials and files that are not valid UTF-8, and writes
+  a plain-text ID, skips completed specs and files that are not valid UTF-8; on materials it rewrites only the three typed role fields, and writes
   only the targets when the run names any. A rename spec writes the old IDs as plain text, so the fix leaves its
   mapping table intact.
 - **By hand**: a missing or duplicated ID is fixed by hand; the rule never guesses which document was meant. Find a
@@ -125,3 +126,7 @@ See `ADR-example`.
 capabilities:
   - CAP-AREA-example
 ```
+
+## Formal roles
+
+related_designs, related_domains and related_operations are typed lists on any indexed kind. Reject malformed shapes, wrong prefixes, missing targets and repeated canonical targets. Same-prefix aliases are identity, never edges; current references are canonically rewritten. Role relations have no reciprocal or cycle obligation.
