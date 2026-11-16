@@ -11,7 +11,7 @@ planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 milestone: MS-documentation-system-evolution
 depends_on:
-  - PROP-design-bundle-layout
+  - SPEC-design-bundle-layout
 boundaries:
   owns:
     - packages/devkit-docs/src/devkit_docs/bundles/docs/
@@ -69,7 +69,7 @@ problem once after the summary and keep any question inside it or as an authorin
 exclusions plus pointers to the owning document; guidance sits in comments or a separate guide; table skeletons are
 placeholder rows; copy-once systems leave old documents alone and check body sections, if at all, warn-only.
 
-`PROP-design-bundle-layout` changes the canonical paths, the `area` field and support placement in the same
+`SPEC-design-bundle-layout` changes the canonical paths, the `area` field and support placement in the same
 templates and instructions. This proposal follows it, so each file is restructured once against the delivered path
 grammar.
 
@@ -146,12 +146,12 @@ grammar.
 ### Assets
 
 Edit the docs bundle sources under `packages/devkit-docs/src/devkit_docs/bundles/docs/` and project them with
-`devkit sync`. Start from the templates and instructions as `PROP-design-bundle-layout` delivers them.
+`devkit sync`. Start from the templates and instructions as `SPEC-design-bundle-layout` delivers them.
 
 ### Non-Goals
 
 - No change to paths, identity, frontmatter schema, the `area` field, support placement, status vocabulary or
-  relation fields; `PROP-design-bundle-layout` and `ADR-formal-role-document-identities` own those.
+  relation fields; `SPEC-design-bundle-layout` and `ADR-formal-role-document-identities` own those.
 - No rule that checks template sections or leftover guidance.
 - No per-document template version marker, template variants or separate guide files.
 
@@ -173,7 +173,5 @@ Edit the docs bundle sources under `packages/devkit-docs/src/devkit_docs/bundles
 ## 4. Lifecycle & Retirement Criteria
 
 Planning settles Q1–Q4. This stays one S feature proposal and starts Development after
-`PROP-design-bundle-layout` delivers its path grammar. If that proposal is rejected, remove `depends_on` and start
-from the current templates: the two touch disjoint concerns (paths and `area` against sections and guidance).
-Acceptance and handoff follow the existing gates; handoff promotes `PADR-problem-first-formal-document-openings`.
-Retirement requires T1–T4.
+`SPEC-design-bundle-layout` delivers its path grammar. Acceptance and handoff follow the existing gates; handoff
+promotes `PADR-problem-first-formal-document-openings`. Retirement requires T1–T4.

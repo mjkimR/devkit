@@ -24,28 +24,34 @@ def test_design_alias_selection_apply_body_and_ineligible_targets(tmp_path: Path
     write(".devkit/config.toml", '[[tool.docs.namespaces]]\nname="api"\npath="packages/api"\n')
     body = "# [DESIGN-mechanism] Mechanism\n\nRetained body with two spaces.  \n"
     path = write(
-        f"{docs_root}/designs/DESIGN-mechanism.md",
-        '---\nid: DESIGN-mechanism\ntitle: Mechanism\nsummary: "Local mechanism."\nstatus: active\naliases: [DESIGN-former]\n---\n'
-        + body,
+        f"{docs_root}/designs/core/DESIGN-mechanism/design.md",
+        '---\nid: DESIGN-mechanism\ntitle: Mechanism\nsummary: "Local mechanism."\nstatus: active\narea: core\n'
+        "aliases: [DESIGN-former]\n---\n" + body,
     )
     write("src/mechanism/model.py", "MODE = 1\n")
     write("src/unrelated.py", "UNRELATED = True\n")
     metadata = write(
-        f"{docs_root}/designs/DESIGN-wording.md",
-        '---\nid: DESIGN-wording\ntitle: Wording\nsummary: "Existing wording only."\nstatus: active\n---\n# [DESIGN-wording] Wording\nRetained metadata-only body.\n',
+        f"{docs_root}/designs/core/DESIGN-wording/design.md",
+        '---\nid: DESIGN-wording\ntitle: Wording\nsummary: "Existing wording only."\nstatus: active\narea: core\n---\n'
+        "# [DESIGN-wording] Wording\nRetained metadata-only body.\n",
     )
     metadata_before = metadata.read_bytes()
     targets = [path.relative_to(tmp_path).as_posix(), metadata.relative_to(tmp_path).as_posix()]
-    for directory, name in [("domain", "DOMAIN-concept"), ("operations", "OPS-diagnosis")]:
-        targets.append(
-            write(f"{docs_root}/{directory}/{name}.md", f"---\nid: {name}\n---\n").relative_to(tmp_path).as_posix()
-        )
-    targets.append(write(f"{docs_root}/designs/README.md", "# Designs\n").relative_to(tmp_path).as_posix())
-    targets.append(
-        write(f"{docs_root}/designs/DESIGN-mechanism/artifacts/example.md", "# Example\nDESIGN-mechanism\n")
-        .relative_to(tmp_path)
-        .as_posix()
-    )
+    for document, name in [
+        ("domain/core/DOMAIN-concept.md", "DOMAIN-concept"),
+        ("operations/OPS-diagnosis.md", "OPS-diagnosis"),
+    ]:
+        targets.append(write(f"{docs_root}/{document}", f"---\nid: {name}\n---\n").relative_to(tmp_path).as_posix())
+    ineligible = {
+        "designs/README.md": "# Designs\n",
+        "designs/core/DESIGN-mechanism/README.md": "# Mechanism bundle\n",
+        "designs/core/DESIGN-mechanism/example.md": "# Example\nDESIGN-mechanism\n",
+        "designs/core/DESIGN-mechanism/examples/nested.md": "# Nested example\nDESIGN-mechanism\n",
+        "designs/core/DESIGN-mechanism/data.csv": "a,b\n",
+        "domain/core/DOMAIN-concept/artifacts/example.md": "# Example\nDOMAIN-concept\n",
+    }
+    for relative, text in ineligible.items():
+        targets.append(write(f"{docs_root}/{relative}", text).relative_to(tmp_path).as_posix())
     bundle = "specs/2026-11/20261116-formal"
     write(f"{bundle}/spec.md", "---\nid: SPEC-formal\nstatus: in-progress\n---\n")
     write(f"{bundle}/tasks.md", "- [x] **Task 1**: mechanism\n  - **_Boundary**: `src/`\n  - _Requirements: AC-01_\n")

@@ -61,8 +61,9 @@ entrypoints:
    with `DOCS_ENTRYPOINTS_PATH_INVALID`.
 4. Paths compare by whole segments, case-sensitively: `src/a` covers `src/a/b.py`, not `src/ab`.
 5. **Entrypoint-bearing documents** are the Markdown files under `docs/capabilities/` and `docs/usecases/`, and under
-   the same directories of a namespace docs root `docs/packages/<name>/` (`CAP-DOCS-namespaces`). Canonical flat
-   `designs/DESIGN-<slug>.md` files also qualify; role README/artifact paths do not. DOMAIN/OPS reject entrypoints.
+   the same directories of a namespace docs root `docs/packages/<name>/` (`CAP-DOCS-namespaces`). Design bundle
+   anchors `designs/<area>/DESIGN-<slug>/design.md` also qualify (`ADR-area-scoped-design-bundles`); role README,
+   bundle support and artifact paths do not. DOMAIN/OPS reject entrypoints.
 
 The same contract governs the code paths of the work-scope registry (`CAP-COLL-work-scope-registry`).
 
@@ -113,7 +114,8 @@ joins them.
    and `resolution`) is a document unless its resolution is `waived` or it is not entrypoint-bearing. A target that
    is not an indexed document is skipped as `missing-doc` (no such file) or `not-a-document` (an existing file without
    an ID, with malformed frontmatter, a `README.md` or a template). Eligibility comes from the docs core's
-   `entrypoint_bearing` policy: canonical DESIGN participates; DOMAIN/OPS and README/artifact paths are skipped
+   `entrypoint_bearing` policy: a design bundle's `design.md` anchor participates; DOMAIN/OPS and README, bundle
+   support and artifact paths are skipped
    as `not-entrypoint-bearing`. Each document counts once per bundle.
 5. **Pairs**: every document is paired with every candidate. `state` is `declared` when an existing entrypoint equals
    the path or is a directory containing it, else `new`; `exists` tells whether the path is in the working tree.

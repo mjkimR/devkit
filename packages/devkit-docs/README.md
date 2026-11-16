@@ -49,14 +49,16 @@ Document rules report invalid placement without moving files or changing lifecyc
 ## Formal role documents
 
 Kind.DESIGN (`design`, DESIGN), Kind.DOMAIN (`domain`, DOMAIN) and Kind.OPERATIONS (`operations`, OPS) append to
-existing public Kind values. In global or registered package docs roots, write flat designs/DESIGN-slug.md,
-domain/DOMAIN-slug.md or operations/OPS-slug.md with id, title, status and a double-quoted English summary, then
+existing public Kind values. In global or registered package docs roots, write a designs/AREA/DESIGN-slug/design.md
+bundle, domain/AREA/DOMAIN-slug.md or flat operations/OPS-slug.md with id, title, status and a double-quoted English
+summary (plus `area` matching the area directory for a design or domain document), then
 `# [ID] title`. Status is draft, active or retired; history browsing exposes retired nodes while resolve/refs still work.
 Optional typed related_designs, related_domains and related_operations lists work on every indexed kind. Same-prefix
 aliases retain identity; no reciprocal role links are required. Existing Document/Reference JSON keys stay unchanged.
 
 Use the shipped design/domain/operations templates and writing instructions. Independent Markdown detail has its
-own formal ID; ID-free parent-owned support belongs under PARENT-ID/artifacts/ and supporting Markdown names its
-parent. Rename/root move carries support and repairs ordinary links. Only DESIGN accepts optional safe existing
+own formal ID (a peer bundle for a design); ID-free parent-owned support belongs in the design bundle, or under
+PARENT-ID/artifacts/ beside a domain or operations document, and supporting Markdown names its parent. Rename, area
+and root moves carry support and repair ordinary links. Only DESIGN accepts optional safe existing
 workspace-relative entrypoints for source reading and reverse --file lookup; DOMAIN/OPS use body links instead.
 The docs core bundle ships eleven instructions and nine templates including the design-template compatibility pointer.

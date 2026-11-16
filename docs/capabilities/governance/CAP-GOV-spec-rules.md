@@ -89,7 +89,8 @@ commit.
    the rules cannot tell which documents follow which conventions.
 7. **Fixes**: fixes are deterministic, idempotent, honor `devkit rules fix --dry-run`, write only targeted current
    files, and change only the bytes they own.
-8. **Kind facts**: the rules read each kind's Living Spec membership and directory, area scoping, summary
+8. **Kind facts**: the rules read each kind's Living Spec membership and directory, layout (`flat`, `area` or
+   `area-bundle` with its anchor file name) and the area scoping derived from it, summary
    requirement, entrypoint-bearing flag, `RULE-spec-format` scope, fix-time default status, heading-token prefix and
    relation-field prefixes from the kind definition table (`CAP-DOCS-document-model` section 3.2) when they run; rule
    codes, messages and remediations do not depend on where a fact is kept. A Living Spec kind without a path grammar
@@ -213,9 +214,10 @@ non-blank strings.
   `specs/<YYYY-MM>/<bundle>/spec.md` that is not a string naming `global` or a registered namespace (not fixable). The `namespace` field is checked in
   current proposals and specs, and in every one of them when the run targets `.devkit/config.toml`.
 - **Fix**: fills what is missing and leaves present values alone: `id` the ID the path derives, `title` the first
-  `# ` heading (a leading ID token dropped) else the file stem, `status: draft` (`open` for proposal feedback, `planned` for milestones), and `created_at` today when none of
+  `# ` heading (a leading ID token dropped), else the bundle directory name for a design bundle's `design.md` anchor
+  and the file stem otherwise, `status: draft` (`open` for proposal feedback, `planned` for milestones), and `created_at` today when none of
   `created_at`, `created`, `date` is set. The path derives the file stem for a capability, use case, single-file
-  proposal or PADR, `PROP-<slug>` for a bundle's `proposal.md` and `PROP-<slug>-target` for its `target-docs.md`, and
+  proposal or PADR, the bundle directory name for a design bundle's `design.md` anchor, `PROP-<slug>` for a bundle's `proposal.md` and `PROP-<slug>-target` for its `target-docs.md`, and
   `FB-<name>` for its direct `feedback/<name>.md`; any other file under `docs/proposals/` derives none, and its missing `id` is reported without a fix.
 
 ### 3.6 `RULE-traceability-link`
@@ -523,14 +525,26 @@ prior ownership through the generic rule repository, without requiring installed
 
 ### Formal role validation
 
-RULE-id-convention checks the flat DESIGN/DOMAIN/OPS path/stem/id/H1 grammar in global and registered roots and
-reports role IDs declared outside their canonical root. It validates the narrow parent-owned artifact exception:
-same-root/same-kind canonical parent, ID-free supporting Markdown naming the parent, no stray nested independent
-Markdown. Binary artifacts need an owner but no fake ID. In a snapshot, deleting a canonical parent checks its
-unchanged dependent artifacts too, while honoring explicit artifact exclusions. These checks never move files.
+RULE-id-convention checks the DESIGN/DOMAIN/OPS path/id/`area`/H1 grammar in global and registered roots, read
+from each kind's layout (`ADR-area-scoped-design-bundles`): a design bundle
+`designs/<area>/DESIGN-<slug>/design.md` whose directory name is the ID, a domain file
+`domain/<area>/DOMAIN-<slug>.md` whose stem is the ID, both with `area` equal to the area directory, and a flat
+operations file `operations/OPS-<slug>.md` that carries no `area`. It reports a flat design or domain path, an `area`
+mismatch, a bundle whose directory and `id` differ, and role IDs declared outside
+their canonical root. It validates parent-owned support: inside a design bundle every file but `design.md`, at any
+depth, is support, and identified Markdown there, including a nested `DESIGN-*/design.md`, is a stray with a
+promote-to-peer-bundle remediation; a bundle without `design.md` is an orphan. Domain and operations support keeps
+the `<ID>/artifacts/` exception: same-root/same-kind canonical parent, ID-free supporting Markdown naming the parent,
+no stray nested independent Markdown. `README.md` stays exempt in area directories and bundles; under `<ID>/artifacts/`
+it is supporting Markdown. Binary support needs an owner but no fake ID, and a non-Markdown file under a role
+directory that fits no document or support path of its kind (dotfiles such as `.gitkeep` excepted), such as one left at a flat `domain/<ID>/artifacts/`
+path, is reported with a move to its area path. In a snapshot, deleting a canonical parent checks its unchanged dependent support
+too, while honoring explicit artifact exclusions. A fix repairs a stale `area` from the directory; these checks
+never move files.
 
 RULE-spec-format requires nonempty string metadata, exact draft/active/retired status, double-quoted summary and
-rejects reserved/inapplicable role fields. DOMAIN/OPS entrypoints are rejected; DESIGN paths receive the existing
+rejects reserved/inapplicable role fields, including `area` on an operations document; parent-owned support, valid
+or not, is outside its scope and fix, so it never receives an ID. DOMAIN/OPS entrypoints are rejected; DESIGN paths receive the existing
 liveness and snapshot deletion checks. RULE-document-reference checks the three typed related_* role lists,
 including canonical-target duplicates and alias rewriting. RULE-document-summary applies the existing English and
 length checks. Retired role nodes remain checked; semantic ownership and ordinary artifact/source links are reviewed.

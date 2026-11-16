@@ -110,3 +110,19 @@ def test_deleting_declared_code_is_caught_without_touching_the_document(tmp_path
     found = [(v.file, v.message) for v in result.violations]
     assert [file for file, _ in found] == ["docs/capabilities/core/CAP-CORE-a.md"]
     assert "Dead code entrypoint" in found[0][1]
+
+
+def test_bundle_design_anchors_are_checked_in_every_docs_root(tmp_path: Path) -> None:
+    design = "docs/designs/core/DESIGN-x/design.md"
+    package = "docs/packages/api/designs/core/DESIGN-y/design.md"
+    files = {
+        "src/main.go": "package main",
+        design: "---\nid: DESIGN-x\nentrypoints: [src/main.go, src/gone.go]\n---\n",
+        package: "---\nid: DESIGN-y\nentrypoints: [src/missing/]\n---\n",
+        "docs/designs/core/DESIGN-x/notes.md": "---\nentrypoints: [src/ignored.go]\n---\nDESIGN-x\n",
+        "docs/designs/DESIGN-flat.md": "---\nid: DESIGN-flat\nentrypoints: [src/ignored.go]\n---\n",
+    }
+    assert _found(check(RULE, tmp_path, files)) == [
+        (design, 3, "Dead code entrypoint: 'src/gone.go' (missing or outside workspace)"),
+        (package, 3, "Dead code entrypoint: 'src/missing/' (missing or outside workspace)"),
+    ]

@@ -239,20 +239,31 @@ def test_formal_baseline_coverage_gaps_and_source_invalidation(tmp_path: Path) -
     assert "DOMAIN, DESIGN and OPS" in guide and "missing required documents" in guide
     source = exercise.source_identity()
 
-    def role(directory: str, identifier: str, statement: str) -> Path:
-        path = exercise.root / f"docs/{directory}/{identifier}.md"
+    def role(relative: str, identifier: str, statement: str, area: str | None = None) -> Path:
+        path = exercise.root / "docs" / relative
         path.parent.mkdir(parents=True, exist_ok=True)
+        scope = f"area: {area}\n" if area else ""
         path.write_text(
-            f'---\nid: {identifier}\ntitle: Retained notes\nsummary: "Retained note subject and source coverage."\nstatus: active\n---\n# [{identifier}] Retained notes\n\n{statement} Source SHA256: {exercise.source_identity()}. Owner `CAP-APP-notes`.\n'
+            f'---\nid: {identifier}\ntitle: Retained notes\nsummary: "Retained note subject and source coverage."\nstatus: active\n{scope}---\n# [{identifier}] Retained notes\n\n{statement} Source SHA256: {exercise.source_identity()}. Owner `CAP-APP-notes`.\n'
         )
         return path
 
-    domain = role("domain", "DOMAIN-note-identity", "A note is an ordered retained text value.")
-    design = role("designs", "DESIGN-json-notes", "The app uses json.loads and json.dumps for local storage.")
+    domain = role(
+        "domain/notes/DOMAIN-note-identity.md",
+        "DOMAIN-note-identity",
+        "A note is an ordered retained text value.",
+        area="notes",
+    )
+    design = role(
+        "designs/notes/DESIGN-json-notes/design.md",
+        "DESIGN-json-notes",
+        "The app uses json.loads and json.dumps for local storage.",
+        area="notes",
+    )
     report = exercise.report("gap", "Required OPS-normal-notes is undocumented; source observations are missing.")
     assert "gap" in report.read_text() and exercise.config()["development"]["approach"] == "adaptive-dev"
     operations = role(
-        "operations",
+        "operations/OPS-normal-notes.md",
         "OPS-normal-notes",
         "After add, observe list against the same store; existing behavior belongs to its capability.",
     )

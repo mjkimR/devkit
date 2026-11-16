@@ -49,22 +49,23 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
     receipt = json.loads((consumer / ".devkit/installation.json").read_text())
     assert '"spec"' not in json.dumps(receipt)
     cli("add", "docs:docs-skeleton")
-    for kind, directory, prefix in [
-        ("design", "designs", "DESIGN"),
-        ("domain", "domain", "DOMAIN"),
-        ("operations", "operations", "OPS"),
+    for kind, path, prefix in [
+        ("design", "designs/core/DESIGN-sample/design.md", "DESIGN"),
+        ("domain", "domain/core/DOMAIN-sample.md", "DOMAIN"),
+        ("operations", "operations/OPS-sample.md", "OPS"),
     ]:
         template = consumer / f".devkit/managed/docs/templates/{kind}.md"
         authored = (
             template.read_text()
             .replace("<slug>", "sample")
+            .replace("<area>", "core")
             .replace("<word-led-lowercase-kebab-slug>", "sample")
             .replace("<Title>", "Sample")
             .replace("<English sentence stating the subject and boundary.>", "Sample formal role content.")
         )
         # Template body prompts are author guidance; create one focused current explanation.
         authored = authored.split("## 1.", 1)[0] + "Current example content.\n"
-        target = consumer / f"docs/{directory}/{prefix}-sample.md"
+        target = consumer / "docs" / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(authored)
         assert f"kind={kind}" in cli("docs", "resolve", f"{prefix}-sample")

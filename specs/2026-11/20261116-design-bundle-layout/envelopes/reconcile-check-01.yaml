@@ -1,0 +1,37 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:26:08.202799Z'
+status: completed
+summary: 'Round 1 independent reconcile verification: 13 targets cover every changed Living Spec file; impact, entrypoint decision, deferred work and ADR scope hold. Two P1 CAP-GOV-spec-rules wording mismatches and one P3 missing removed-path comparison.'
+findings:
+- issue: CAP-GOV-spec-rules attributes rejecting area on an operations document to RULE-id-convention; RULE-spec-format reports it.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:533; packages/devkit-docs/src/devkit_docs/features/governance/usecases/spec_format.py:189-190
+  failure_condition: A run filtered to RULE-id-convention reports nothing for area on OPS.
+  suggested_action: Move the statement to the RULE-spec-format paragraph.
+  resolution: open
+  severity: P1
+- issue: The RULE-spec-format fix clause says the default title falls back to the file stem; for a bundle anchor it is the bundle directory name.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:216-217; packages/devkit-docs/src/devkit_docs/features/governance/usecases/spec_format.py
+  failure_condition: The contract predicts title design for a bundle anchor; the fix writes the DESIGN ID.
+  suggested_action: State the bundle directory fallback for design bundle anchors.
+  resolution: open
+  severity: P1
+- issue: reconcile.md compares only the four document moves, not the PADR-to-ADR promotion and the proposal records moved at handoff.
+  evidence: specs/2026-11/20261116-design-bundle-layout/reconcile.md
+  failure_condition: An audit from reconcile.md alone misses the PADR path replacement.
+  suggested_action: Add the promotion and moved records to the body.
+  resolution: open
+  severity: P3
+assumptions:
+- Proposal and spec-unit records are not Living Spec targets.
+unverified_areas:
+- Each of the many referrers of CAP-DOCS-document-model and CAP-GOV-spec-rules was covered by search, not read individually.
+checks:
+  rules: PASS rules check --ci --base 93514612d errors=0
+  resolve_refs: PASS four moved IDs resolve with incoming refs intact
+  search_pin: PASS design.md pins nothing
+diff_scope:
+  base: 93514612da7464cb468bfcd29cb2fa2f3c7d6673
+  head: 524970793157273fc7a27a3446e35e7d8d55b83c

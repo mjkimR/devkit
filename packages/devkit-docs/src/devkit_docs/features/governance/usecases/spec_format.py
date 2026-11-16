@@ -13,11 +13,15 @@ directories, whether or not it declares a well-formed ID:
 The fix prepends a block to a file without one (``id`` the ID the path derives, ``title`` the first ``# `` heading
 without a leading ``[ID]``, else the file stem, ``status: draft`` (``open`` for proposal feedback) and ``created_at`` today) and fills the missing
 fields of an existing block with the same values, adding ``created_at`` when neither ``created_at``, ``created`` nor
-``date`` is set. The path derives the ID (``_derived_id``) of a capability or use case (the file stem), of a single-file
+``date`` is set. The path derives the ID (``_derived_id``) of a capability or use case (the file stem), of a design
+bundle anchor ``<area>/DESIGN-<slug>/design.md`` (the bundle directory name, also the default title), of a single-file
 proposal ``PROP-<slug>.md`` or a PADR ``PROP-<slug>/decisions/PADR-<name>.md`` (the stem), of a bundle's
 ``proposal.md`` (``PROP-<slug>``) and of its ``target-docs.md`` (``PROP-<slug>-target``); any other file under
 ``docs/proposals/`` derives none, so its missing ``id`` is reported but not fixed (the fix still fills the other
 fields). It never touches a file the check accepts, a malformed block or a field of the wrong type. Done/dropped milestone documents are history and checked only when explicitly targeted.
+Formal role support (``role_artifacts.support_of``: every file of a design bundle but its anchor, every file under a
+domain or operations ``<ID>/artifacts/``) is out of scope, valid or not: ``RULE-id-convention`` checks it, and the
+fix never gives it an ID.
 
 The ``namespace`` field of a bundle anchor (``docs/proposals/PROP-<slug>/proposal.md``, a single-file proposal
 ``docs/proposals/PROP-<slug>.md`` or ``specs/<month>/<bundle>/spec.md``), when present, must be a string naming ``global`` or a registered namespace; it is not fixable. Anchors are
@@ -57,7 +61,6 @@ from devkit_docs.features.documents import (
     Document,
     DocumentIndex,
     FormatScope,
-    Kind,
     by_prefix,
     definitions,
     field_node,
@@ -74,7 +77,7 @@ from devkit_docs.features.governance import (
     namespaces,
     reportable,
 )
-from devkit_docs.features.governance.services.role_artifacts import ROLE_DIRECTORIES, artifact_state
+from devkit_docs.features.governance.services.role_artifacts import ROLE_KINDS, role_row, support_of
 
 RULE_ID = "RULE-spec-format"
 NAMESPACE_FIELD = "namespace"
@@ -87,8 +90,8 @@ _BLANK_VALUE = r"""[ \t]*(?:""|''|~|null|Null|NULL)?[ \t]*(?:#[^\r\n]*)?(?=\r?$)
 REMEDIATION = {
     "id": (
         "Set id to the document's full ID: the file stem of a capability, use case, single-file proposal or PADR"
-        " (CAP-<AREA>-<slug>, UC-<slug>, PROP-<slug>, PADR-<slug>), PROP-<slug> in a bundle's proposal.md and"
-        " PROP-<slug>-target in its target-docs.md"
+        " (CAP-<AREA>-<slug>, UC-<slug>, PROP-<slug>, PADR-<slug>), the bundle directory name in a design bundle's"
+        " design.md, PROP-<slug> in a bundle's proposal.md and PROP-<slug>-target in its target-docs.md"
     ),
     "title": "Set title to the document's title",
     "status": "Set status to the document's lifecycle status (for example draft, proposed, active)",
@@ -107,15 +110,34 @@ def _blank(value: Any) -> bool:
     return value is None or (isinstance(value, str) and not value.strip())
 
 
-def _derived_id(path: str) -> str | None:
+def _bundle_name(path: str, registered: tuple[Namespace, ...]) -> str | None:
+    """The bundle directory name of the anchor of an ``area-bundle`` kind at ``path``
+    (``<root>/designs/<area>/DESIGN-<slug>/design.md``), or ``None`` for any other path."""
+    local = living_path(path, namespaces=registered).split("/")
+    if len(local) != 5 or local[0] != "docs":
+        return None
+    for row in definitions():
+        if row.bundled and row.directory == local[1] and local[4] == row.layout_anchor:
+            return local[3]
+    return None
+
+
+def _default_title(path: str, registered: tuple[Namespace, ...]) -> str:
+    """The title the fix writes when the document has no H1: the bundle directory name of a bundle anchor, else the
+    file stem."""
+    return _bundle_name(path, registered) or Path(path).stem
+
+
+def _derived_id(path: str, registered: tuple[Namespace, ...] = ()) -> str | None:
     """The ID the workspace-relative ``path`` of a checked file requires, or ``None`` when its path derives none.
 
-    A capability or use case declares its file stem. Under ``docs/proposals/``: ``PROP-<slug>.md`` and
-    ``PROP-<slug>/decisions/PADR-<name>.md`` their stems, ``PROP-<slug>/proposal.md`` ``PROP-<slug>`` and
-    ``PROP-<slug>/target-docs.md`` ``PROP-<slug>-target``; any other file there derives none."""
+    A capability or use case declares its file stem, a bundle anchor (``designs/<area>/DESIGN-<slug>/design.md``) its
+    bundle directory name. Under ``docs/proposals/``: ``PROP-<slug>.md`` and ``PROP-<slug>/decisions/PADR-<name>.md``
+    their stems, ``PROP-<slug>/proposal.md`` ``PROP-<slug>`` and ``PROP-<slug>/target-docs.md``
+    ``PROP-<slug>-target``; any other file there derives none."""
     stem = Path(path).stem
     if not path.startswith(f"{PROPOSALS}/"):
-        return stem
+        return _bundle_name(path, registered) or stem
     parts = path.removeprefix(f"{PROPOSALS}/").split("/")
     if len(parts) == 1:
         return stem if stem.startswith("PROP-") else None
@@ -149,7 +171,7 @@ def _problems(ctx: RuleContext, path: str, registered: tuple[Namespace, ...]) ->
     for name in REQUIRED:
         value = data.get(name)
         if _blank(value):
-            fixable = name != "id" or _derived_id(path) is not None
+            fixable = name != "id" or _derived_id(path, registered) is not None
             remediation = f"{REMEDIATION[name]}, or run `{FIX_COMMAND}`" if fixable else REMEDIATION[name]
             problems.append(
                 _Problem(f"frontmatter is missing the required field '{name}'", remediation, fixable=fixable)
@@ -158,15 +180,16 @@ def _problems(ctx: RuleContext, path: str, registered: tuple[Namespace, ...]) ->
             problems.append(_Problem(f"frontmatter field '{name}' must be a string", REMEDIATION[name]))
     local = living_path(path, namespaces=registered).split("/")
     row = by_prefix(str(data.get("id", "")))
-    is_role = (len(local) > 1 and local[1] in ROLE_DIRECTORIES) or (
-        row is not None and row.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}
-    )
-    if is_role:
+    located = role_row(local[1]) if len(local) > 1 and local[0] == "docs" else None
+    role = located or (row if row is not None and row.kind in ROLE_KINDS else None)
+    if role is not None:
         status = data.get("status")
         if isinstance(status, str) and status.strip() and status not in {"draft", "active", "retired"}:
             problems.append(_Problem("role status must be draft | active | retired", "Set an exact role status"))
-        forbidden = {"area", "proposal", "decomposed_from", "depends_on", "milestone", "supersedes", "superseded_by"}
-        if not (row is not None and row.kind is Kind.DESIGN):
+        forbidden = {"proposal", "decomposed_from", "depends_on", "milestone", "supersedes", "superseded_by"}
+        if not role.area_scoped:  # the area of an area-scoped role is checked against its directory instead
+            forbidden.add("area")
+        if not (row is not None and row.entrypoints):
             forbidden.add("entrypoints")
         for field in sorted(forbidden & data.keys()):
             problems.append(
@@ -242,7 +265,7 @@ def _scope(ctx: RuleContext, registered: tuple[Namespace, ...]) -> list[str]:
             relative = ctx.cache.relative_name(path)
             if (
                 is_document_file(path.name)
-                and artifact_state(ctx, relative, registered) != (True, "")
+                and support_of(relative, registered) is None
                 and in_source_directory(relative)
                 and "/materials/" not in relative
                 and ctx.is_file_targeted(relative)
@@ -251,10 +274,10 @@ def _scope(ctx: RuleContext, registered: tuple[Namespace, ...]) -> list[str]:
                 paths.append(relative)
     for document in document_index(ctx).documents:
         if (
-            document.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}
+            document.kind in ROLE_KINDS
             and document.path not in paths
             and ctx.is_file_targeted(document.path)
-            and artifact_state(ctx, document.path, registered) != (True, "")
+            and support_of(document.path, registered) is None
         ):
             paths.append(document.path)
     return paths
@@ -332,7 +355,7 @@ class SpecFormatRule(BaseRule):
             text = ctx.cache.read_text_strict(path)
             if text is None:
                 continue
-            updated = _fixed(text, Path(path).stem, _derived_id(path), today)
+            updated = _fixed(text, _default_title(path, registered), _derived_id(path, registered), today)
             if updated is not None and updated != text:
                 ctx.cache.write_text(path, updated, dry_run=ctx.dry_run)
                 changed.append(path)

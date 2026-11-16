@@ -12,7 +12,7 @@ usecases: []
 ## 1. Summary
 
 Documentation responsibilities determine ownership. Domain meaning, current implementation design and operations
-composition are distinct roles alongside architecture and behavioral contracts. All three have formal indexed Kinds and prefixes. `ADR-formal-role-document-identities` records the representation decision.
+composition are distinct roles alongside architecture and behavioral contracts. All three have formal indexed Kinds and prefixes. `ADR-formal-role-document-identities` records the representation decision, and `ADR-area-scoped-design-bundles` the design bundle and domain area paths.
 
 ## 2. Scope & Boundary
 
@@ -70,15 +70,19 @@ already belong to arc42. These are responsibility boundaries, not a chapter tuto
 ### 3.3 Formal roles and useful detail
 
 1. **Formal standing**: Authors MUST give independently maintained design, domain and operations Markdown its own
-   DESIGN, DOMAIN or OPS ID and canonical flat path in the corresponding global or registered package docs root
-   (`CAP-DOCS-document-model`, `RULE-id-convention`).
+   DESIGN, DOMAIN or OPS ID and canonical path in the corresponding global or registered package docs root: a design
+   bundle `designs/<area>/DESIGN-<slug>/design.md`, a domain file `domain/<area>/DOMAIN-<slug>.md` or a flat
+   operations file `operations/OPS-<slug>.md` (`CAP-DOCS-document-model`, `RULE-id-convention`).
 2. **Independent usefulness**: Authors SHOULD state the reader question, overview, authority boundary and next useful
    action. An independent detail, worked example or datasheet has its own question/maintenance seam and formal peer ID.
-3. **Supporting artifacts**: Parent-owned support MUST live under `<PARENT-ID>/artifacts/` in the same role root,
-   with one canonical same-kind parent. Supporting Markdown MUST be ID-free and name that parent; non-Markdown
-   files need no fake identity. An alias does not authorize an orphan old-ID subtree (`RULE-id-convention`).
-4. **Maintenance**: WHEN renaming, moving roots, splitting or reclassifying content, authors MUST retain one canonical
-   artifact owner and repair ordinary links; a cross-kind predecessor remains retired with its replacement named.
+3. **Supporting artifacts**: A design's parent-owned support MUST live inside its bundle beside `design.md`, at any
+   depth; domain and operations support MUST live under `<PARENT-ID>/artifacts/` beside the parent file, with one
+   canonical same-kind parent in the same root. Supporting Markdown MUST be ID-free and name that parent;
+   non-Markdown files need no fake identity. Independent detail is a peer bundle or file with its own ID; design
+   bundles never nest. An alias does not authorize an orphan old-ID subtree or bundle (`RULE-id-convention`).
+4. **Maintenance**: WHEN renaming, moving areas or roots, splitting or reclassifying content, authors MUST retain one
+   canonical support owner and repair ordinary links; an area move keeps the ID and updates `area`; a cross-kind
+   predecessor remains retired with its replacement named.
 5. **Navigation**: Authors SHOULD use selected full-ID links or typed related_* lists for the reader's question;
    no reciprocal registry, all-pairs links, whole-layer prerequisite or fixed hop count is required.
 
@@ -93,4 +97,5 @@ The docs bundle supplies formal design/domain/operations templates and correspon
 `templates/design-template.md` remains a compatibility pointer to `design.md`. Formal nodes participate directly
 in index/list/search/resolve/refs with `CAP-DOCS-document-model` identity and typed relation rules. Semantic ownership,
 source agreement and ordinary artifact/source link destinations are Review only; applicable structural rules do
-not prove those semantic or ordinary-link properties. `ADR-formal-role-document-identities` defines the schema.
+not prove those semantic or ordinary-link properties. `ADR-formal-role-document-identities` defines the schema and
+`ADR-area-scoped-design-bundles` the design and domain paths.

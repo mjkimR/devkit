@@ -24,9 +24,11 @@ Read the core role instruction/template. DOMAIN describes concepts/relationships
 examples/datasheets; OPS routes symptom/evidence to existing action owners. Traverse only useful owner/detail links.
 
 Create/update against the integrated source; give independently maintained detail a peer ID and parent-owned
-support one canonical artifact parent. Regenerate only artifacts whose actual source changed. Rename/root moves
-carry canonical file and artifact subtree together; same-kind renames keep old-ID aliases, unchanged-ID root moves
-need none. Repair current prose/typed references with `devkit rules fix`, ordinary links inside/outside the subtree
+support one canonical parent: beside `design.md` in the DESIGN bundle `designs/<area>/DESIGN-<slug>/`, or in the
+DOMAIN/OPS sibling `<ID>/artifacts/` directory. Regenerate only artifacts whose actual source changed.
+Rename, area and root moves carry a DESIGN's whole bundle directory, or a DOMAIN/OPS file with its `<ID>/artifacts/`
+directory; same-kind renames keep old-ID aliases, unchanged-ID area and root moves need none. Repair current
+prose/typed references with `devkit rules fix`, ordinary links inside/outside the moved bundle or support directory
 and relative source links. Check global/registered roots, collisions and old-folder absence: aliases do not legalize orphans.
 
 For split, allocate every statement, independent detail and retained artifact to exactly one canonical owner,

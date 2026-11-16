@@ -3,6 +3,7 @@ id: DESIGN-<slug>
 title: <Title>
 status: draft
 summary: "<English sentence stating the subject and boundary.>"
+area: <area>
 related_capabilities: []
 related_usecases: []
 related_designs: []
@@ -20,8 +21,9 @@ guarantees and the architecture that constrains the mechanism. Add source links 
 
 ## 2. Details, examples and datasheets
 
-Keep useful worked examples here. Give independently maintained Markdown detail its own formal DESIGN ID and
-optional related_designs link. Put parent-owned support under DESIGN-<slug>/artifacts/ and link it from this body.
+Keep useful worked examples here. Give independently maintained Markdown detail its own peer bundle with a formal
+DESIGN ID and an optional related_designs link. Put parent-owned support beside this design.md in the
+designs/<area>/DESIGN-<slug>/ bundle and link it from this body.
 
 ## 3. Maintenance and next action
 

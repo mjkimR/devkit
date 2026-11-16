@@ -439,8 +439,9 @@ For an unaffected responsibility give a bounded source-based reason; create no e
 
 <Use core per-kind instructions/templates and eligibility. Plan create/update/split/rename/root-move/reclassify/retire
 for warranted subjects, sole statement ownership, independent detail IDs and one canonical parent per support artifact.
-Composed rename/root moves carry the artifact subtree, preserve same-kind aliases and repair current references,
-ordinary artifact links and relative source links; aliases never legalize old orphan folders. Split/transfer leaves
+Composed rename/area/root moves carry support with its owner (the whole DESIGN bundle directory, or the DOMAIN/OPS
+`<ID>/artifacts/` directory), preserve same-kind aliases and repair current references,
+ordinary support links and relative source links; aliases never legalize old orphan folders. Split/transfer leaves
 no duplicate/unowned support; cross-kind changes retire the old identity without cross-prefix aliases. Retire in the
 source-deleting change, removing/replacing obsolete DESIGN entrypoints; keep historical coordinates with commit provenance.
 Record modified/deleted canonical and support paths as prospective reconciliation targets and source-specific verification.>

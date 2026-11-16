@@ -37,13 +37,13 @@ created_at: 2026-11-16
 - **Versions**: devkit main after the formal document lifecycle integration.
 - **Conditions**: Draft in Backlog, dependents accepted with `depends_on` naming only an earlier spec.
 - **Workarounds Attempted**: Manual comparison of handoff commits and spec statuses; succeeded.
-- **Related Assets**: `devkit spec proposal handoff`, `devkit spec proposal check`, `PROP-design-bundle-layout`,
+- **Related Assets**: `devkit spec proposal handoff`, `devkit spec proposal check`, `SPEC-design-bundle-layout`,
   `SPEC-design-document-lifecycle`, `SPEC-design-document-viewer`.
 
 ## Evidence
 
 ```text
-draft retirement section: "handoff precedes the handoff of PROP-design-document-lifecycle and PROP-design-document-viewer"
+draft retirement section: "handoff precedes the handoff of PROP-design-document-lifecycle and SPEC-design-document-viewer"
 git log: "spec: hand off design-document-lifecycle to Development", "spec: hand off design-document-viewer to Development"
 SPEC-design-document-lifecycle status: completed (integrated into main)
 devkit spec proposal check design-bundle-layout -> editable=yes, no notice
