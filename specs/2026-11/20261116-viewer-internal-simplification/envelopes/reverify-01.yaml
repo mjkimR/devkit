@@ -1,0 +1,47 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:00:50.683786Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified at 4e3323664: scanDocuments and loadMilestoneDocuments have six-in-flight refill tests, a DashboardView test proves Refresh clears the source caches, CAP-VIEW and the frontend README require the AbortSignal, the ADR statement and pointer drop the future clause, parsePagePath is removed; just viewer lint/check/test/build pass (244 tests), rules check and viewer-assets check pass'
+findings:
+- issue: Two kept six-worker read loops (scanDocuments, loadMilestoneDocuments) lost their concurrency-bound tests; milestones.test 'bounds ... to six' now repeats the dashboard test.
+  evidence: packages/devkit-viewer/frontend/src/api/documents.ts:85-120, src/api/milestones.ts:59; rg 'LessThanOrEqual\(6\)' finds only milestones.test.ts:255 and loading.test.ts:158, both via loadDashboardSection
+  failure_condition: A change that raises or removes the six-request limit in scanDocuments or loadMilestoneDocuments passes the whole frontend suite.
+  suggested_action: Port the scanDocuments bound test to a treeRecursive FileSource and point the milestones bound test at loadMilestoneDocuments or loadRoadmapDocuments.
+  resolution: resolved
+  severity: P2
+- issue: AC-08's 'the source's caches are cleared' on Refresh has no test; the dashboard tests only count body reads.
+  evidence: packages/devkit-viewer/frontend/src/features/dashboard/DashboardView.svelte:62-65; DashboardView.test.ts:84-110, :176; probe scratch/review-01/refresh-cache.test.ts passes
+  failure_condition: Deleting clearRepositoryCache(source) from refresh() leaves every test green, and Refresh keeps a stale index or roadmap for up to 30 s.
+  suggested_action: Add a DashboardView test that seeds a cache entry and asserts Refresh removes it.
+  resolution: resolved
+  severity: P3
+- issue: CAP-VIEW §6 and the frontend README say every member takes an optional AbortSignal; the interface requires it.
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:348-349; packages/devkit-viewer/frontend/README.md; src/api/repository.ts
+  failure_condition: A reader following the contract calls a member without a signal and svelte-check rejects it.
+  suggested_action: Say 'each taking an AbortSignal'.
+  resolution: resolved
+  severity: P3
+- issue: ADR-repository-viewer's pointer still says the ADR becomes superseded after handoff while its status is superseded.
+  evidence: docs/decisions/2026-11/20261102-repository-viewer.md:19 vs lines 5-6
+  failure_condition: The record reads as partial and future while its status is complete.
+  suggested_action: Reword the statement and pointer without the future clause.
+  resolution: resolved
+  severity: P3
+- issue: parsePagePath is unused after the host handbook request props were removed.
+  evidence: packages/devkit-viewer/frontend/src/api/handbook.ts:127
+  failure_condition: Dead host deep-link code stays in the one-host source tree.
+  suggested_action: Remove parsePagePath and any test of it.
+  resolution: resolved
+  severity: P3
+- issue: Ignore entries for the removed library outputs (dist, dist-pack) remain.
+  evidence: .gitignore:61-62; packages/devkit-viewer/frontend/.prettierignore:1,5
+  failure_condition: Leftover config names outputs nothing produces; .gitignore is outside every task boundary.
+  suggested_action: Remove them as a stated boundary extension, or leave them and note it.
+  resolution: waived
+  waiver: .gitignore lies outside every task boundary and its dist entries are harmless; the in-scope .prettierignore entries were removed
+  severity: P3
+checks: {}
