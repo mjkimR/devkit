@@ -1,0 +1,32 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T02:07:02.984719Z'
+status: completed
+summary: 'Completed one Development turn through final report: retained domain/design/operations drafts, detail, ownership ledger, two reader/reviewer evidence sets, recommendations and resolved reconciliation. No scope extensions or sync outputs; all writes remain in assigned unit/material directories. Stopped before integration for Host verification and Git operator.'
+findings: []
+assumptions:
+- 'Codex boundaries emulated: assigned cwd/absolute paths, per-operation write/Git approvals, scoped staging, actual diff checks and role snapshots substitute for native path/isolation enforcement.'
+- Three retained roles with unique normative owners; no production code/new Kind/UI/final homes or feature edge; no recovery run.
+- dev-integration auto passed by policy; local integration is the recommended Host route, no integration/Git cleanup executed by this worker.
+- Five existing proposals retain deferred foundation/domain/operations/lifecycle/viewer implementation; evidence.md and reconcile.md identify restart checks.
+unverified_areas:
+- Actual recovery, package-context execution, viewer and timing outcomes remain out of scope. Initial test run had nonfatal cache permission warning; final 18-test run was clean.
+- Initial Code Reviewer read base-checkout response-style skill, disclosed to Host; remaining content reads assigned worktree. Supplied-entry repeats were not separately blinded; extraction overreads/truncation retained.
+- Final base/post-integration runtime verification and declared lint-ci-clean runner attestation remain Host responsibilities.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base 8f89c95d01e6f1e28ac94f48d92104ce9cb53ffc at 9846af435e37f0691b9509db581d71c5e13b51b7; partial docs/specs selection with full fallback; 18 passed
+  build: PASS 19 local Markdown targets/anchors across eight pilot files at 9846af435e37f0691b9509db581d71c5e13b51b7
+  lint: PASS affected docs/unit plus rules check --ci --base main, 22 rules and zero violations; whitespace clean at 9846af435e37f0691b9509db581d71c5e13b51b7
+  review: PASS code-reviewer review-01; no findings; unchanged support-role content tree 5fabe976c544a6fbcfe1efe1203572714c1f3751
+  reconcile: PASS independent reconcile-check-01; all eight targets, no findings; unchanged content tree 44323599a2004e20d5a2fd9a099d22d1c72d3274
+  envelopes: PASS four completed records validated before worker; no open questions/problems
+  outcome: PASS qualitative before/after at head with entry withheld versus supplied; direct discovery gap and existing indexed-owner reachability remain distinct
+  entrypoints: PASS zero candidate pairs; eight material targets not entrypoint-bearing
+  feedback: PASS sweep complete; FB-runtime-journal-ordering retained; critical count zero
+diff_scope:
+  base: 3d21622a44ccb9fdf1388a33b360bf39c71a79a1
+  head: 339cbf699c8c1c4cb963646fec203a94bb8c6317
+activity_effort: medium
