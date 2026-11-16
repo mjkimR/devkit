@@ -103,5 +103,6 @@ separate-process persistent memo and a docs-only installed-wheel consumer. The [
 records the five canonical migrations and ordinary-link checks. RULE-id-convention, RULE-spec-format,
 RULE-document-summary, RULE-document-reference and RULE-code-entrypoints enforce applicable structure.
 Semantic ownership, source agreement, independent-detail classification and ordinary artifact links remain Review
-only. Required `SPEC-design-document-lifecycle` L1–L4 and `PROP-design-document-viewer` V1–V4 proof remains pending;
-core verification alone does not complete the milestone.
+only. `SPEC-design-document-lifecycle` records L1–L4 delivery evidence, and `SPEC-design-document-viewer` records
+V1–V4 reading and packaging evidence. Core verification alone does not complete the milestone; the milestone
+retains its own completion review and outstanding direct work.

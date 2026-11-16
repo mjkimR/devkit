@@ -1,0 +1,44 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T07:42:42.606189Z'
+status: completed
+summary: round 1; REVISE four reproduced navigation/empty-state defects; whole AC-01–07 reviewed
+findings:
+- issue: Files discards Markdown heading fragments.
+  evidence: packages/devkit-viewer/frontend/src/lib/features/document/DocumentViewer.svelte:70; review-01/navigation.test.ts:19,78 same-document and peer fragments do not scroll
+  failure_condition: In rendered Files follow a same-document or indexed peer Markdown heading link.
+  suggested_action: Carry the fragment through Files navigation and scroll after rendering, including same-path navigation without reload.
+  resolution: open
+  severity: P1
+- issue: Read loses Back context when the first navigation is a body reference.
+  evidence: packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte:435,534; review-01/navigation.test.ts:44 no Back button
+  failure_condition: Open book without a direct request/sidebar selection, then follow a reference in a visible formal document.
+  suggested_action: Record actual originating chapter, anchor, filters and scroll before body or panel reference navigation, including first navigation, and restore it through Back.
+  resolution: open
+  severity: P1
+- issue: A pinned document bypasses subsequent explicit search and namespace changes.
+  evidence: packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte:247,444; review-01/navigation.test.ts:61,69 search and scope ordering fail
+  failure_condition: Select a document then change search or namespace so the prior target no longer matches.
+  suggested_action: Expire the previous pin on explicit filter changes while preserving materialization for a newly requested hidden target; keep result counts within filters.
+  resolution: open
+  severity: P1
+- issue: An empty completed index suppresses the requested missing identity.
+  evidence: packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte:352; review-01/navigation.test.ts:24 no written missing ID
+  failure_condition: Request a formal ID/path when completed index has no readable documents.
+  suggested_action: Use indexing readiness rather than count, preserve written target and reload/return after empty or failed scans.
+  resolution: open
+  severity: P1
+assumptions:
+- 'Codex emulated scope: explicit own-tree paths, frozen author writes and matching full snapshots; no native boundary guarantee'
+unverified_areas:
+- Separate reconcile verification remains pending; reviewer did not repeat real browser visual/packaging checks
+checks:
+  probes: FAIL independent8 tests:6 failures across4 findings,2 source/fragment controls pass
+  boundary: PASS unchanged clean HEAD and author snapshot9964f951
+  existing_checks: SKIP reviewer used caller source-specific239frontend294affected155focused/public package evidence
+diff_scope:
+  base: f32b831f7ca791566fad7934e13f537a40aaf787
+  head: 94e4920abe589af956978dcdce90a473e5f45fc5
+activity_effort: high

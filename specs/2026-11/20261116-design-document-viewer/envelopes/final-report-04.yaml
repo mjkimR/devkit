@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T09:25:54.965743Z'
+status: completed
+summary: Completed Task5 delivered bundle/domain-area consumer compatibility with current source support inventory, canonical area navigation, handbook lookup, current UX and verified source feedback; fresh HIGH code round4 and reconcile round3 pass; ready for Host source/integration verification
+findings: []
+assumptions:
+- Codex emulated boundaries enforced procedurally through own-tree cwd/paths, scoped commits and frozen full snapshots; no native isolation guarantee
+- dev-integration auto is repository policy; integration and combined landed-head runner remain Host-owned; no merge or publication performed
+unverified_areas:
+- No additional real-browser visual walkthrough or separate package E2E tier; native DOM/HTTP/public-host/wheel checks provide recorded coverage; final landed-head verification remains Host work
+checks:
+  tests: PASS frontend265/22 focused backend-handbook207 affected296 partial20 against002241b56 full fallback retained; source4f7b5a262 runtime/tests unchanged
+  build: PASS install/pack/build/generated-stale0/current public generic-host1/external-tsc/wheel100 exact static set-bytes at4f7b5a262 unchanged
+  lint: PASS Viewer Ruff/Pyright0, frontend formatting/Svelte0, exact handbook Ruff; committed rules22 at7db43300, sync_start/final0
+  review: PASS independent fresh HIGH code round4 no findings; reconcile round3 all16 modified3 waived no findings; exact full snapshots matched
+  feedback: PASS explicitly linked source resolved with disposition; fresh sweep0 new; critical open0
+diff_scope:
+  base: cff2ca7c0b2e888b16c0c348a0f5deed099f162e
+  head: 7db43300afa332cb3a6532b019bf3204f3035f26
+activity_effort: high

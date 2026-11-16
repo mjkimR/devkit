@@ -492,3 +492,78 @@ def test_stale_handbook_citations_are_excluded_from_the_cli_contract_rule(tmp_pa
     assert [violation.file for violation in found] == ["guides/a.md"]
     links = check(MarkdownLinkRule(), tmp_path)
     assert {violation.file for violation in links} == {"handbook/en/a.md", "guides/a.md"}
+
+
+@pytest.mark.parametrize(
+    ("prefix", "directory", "kind"),
+    [("DESIGN", "designs", "design"), ("DOMAIN", "domain", "domain"), ("OPS", "operations", "operations")],
+)
+def test_formal_sources_and_aliases_are_citeable_without_required_coverage_or_generated_pages(
+    script, repo, prefix, directory, kind
+):
+    identifier = f"{prefix}-example_name"
+    alias = f"{prefix}-old_name"
+    path = (
+        f"docs/designs/distribution/{identifier}/design.md"
+        if prefix == "DESIGN"
+        else f"docs/domain/distribution/{identifier}.md"
+        if prefix == "DOMAIN"
+        else f"docs/{directory}/{identifier}.md"
+    )
+    write(repo, {path: doc(identifier, "Formal example", aliases=f"[{alias}]", status="active")})
+    revision = commit(repo)
+    documents = script.load_documents(repo, revision)
+    assert documents.get(identifier).kind == kind
+    assert documents.get(alias).id == identifier
+    make_handbook(script, repo)
+    assert run(script, repo, "status").exit_code == 0  # No formal-source citation requirement.
+    page = repo / "handbook/en/README.md"
+    page.write_text(page.read_text().replace("sources:\n", f"sources:\n  {alias}: ''\n") + f"\nSource `{alias}`.\n")
+    assert run(script, repo, "stamp", "en/README.md").exit_code == 0
+    assert run(script, repo, "stamp", "ko/README.md").exit_code == 0
+    assert run(script, repo, "verify").exit_code == 0
+    assert documents.get(alias).blob in page.read_text()
+    assert not any((repo / "handbook/en").glob(f"{identifier}*"))
+    write(repo, {path: doc(identifier, "Formal example", "Changed data.", aliases=f"[{alias}]", status="active")})
+    commit(repo)
+    stale = run(script, repo, "status")
+    assert "HANDBOOK_STALE" in stale.stdout and alias in stale.stdout
+    assert script.DOCUMENT_ID.fullmatch(identifier)
+    assert script.DOCUMENT_ID.fullmatch(f"{prefix}-missing")
+    assert documents.get(f"{prefix}-missing") is None
+
+
+@pytest.mark.parametrize("prefix", ["DESIGN", "DOMAIN", "OPS"])
+def test_a_missing_formal_inline_source_is_reported_by_verification(script, handbook, prefix):
+    page = handbook / "handbook/en/README.md"
+    page.write_text(page.read_text() + f"\nUnknown `{prefix}-missing`.\n")
+    result = run(script, handbook, "verify")
+    assert result.exit_code == 1
+    assert "HANDBOOK_ID_UNRESOLVED" in result.stdout
+    assert f"{prefix}-missing" in result.stdout
+
+
+@pytest.mark.parametrize("root", ["docs", "docs/packages/registered"])
+def test_formal_bundle_source_inventory_excludes_identified_support_and_nested_orphans(script, repo, root):
+    write(
+        repo,
+        {
+            f"{root}/designs/alpha/DESIGN-parent/design.md": doc(
+                "DESIGN-parent", "Parent", aliases="[DESIGN-old]", area="alpha"
+            ),
+            f"{root}/designs/alpha/DESIGN-parent/examples/stray.md": doc("CAP-X-stray", "Invalid support"),
+            f"{root}/designs/alpha/DESIGN-parent/DESIGN-nested/design.md": doc("DESIGN-nested", "Nested"),
+            f"{root}/designs/alpha/DESIGN-orphan/note.md": doc("DOMAIN-orphan", "Orphan"),
+            f"{root}/domain/beta/DOMAIN-example.md": doc("DOMAIN-example", "Domain", area="beta"),
+            f"{root}/domain/beta/DOMAIN-example/artifacts/stray.md": doc("CAP-X-domain-stray", "Invalid support"),
+            f"{root}/operations/OPS-example.md": doc("OPS-example", "Operations"),
+            f"{root}/operations/OPS-example/artifacts/stray.md": doc("CAP-X-ops-stray", "Invalid support"),
+        },
+    )
+    revision = commit(repo)
+    documents = script.load_documents(repo, revision)
+    assert documents.get("DESIGN-old").path == f"{root}/designs/alpha/DESIGN-parent/design.md"
+    assert documents.get("DOMAIN-example").kind == "domain"
+    assert documents.get("OPS-example").kind == "operations"
+    for identifier in ["CAP-X-stray", "DESIGN-nested", "DOMAIN-orphan", "CAP-X-domain-stray", "CAP-X-ops-stray"]:
+        assert documents.get(identifier) is None

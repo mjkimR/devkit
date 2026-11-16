@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { RepositoryDocument, RenderedDocument } from '../../api/documents';
+	import { formalArea } from '../../api/identity';
 	import { bookGroups, bookGroup, documentAnchor } from '../../api/documents';
 
 	let {
@@ -14,6 +15,7 @@
 		area = $bindable(''),
 		areas = [],
 		includeCompleted = $bindable(false),
+		includeRetired = $bindable(false),
 		book = [],
 		entries = [],
 		sources = {},
@@ -22,6 +24,7 @@
 		rendered,
 		onJump,
 		onSelect,
+		onFiltersChanged = () => {},
 		onHandbook = undefined
 	}: {
 		view: 'book' | 'proposals' | 'specs';
@@ -35,6 +38,7 @@
 		area?: string;
 		areas?: string[];
 		includeCompleted?: boolean;
+		includeRetired?: boolean;
 		book?: RepositoryDocument[];
 		entries?: RepositoryDocument[];
 		/** Planning source label by overlaid proposal path. */
@@ -44,6 +48,7 @@
 		rendered: Map<string, RenderedDocument>;
 		onJump: (path: string, anchor?: string) => void;
 		onSelect: (doc: RepositoryDocument) => void;
+		onFiltersChanged?: () => void;
 		/** Returns the reading tab to the handbook; the book's index stays loaded. */
 		onHandbook?: () => void;
 	} = $props();
@@ -56,13 +61,25 @@
 		{/if}
 		<label>
 			Scope
-			<select aria-label="Scope" bind:value={namespace}>
+			<select aria-label="Scope" bind:value={namespace} onchange={onFiltersChanged}>
 				<option value="all">All</option>
 				{#each namespaces as name}
 					<option value={name}>{name === 'global' ? 'Global' : name + ' + Global'}</option>
 				{/each}
 			</select>
 		</label>
+		{#if view === 'book'}
+			<input
+				aria-label="Search documents"
+				placeholder="Search ID, alias or text"
+				bind:value={query}
+				oninput={onFiltersChanged}
+			/>
+			<label class="checkbox-label"
+				><input type="checkbox" bind:checked={includeRetired} onchange={onFiltersChanged} /> Include retired</label
+			>
+			<p class="count">{book.length} documents</p>
+		{/if}
 		{#if view !== 'book'}
 			<input aria-label="Search title or ID" placeholder="Search title or ID" bind:value={query} />
 			<div class="filter-row">
@@ -108,13 +125,18 @@
 			{#if book.some((d) => bookGroup(d) === group)}
 				<h2>{group}</h2>
 			{/if}
-			{#each book.filter((d) => bookGroup(d) === group) as doc}
+			{#each book.filter((d) => bookGroup(d) === group) as doc, i}
+				{#if formalArea(doc) && (i === 0 || formalArea(book.filter((d) => bookGroup(d) === group)[i - 1]) !== formalArea(doc))}<h3
+					>
+						{formalArea(doc)}
+					</h3>{/if}
 				<button
 					class:active={currentAnchor === documentAnchor(doc.path) ||
 						currentAnchor === rendered.get(doc.path)?.headings[0]?.id}
 					onclick={() => onJump(doc.path)}
 				>
 					{doc.title}
+					<small>{doc.meta.id ?? ''}{doc.meta.status === 'retired' ? ' · retired' : ''}</small>
 				</button>
 				{#each rendered
 					.get(doc.path)

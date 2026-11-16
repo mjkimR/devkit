@@ -1,5 +1,14 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import {
+	ID_SOURCE,
+	ID_PATTERN,
+	documentId,
+	identityResolver,
+	isArtifactPath,
+	formalArea
+} from './identity';
+import { visibleLines } from './markdown';
 import { parseFrontmatter } from './frontmatter';
 import { normalizeTree, type RepositoryDataSource, type TreeItem } from './repository';
 import { cachedResult, cacheGeneration, cacheResult } from './cache';
@@ -52,6 +61,8 @@ export function parseBlob(path: string, content: string, encoding: string): Repo
 export interface DocumentIndex {
 	documents: RepositoryDocument[];
 	errors: string[];
+	/** Source tree inventory, collected during the same scan without reading supporting blobs. */
+	files?: TreeItem[];
 }
 
 /** Continuous workers refill after each job, including newly discovered descendants. */
@@ -72,6 +83,7 @@ export async function scanDocuments(
 	}));
 	const seen = new Set<string>();
 	const documents: RepositoryDocument[] = [];
+	const files = new Map<string, TreeItem>();
 	const errors: string[] = [];
 	await new Promise<void>((resolve) => {
 		let active = 0;
@@ -97,6 +109,7 @@ export async function scanDocuments(
 									item.path.split('/').some((p) => p === '..' || p === '.')
 								)
 									continue;
+								if (item.type === 'blob') files.set(item.path, item);
 								if (job.kind === 'tree' && item.type === 'tree' && descend(item))
 									jobs.push({ path: item.path, kind: 'tree' });
 								else if (item.type === 'blob' && select(item))
@@ -127,7 +140,8 @@ export async function scanDocuments(
 	});
 	return {
 		documents: documents.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true })),
-		errors
+		errors,
+		files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path))
 	};
 }
 
@@ -139,22 +153,39 @@ export async function indexDocuments(
 	const cached = cachedResult<DocumentIndex>(source, ref, 'documents');
 	if (cached && !signal.aborted) return cached;
 	const generation = cacheGeneration(source);
-	const result = await scanDocuments(source, ref, signal, ['docs', 'specs']);
+	const result = await scanDocuments(
+		source,
+		ref,
+		signal,
+		['docs', 'specs'],
+		(item) => item.name.endsWith('.md') && !isArtifactPath(item.path)
+	);
 	if (!signal.aborted && !result.errors.length)
 		cacheResult(source, ref, 'documents', result, generation);
 	return result;
 }
 
 export function idIndex(documents: RepositoryDocument[]) {
-	const index = new Map<string, RepositoryDocument>();
-	const duplicates = new Set<string>();
-	for (const doc of documents) {
-		if (typeof doc.meta.id !== 'string') continue;
-		if (index.has(doc.meta.id)) duplicates.add(doc.meta.id);
-		else index.set(doc.meta.id, doc);
+	const resolver = identityResolver(documents);
+	return new Map(
+		[...resolver.keys].flatMap((id) => {
+			const doc = resolver.resolve(id).document;
+			return doc ? [[id, doc] as const] : [];
+		})
+	);
+}
+
+export function visibleReferences(doc: RepositoryDocument): string[] {
+	const refs: string[] = [];
+	for (const line of visibleLines(doc.body.split('\n')).values()) {
+		const pattern = new RegExp('`(' + ID_SOURCE + ')`|\\[(' + ID_SOURCE + ')\\]', 'g');
+		for (const match of line.matchAll(pattern)) {
+			const id = match[1] ?? match[2];
+			if (line.trimStart().startsWith('# ') && id === documentId(doc)) continue;
+			refs.push(id);
+		}
 	}
-	for (const id of duplicates) index.delete(id);
-	return index;
+	return [...new Set(refs)];
 }
 
 export function resolvePath(origin: string, href: string) {
@@ -172,6 +203,7 @@ export function resolvePath(origin: string, href: string) {
 	} catch {
 		return null;
 	}
+	if (/[\\\u0000-\u001f]/.test(decoded) || decoded.split('/').includes('.git')) return null;
 	const parts = decoded
 		? decoded.startsWith('/')
 			? []
@@ -192,10 +224,42 @@ export function renderDocument(
 	documents: RepositoryDocument[]
 ): RenderedDocument {
 	const wrapper = document.createElement('div');
-	wrapper.innerHTML = DOMPurify.sanitize(
-		marked.parse(doc.body, { gfm: true, breaks: true }) as string,
-		{ USE_PROFILES: { html: true } }
-	);
+	// Sanitize in DOMPurify's inert document before assigning HTML: relative images must never hit the viewer origin.
+	DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+		const element = node as Element;
+		for (const name of [
+			'data-doc-path',
+			'data-repo-path',
+			'data-repo-image',
+			'data-repo-image-fragment',
+			'data-origin-path',
+			'data-fragment',
+			'srcset'
+		])
+			element.removeAttribute?.(name);
+		if (node.nodeName !== 'IMG') return;
+		const image = node as Element;
+		image.removeAttribute('srcset');
+		const src = image.getAttribute('src');
+		if (!src || /^https?:/i.test(src)) return;
+		image.removeAttribute('src');
+		const resolved = resolvePath(doc.path, src);
+		if (resolved) {
+			image.setAttribute('data-repo-image', resolved.path);
+			image.setAttribute(
+				'data-repo-image-fragment',
+				src.includes('#') ? src.slice(src.indexOf('#') + 1) : ''
+			);
+		} else image.setAttribute('alt', `Unavailable image: ${src}`);
+	});
+	try {
+		wrapper.innerHTML = DOMPurify.sanitize(
+			marked.parse(doc.body, { gfm: true, breaks: true }) as string,
+			{ USE_PROFILES: { html: true }, FORBID_TAGS: ['video', 'audio', 'source', 'track'] }
+		);
+	} finally {
+		DOMPurify.removeHook('afterSanitizeAttributes');
+	}
 	const headings: Heading[] = [];
 	const counts = new Map<string, number>();
 	for (const node of wrapper.querySelectorAll('h1,h2,h3,h4,h5,h6')) {
@@ -206,17 +270,20 @@ export function renderDocument(
 				? rawTitle.slice(selfPrefix.length).trim()
 				: rawTitle;
 		if (title !== rawTitle) node.textContent = title;
-		const slug = headingSlug(rawTitle) || 'section';
+		const slug = node.id || headingSlug(rawTitle) || 'section';
 		const n = counts.get(slug) ?? 0;
 		counts.set(slug, n + 1);
 		const id = `${documentAnchor(doc.path)}--${slug}${n ? `-${n}` : ''}`;
 		node.id = id;
 		headings.push({ id, title, level: Number(node.tagName.slice(1)) });
 	}
+	for (const node of wrapper.querySelectorAll<HTMLElement>('[id]'))
+		if (!/^H[1-6]$/.test(node.tagName)) node.id = documentAnchor(doc.path) + '--' + node.id;
 	const byId = idIndex(documents);
 	function linkNode(node: HTMLElement, target: RepositoryDocument, fragment = '') {
 		node.setAttribute('href', `#${documentAnchor(target.path)}${fragment ? `--${fragment}` : ''}`);
 		node.dataset.docPath = target.path;
+		node.dataset.originPath = doc.path;
 		node.dataset.fragment = fragment;
 	}
 	for (const a of wrapper.querySelectorAll<HTMLAnchorElement>('a[href]')) {
@@ -224,7 +291,32 @@ export function renderDocument(
 		const byReference = byId.get(href) ?? byId.get(href.replace(/^\[|\]$/g, ''));
 		const resolved = resolvePath(doc.path, href);
 		const target = byReference ?? (resolved && documents.find((d) => d.path === resolved.path));
-		if (target) linkNode(a, target, byReference ? '' : resolved!.fragment);
+		if (target && !isArtifactPath(target.path))
+			linkNode(a, target, byReference ? '' : resolved!.fragment);
+		else if (ID_PATTERN.test(href)) {
+			a.removeAttribute('href');
+			a.title = `Unavailable reference: ${href}`;
+		} else if (resolved) {
+			a.setAttribute('href', '#');
+			a.dataset.repoPath = resolved.path;
+			a.dataset.fragment = resolved.fragment;
+			a.dataset.originPath = doc.path;
+		} else if (!/^(?:https?:|mailto:)/i.test(href)) {
+			a.removeAttribute('href');
+			a.title = `Unavailable repository path: ${href}`;
+		}
+	}
+	for (const image of wrapper.querySelectorAll<HTMLImageElement>('img[src]')) {
+		const href = image.getAttribute('src')!;
+		const resolved = resolvePath(doc.path, href);
+		if (resolved) {
+			image.removeAttribute('src');
+			image.dataset.repoImage = resolved.path;
+			image.dataset.repoImageFragment = href.includes('#') ? href.slice(href.indexOf('#') + 1) : '';
+		} else if (!/^https?:/i.test(href)) {
+			image.removeAttribute('src');
+			image.alt = `Unavailable image: ${href}`;
+		}
 	}
 	// ID references occur both as [ID] prose and exact inline code; fenced code is untouched.
 	const walker = document.createTreeWalker(wrapper, NodeFilter.SHOW_TEXT);
@@ -235,9 +327,7 @@ export function renderDocument(
 		if (!parent || parent.closest('a,pre,h1,h2,h3,h4,h5,h6')) continue;
 		const value = node.textContent ?? '';
 		const exactCode = parent.tagName === 'CODE' && byId.has(value);
-		const pattern = exactCode
-			? /^(.*)$/g
-			: /\[((?:CAP|UC|UX|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT|MS)-[A-Za-z0-9][A-Za-z0-9-]*)\]/g;
+		const pattern = exactCode ? /^(.*)$/g : new RegExp(`\\[(${ID_SOURCE})\\]`, 'g');
 		let match: RegExpExecArray | null;
 		let cursor = 0;
 		const replacement = document.createDocumentFragment();
@@ -268,13 +358,17 @@ export function bookGroup(doc: RepositoryDocument) {
 	if (
 		!path.startsWith('docs/') ||
 		/\/(proposals|materials)\//.test(path) ||
-		/\/README\.md$/i.test(path)
+		/\/README\.md$/i.test(path) ||
+		isArtifactPath(path)
 	)
 		return null;
 	if (path.startsWith('docs/steering/') || /^docs\/packages\/[^/]+\/glossary\.md$/.test(doc.path))
 		return STEERING;
 	for (const [directory, title] of [
 		['architecture', 'Architecture'],
+		['domain', 'Domain'],
+		['designs', 'Designs'],
+		['operations', 'Operations'],
 		['capabilities', 'Capabilities'],
 		['usecases', 'Use Cases'],
 		['ux', 'UX'],
@@ -288,13 +382,21 @@ export function bookGroup(doc: RepositoryDocument) {
 export const bookGroups = [
 	'Overview',
 	'Architecture',
+	'Domain',
 	'Capabilities',
 	'Use Cases',
 	'UX',
+	'Designs',
+	'Operations',
 	STEERING,
 	'Decisions',
 	'Development'
 ];
+export function byBookArea(documents: RepositoryDocument[]) {
+	return [...documents].sort(
+		(a, b) => formalArea(a).localeCompare(formalArea(b)) || a.path.localeCompare(b.path)
+	);
+}
 export const namespaceOf = (doc: RepositoryDocument) =>
 	doc.path.match(/^docs\/packages\/([^/]+)\//)?.[1] ?? String(doc.meta.namespace ?? 'global');
 

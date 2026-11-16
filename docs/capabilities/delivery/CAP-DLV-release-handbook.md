@@ -70,6 +70,10 @@ it describes.
 5. **Coverage**: `status` MUST report every use case and every capability that is not `deprecated` and that no
    English page lists in `sources` as a gap.
 
+Formal DESIGN, DOMAIN and OPS canonical IDs and same-prefix aliases are supported source citations and staleness
+inputs. Formal sources do not add required coverage or automatic generated pages; generated ADR/SPEC membership
+retains §3.1 rule 3. Check: `tools/devkit-dev/tests/integration/test_handbook_script.py`.
+
 ### 3.3 Refresh and verification
 
 1. **On request only**: The refresh MUST run only when the user requests it, during release preparation after
@@ -153,3 +157,8 @@ findings, `2` could not run (an `[ERROR]` block on stderr).
 - **Glossary source**: the script reads `docs/steering/glossary.md` at the source commit and, for a commit before
   the glossary moved into the steering directory, `docs/glossary.md`; with neither it exits `2` with
   `HANDBOOK_GLOSSARY_MISSING`.
+
+Source lookup reads frontmatter identities at the paths owned by `CAP-DOCS-document-model`, including
+area-scoped DESIGN design.md anchors and DOMAIN files. Non-anchor DESIGN bundle files, including identified
+strays or nested anchors, and DOMAIN/OPS artifacts remain outside canonical source citations.
+Check: `tools/devkit-dev/tests/integration/test_handbook_script.py`.

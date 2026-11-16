@@ -178,3 +178,55 @@ def test_dashboard_archive_and_nested_detail(repo: Path, status: str) -> None:
     }
     assert reader.blob(path) == target.read_bytes()
     assert path in {item.path for item in reader.tree("docs/roadmap/_archive")}
+
+
+@pytest.mark.parametrize(("prefix", "directory"), [("DESIGN", "designs"), ("DOMAIN", "domain"), ("OPS", "operations")])
+@pytest.mark.parametrize("docs_root", ["docs", "docs/packages/registered"])
+def test_formal_documents_and_parent_artifacts_use_existing_byte_and_guard_contract(
+    repo: Path, prefix: str, directory: str, docs_root: str
+) -> None:
+    import base64
+
+    from devkit_viewer.features.browse.models.repository import Repository
+    from devkit_viewer.features.browse.usecases.read import ReadRepositoryUseCase
+
+    if docs_root != "docs":
+        (repo / "packages/registered").mkdir(parents=True, exist_ok=True)
+        registry = repo / ".devkit/config.toml"
+        registry.write_text(
+            registry.read_text() + '\n[[tool.docs.namespaces]]\nname = "registered"\npath = "packages/registered"\n'
+        )
+    area_root = f"{docs_root}/{directory}/distribution" if prefix != "OPS" else f"{docs_root}/{directory}"
+    parent = f"{area_root}/{prefix}-example/design.md" if prefix == "DESIGN" else f"{area_root}/{prefix}-example.md"
+    support = (
+        f"{area_root}/{prefix}-example/examples" if prefix == "DESIGN" else f"{area_root}/{prefix}-example/artifacts"
+    )
+    artifact = f"{support}/data.csv"
+    image = f"{support}/chart.png"
+    values = {
+        parent: f"---\nid: {prefix}-example\n---\n# Example\n".encode(),
+        artifact: b"a,b\n1,2\n",
+        image: bytes([137, 80, 78, 71, 255, 0]),
+    }
+    for path, data in values.items():
+        target = repo / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    reader = WorkingTreeReader(repo)
+    assert set(values) <= {item.path for item in reader.tree(docs_root, recursive=True)}
+    usecase = ReadRepositoryUseCase()
+    repository = Repository(id="formal", root=repo)
+    for path, data in values.items():
+        payload = usecase.execute(repository, "blob", path)
+        assert payload["encoding"] == "base64"
+        content = payload["content"]
+        assert isinstance(content, str)
+        assert base64.b64decode(content) == data
+    (repo / (artifact + ".alias")).symlink_to(repo / artifact)
+    for path in [artifact + ".alias", f"{docs_root}/{directory}/{prefix}-old/artifacts/data.csv"]:
+        with pytest.raises(ReadError) as caught:
+            usecase.execute(repository, "blob", path)
+        assert caught.value.status == 404
+    with pytest.raises(ReadError) as caught:
+        usecase.execute(repository, "blob", f"{docs_root}/{directory}/../secret")
+    assert caught.value.status == 400

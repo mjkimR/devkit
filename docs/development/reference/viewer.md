@@ -108,3 +108,27 @@ probe exits `1`; a relative or missing directory exits `2`.
 
 
 The exact local report page is `/review/<registered-id>/<generation-id>`; it displays escaped Markdown with source/language/expiry and never regenerates reports. See `CAP-VIEW-repository-viewer`.
+
+
+## Formal document reading
+
+Read groups include Domain, Designs and Operations in the order owned by `CAP-VIEW-repository-viewer` §4.3.
+Book search matches canonical/alias IDs and text; Include retired exposes historical formal entries. Explicit
+ID/alias/path links can open one hidden target without exposing other retired entries. The shared Document context
+panel shows current incoming/outgoing references and separately labelled provenance in Read and rendered Files.
+View raw switches source in place; Back retains the parent reading context.
+
+Relative supporting files use the same RepositoryDataSource.blob callback and selected branch/Planning source.
+Markdown/Mermaid, text/CSV and safe images have previews; unsupported bytes retain an explicit download state.
+No extra host callback is required. The per-file preview limit is 8 MiB; an article permits 32 repository images
+and 16 MiB total image bytes. Source/path guards, abort signals and disposable URLs apply to these reads.
+The browser displays declared metadata and entrypoints without certifying core governance or source liveness.
+
+Handbook citations recognize DESIGN, DOMAIN and OPS sources/aliases. Handbook coverage remains CAP/UC and generated
+membership remains accepted ADRs/completed specs; this support performs no handbook refresh.
+
+
+Designs and Domain are grouped by area. Design anchors are area-scoped `<ID>/design.md` bundles, labelled by
+canonical ID. The shared context lists every other bundle file at any depth as supporting content; Domain/OPS
+list adjacent ID/artifacts support. The source tree inventory is reused without prefetching support blobs.
+Invalid identified support, nested design anchors and orphan files never become canonical nodes or graph identities.

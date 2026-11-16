@@ -55,7 +55,7 @@ Hypothesis: an area-scoped directory bundle gives each design one path for the d
 delivery work an area prefix, without changing design identity, references or the ownership model.
 
 `SPEC-design-document-lifecycle` has completed on the flat grammar: its spec and adaptive guidance and its
-end-to-end scenarios name `<ID>/artifacts/` and flat design and domain paths. `PROP-design-document-viewer` is in
+end-to-end scenarios name `<ID>/artifacts/` and flat design and domain paths. `SPEC-design-document-viewer` is in
 Development and pins the flat grammar in its core contract material, with no viewer code written yet. Each further
 delivery on the flat grammar adds migration work, so the grammar change lands now: it migrates the landed lifecycle
 consumers itself, and the viewer adopts it after it lands.
@@ -183,7 +183,7 @@ Sections of the proposal that did not map to a spec section. Trim or promote the
 - **Landed lifecycle consumers.** This proposal updates the spec and adaptive bundle guidance and the lifecycle
   tests that state the flat grammar (Q4). Those edits change path and support-file statements only, not lifecycle
   behavior.
-- **Viewer.** `PROP-design-document-viewer` continues its Development on the flat grammar. When this proposal lands,
+- **Viewer.** `SPEC-design-document-viewer` continues its Development on the flat grammar. When this proposal lands,
   it records a follow-up for the viewer to adopt the bundle grammar; the viewer's own unit or a later proposal does
   that work.
 

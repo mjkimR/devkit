@@ -1,9 +1,13 @@
 <script lang="ts">
+	import { ID_PATTERN, identityResolver, isArtifactPath, formalArea } from '../../api/identity';
+	import SupportingArtifact from '../document/SupportingArtifact.svelte';
+	import { planningDataSource } from '../../api/planning';
 	import { tick, untrack } from 'svelte';
 	import { clearRepositoryCache } from '../../api/cache';
-	import type { RepositoryDataSource } from '../../api/repository';
+	import type { RepositoryDataSource, TreeItem } from '../../api/repository';
 	import {
 		indexDocuments,
+		byBookArea,
 		taskProgress,
 		renderDocument,
 		documentAnchor,
@@ -50,6 +54,7 @@
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
+	let inventory = $state<TreeItem[]>([]);
 	let relationDocuments = $state<RepositoryDocument[]>([]);
 	let errors = $state<string[]>([]);
 	let loading = $state(false);
@@ -63,6 +68,37 @@
 	let area = $state('');
 	let namespace = $state('all');
 	let includeCompleted = $state(false);
+	let includeRetired = $state(false);
+	let pinnedPath = $state('');
+	let requestError = $state('');
+	let activePath = $state('');
+	let history = $state<
+		{
+			path: string;
+			anchor: string;
+			namespace: string;
+			query: string;
+			includeRetired: boolean;
+			scroll: number;
+		}[]
+	>([]);
+	let artifactFragment = $state('');
+	let artifact = $state.raw<{
+		path: string;
+		parent: string;
+		source: RepositoryDataSource;
+		label: string;
+		scroll: number;
+	} | null>(null);
+	$effect(() => {
+		source;
+		branch;
+		artifact = null;
+		history = [];
+		pinnedPath = '';
+		requestError = '';
+		activePath = '';
+	});
 	let selectedPath = $state('');
 	let detailPath = $state('');
 	let currentAnchor = $state('');
@@ -93,6 +129,7 @@
 		if (!keep) {
 			documents = [];
 			relationDocuments = [];
+			inventory = [];
 			errors = [];
 			resolvedRequest = '';
 			selectedPath = '';
@@ -108,6 +145,7 @@
 					if (controller.signal.aborted) return;
 					const subjects = keep ? untrack(() => documents) : [];
 					relationDocuments = result.documents;
+					inventory = result.files ?? [];
 					documents = [
 						...result.documents.map(
 							(doc) => subjects.find((subject) => subject.path === doc.path) ?? doc
@@ -124,6 +162,7 @@
 				.catch((error: unknown) => {
 					if (!controller.signal.aborted) {
 						errors = [String(error)];
+						loadedContext = { source: repository, branch: ref };
 						loading = false;
 						relationLoading = false;
 					}
@@ -131,6 +170,8 @@
 		return () => controller.abort();
 	});
 	function reloadRelations() {
+		resolvedRequest = '';
+		requestError = '';
 		if (source) clearRepositoryCache(source);
 		relationReload++;
 	}
@@ -197,9 +238,23 @@
 		)
 	);
 	const ids = $derived(idIndex(merged));
-	const book = $derived(
-		bookGroups.flatMap((group) => scoped.filter((d) => bookGroup(d) === group))
-	);
+	const book = $derived.by(() => {
+		const matches = scoped.filter(
+			(doc) =>
+				(includeRetired ||
+					doc.meta.status !== 'retired' ||
+					!/^(?:DESIGN|DOMAIN|OPS)-/.test(String(doc.meta.id))) &&
+				(!query ||
+					`${doc.title} ${doc.meta.id ?? ''} ${Array.isArray(doc.meta.aliases) ? doc.meta.aliases.filter((value: unknown) => typeof value === 'string').join(' ') : ''} ${doc.meta.summary ?? ''} ${doc.body}`
+						.toLowerCase()
+						.includes(query.toLowerCase()))
+		);
+		const pinned = merged.find((doc) => doc.path === pinnedPath);
+		if (pinned && !matches.some((doc) => doc.path === pinned.path)) matches.push(pinned);
+		return bookGroups.flatMap((group) =>
+			byBookArea(matches.filter((doc) => bookGroup(doc) === group))
+		);
+	});
 	const candidates = $derived(
 		scoped.filter((d) =>
 			view === 'proposals'
@@ -301,12 +356,22 @@
 			anchor = requestedAnchor,
 			currentView = view,
 			available = merged;
-		if (loading || !available.length || handbookMode) return;
+		if (loading || relationLoading || !loadedContext || handbookMode) return;
 		untrack(() => {
 			const key = `${currentView}\n${path}\n${anchor}`;
 			if (resolvedRequest === key) return;
-			const doc = available.find((d) => d.path === path);
-			if (!doc) return;
+			const result = identityResolver(available).resolve(path);
+			const doc = available.find((d) => d.path === path) ?? result.document;
+			if (!doc) {
+				if (path) {
+					const reason = ID_PATTERN.test(path) ? result.unavailable : 'missing';
+					requestError = `${path} — unavailable (${reason === 'missing' && errors.length ? 'index incomplete' : reason})`;
+					if (currentView === 'book') resolvedRequest = key;
+				}
+				return;
+			}
+			requestError = '';
+			if (currentView === 'book') pinnedPath = doc.path;
 			resolvedRequest = key;
 			if (currentView !== 'book') {
 				const entry = candidates.find((d) =>
@@ -325,7 +390,7 @@
 			}
 			// A tab switch before the next tick cancels the jump, so it never resolves in another view.
 			void tick().then(() => {
-				if (view === currentView) void jump(path, anchor || documentAnchor(path));
+				if (view === currentView) void jump(doc.path, anchor || documentAnchor(doc.path), false);
 			});
 		});
 	});
@@ -374,11 +439,30 @@
 	const findDocument = (path: string) =>
 		bundle.find((d) => d.path === path) ?? merged.find((d) => d.path === path);
 
-	async function jump(path: string, anchor = documentAnchor(path)) {
+	async function jump(
+		path: string,
+		anchor = documentAnchor(path),
+		remember = true,
+		originPath = activePath
+	) {
+		if (remember && originPath && originPath !== path)
+			history.push({
+				path: originPath,
+				anchor: currentAnchor.startsWith(documentAnchor(originPath))
+					? currentAnchor
+					: documentAnchor(originPath),
+				namespace,
+				query,
+				includeRetired,
+				scroll: root?.querySelector('.reading-content')?.scrollTop ?? 0
+			});
+		if (view === 'book') pinnedPath = path;
+		requestError = '';
+		activePath = path;
 		if (!visibleDocs.some((d) => d.path === path)) {
 			const target = findDocument(path);
 			if (!target) return;
-			if (view === 'book' && bookGroup(target)) namespace = 'all';
+			if (view === 'book' && bookGroup(target)) pinnedPath = path;
 			else if (
 				selected &&
 				path.startsWith(selected.path.slice(0, selected.path.lastIndexOf('/') + 1))
@@ -398,7 +482,7 @@
 		onLocation(path, anchor, view, findDocument(path)?.meta ?? {});
 	}
 
-	async function openRelation(path: string) {
+	async function openRelation(path: string, originPath = activePath) {
 		if (view !== 'book') {
 			onOpen(path);
 			return;
@@ -410,7 +494,7 @@
 				: [...documents, fresh];
 			await tick();
 		}
-		await jump(path);
+		await jump(path, documentAnchor(path), true, originPath);
 	}
 
 	function linkNavigation(node: HTMLElement) {
@@ -422,11 +506,53 @@
 		};
 	}
 
+	async function back() {
+		const prior = history.pop();
+		if (!prior) return;
+		namespace = prior.namespace;
+		query = prior.query;
+		includeRetired = prior.includeRetired;
+		await jump(prior.path, prior.anchor || documentAnchor(prior.path), false);
+		await tick();
+		const content = root.querySelector('.reading-content');
+		if (content) content.scrollTop = prior.scroll;
+	}
+	function openArtifact(path: string, origin: string, fragment = '') {
+		if (!source) return;
+		const entry = view === 'book' ? undefined : selectedEntry;
+		if (entry && !source.planningBlob) {
+			requestError = `${path} — Planning source unavailable`;
+			return;
+		}
+		artifactFragment = fragment;
+		artifact = {
+			path,
+			parent: String(merged.find((doc) => doc.path === origin)?.meta.id ?? origin),
+			source: entry ? planningDataSource(source, entry.source.id) : source,
+			label: entry?.source.label ?? branch,
+			scroll: root.querySelector('.reading-content')?.scrollTop ?? 0
+		};
+	}
 	function followLink(event: MouseEvent) {
-		const link = (event.target as Element).closest<HTMLAnchorElement>('a[data-doc-path]');
+		if (event.defaultPrevented) return;
+		const link = (event.target as Element).closest<HTMLAnchorElement>(
+			'a[data-doc-path],a[data-repo-path]'
+		);
 		if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
 		event.preventDefault();
-		void jump(link.dataset.docPath!, link.getAttribute('href')!.slice(1));
+		if (link.dataset.repoPath)
+			openArtifact(
+				link.dataset.repoPath,
+				link.dataset.originPath ?? activePath,
+				link.dataset.fragment
+			);
+		else
+			void jump(
+				link.dataset.docPath!,
+				link.getAttribute('href')!.slice(1),
+				true,
+				link.dataset.originPath ?? activePath
+			);
 	}
 
 	function select(doc: RepositoryDocument) {
@@ -477,6 +603,7 @@
 					bind:size
 					bind:area
 					{areas}
+					bind:includeRetired
 					bind:includeCompleted
 					{book}
 					{entries}
@@ -486,53 +613,96 @@
 					{rendered}
 					onJump={(path, anchor) => jump(path, anchor)}
 					onSelect={select}
+					onFiltersChanged={() => (pinnedPath = '')}
 					onHandbook={() => {
 						bookRequested = false;
 					}}
 				/>
 				<main class="reading-content" use:linkNavigation>
-					{#if view !== 'book' && selected}
-						<BundleHeader
-							{selected}
-							{bundle}
-							{detail}
-							{taskChecks}
-							{relations}
-							{ids}
-							{rendered}
-							{view}
-							sourceLabel={selectedEntry?.source.label}
-							{onOpen}
-							onLocation={(path, anchor, meta) => onLocation(path, anchor, view, meta)}
-							onJump={(path, headingId) => jump(path, headingId)}
-							onSelectDetail={(path) => {
-								detailPath = path;
-								currentAnchor = '';
-							}}
-						/>
-					{/if}
-					{#each visibleDocs as doc (doc.path)}
-						<ChapterSection
-							{doc}
-							html={rendered.get(doc.path)?.html ?? ''}
+					{#if artifact}<SupportingArtifact
+							source={artifact.source}
 							{branch}
-							{theme}
-							{lazyDiagrams}
-							{trackHeading}
-							sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
-							{onOpen}
-							documents={relationDocuments}
-							{relationLoading}
-							relationErrors={errors}
-							onReloadRelations={reloadRelations}
-							onRelationOpen={openRelation}
-						/>
-					{/each}
-					{#if !visibleDocs.length}
-						<p class="empty">
-							{view === 'book' ? 'No documents to display.' : 'Select an item from the list.'}
-						</p>
-					{/if}
+							path={artifact.path}
+							parent={artifact.parent}
+							sourceLabel={artifact.label}
+							fragment={artifactFragment}
+							documents={merged}
+							{diagrams}
+							onBack={async () => {
+								const scroll = artifact?.scroll ?? 0;
+								artifact = null;
+								await tick();
+								const node = root.querySelector('.reading-content');
+								if (node) node.scrollTop = scroll;
+							}}
+							onOpen={(path, fragment) => {
+								if (merged.some((doc) => doc.path === path && !isArtifactPath(path))) {
+									artifact = null;
+									void jump(path, documentAnchor(path) + (fragment ? '--' + fragment : ''));
+								} else if (artifact) {
+									artifactFragment = fragment ?? '';
+									if (path !== artifact.path) artifact = { ...artifact, path };
+								}
+							}}
+						/>{/if}
+					<div class:artifact-hidden={Boolean(artifact)}>
+						{#if requestError}<p role="status">{requestError}</p>
+							<button onclick={() => (requestError = '')}>Back to documents</button><button
+								onclick={reloadRelations}>Reload documents</button
+							>{/if}
+						{#if history.length}<button onclick={back}>Back to previous document</button>{/if}
+						{#if view !== 'book' && selected}
+							<BundleHeader
+								{selected}
+								{bundle}
+								{detail}
+								{taskChecks}
+								{relations}
+								{ids}
+								{rendered}
+								{view}
+								sourceLabel={selectedEntry?.source.label}
+								{onOpen}
+								onLocation={(path, anchor, meta) => onLocation(path, anchor, view, meta)}
+								onJump={(path, headingId) => jump(path, headingId)}
+								onSelectDetail={(path) => {
+									detailPath = path;
+									currentAnchor = '';
+								}}
+							/>
+						{/if}
+						{#each visibleDocs as doc, i (doc.path)}
+							{#if formalArea(doc) && (i === 0 || bookGroup(visibleDocs[i - 1]) !== bookGroup(doc) || formalArea(visibleDocs[i - 1]) !== formalArea(doc))}<h3
+								>
+									{formalArea(doc)}
+								</h3>{/if}
+							<ChapterSection
+								{doc}
+								source={view !== 'book' && selectedEntry && source
+									? planningDataSource(source, selectedEntry.source.id)
+									: source}
+								html={rendered.get(doc.path)?.html ?? ''}
+								{branch}
+								{theme}
+								{lazyDiagrams}
+								{trackHeading}
+								sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
+								{onOpen}
+								documents={relationDocuments}
+								files={inventory}
+								onSupportingOpen={(path) => openArtifact(path, doc.path)}
+								{relationLoading}
+								relationErrors={errors}
+								onReloadRelations={reloadRelations}
+								onRelationOpen={(path) => openRelation(path, doc.path)}
+							/>
+						{/each}
+						{#if !visibleDocs.length}
+							<p class="empty">
+								{view === 'book' ? 'No documents to display.' : 'Select an item from the list.'}
+							</p>
+						{/if}
+					</div>
 				</main>
 			</div>
 		{/if}
@@ -540,6 +710,9 @@
 </div>
 
 <style>
+	.artifact-hidden {
+		display: none;
+	}
 	.knowledge {
 		display: flex;
 		flex-direction: column;

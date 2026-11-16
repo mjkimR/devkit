@@ -45,7 +45,16 @@ GENERATED_PAGES = ("decisions.md", "changes.md", "glossary.md")
 # The Living Spec glossary at a source commit: the steering directory, then the root path of commits before the move.
 GLOSSARY_PATHS = ("docs/steering/glossary.md", "docs/glossary.md")
 SOURCE_DIRECTORIES = ("docs", "specs")
-KINDS = {"UC": "usecase", "CAP": "capability", "ADR": "decision", "ARCH": "architecture", "SPEC": "spec"}
+KINDS = {
+    "UC": "usecase",
+    "CAP": "capability",
+    "ADR": "decision",
+    "ARCH": "architecture",
+    "SPEC": "spec",
+    "DESIGN": "design",
+    "DOMAIN": "domain",
+    "OPS": "operations",
+}
 
 PROVENANCE_START = "<!-- handbook:provenance -->"
 PROVENANCE_END = "<!-- /handbook:provenance -->"
@@ -53,7 +62,7 @@ GENERATED_START = re.compile(r"^<!-- handbook:generated ([a-z][a-z0-9-]*) -->$")
 GENERATED_END = "<!-- /handbook:generated -->"
 FENCE = re.compile(r"^\s*(```|~~~)")
 CODE_SPAN = re.compile(r"`([^`\n]+)`")
-DOCUMENT_ID = re.compile(r"^(?:UC|CAP|ADR|ARCH|SPEC)-[A-Za-z0-9][A-Za-z0-9-]*$")
+DOCUMENT_ID = re.compile(r"^(?:UC|CAP|ADR|ARCH|SPEC|DESIGN|DOMAIN|OPS)-[A-Za-z0-9][A-Za-z0-9_-]*$")
 NORMATIVE = re.compile(r"\b(MUST|SHALL|SHOULD|MAY)\b")
 SOURCE_LINK = re.compile(r"https://github\.com/([^/\s)]+/[^/\s)]+)/blob/([^/\s)]+)/([^\s)#]+)")
 GLOSSARY_ROW = re.compile(r"^\|\s*\*\*(.+?)\*\*\s*\|")
@@ -216,6 +225,12 @@ def load_documents(root: Path, commit: str) -> Documents:
     documents = Documents(commit=commit, paths=all_paths)
     for sha, path in entries:
         if sha not in texts:
+            continue
+        local = re.sub(r"^docs/packages/[^/]+/", "docs/", path)
+        bundle = re.match(r"^docs/designs/[^/]+/DESIGN-[^/]+/(.+)$", local)
+        if bundle and bundle[1] != "design.md":
+            continue
+        if re.match(r"^docs/(?:domain/(?:[^/]+/)?|operations/|designs/)[^/]+/artifacts/", local):
             continue
         meta, _ = frontmatter(texts[sha])
         identifier = meta.get("id")

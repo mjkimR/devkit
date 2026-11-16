@@ -8,7 +8,7 @@ target: PROP-design-document-viewer
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -16,7 +16,7 @@ created_at: 2026-11-16
 
 ## 2. Suggestion / Change Request (suggestion, change-request)
 
-- **Current Procedure**: `PROP-design-document-viewer` plans against the flat formal-role grammar that
+- **Current Procedure**: `SPEC-design-document-viewer` plans against the flat formal-role grammar that
   `ADR-formal-role-document-identities` selected: every design, domain and operations document is a flat file
   `<root>/<directory>/<PREFIX>-<slug>.md` with no `area` field, and parent-owned support lives under a sibling
   `<root>/<directory>/<PARENT-ID>/artifacts/`. The flat grammar is pinned in these places:
@@ -70,19 +70,19 @@ created_at: 2026-11-16
 
 ## Diagnostic Details
 
-- **Reproduction**: Search `PROP-design-document-viewer` and its materials for `DESIGN-<word-led-slug>.md`,
+- **Reproduction**: Search `SPEC-design-document-viewer` and its materials for `DESIGN-<word-led-slug>.md`,
   `DOMAIN-<word-led-slug>.md`, `<PARENT-ID>/artifacts/` and "flat".
 - **Expected / Actual**: Expected the viewer contract to state the bundle and area grammar; it states the flat
   grammar of `ADR-formal-role-document-identities`.
 - **Versions**: `SPEC-design-bundle-layout` Development branch, 2026-11-16; viewer core pin source commit `504e2e1`.
-- **Conditions**: `PROP-design-document-viewer` is in Development with no viewer code written for formal kinds;
+- **Conditions**: `SPEC-design-document-viewer` is in Development with no viewer code written for formal kinds;
   `SPEC-design-bundle-layout` lands the grammar change and migrates `DESIGN-distribution-transactions`,
   `DESIGN-distribution-file-directory-replacement`, `DOMAIN-bundle-selection-and-installation` and
   `DOMAIN-delivery-relationships` under unchanged IDs.
 - **Workarounds Attempted**: not attempted; `SPEC-design-bundle-layout` excludes viewer changes.
 - **Related Assets**: `ADR-area-scoped-design-bundles`, `ADR-formal-role-document-identities`,
   `CAP-DOCS-document-model`, `CAP-DOCS-documentation-ownership`, `CAP-DOCS-namespaces`, `CAP-TRACE-code-entrypoints`,
-  `PROP-design-document-viewer`, `PROP-design-document-viewer-target`, `SPEC-design-bundle-layout` (AC-07).
+  `SPEC-design-document-viewer`, `PROP-design-document-viewer-target`, `SPEC-design-bundle-layout` (AC-07).
 
 ## Evidence
 
@@ -102,3 +102,18 @@ Migrated paths on this branch: docs/designs/distribution/DESIGN-distribution-tra
   docs/domain/distribution/DOMAIN-bundle-selection-and-installation.md,
   docs/domain/delivery/DOMAIN-delivery-relationships.md
 ```
+
+
+## Disposition
+
+Resolved by `SPEC-design-document-viewer` Task 5 at implementation source
+`4f7b5a262b4e84bb1b0716c99d455514c97d5e2f`, independently verified by HIGH code review round 4
+(`review-04.yaml` in that unit, zero findings). The Viewer consumes the delivered DESIGN bundle/DOMAIN area
+policy, groups areas, labels canonical IDs and lists whole-bundle support from the existing source scan.
+Stray/nested/orphan support never becomes canonical identity, search/count or graph data. DOMAIN/OPS support
+controls, source/ref/Back and public callbacks are preserved; handbook source lookup excludes identified support.
+The current target/plan/Screens and support matrix distinguish delivered policy from the immutable original pin.
+Verification: frontend265/22, affected296 against delivered core, focused backend/handbook207, lint/type0,
+pack/build/generated-stale0/public-host1/external-tsc and wheel100 exact static files. Current retained-five plus
+CAP routes read real repository bytes. Full scope/evidence is retained in the Viewer development-evidence.md;
+core schema and later template/body policy are unchanged. Independent reconciliation follows in that unit.

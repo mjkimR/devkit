@@ -1,0 +1,30 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:20:05.228455Z'
+status: completed
+summary: round 1; independent review of all15 targets confirms12 modified and3 justified decision waivers; one existing read-budget wording conflict remains
+findings:
+- issue: The existing read-budget clause still states an exclusive Files-wide ADR/PADR trigger.
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:246; packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:147
+  failure_condition: Section4.4 rule9 unqualified Files-only ADR/PADR clause excludes the formal and typed-relation triggers implemented and documented in4.3 and4.5.
+  suggested_action: Qualify4.4 rule9 as the supersession-context trigger and cross-reference4.5 additional formal-context triggers, preserving raw/ordinary/artifact/handbook exclusions.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated explicit own-tree read-only paths with frozen source and matching full snapshots, no native guarantee
+unverified_areas:
+- Real-browser visuals/runtime suites not rerun by reconcile reviewer
+checks:
+  reflection: PASS independent whole reflection/source comparison
+  inventory: PASS all changed docs covered;12 modified and3 waivers
+  refs: PASS native incoming refs CAP-VIEW/CAP-DLV/UC-formal
+  core_pin: PASS immutable SHA256 matches
+  parity: PASS runtime/static unchanged since reviewed source
+  tests: SKIP rerun; review03/reverify03 exact source evidence retained250frontend294affected
+  boundary: PASS unchanged clean7bb2a971 and full snapshot1540a24c
+diff_scope:
+  base: f32b831f7ca791566fad7934e13f537a40aaf787
+  head: 7bb2a971c610be7180f853219b38f36103d28d61
+activity_effort: high

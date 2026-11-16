@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:44:58.956807Z'
+status: completed
+summary: Verified original viewer source preparation and current owner/confirmation reflection; newer main bundle grammar will be consumed before final integration
+findings: []
+unverified_areas:
+- Main advanced to bundle grammar after this source preparation; compatibility update and final landed checks remain pending
+checks:
+  tests: PASS post-merge affected1878; exact retained viewer source frontend250 and affected294
+  build: PASS unchanged viewer static/runtime bytes retain public pack and exact100-file wheel proof; generated stale0
+  lint: PASS source lint and Pyright0; CI22; source diff hygiene
+  reconcile: PASS independent14 modified and3 waived targets
+diff_scope:
+  base: ea8a89bffa4c38693d7a59c5fa2bad53af5a5644
+  head: d459a13cf9c35310fce5487953621486009a718a
+activity_effort: high

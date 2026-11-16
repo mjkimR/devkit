@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:22:20.255731Z'
+status: completed
+summary: Delivered full V1-V4 formal viewer/handbook integration; HIGH code review3 passes and independent reconciliation P2 wording is closed; all accepted criteria implemented with current contracts and actual retained-document acceptance
+findings: []
+assumptions:
+- Emulated scope/isolation uses explicit own-tree paths, scoped commits and before/after frozen snapshots; no native guarantee
+- Screens body-copy omission was corrected during build; unchanged accepted drafts and both independent UX rounds existed before code, as retained provenance records explain
+unverified_areas:
+- Viewer has no package E2E tier; no new real-browser visual walkthrough was executed; native HTTP, DOM, public host and wheel checks provide recorded coverage
+- Host owns lifecycle source preparation, integration and final combined landed-head checks; documentation evolution milestone remains open for later work
+checks:
+  tests: PASS frontend250/21 at44b2ff8; affected294 atd9ed254; focused backend/handbook155 and registered namespace12; public-host1
+  build: PASS public pack, generated stale0, wheel100 exact static bytes at e04ace5f; runtime/static unchanged afterward
+  lint: PASS frontend lint/svelte-check0 at44b2ff8; Python lint/type at1793188d; final current rules22 and source diff hygiene atb767ad53
+  sync: PASS initial and final check exit0; no selected bundle source changed or tracked sync output
+diff_scope:
+  base: f32b831f7ca791566fad7934e13f537a40aaf787
+  head: b767ad53dcf29d52d16928ebd5dff7d2a31933f8
+activity_effort: high
