@@ -34,6 +34,10 @@ Any conflict encountered is recorded against its existing owner and is not silen
 
 Create three role entries and one design detail under the retained pilot evidence directory. Keep each entry
 readable independently: reader question, relationship or mechanism explanation, owner links, evidence boundary.
+Each entry explains the question's overview and next step before referring to a necessary owner or detail.
+Concise non-normative summaries orient the reader without establishing a second authority. Do not require
+whole-layer prerequisite reading. Domain links the necessary contract; design links only the capability,
+architecture or detail its explanation needs; operations points to the selected diagnostic/recovery owner.
 The design entry links its detail by an ordinary relative Markdown link. No ID or invented kind is assigned.
 Include a source statement ledger: draft passage, current owner and section, quotation/paraphrase/link/composition,
 added value, normative owner before and after. A paraphrase that changes a guarantee fails ownership review.
@@ -48,6 +52,10 @@ Any repeated normative statement is replaced with an owner reference before acce
 - **AC-PILOT-02 navigation**: for domain and operations, give an independent reader only the question
   and the named draft entry.
   Record every opened document/link, the final answer with owner/section, and any missing or misleading hop.
+  For each opened source, record why its information was necessary. Flag returns to already opened pages that
+  add no needed information, prerequisite whole-layer reading, and points where the entry fails to explain the
+  overview or next step. Treat these as usability findings even when every link resolves; simplify the draft
+  before declaring a useful path. Use observations and reasons, with no arbitrary numeric hop cap.
   Run domain concept-to-contract and operations symptom-to-owner trials.
   Run a separate design discovery trial starting with only `CAP-DIST-sync-and-transactions` §3 and the reader
   question. Record how the reader finds the draft entry, or record the unavailable contract-to-entry hop as a
@@ -64,7 +72,8 @@ Any repeated normative statement is replaced with an owner reference before acce
 - **AC-PILOT-02 discovery baseline**: separately record `devkit docs search` in explicit lexical mode for the
   selected owner IDs and `devkit docs resolve`/`refs` on those IDs. Check ordinary relative draft/detail links
   locally. These unindexed Markdown drafts are not promised as search hits. Record the difference between
-  reaching an existing owner and discovering a draft. Inspect namespace selection contracts in
+  reaching an existing owner and discovering a draft. Reuse existing reverse-reference tools where sufficient;
+  manually maintained reciprocal or all-pairs links are not pilot requirements. Inspect namespace selection contracts in
   `CAP-DOCS-namespaces`; this global pilot claims no executed package-context or viewer validation.
 - **AC-PILOT-03 maintenance**: use a counterfactual change to deletion ordering, with safety guarantees held
   constant. Identify source-symbol and design-detail updates, the architecture review needed if system interaction
@@ -87,3 +96,9 @@ and operations success lacked the existing readiness criterion. The protocol now
 and supplied-entry trials and adds the desired-state-drift paper case with the capability's readiness owner.
 The worker verified those exact text changes. The support role reported no outside-scope reads; before/after
 worktree tree snapshots were identical at `7043eb7b53b93139e9a85bc95e32226189974c74`.
+
+The Host's later user direction adds question-specific reference simplicity: entry overview and next step,
+only necessary owner/detail links, and observed unnecessary round trips or prerequisite reading. This refinement
+changes the evidence protocol within the same four-draft sample; it adds no runtime, reciprocal-link or hop-count
+requirement. The worker checked its consistency with both resolved Challenger findings: contract-only discovery
+still has a separate result, and operations still identifies the existing readiness criterion.

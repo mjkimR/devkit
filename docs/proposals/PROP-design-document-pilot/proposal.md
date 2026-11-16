@@ -49,6 +49,11 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
 - Prototype readable entry documents and only the supporting files the selected content needs. Keep drafts and
   comparison evidence in this proposal's materials or dated materials until the selected approach permits their
   promotion. Use existing representations; no new kind or runtime behavior is a prerequisite for this pilot.
+- Keep reference paths specific to the reader question. Each entry explains its overview and next step without
+  prerequisite reading of whole documentation layers. Domain links necessary contracts; design links needed
+  capability, architecture and detail; operations links the selected diagnosis or recovery owner. Concise
+  non-normative summaries may orient the reader while the exact normative statement keeps one owner.
+  Use existing reverse-reference tools where sufficient; require no all-pairs graph or manual reciprocal links.
 - Compare the prototypes against the existing architecture, glossary, capability, reference and procedure views.
   Account for each statement's authoritative source. Do not duplicate a rule merely by labeling it conceptual.
 - For domain content, first compose existing conceptual meaning and cite validity and transformation contracts.
@@ -90,6 +95,8 @@ This early pilot supplies evidence for `PROP-design-document-foundation`; it doe
   identify a concrete missing behavior; successful existing paths justify leaving those facilities unchanged.
   Contract-only design discovery and supplied-entry navigation have separate results. Operations includes the
   existing readiness owner and a no-journal state with desired-state drift that remains not ready.
+  Each trial reports unnecessary round trips, prerequisite reading and whether the entry explains the next step.
+  Link connectivity alone does not establish a useful path; no fixed hop cap is imposed.
 - **AC-PILOT-03**: A bounded change walkthrough identifies which owned statements need updating and which layers are unaffected.
   No implementation change is required to update every documentation layer.
 - **AC-PILOT-04**: Evidence distinguishes verified facts, open questions and illustrative content. The result states the minimal
