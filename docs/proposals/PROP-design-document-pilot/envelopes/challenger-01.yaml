@@ -1,0 +1,31 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T01:31:38.002134Z'
+status: completed
+summary: Bounded distribution pilot preserves ownership; two P2 evidence-protocol gaps require closure.
+findings:
+- issue: The design trial bypasses the contract-to-entry hop it claims to test.
+  evidence: materials/example-selection.md:48-58; proposal.md:35-36,89-90
+  failure_condition: A supplied draft entry lets the reader pass detail navigation while contract readers cannot discover that entry.
+  suggested_action: Split contract-only discovery from supplied-entry navigation; record an unavailable hop as a gap without owner edits or tooling changes.
+  resolution: open
+  severity: P2
+- issue: Operations success omits the existing normal-state readiness criterion.
+  evidence: materials/example-selection.md:48-53; CAP-DIST-sync-and-transactions:518-536; docs/development/reference/distribution.md:234-235
+  failure_condition: A reader treats journal removal or clean status as normal operation while desired-state changes remain.
+  suggested_action: Require the existing sync --check exit-0 readiness owner and a no-journal but desired-state-drift paper scenario classified not ready.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated; scoped cwd and reads; identical before/after snapshot 7043eb7b53b93139e9a85bc95e32226189974c74 and unchanged HEAD verify read-only result.
+- Reviewed three uncommitted Planning drafts at declared HEAD; no outside-scope reads reported.
+unverified_areas:
+- Reader trials, package contexts and viewer behavior remain Development or later milestone work.
+checks:
+  source_review: PASS Challenger inspected scoped proposal and existing contract, architecture and implementation owners
+  tests: SKIP read-only Planning criticism; no runtime or recovery execution
+diff_scope:
+  base: 697a5da02e4fc8a50493aef650738f91c634a5a1
+  head: 62f54082989e635529d1d6b95b1c2e94aab7a266
