@@ -33,7 +33,7 @@ behavior until implementation reconciles them. Core identity/schema and neutral 
 | `CAP-TRACE-code-entrypoints` | Derive/review/apply supports every core-eligible kind; eligibility/path semantics are referenced from core policy, and ineligible kinds are explicitly skipped |
 
 `CAP-DOCS-documentation-ownership`, `CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`,
-`CAP-DOCS-document-search` and `CAP-DOCS-namespaces` are core inputs. Core also owns `CAP-TRACE-code-entrypoints` §§3.1–3.3 neutral declaration, liveness and reverse-lookup clauses;
+`CAP-DOCS-document-search` and `CAP-DOCS-namespaces` are core inputs. Core also owns `CAP-TRACE-code-entrypoints` §1 and §§3.1–3.3 neutral declaration, liveness and reverse-lookup clauses;
 lifecycle owns §§3.4–3.7 derivation, selection, apply and review plus applicable interface descriptions.
 Lifecycle does not rewrite their identity,
 relation or applicability policy. If their delivered contract cannot support L1–L4, return the concrete conflict to
@@ -106,3 +106,13 @@ Before source guidance changes, Development runs `uv run devkit get-context auth
 
 L1–L4 require the complete verification matrix in [integration contract](materials/integration-contract.md).
 Core/viewer completion is separate required milestone evidence; these comparisons claim no implementation pass.
+
+
+## 6. Selected core interface dependency
+
+[Core consumption record](materials/core-interface-pin.md) pins source ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d and
+verified content hash. Use flat canonical role IDs and peer independent details; parent-owned artifacts live under
+PARENT-ID/artifacts. DESIGN has optional entrypoints; DOMAIN/OPS are explicitly ineligible. All three support
+complete lifecycle operations, same-kind aliases, typed optional relations and retired identity without ADR
+supersession fields. Consumer guidance points to the core definitions rather than copying an applicability matrix.
+This is a reviewed future contract; delivered core runtime/assets are a prerequisite to Development handoff.

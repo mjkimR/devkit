@@ -16,19 +16,17 @@ Formal kinds are mandatory in every option. ID-free ownership and optional gap-o
 
 ## 2. Core interface consumed
 
-Before Development handoff, the Host pins the delivered core revision and records: exact enum values/prefixes,
-canonical global/namespace paths, H1/frontmatter/status grammar, alias and relation semantics, independent detail
-versus supporting artifact identity, and entrypoint applicability plus allowed source anchors. Until that relay,
-DESIGN/DOMAIN/OPS denote roles provisionally, not settled schema values. Core templates and writing instructions
-are the authoring authority. No consumer substitutes a guessed path, status, relation or prefix.
+The Host's selected future core interface is pinned and hash-verified in
+[core consumption record](core-interface-pin.md), source ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d. Core remains the
+single schema/ownership authority; the consumption record names exact applicable integration values and tests.
+Development handoff requires its delivered implementation revision and prerequisite evidence, not this design pin.
 
 `entrypoint_bearing(path)` in
 `packages/devkit-docs/src/devkit_docs/features/governance/services/entrypoint_paths.py:26-34` already derives from
 Kind definitions and namespace mapping. `devkit_spec.features.entrypoints.services.derive` calls it for each
 non-waived reconciliation target. Lifecycle tests prove each newly eligible kind, and assert
-`not-entrypoint-bearing` for each ineligible kind. Core-eligible role anchors are reviewed for the documented
-subject: mechanism source for design, implemented meaning/mapping for domain, diagnostic/action-owner source for
-operations where policy permits. CAP/UC doorway heuristics and reciprocity do not become universal rules.
+`not-entrypoint-bearing` for each ineligible kind. DESIGN source anchors are reviewed for the mechanism subject. DOMAIN and OPS use body source/action-owner
+links and explicitly skip derive/apply; their entrypoints field is rejected by core schema. CAP/UC doorway heuristics and reciprocity do not become universal rules.
 No new CLI selector, output schema, error code, approval or workflow stage is planned.
 
 ## 3. Change-specific impact and maintenance
@@ -49,10 +47,12 @@ Apply the following operations separately to each of the three kinds in global a
 | Update | Compare changed statements with the retained source; update applicable summary/relations/source anchors and regenerate only artifacts whose actual source changed |
 | Split | Allocate each transferred statement one resulting owner; assign independent formal detail its own core-compliant ID, leave parent-owned support unindexed, replace old normative duplicate with orientation link |
 | Rename | Move canonical path/H1/ID together; preserve old ID aliases including moved independent details; repair current prose and structured references, entrypoints and relative support links; check collisions and namespace-qualified destinations |
-| Retire | Follow core terminal status/removal/relation policy, preserve required history/provenance and useful replacement routes; repair incoming current refs, owner/detail/artifact links and actual source anchors; do not borrow ADR supersession fields |
+| Reclassify | Retire the old same-kind identity, create the receiving kind's canonical node, transfer sole statement ownership and repair current refs; cross-prefix aliases remain invalid |
+| Retire | Set retired, retain resolve/refs identity and applicable replacement links, remove/repair obsolete source entrypoints, preserve required provenance; repair incoming current refs and owner/detail/artifact links; do not borrow ADR supersession fields |
 
-Do not alias one old ID to multiple split destinations. Keep the old conceptual owner/redirect only where the core
-permits; otherwise repair all current references explicitly. Retiring an entry does not imply deleting shared
+Do not alias one old ID to multiple split destinations. Retain the original active ID only if it still owns a
+maintained subject; otherwise retire it and name useful successors through core relations/prose. Repair current
+references to their actual receiving owner. Retiring an entry does not imply deleting shared
 support files or historical materials. For a support file, inspect its other owners before moving/removing it;
 verify retained destinations and non-Markdown links separately because formal refs alone cannot prove them.
 
@@ -78,7 +78,7 @@ conflict/unverified result. It creates no implicit Unit, envelope, gate, retrosp
   supporting artifacts change; no empty CAP/UC/domain/operations document is required.
 - Adaptive: retained implementation changes each warranted role; documenter receives exact source identity and
   governing IDs, uses formal templates, compares source, updates context map and runs project/document checks.
-  Exercise create/update/split/rename/retire for each kind. Assert no implicit specs/, workflow/envelope/gate files
+  Exercise create/update/split/rename/reclassify/retire for each kind. Assert no implicit specs/, workflow/envelope/gate files
   or approach change; preserve explicitly pre-existing SDD history if fixture includes it.
 - Adoption: brownfield canonical ID-free input migrates once through core formal policy; legacy history remains
   historical. Baseline includes all warranted retained formal docs and missing-source/required-doc gaps; no gap
@@ -98,7 +98,7 @@ Tests implement scripted procedures, not proof an autonomous agent made semantic
 
 | Requirement / surface | Runtime or source owner | Exact verification owner / command |
 | --- | --- | --- |
-| L1 each kind × read/create/update/split/rename/retire × SDD/adaptive; source and detail/artifact agreement | Core schemas reused; spec/adaptive procedures changed | New files packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py and packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py; run `uv run pytest packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py`. Script actual docs commands/reference fixes and assert final file content/links/source hashes; label semantic review evidence separately |
+| L1 each kind × read/create/update/split/rename/reclassify/retire × SDD/adaptive; source and detail/artifact agreement | Core schemas reused; spec/adaptive procedures changed | New files packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py and packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py; run `uv run pytest packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py`. Script actual docs commands/reference fixes and assert final file content/links/source hashes; label semantic review evidence separately |
 | L2 generated formal impact/migration/applicability sections | proposals/usecases/scaffold.py | packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py; `uv run pytest packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py` |
 | L2 core eligibility and per-kind source anchors; alias/namespace/apply idempotence/skip controls | Existing entrypoints derive/apply/CLI feature | packages/devkit-spec/tests/integration/features/entrypoints/{test_derive,test_apply,test_cli}.py; `uv run pytest packages/devkit-spec/tests/integration/features/entrypoints` |
 | L2 multi-role and single-role through plan/review/reconcile; no unrelated edits | spec-plan/review/sync/planning/completion assets | Existing packages/devkit-spec/tests/integration/bundles/spec/ with focused test_formal_document_lifecycle_guidance.py; scripted E2E file above generates blueprint and exercises target handling with core kinds |
@@ -118,7 +118,8 @@ lifecycle scenarios reuse them with new-kind evidence across actual downstream i
 Scout ran in the assigned worktree at frozen HEAD 306b30ed6d8aff09c26c3547cfffc62705d3123a. Before/after status was
 clean with identical HEAD, so the complete nonignored tree equals that HEAD tree. The post-return file-content/mode
 SHA256 inventory was e4c9bcf2e44360e9dda986ddcda2bce1c1fd5fa66e97d6711a83f05bae4e2ad9. No outside-tree read or write was
-reported. This is emulated scope verification, not native confinement.
+reported by Scout. The later Host-admitted immutable core artifact is the sole extra read scope, recorded in
+core-interface-pin.md. This is emulated scope verification, not native confinement.
 
 Incoming-reference queries started at each touched capability and ADR. Scout inspected all 7 incoming nodes for
 `CAP-DOCS-documentation-ownership`; first pages only for `CAP-DOCS-document-model` (49 total),

@@ -87,7 +87,8 @@ This phase and `PROP-design-document-viewer` are required to complete `MS-docume
    bodies. Record a bounded reason for an unaffected responsibility; do not manufacture empty documents or edits.
 3. Canonical IDs, aliases, relation fields, detail identity, status and entrypoint eligibility are supplied by the
    core. Delivery consumes them; it does not extend CAP↔UC reciprocity, doorway restrictions or ADR supersession
-   automatically to formal roles. The pinned interface and dependency check are required before Development handoff.
+   automatically to formal roles. The selected interface is pinned in [core interface](materials/core-interface-pin.md); delivered runtime/assets
+   and their evidence are required before Development handoff.
 4. The lifecycle phase owns spec/adaptive consumers and `CAP-TRACE-code-entrypoints` derivation/review/apply
    integration. Core owns neutral docs assets, canonical migration and shared schema/policy contracts. Viewer owns
    presentation and handbook. These are required milestone owners; no phase may claim the others' completion.
@@ -100,7 +101,7 @@ This phase and `PROP-design-document-viewer` are required to complete `MS-docume
 `PROP-design-document-lifecycle-target` and [verification matrix](materials/integration-contract.md#5-verification-matrix)
 name exact source/test owners and the required per-kind scenario cross-product. Planning records no passing code tests.
 
-- **L1 — Authoring and maintenance**: All three kinds have verified create/update/split/rename/retire paths using
+- **L1 — Authoring and maintenance**: All three kinds have verified create/update/split/rename/reclassify/retire paths using
   the formal schemas. Real migrated documents and supporting artifacts retain correct IDs, aliases, references,
   owner boundaries and source agreement. Lifecycle applicability is explicit for every kind.
 - **L2 — SDD integration**: A multi-role change and a single-role change traverse proposal target-docs, Planning,
@@ -125,7 +126,8 @@ this phase or complete the milestone.
 
 ### Dependency readiness
 
-Core interface values remain pending the Host's pinned core contract. This is a technical dependency, not a
-question reopening first-class standing. Planning can finish the consumer design, but handoff requires the delivered
-core definitions, templates, writing instructions, migration ledger and entrypoint policy at an identified revision.
+The selected future core interface is pinned at ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d with verified artifact hash
+in [core interface](materials/core-interface-pin.md). It settles schema consumption for Planning. Handoff still
+requires delivered core definitions, templates, writing instructions, migration ledger and entrypoint policy at an
+identified implementation revision; the selected contract is not runtime evidence.
 L1–L4 remain mandatory if any interface value changes. No unverified generic path counts as support.
