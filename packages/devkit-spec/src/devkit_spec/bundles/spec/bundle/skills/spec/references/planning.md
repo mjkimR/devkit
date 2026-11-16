@@ -15,7 +15,12 @@ Read this to run one Planning turn of a proposal on its `plan-<slug>` branch, fr
      Pass a short decision slug explicitly: `devkit spec proposal padr <slug> "<title>" --slug <decision-slug> --summary "<Y-statement>"`.
      Handoff retains that slug in the ADR ID. Read the scaffold before writing its body.
    - Withdraw a PADR the answers dropped by deleting its file in the fold commit (handoff promotes every PADR left in `decisions/`); name it and the reason in the proposal's Planning decisions and remove references to it.
-3. Review the proposal at the Planning `activity-effort` ([effort](effort.md); `high` rounds follow the [review loop](review-loop.md)).
+3. Assess design, domain and operations against the actual change. For each responsibility record affected IDs
+   or a prospective canonical destination, changed statements, source identity, one statement owner, maintenance
+   action and verification; give a bounded source-based reason when unaffected. Select only useful owner/detail
+   links, with no fixed layer order or empty document requirement. Read the core role writing instruction before
+   authoring; it owns identity, relations, artifacts and entrypoint eligibility.
+   Review the proposal at the Planning `activity-effort` ([effort](effort.md); `high` rounds follow the [review loop](review-loop.md)).
    - Record each `scout` or `challenger` return with `devkit workflow envelope new --unit <proposal dir> --kind scout|challenger --stage spike --findings-file -`; comparisons and evidence go into `materials/`, created with its first file (the scaffold writes no empty directory, and a worktree holds none).
    - After folding a `challenger` round, close it with `devkit workflow envelope reverify --unit <proposal dir> --stage spike --from envelopes/challenger-NN.yaml`: `--resolve <N>` per folded finding, `--waive "<N>=<reason>"` for a P2 or P3 not taken; leave `Decision needed:` findings open for `plan-accept` until an answer fully settles them as in step 2. A later reverify of the same round starts from its last reverify: pass only the findings that turn closes; a number naming a finding already closed is refused (`ENVELOPE_FINDING_CLOSED`).
    - Wait for every support role you start before relying on it; a failed role is a problem.

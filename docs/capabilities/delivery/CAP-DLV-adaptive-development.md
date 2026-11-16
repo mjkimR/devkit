@@ -154,6 +154,13 @@ and current context, linking a research material by its ID, and the approach, bu
     linking rather than copying content (`UC-advance-an-idea` 7c). IF the project has no document yet, THEN the coordinator MUST record that fact in current context, MUST NOT seed a document tree and writes the first document only where a retained subject warrants one, in the document system's kinds. Document work adds no
     per-change record, SDD Unit, approval or envelope. Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev_documents.py`.
 
+    The Host MUST assess warranted DOMAIN, DESIGN and OPS responsibilities against the described source identity:
+    affected IDs/statements, sole owner, maintenance action and source/detail/artifact verification, or a bounded
+    unaffected reason. It consumes shared core policy (`CAP-DOCS-document-model`, `CAP-DOCS-documentation-ownership`).
+    Composed rename/root moves, splits, reclassification and retirement preserve canonical/artifact ownership,
+    actual ordinary link destinations and existing source/action authority. Source changes invalidate affected
+    evidence; missing required coverage remains `undocumented`. Tests: `packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py`.
+
 28. **Explicit import entry**: The bundle MUST declare `adaptive-import` with `invocation = "user"`, and its other
     assets MUST NOT name or suggest the entry or its playbook. Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_import.py`.
 29. **Approach independence**: WHEN the import entry or the conversion playbook runs, it MUST NOT require an approach
@@ -318,7 +325,8 @@ means execution was unavailable. The scorer cannot establish the authenticity of
 Product notes reuse existing destinations and are written only when they help the next decision or describe
 retained behavior. Native capability/use-case/decision/milestone semantics apply only when their subject warrants
 them. The skill's `references/documents.md` holds the document linkage: retained behavior goes to a capability or use
-case, structure and boundaries to architecture, and a retained choice to a decision when its reason or reopening
+case, conceptual meaning to DOMAIN, implementation mechanisms/examples/datasheets to DESIGN, operational evidence
+and action-owner routing to OPS, structure and boundaries to architecture, and a retained choice to a decision when its reason or reopening
 condition matters later. Document writing is delegated as its own assignment only after the code it describes is
 integrated, using `swarm-worker` with the skill-local `roles/documenter.md` overlay. Each assignment supplies
 exclusive document paths, the described source identity and governing documents, with one owner per document.

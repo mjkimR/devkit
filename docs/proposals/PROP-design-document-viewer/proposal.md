@@ -44,7 +44,7 @@ metadata, reference graph or packaged-static support.
 
 The core proposal replaces the earlier operations prerequisite. `SPEC-design-document-foundation` and
 `SPEC-domain-model-documents` remain historical context. This required phase and
-`PROP-design-document-lifecycle` complete integration under `MS-documentation-system-evolution`.
+`SPEC-design-document-lifecycle` complete integration under `MS-documentation-system-evolution`.
 
 ## 2. Technical Spike Questions
 

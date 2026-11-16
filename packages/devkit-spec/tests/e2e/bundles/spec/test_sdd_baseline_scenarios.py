@@ -122,7 +122,7 @@ class Exercise:
 
     def verify_product(self) -> None:
         self.run(sys.executable, "checks/check_notes.py")
-        store = str(self.root / "observed-notes.json")
+        store = str(self.root / f"observed-notes-{len(self.observations)}.json")
         added = self.run(sys.executable, "app.py", store, "add", "retained")
         listed = self.run(sys.executable, "app.py", store, "list")
         assert json.loads(added.stdout) == json.loads(listed.stdout) == ["retained"]
@@ -139,7 +139,9 @@ class Exercise:
             f"Retained coverage status: {status}. {detail}\n"
             f"Simulated user decision (test data, not real user authority): {decision}\n"
             f"Observed final configuration: {json.dumps(self.config(), sort_keys=True)}\n\n"
+            + "```json\n"
             + "\n".join(json.dumps(item, sort_keys=True) for item in self.observations)
+            + "\n```\n"
         )
         return path
 
@@ -229,3 +231,43 @@ def test_actual_sync_failure_reports_partial_state_and_supported_recovery(tmp_pa
         "Explicit recovery restored core selection and sync consistency; original app evidence unchanged.",
         "synthetic recovery for same effects",
     )
+
+
+def test_formal_baseline_coverage_gaps_and_source_invalidation(tmp_path: Path) -> None:
+    exercise = Exercise(tmp_path / "formal-baseline")
+    guide = (exercise.root / ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md").read_text()
+    assert "DOMAIN, DESIGN and OPS" in guide and "missing required documents" in guide
+    source = exercise.source_identity()
+
+    def role(directory: str, identifier: str, statement: str) -> Path:
+        path = exercise.root / f"docs/{directory}/{identifier}.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            f'---\nid: {identifier}\ntitle: Retained notes\nsummary: "Retained note subject and source coverage."\nstatus: active\n---\n# [{identifier}] Retained notes\n\n{statement} Source SHA256: {exercise.source_identity()}. Owner `CAP-APP-notes`.\n'
+        )
+        return path
+
+    domain = role("domain", "DOMAIN-note-identity", "A note is an ordered retained text value.")
+    design = role("designs", "DESIGN-json-notes", "The app uses json.loads and json.dumps for local storage.")
+    report = exercise.report("gap", "Required OPS-normal-notes is undocumented; source observations are missing.")
+    assert "gap" in report.read_text() and exercise.config()["development"]["approach"] == "adaptive-dev"
+    operations = role(
+        "operations",
+        "OPS-normal-notes",
+        "After add, observe list against the same store; existing behavior belongs to its capability.",
+    )
+    exercise.verify_product()
+    for identifier in ("DOMAIN-note-identity", "DESIGN-json-notes", "OPS-normal-notes"):
+        assert identifier in exercise.cli("docs", "resolve", identifier).stdout
+    # A changed source invalidates evidence even if its behavior still passes.
+    app = exercise.root / "app.py"
+    app.write_text(app.read_text() + "\n# Retained implementation reading note.\n")
+    assert exercise.source_identity() != source
+    report = exercise.report("gap", "Formal source comparison is stale; recompare before readiness.")
+    assert "stale" in report.read_text() and exercise.config()["development"]["approach"] == "adaptive-dev"
+    for path in (domain, design, operations):
+        path.write_text(path.read_text().replace(source, exercise.source_identity()))
+    exercise.verify_product()
+    exercise.report("verified", "Formal statements match retained app.py; no activation decision supplied.")
+    assert exercise.config()["development"]["approach"] == "adaptive-dev"
+    assert not list((exercise.root / "specs").glob("**/spec.md")) if (exercise.root / "specs").exists() else True

@@ -179,6 +179,13 @@ removes it.
 
 15. **Planning review before acceptance**: when a bound proposal in Planning reaches `plan-accept`, the agent reviews the proposal, PADRs and envelopes directly for the final committed `plan-<slug>` source before presenting acceptance. Acceptance operates on the committed proposal directly and does not require a shared artifact report. `devkit spec proposal report <slug> [--source-sha <sha>]` can be run to inspect a summary briefing. Acceptance records `status: accepted` and `gate:plan-accept` on the committed proposal.
 
+16. **Formal responsibility impact**: WHEN Planning assesses a change, the agent MUST record design, domain and
+    operations impact in the existing blueprint/plan: affected IDs or prospective destinations, statements,
+    source identity, sole owner, maintenance action and verification, or a bounded source-based unaffected reason.
+    The generated blueprint supplies these prompts alongside existing sections. No unaffected document, fixed
+    reading order or whole-layer update is required. Identity and authoring policy are consumed from the docs core
+    (`CAP-DOCS-document-model`, `CAP-DOCS-documentation-ownership`). Test: `packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py`.
+
 ### 3.1 Planning feedback retirement
 
 Planning writes direct `feedback/<name>.md` files with `FB-<name>` and existing feedback metadata.

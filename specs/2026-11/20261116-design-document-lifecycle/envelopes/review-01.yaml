@@ -1,0 +1,34 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:47:37.442413Z'
+status: completed
+summary: round 1; revise DESIGN directory review and resolved reconciliation/metadata-only proof
+findings:
+- issue: The universal directory-anchor restriction still applies CAP/UC heuristics to DESIGN
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-entrypoints/SKILL.md:20-23
+  failure_condition: A DESIGN bounds a mechanism directory but the universal whole-package ownership heuristic forbids its directory anchor
+  suggested_action: Scope whole-package directory heuristic to CAP/UC; permit bounded DESIGN mechanism directories and test real directory selection
+  resolution: open
+  severity: P1
+- issue: New-kind reconciliation evidence never exercises resolved modified/deleted canonical and support targets
+  evidence: packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py:284-286,421-432
+  failure_condition: Pending records and docs-only checks never validate removed paths and replacement artifacts through staged reconcile-contract
+  suggested_action: Extend composed SDD cases with resolved changed/deleted targets, staged checks and unchanged-target negative controls for all kinds/roots
+  resolution: open
+  severity: P2
+- issue: The required metadata-only eligible-document exclusion is untested
+  evidence: packages/devkit-spec/tests/integration/features/entrypoints/test_formal_documents.py:31-85
+  failure_condition: A second eligible DESIGN touched only for wording could receive unwanted source anchors without regression coverage
+  suggested_action: Derive alongside a metadata-only DESIGN, explicitly select mechanism target/code and prove wording target stays byte-identical without entrypoints
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated; frozen explicit worktree reads with matching content/index/tree snapshots, no native boundary guarantee
+checks:
+  tests: PASS reviewer independently40 focused; caller1877 affected and20E2E not rerun
+  rules: PASS reviewer independently22 rules
+diff_scope:
+  base: 7df4a63961e513f13a0ad092159ce945d670e955
+  head: a34f10ff7183ece8a8c75d4f57a76549d00f4c63

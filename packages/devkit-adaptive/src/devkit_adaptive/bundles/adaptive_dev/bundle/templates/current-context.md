@@ -14,6 +14,9 @@ User decisions, implementation choices and assumptions needing evidence, kept ap
 
 Map each retained behavior, structure or choice to its document ID, or its path where the document has no ID; mark one without a document `undocumented`. Link, never copy document content. If the project has no document yet, say so here.
 
+Include warranted DOMAIN, DESIGN and OPS IDs and source/detail/artifact comparison evidence, or a bounded
+unaffected reason. Missing required coverage stays `undocumented`; source changes invalidate affected evidence.
+
 ## Run and verify
 
 Setup, run and check commands with required environment. Per observed result: source/artifact identity, actual command or interaction, outcome and limitation. Mark unexecuted or skipped checks unverified.

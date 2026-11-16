@@ -1,0 +1,35 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:52:52.045712Z'
+status: completed
+review: review-01.yaml
+summary: round 1; all3 findings fixed with reproducing directory policy, explicit selection and native reconciliation controls; fresh round2 follows
+findings:
+- issue: The universal directory-anchor restriction still applies CAP/UC heuristics to DESIGN
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-entrypoints/SKILL.md:20-23
+  failure_condition: A DESIGN bounds a mechanism directory but the universal whole-package ownership heuristic forbids its directory anchor
+  suggested_action: Scope whole-package directory heuristic to CAP/UC; permit bounded DESIGN mechanism directories and test real directory selection
+  resolution: resolved
+  severity: P1
+- issue: New-kind reconciliation evidence never exercises resolved modified/deleted canonical and support targets
+  evidence: packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py:284-286,421-432
+  failure_condition: Pending records and docs-only checks never validate removed paths and replacement artifacts through staged reconcile-contract
+  suggested_action: Extend composed SDD cases with resolved changed/deleted targets, staged checks and unchanged-target negative controls for all kinds/roots
+  resolution: resolved
+  severity: P2
+- issue: The required metadata-only eligible-document exclusion is untested
+  evidence: packages/devkit-spec/tests/integration/features/entrypoints/test_formal_documents.py:31-85
+  failure_condition: A second eligible DESIGN touched only for wording could receive unwanted source anchors without regression coverage
+  suggested_action: Derive alongside a metadata-only DESIGN, explicitly select mechanism target/code and prove wording target stays byte-identical without entrypoints
+  resolution: resolved
+  severity: P2
+assumptions:
+- Every fix is within accepted scope; fresh independent HIGH review follows because source guidance behavior changed
+checks:
+  tests: PASS focused6 and strengthened SDD E2E9; P1 directory guidance failed before fix then passed
+  lint: PASS spec lint/Pyright0, staged22rules; no new schema/codes/flags
+diff_scope:
+  base: a34f10ff7183ece8a8c75d4f57a76549d00f4c63
+  head: 26773cb408ee7bf900506a99cbd8b6745727d0e9

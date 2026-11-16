@@ -124,3 +124,19 @@ created_at: 2026-10-13
 - **Given**: a canonical role parent owns a CSV artifact
 - **When**: a commit stages only parent deletion and the gate checks the snapshot
 - **Then**: RULE-id-convention reports the unchanged orphan artifact; a composed rename that moves the artifact with its new canonical parent passes
+
+### Scenario 9: Derives applicable formal source anchors
+
+- **Covers**: main success scenario, steps 1–4
+- **Given** canonical DESIGN and ineligible DOMAIN/OPS/artifact reconciliation targets,
+- **When** the agent derives and explicitly applies reviewed source pairs,
+- **Then** DESIGN receives selected paths with body preservation and rerun idempotence; ineligible targets produce no pair
+  (`CAP-TRACE-code-entrypoints`).
+
+### Scenario 10: Retires a DESIGN with deleted source
+
+- **Covers**: 3a, 5a
+- **Given** a retired DESIGN retains an entrypoint to source deleted by the staged change,
+- **When** the commit snapshot is checked,
+- **Then** the stale declaration is rejected until removed or replaced in that change; history remains resolvable
+  (`CAP-TRACE-code-entrypoints`).

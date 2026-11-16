@@ -1,4 +1,4 @@
-"""Derivation: join a bundle's ``_Boundary`` code paths with its reconciled capability and use case documents.
+"""Derivation: join a bundle's ``_Boundary`` code paths with its reconciled core-eligible documents.
 
 Document side: each ``reconcile.md`` target that is not ``waived`` and is entrypoint-bearing (``paths``), once.
 Code side: each authored ``_Boundary`` path outside ``docs/`` and ``specs/``, once per bundle; managed outputs

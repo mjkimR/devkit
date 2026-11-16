@@ -15,3 +15,33 @@
 13. Add no per-change record, SDD Unit, approval or envelope for document work.
 
 Example map: `shared list editing: CAP-<AREA>-<slug>`, `storage boundary: docs/architecture/storage.md`, `last-write-wins merge: undocumented`.
+
+## Formal responsibility and maintenance
+
+Assess design, domain and operations against the retained source identity: affected IDs or canonical destination,
+changed statements, one owner, maintenance action and verification; record a bounded reason when unaffected.
+Read the core role instruction/template. DOMAIN describes concepts/relationships; DESIGN explains mechanisms,
+examples/datasheets; OPS routes symptom/evidence to existing action owners. Traverse only useful owner/detail links.
+
+Create/update against the integrated source; give independently maintained detail a peer ID and parent-owned
+support one canonical artifact parent. Regenerate only artifacts whose actual source changed. Rename/root moves
+carry canonical file and artifact subtree together; same-kind renames keep old-ID aliases, unchanged-ID root moves
+need none. Repair current prose/typed references with `devkit rules fix`, ordinary links inside/outside the subtree
+and relative source links. Check global/registered roots, collisions and old-folder absence: aliases do not legalize orphans.
+
+For split, allocate every statement, independent detail and retained artifact to exactly one canonical owner,
+move support and repair links without stale duplicates. Keep the old active identity only for a maintained subject;
+otherwise retire it and link successors. Reclassify by retiring the old identity and creating the receiving kind's
+node; transfer sole statement/artifact ownership and reject cross-prefix aliases. Use no ADR supersession fields.
+
+Retire while retaining history/resolve/refs and source provenance. Remove/replace obsolete DESIGN entrypoints in
+the source-deleting change and retain useful live anchors; keep removed coordinates only in explicitly historical
+prose plus source commit. DOMAIN/OPS use body source/action-owner links and skip source-anchor derivation. Use the
+core eligibility policy, not CAP/UC doorway heuristics for DESIGN. Retired nodes remain rule-checked. Inspect shared
+support users before moving/removing files; retain one live/retired canonical parent or historical material provenance.
+
+Verify aliases, namespaces, incoming/outgoing refs, actual ordinary link destinations and support bytes/source
+agreement after composed operations; reference rules alone do not prove ordinary links. Return source-specific
+results and gaps to the Host's mutable context map, using IDs or `undocumented`. If source changes, invalidate its
+affected evidence and recompare. These procedures create no implicit Unit, envelope, gate or approach change and
+preserve existing SDD history bytes; an explicitly assigned adaptive ledger remains an adaptive assignment.
