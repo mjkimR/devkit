@@ -234,6 +234,34 @@ token, no `entrypoints`, no terminal status (statuses `draft`, `active`, `deprec
 takes its IDs: a use case cites a UX ID in step prose, and `RULE-ux-links` and `RULE-ux-coverage` check those
 citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
 
+### Formal role schema
+
+Design/domain/operations MUST declare nonempty string id, title, status and double-quoted English summary, and
+first H1 `# [ID] title` matching stem and metadata. Slugs are lowercase ASCII kebab case with a letter in the first
+segment. All three are unscoped Living Spec kinds in every docs root; area is inapplicable. Status MUST be exactly
+draft, active or retired, with draft the template/fix default. Retirement hides default browse/search but keeps
+resolve/refs/aliases and governance checks active. Use prose and optional related_* successor edges for retirement,
+not ADR supersession. DOMAIN/OPS MUST omit entrypoints; DESIGN MAY declare safe existing workspace-relative paths.
+Role documents MUST omit proposal, decomposed_from, depends_on, milestone, supersedes and superseded_by. Existing
+spec/plan current-reference semantics and descriptive metadata remain available.
+
+related_designs, related_domains and related_operations MAY appear on every indexed kind as typed ID lists. Each
+MUST contain existing targets of its declared prefix without repeated canonical targets; resolving same-prefix
+aliases are rewritten as current references. Aliases remain same-prefix identity, not edges. No generic reciprocal
+or cycle constraint is introduced. IDs and aliases remain repository-wide across namespace roots.
+
+Independent Markdown detail has a formal peer ID. Parent-owned support under `<ROLE-ID>/artifacts/` has one same-root
+canonical parent; supporting Markdown names that parent and MUST NOT declare id or an H1 ID token. CSV/images need
+no fake IDs. Canonical artifacts are ID-free and unindexed; invalid/orphan/identified artifacts and stray nested
+independent Markdown fail identity governance. README remains optional navigation. Same-kind rename/root move carries
+the artifact subtree and repairs ordinary links; split/reclassification assigns every retained artifact one parent.
+Cross-kind reclassification retains the old node retired; cross-prefix aliases remain invalid.
+
+`ADR-formal-role-document-identities` owns this lasting schema decision. Existing public Kind values/order and
+Document/Reference JSON keys remain unchanged; design/domain/operations rows are appended. Templates include
+three formal role files and the legacy design-template compatibility pointer, for nine total files. No docs MCP
+service, docs-to-spec import or implicit delivery lifecycle is introduced.
+
 ### 3.3 References
 
 1. **Full IDs only**: A document MUST reference another by its full ID, never by a Markdown path.
@@ -398,7 +426,7 @@ file selection.
 ## Document asset distribution
 
 The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eleven writing instructions,
-ten document rule assets, five shared templates and the docs-pointer. Only docs declares the `docs/steering`
+ten document rule assets, eight formal templates plus the design-template compatibility pointer and the docs-pointer. Only docs declares the `docs/steering`
 context directory and registers the `devkit.context_documents` provider that adds a registered namespace's steering
 directory for the working directory. `devkit get-context docs` lists steering summaries and document instructions.
 `docs:docs-skeleton` seeds absent files only when selected; seeded files remain project-owned.
@@ -406,31 +434,3 @@ The bundle introduces no SDD entry, approval, immutable ADR history or completed
 The selected development approach owns those policies (`ADR-document-system`).
 A clean document-only installation omits devkit-spec; deselecting spec assets does not disable installed extensions.
 Tests: `packages/devkit-docs/tests/integration/bundles/docs/` and `packages/devkit-docs/tests/e2e/bundles/docs/`.
-
-### Formal role schema
-
-Design/domain/operations MUST declare nonempty string id, title, status and double-quoted English summary, and
-first H1 `# [ID] title` matching stem and metadata. Slugs are lowercase ASCII kebab case with a letter in the first
-segment. All three are unscoped Living Spec kinds in every docs root; area is inapplicable. Status MUST be exactly
-draft, active or retired, with draft the template/fix default. Retirement hides default browse/search but keeps
-resolve/refs/aliases and governance checks active. Use prose and optional related_* successor edges for retirement,
-not ADR supersession. DOMAIN/OPS MUST omit entrypoints; DESIGN MAY declare safe existing workspace-relative paths.
-Role documents MUST omit proposal, decomposed_from, depends_on, milestone, supersedes and superseded_by. Existing
-spec/plan current-reference semantics and descriptive metadata remain available.
-
-related_designs, related_domains and related_operations MAY appear on every indexed kind as typed ID lists. Each
-MUST contain existing targets of its declared prefix without repeated canonical targets; resolving same-prefix
-aliases are rewritten as current references. Aliases remain same-prefix identity, not edges. No generic reciprocal
-or cycle constraint is introduced. IDs and aliases remain repository-wide across namespace roots.
-
-Independent Markdown detail has a formal peer ID. Parent-owned support under `<ROLE-ID>/artifacts/` has one same-root
-canonical parent; supporting Markdown names that parent and MUST NOT declare id or an H1 ID token. CSV/images need
-no fake IDs. Canonical artifacts are ID-free and unindexed; invalid/orphan/identified artifacts and stray nested
-independent Markdown fail identity governance. README remains optional navigation. Same-kind rename/root move carries
-the artifact subtree and repairs ordinary links; split/reclassification assigns every retained artifact one parent.
-Cross-kind reclassification retains the old node retired; cross-prefix aliases remain invalid.
-
-`ADR-formal-role-document-identities` owns this lasting schema decision. Existing public Kind values/order and
-Document/Reference JSON keys remain unchanged; design/domain/operations rows are appended. Templates include
-three formal role files and the legacy design-template compatibility pointer, for nine total files. No docs MCP
-service, docs-to-spec import or implicit delivery lifecycle is introduced.
