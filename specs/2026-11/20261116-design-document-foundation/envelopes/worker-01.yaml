@@ -1,0 +1,41 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T03:25:04.369007Z'
+status: completed
+summary: 'Completed one Development turn through final report: F1-F6 ownership/design/consumer outcomes verified; independent Code and Reconcile Reviewers passed. All work committed; integration and postlanding checks remain Host-owned. Sole tracked sync output: .devkit/installation.json, annotated task3 (sync output).'
+findings: []
+assumptions:
+- 'Boundaries emulated, not native: explicit absolute cwd/read/write scopes, source/diff comparison, author quiescence and matching reviewer snapshots substitute for isolation.'
+- Host expressly authorized exact adjacent test mirror extension task3 AC-05; prior inventory/assertions preserved. Only docs/source assets/test mirror changed; no runtime implementation or feature edge.
+- Recorded Planning R1/V1 supplies before measurement; independent after routes establish selected question-specific improvement only, without time or whole-corpus claims. Fixture Git roots initialized by Host after initial setup rejection.
+unverified_areas:
+- Host owns integrate-stage runner lint-ci-clean and all integration/postlanding setup/verification; no worker merge/push/integration performed. dev-integration policy auto reported by workflow, not user approval.
+- No runtime recovery, viewer, universal discovery or real package demand. Domain/operations homes deferred to PROP-domain-model-documents/PROP-operations-documents; lifecycle/viewer to PROP-design-document-lifecycle/PROP-design-document-viewer; existing FB-runtime-journal-ordering unchanged.
+checks:
+  sync_start: PASS exit=0
+  tests: 'PASS just test-affected --base 6aaddb58a48aa81c6a0c23417801e9b4542f758a: mode=partial paths=157 default unit-integration 2591 passed; full fallback preserved. Initial 2590/1 template inventory mismatch corrected. Source386c6b0b296a9dae48230b73a90ccf4963c58ee4 unchanged since verification.'
+  integration: 'PASS uv run --no-active --no-sync pytest packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py -q: 2 passed'
+  e2e: 'PASS uv run --no-active --no-sync pytest packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py -q: 1 passed, disjoint manually selected E2E from affected default unit-integration'
+  build: PASS E2E built devkit-advisory/cli/core/dist/agt/docs wheels and tested isolated consumer without spec package
+  lint: 'PASS just lint-check devkit-docs: ruff check and155 formatted files'
+  types: 'PASS just check devkit-docs: pyright zero errors/warnings/information'
+  rules: PASS scoped docs/source assets22 and final rules --ci --base main22 at c1e1c71e36727e871d00c155945573fbeca8a08d
+  sync: PASS source sync generated receipt/managed assets; post-sync and final sync --check zero drift
+  f1_f2: PASS all12 ownership/ARCH overlap cases and pilot ledger retain authorities; independently useful entry/detail, inspected symbols and relative links, no design identity
+  f3: 'PASS fresh reader only capability plus original question: capability3-entry-detail-source; no document returns; initial whole capability read avoidable; snapshot7609f68f matched'
+  f4: PASS fresh package reader source cwd resolve-owner-entry-detail-example source; no avoidable reads/returns; namespace list/search/resolve/refs and global/unrelated controls passed; expected design unresolved exit2; snapshot2a379209 matched
+  f5: PASS isolated consumer sync/check exit0; delivered instructions/template byte-equal generic, no scaffold; optional MCP warning bounded
+  review: PASS review-01 Code Reviewer and reconcile-check-01 independent Reconcile Reviewer, no findings; quiesced clean source snapshots; no outside reads reported
+  records: PASS envelope check unblocked/no pending questions; reconcile resolved, spec completed, feedback0, final-report committed; whitespace clean
+diff_scope:
+  base: db9d230adfe2c8bd221996e9c5f910e67d3c3151
+  head: 8834721e562479574089b28ab054d08fefb057e5
+scope_extensions:
+- path: packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py
+  task: 3
+  reason: Verify design-template inventory and consumer delivery for F5
+  requirements:
+  - AC-05
+activity_effort: medium
