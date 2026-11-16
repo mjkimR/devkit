@@ -18,6 +18,6 @@ plan: PLAN-reverify-summary-required
   - **Verification**: `just test-affected --base 22b28c936`; lint and pyright.
 
 - [ ] **Task 3**: Agent-facing contract, reference and skill examples name `--summary` on `envelope reverify`
-  - **_Boundary**: `docs/capabilities/delivery/CAP-DLV-cli-and-output.md`, `docs/development/reference/workflow.md`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review/SKILL.md`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md`
+  - **_Boundary**: `docs/capabilities/delivery/CAP-DLV-cli-and-output.md`, `docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md` (scope extension: restates the reverify authoring flags and the explicit-commit refusal of CAP-DLV-workflow-envelopes that AC-01 and AC-02 change), `docs/development/reference/workflow.md`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review/SKILL.md`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md`
   - _Requirements: AC-01, AC-02, AC-03_
   - **Verification**: `uv run devkit rules check --ci --base main`; `uv run devkit sync --check` after `devkit sync`.
