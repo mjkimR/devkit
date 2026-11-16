@@ -49,7 +49,8 @@ present, non-blank strings; their values are checked by the other spec rules (`R
   - a block missing `id`, `title` or `status` (or setting it to an empty or null value) gets the same values for the
     missing fields, plus `created_at` when none of `created_at`, `created` or `date` is set.
 
-  The path derives the ID from the file stem, except a bundle's `PROP-<slug>/proposal.md` (`PROP-<slug>`),
+  The path derives the ID from the file stem, except a design bundle's `<area>/DESIGN-<slug>/design.md`
+  (`DESIGN-<slug>`, also the default title), a bundle's `PROP-<slug>/proposal.md` (`PROP-<slug>`),
   `target-docs.md` (`PROP-<slug>-target`) and `feedback/<name>.md` (`FB-<name>`). Any other file under
   `docs/proposals/` than these, `PROP-<slug>.md` and `decisions/PADR-<name>.md` derives no ID: its missing `id` is
   reported without a fix and set by hand.
@@ -102,4 +103,4 @@ capabilities:
 
 ## Formal roles
 
-Formal design/domain/operations require nonempty string id/title/status and a double-quoted English summary. Status is exactly draft, active or retired. Reject area, proposal, decomposed_from, depends_on, milestone, supersedes and superseded_by; DOMAIN/OPS also reject entrypoints. Valid ID-free parent-owned Markdown artifacts are exempt. Missing fields use existing deterministic fixes; invalid values are never guessed.
+Formal design/domain/operations require nonempty string id/title/status and a double-quoted English summary. Status is exactly draft, active or retired. Reject proposal, decomposed_from, depends_on, milestone, supersedes and superseded_by; OPS also rejects area (a design's or domain document's area is checked against its area directory by `RULE-id-convention`), and DOMAIN/OPS also reject entrypoints. Valid ID-free parent-owned support Markdown is exempt. Missing fields use existing deterministic fixes; a design bundle's `design.md` derives its ID and default title from the bundle directory name; invalid values are never guessed.

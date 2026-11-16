@@ -6,7 +6,7 @@ plan: PLAN-design-bundle-layout
 
 # Task Breakdown: `SPEC-design-bundle-layout` Area-scoped directory bundles for formal design documents
 
-- [ ] **Task 1**: Kind layout fact, layout-aware governance, search pin, docs bundle assets and their tests
+- [x] **Task 1**: Kind layout fact, layout-aware governance, search pin, docs bundle assets and their tests
   - **_Boundary**: `packages/devkit-docs/`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-06_
   - **Verification**: devkit-docs unit, rule and integration tests; `just test-affected`; lint and type checks.

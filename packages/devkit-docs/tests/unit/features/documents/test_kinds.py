@@ -8,7 +8,7 @@ import pytest
 
 from devkit_docs.features.documents import TERMINAL_STATUSES, Kind, KindTableError, definition, definitions, kind_of
 from devkit_docs.features.documents.models import ids, kinds
-from devkit_docs.features.documents.models.kinds import ROWS, Summary, by_prefix, relation_prefixes, validate
+from devkit_docs.features.documents.models.kinds import ROWS, Layout, Summary, by_prefix, relation_prefixes, validate
 from devkit_docs.features.documents.repositories import memo
 
 
@@ -66,7 +66,21 @@ def test_the_rows_keep_each_kind_fact() -> None:
         Kind.DOMAIN,
         Kind.OPERATIONS,
     }
-    assert kinds_where(lambda row: row.area_scoped) == {Kind.CAPABILITY, Kind.USECASE, Kind.UX}
+    assert {row.kind: row.layout for row in definitions() if row.layout is not Layout.FLAT} == {
+        Kind.CAPABILITY: Layout.AREA,
+        Kind.USECASE: Layout.AREA,
+        Kind.UX: Layout.AREA,
+        Kind.DESIGN: Layout.AREA_BUNDLE,
+        Kind.DOMAIN: Layout.AREA,
+    }
+    assert {row.kind: row.layout_anchor for row in definitions() if row.layout_anchor} == {Kind.DESIGN: "design.md"}
+    assert kinds_where(lambda row: row.area_scoped) == {
+        Kind.CAPABILITY,
+        Kind.USECASE,
+        Kind.UX,
+        Kind.DESIGN,
+        Kind.DOMAIN,
+    }
     assert kinds_where(lambda row: row.entrypoints) == {Kind.CAPABILITY, Kind.USECASE, Kind.DESIGN}
     assert {row.prefix for row in definitions() if row.heading_token} == {
         "SPEC", "PLAN", "TASKS", "REC", "ADR", "FB", "CAP", "UC", "UX", "ARCH", "MS", "DESIGN", "DOMAIN", "OPS",
@@ -97,6 +111,21 @@ def test_the_rows_keep_each_kind_fact() -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("layout", "area_scoped", "bundled"),
+    [(Layout.FLAT, False, False), (Layout.AREA, True, False), (Layout.AREA_BUNDLE, True, True)],
+)
+def test_area_scoping_is_derived_from_the_layout(layout: Layout, area_scoped: bool, bundled: bool) -> None:
+    row = replace(ROWS[0], layout=layout, layout_anchor="x.md" if bundled else "")
+    assert (row.area_scoped, row.bundled) == (area_scoped, bundled)
+    for row in definitions():
+        assert row.area_scoped == (row.layout in {Layout.AREA, Layout.AREA_BUNDLE})
+        assert row.bundled == bool(row.layout_anchor)
+    # The layout anchor is independent of the summary anchor: a design keeps an always-required summary.
+    design = definition(Kind.DESIGN)
+    assert (design.layout_anchor, design.summary, design.anchor) == ("design.md", Summary.ALWAYS, "")
+
+
 def test_by_prefix_reads_the_prefix_before_the_first_dash() -> None:
     assert by_prefix("MS--odd") is definition(Kind.MILESTONE)
     assert by_prefix("FB-x") is definition(Kind.FEEDBACK)
@@ -115,6 +144,9 @@ def test_by_prefix_reads_the_prefix_before_the_first_dash() -> None:
         ((replace(ROWS[0], summary=Summary.ANCHOR), *ROWS[1:]), "anchor file"),
         ((replace(ROWS[0], anchor="x.md"), *ROWS[1:]), "anchor file"),
         ((replace(ROWS[0], directory=""), *ROWS[1:]), "needs a directory"),
+        ((replace(ROWS[0], layout=Layout.AREA_BUNDLE), *ROWS[1:]), "layout anchor"),
+        ((replace(ROWS[0], layout_anchor="x.md"), *ROWS[1:]), "layout anchor"),
+        ((*ROWS[:6], replace(ROWS[6], layout=Layout.AREA), *ROWS[7:]), "needs a directory"),
     ],
     ids=[
         "missing",
@@ -126,6 +158,9 @@ def test_by_prefix_reads_the_prefix_before_the_first_dash() -> None:
         "anchorless",
         "anchor",
         "directory",
+        "bundle-without-anchor",
+        "layout-anchor-without-bundle",
+        "area-without-directory",
     ],
 )
 def test_an_inconsistent_table_is_refused(rows, fragment: str) -> None:

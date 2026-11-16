@@ -13,7 +13,7 @@ from devkit_agt.features.rules.services.testing import check
 
 from devkit_docs.features.documents import DocumentIndex, Kind, KindTableError
 from devkit_docs.features.documents.models import kinds
-from devkit_docs.features.documents.models.kinds import ROWS, Summary, validate
+from devkit_docs.features.documents.models.kinds import ROWS, Layout, Summary, validate
 from devkit_docs.features.governance.usecases import id_convention
 from devkit_docs.features.governance.usecases.code_entrypoints import CodeEntrypointsRule
 from devkit_docs.features.governance.usecases.document_reference import DocumentReferenceRule
@@ -95,8 +95,20 @@ def test_the_area_check_follows_the_table(tmp_path: Path, monkeypatch: pytest.Mo
     assert _messages(IdConventionRule(), tmp_path, files) == [
         ("docs/capabilities/core/CAP-CORE-x.md", 'Frontmatter area is "other" but the directory requires "core"')
     ]
-    _inject(monkeypatch, CAPABILITY={"area_scoped": False})
+    _inject(monkeypatch, CAPABILITY={"layout": Layout.FLAT})
     assert _messages(IdConventionRule(), tmp_path, {}) == []
+
+
+def test_the_formal_role_grammar_follows_the_layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    role = '---\nid: {id}\ntitle: X\nstatus: active\nsummary: "X."\n{area}---\n# [{id}] X\n'
+    files = {
+        "docs/domain/DOMAIN-x.md": role.format(id="DOMAIN-x", area=""),
+        "docs/designs/core/DESIGN-y.md": role.format(id="DESIGN-y", area="area: core\n"),
+    }
+    assert {v.file for v in check(IdConventionRule(), tmp_path, files)} == set(files)
+    _inject(monkeypatch, DOMAIN={"layout": Layout.FLAT}, DESIGN={"layout": Layout.AREA, "layout_anchor": ""})
+    assert _messages(IdConventionRule(), tmp_path, {}) == []
+    assert _messages(SpecFormatRule(), tmp_path, {}) == []
 
 
 def test_every_living_spec_row_has_a_path_grammar() -> None:
@@ -119,7 +131,7 @@ def test_an_area_scoped_kind_whose_grammar_sets_no_area_fails(tmp_path: Path, mo
         "docs/architecture/ARCH-sample.md": "---\nid: ARCH-sample\ntitle: A\nstatus: active\n---\n# [ARCH-sample] A\n"
     }
     assert _messages(IdConventionRule(), tmp_path, files) == []
-    _inject(monkeypatch, ARCHITECTURE={"area_scoped": True})
+    _inject(monkeypatch, ARCHITECTURE={"layout": Layout.AREA})
     with pytest.raises(RulesRunError, match="area-scoped kind architecture has a path grammar"):
         check(IdConventionRule(), tmp_path)
 

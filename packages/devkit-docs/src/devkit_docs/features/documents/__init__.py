@@ -8,7 +8,9 @@ workspace index (``DocumentIndex``). Contract: ``CAP-DOCS-document-model`` (``do
 from devkit_docs.features.documents.models.ids import PREFIXES, Kind, is_id, kind_of
 from devkit_docs.features.documents.models.kinds import (
     FormatScope,
+    KindDefinition,
     KindTableError,
+    Layout,
     Summary,
     by_prefix,
     definition,
@@ -38,7 +40,9 @@ __all__ = [
     "FormatScope",
     "Issue",
     "Kind",
+    "KindDefinition",
     "KindTableError",
+    "Layout",
     "Reference",
     "Summary",
     "VisibleLine",

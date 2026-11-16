@@ -810,3 +810,118 @@ def test_monorepo_namespace_milestones_pass_with_a_cross_namespace_edge(tmp_path
     }
     assert check(RULE, tmp_path, files) == []
     assert check(RULE, tmp_path, targets=list(files)) == []
+
+
+def _role(identifier: str, area: str | None = "core", extra: str = "", body: str = "") -> str:
+    """A formal role document with ``area: <area>`` (none when ``area`` is ``None``)."""
+    area_line = f"area: {area}\n" if area is not None else ""
+    return (
+        f'---\nid: {identifier}\ntitle: Sample\nstatus: active\nsummary: "Sample."\n{area_line}{extra}---\n'
+        f"# [{identifier}] Sample\n{body}"
+    )
+
+
+@pytest.mark.parametrize("root", ["docs", "docs/packages/api"])
+def test_design_bundles_and_domain_areas_pass_in_every_docs_root(tmp_path: Path, root: str) -> None:
+    files = {
+        ".devkit/config.toml": _namespaces("api"),
+        f"{root}/designs/README.md": "# Designs\n",
+        f"{root}/designs/core/README.md": "# Core designs\n",
+        f"{root}/designs/core/DESIGN-x/design.md": _role("DESIGN-x", body="[Data](data.csv)\n"),
+        f"{root}/designs/core/DESIGN-x/README.md": "# Bundle readme without a parent name\n",
+        f"{root}/designs/core/DESIGN-x/data.csv": "a,b\n",
+        f"{root}/designs/core/DESIGN-x/notes.md": "# Notes\nSupport for `DESIGN-x`.\n",
+        f"{root}/designs/core/DESIGN-x/examples/deep/example.md": "# Example\nDESIGN-x worked example.\n",
+        f"{root}/designs/core/DESIGN-x/examples/deep/image.png": "png",
+        f"{root}/domain/README.md": "# Domain\n",
+        f"{root}/domain/delivery/README.md": "# Delivery\n",
+        f"{root}/domain/delivery/DOMAIN-y.md": _role("DOMAIN-y", area="delivery"),
+        f"{root}/domain/delivery/DOMAIN-y/artifacts/table.csv": "a,b\n",
+        f"{root}/domain/delivery/DOMAIN-y/artifacts/table.md": "# Table\nSupport for `DOMAIN-y`.\n",
+        f"{root}/operations/OPS-z.md": _role("OPS-z", area=None),
+    }
+    assert _found(check(RULE, tmp_path, files)) == []
+
+
+@pytest.mark.parametrize("root", ["docs", "docs/packages/api"])
+def test_design_and_domain_path_errors(tmp_path: Path, root: str) -> None:
+    write_files(tmp_path, {".devkit/config.toml": _namespaces("api")})
+    design_issue = (
+        f"Invalid partition path: Design must be stored at {root}/designs/{{area}}/DESIGN-{{word-led-slug}}/design.md"
+    )
+    domain_issue = (
+        f"Invalid partition path: Domain must be stored at {root}/domain/{{area}}/DOMAIN-{{word-led-slug}}.md"
+    )
+    cases = {
+        f"{root}/designs/DESIGN-flat.md": (_role("DESIGN-flat"), design_issue),
+        f"{root}/designs/core/DESIGN-file.md": (_role("DESIGN-file"), design_issue),
+        f"{root}/designs/DESIGN-noarea/design.md": (_role("DESIGN-noarea"), design_issue),
+        f"{root}/designs/core/DESIGN-Bad/design.md": (_role("DESIGN-Bad"), design_issue),
+        f"{root}/domain/DOMAIN-flat.md": (_role("DOMAIN-flat"), domain_issue),
+    }
+    for path, (text, message) in cases.items():
+        assert _found(check(RULE, tmp_path, {path: text})) == [(path, 1, message)], path
+        (tmp_path / path).unlink()
+    # A bundle whose directory and id differ, and an area other than the area directory, are fixable.
+    anchor = f"{root}/designs/core/DESIGN-x/design.md"
+    domain = f"{root}/domain/delivery/DOMAIN-y.md"
+    files = {anchor: _role("DESIGN-other", area="elsewhere"), domain: _role("DOMAIN-y", area="core")}
+    found = check(RULE, tmp_path, files)
+    assert _found(found) == [
+        (anchor, 1, 'Frontmatter id is "DESIGN-other" but the path requires "DESIGN-x"'),
+        (anchor, 1, 'Frontmatter area is "elsewhere" but the directory requires "core"'),
+        (anchor, 8, "Heading token [DESIGN-other] does not match identifier DESIGN-x"),
+        (anchor, 8, "Role heading must be # [ID] title matching frontmatter"),
+        (domain, 1, 'Frontmatter area is "core" but the directory requires "delivery"'),
+    ]
+    remediation = next(v.remediation for v in found if v.file == anchor and "area" in v.message)
+    assert remediation.endswith(f"(or move the bundle directory to {root}/designs/elsewhere/)")
+
+
+def test_bundle_strays_and_orphans(tmp_path: Path) -> None:
+    anchor = "docs/designs/core/DESIGN-x/design.md"
+    write_files(tmp_path, {anchor: _role("DESIGN-x")})
+    stray = "Invalid partition path: identified Markdown inside a DESIGN bundle is a stray; only its design.md anchor carries an ID"
+    for path, text in {
+        "docs/designs/core/DESIGN-x/detail.md": _role("DESIGN-detail"),
+        "docs/designs/core/DESIGN-x/nested/DESIGN-inner/design.md": _role("DESIGN-inner"),
+        "docs/designs/core/DESIGN-x/deep/er/note.md": "# [DESIGN-note] Note\nDESIGN-x\n",
+        "docs/designs/core/DESIGN-x/record.md": "---\nreconcile_id: REC-x\n---\n# Record\nDESIGN-x\n",
+    }.items():
+        found = [v for v in check(RULE, tmp_path, {path: text}) if v.file == path]
+        assert [(v.message, v.remediation) for v in found] == [
+            (
+                stray,
+                "Promote it to a peer bundle docs/designs/{area}/DESIGN-{slug}/design.md with its own ID, or remove"
+                " its ID and name the parent DESIGN-x in its text",
+            )
+        ], path
+        (tmp_path / path).unlink()
+    unnamed = "docs/designs/core/DESIGN-x/sub/plain.md"
+    assert _found(check(RULE, tmp_path, {unnamed: "# Plain\n"})) == [
+        (unnamed, 1, "Invalid partition path: role artifact must name its canonical parent in its text")
+    ]
+    (tmp_path / unnamed).unlink()
+    orphan = "Invalid partition path: bundle has no eligible design.md anchor whose ID is the bundle directory name"
+    files = {
+        "docs/designs/core/DESIGN-orphan/data.csv": "a,b\n",
+        "docs/designs/core/DESIGN-orphan/notes.md": "# Notes\nDESIGN-orphan\n",
+        "docs/designs/core/DESIGN-orphan/README.md": "# Readme\n",
+    }
+    assert sorted(_found(check(RULE, tmp_path, files))) == [(path, 1, orphan) for path in sorted(files)]
+
+
+def test_bundle_fix_writes_the_directory_id_and_area_without_moving_files(tmp_path: Path) -> None:
+    anchor = "docs/designs/core/DESIGN-x/design.md"
+    domain = "docs/domain/delivery/DOMAIN-y.md"
+    files = {
+        anchor: '---\nid: DESIGN-old\ntitle: Sample\nstatus: active\nsummary: "S."\narea: stale\n---\n# [DESIGN-old] Sample\n',
+        domain: '---\nid: DOMAIN-y\ntitle: Sample\nstatus: active\nsummary: "S."\n---\n# [DOMAIN-y] Sample\n',
+    }
+    assert _found(check(RULE, tmp_path, files, fix=True)) == []
+    assert _read(tmp_path, anchor).startswith(
+        '---\nid: DESIGN-x\ntitle: Sample\nstatus: active\nsummary: "S."\narea: core\n'
+    )
+    assert "# [DESIGN-x] Sample" in _read(tmp_path, anchor)
+    assert _read(tmp_path, domain).startswith("---\nid: DOMAIN-y\narea: delivery\n")
+    assert sorted(p.relative_to(tmp_path).as_posix() for p in (tmp_path / "docs").rglob("*.md")) == sorted(files)

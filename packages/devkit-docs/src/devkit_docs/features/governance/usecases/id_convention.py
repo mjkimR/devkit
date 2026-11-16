@@ -8,8 +8,16 @@ Checks the identifier targets:
 - feedback at ``specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`` or
   ``specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`` (``FB-<slug>``);
 - Living Spec documents, whose ID is the file stem: ``docs/capabilities/<area>/CAP-<AREA>-<slug>.md``,
-  ``docs/usecases/<area>/UC-<slug>.md``, ``docs/ux/<area>/UX-<slug>.md`` (each with ``area: <area>``) and
-  ``docs/architecture/ARCH-[<NN>[-<n>]-]<slug>.md`` (``NN`` an arc42 chapter other than 09 and 12).
+  ``docs/usecases/<area>/UC-<slug>.md``, ``docs/ux/<area>/UX-<slug>.md``, ``docs/domain/<area>/DOMAIN-<slug>.md``
+  (each with ``area: <area>``), ``docs/architecture/ARCH-[<NN>[-<n>]-]<slug>.md`` (``NN`` an arc42 chapter other
+  than 09 and 12) and ``docs/operations/OPS-<slug>.md``; a design is the bundle directory
+  ``docs/designs/<area>/DESIGN-<slug>/`` whose ``design.md`` anchor declares the directory name as its ID and
+  ``area: <area>``. The formal role grammars (design, domain, operations) follow the kind table's layout.
+
+Formal role support (``role_artifacts``) is checked by path: every other file of a design bundle, at any depth, is
+ID-free support that names its parent; identified Markdown inside a bundle (a nested bundle anchor included) is a stray
+to promote to a peer bundle, and a bundle without its anchor is an orphan. Domain and operations support lives under
+``<ID>/artifacts/`` beside the document. ``README.md`` is exempt everywhere.
 
 A target is reported for a path off the convention (and then nothing else), a missing frontmatter, an ``id`` /
 ``reconcile_id`` or ``area`` other than the path requires (fixable), a first H1 opened by an ``[ID]`` or `` `ID` ``
@@ -64,7 +72,14 @@ from devkit_docs.features.documents.models.namespace import Namespace
 from devkit_docs.features.documents.repositories.index import is_document_file
 from devkit_docs.features.documents.services.namespaces import docs_roots, living_path
 from devkit_docs.features.governance import FIX_COMMAND, document_index, explicitly_targeted, namespaces
-from devkit_docs.features.governance.services.role_artifacts import artifact_parent, artifact_state
+from devkit_docs.features.governance.services.role_artifacts import (
+    BUNDLE_STRAY,
+    ROLE_KINDS,
+    artifact_parent,
+    artifact_state,
+    role_rows,
+    stray_remediation,
+)
 
 RULE_ID = "RULE-id-convention"
 type Add = Callable[..., None]
@@ -106,6 +121,10 @@ _MILESTONE_PATH_ISSUE = (
 _LIVING_REMEDIATION = (
     f"Rename or move the file to the required path (the ID is the file stem), then run `{FIX_COMMAND}`"
 )
+_BUNDLE_REMEDIATION = (
+    "Rename or move the bundle to the required path (the ID is the bundle directory name, the document its {anchor}),"
+    f" then run `{FIX_COMMAND}`"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,8 +162,9 @@ def _living_kinds() -> tuple[Kind, ...]:
 
 def _path_remediation(kind: Kind) -> str:
     """The remediation of a target of ``kind`` off its path convention; ``KindTableError`` for a kind without one."""
-    if definition(kind).living_spec:
-        return _LIVING_REMEDIATION
+    row = definition(kind)
+    if row.living_spec:
+        return _BUNDLE_REMEDIATION.format(anchor=row.layout_anchor) if row.bundled else _LIVING_REMEDIATION
     remediation = _PATH_REMEDIATIONS.get(kind)
     if remediation is None:
         raise KindTableError(f"kind {kind} has no path remediation in {RULE_ID}")
@@ -165,6 +185,7 @@ class _Target:
     expected_area: str = ""
     path_issue: str = ""
     docs_root: str = "docs"
+    remediation: str = ""  # replaces the kind's path remediation of a ``path_issue``
 
     def allowed_tokens(self) -> list[str]:
         """The IDs a first H1 token may name."""
@@ -300,12 +321,25 @@ def _architecture(target: Callable[..., _Target], parts: list[str], stem: str, d
     return target(slug=match.group(3), expected_id=stem)
 
 
-def _role(label: str, directory: str, prefix: str) -> _Grammar:
+def _role(label: str, kind: Kind) -> _Grammar:
+    """The grammar of a formal role kind, by its layout in the kind table: ``<directory>/<PREFIX>-<slug>.md``
+    (``flat``), ``<directory>/<area>/<PREFIX>-<slug>.md`` (``area``) or
+    ``<directory>/<area>/<PREFIX>-<slug>/<layout_anchor>`` (``area-bundle``, whose ID is the bundle directory)."""
+
     def grammar(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
-        slug = stem.removeprefix(f"{prefix}-")
-        if len(parts) != 3 or not stem.startswith(f"{prefix}-") or not is_word_led_slug(slug):
-            return target(path_issue=f"{label} must be stored at {docs_root}/{directory}/{prefix}-{{word-led-slug}}.md")
-        return target(slug=slug, expected_id=stem)
+        row = definition(kind)
+        prefix, directory = row.prefix, row.directory
+        if row.bundled:
+            shape = f"{{area}}/{prefix}-{{word-led-slug}}/{row.layout_anchor}"
+            size, name = 5, parts[3] if len(parts) == 5 and parts[4] == row.layout_anchor else ""
+        elif row.area_scoped:
+            shape, size, name = f"{{area}}/{prefix}-{{word-led-slug}}.md", 4, stem
+        else:
+            shape, size, name = f"{prefix}-{{word-led-slug}}.md", 3, stem
+        slug = name.removeprefix(f"{prefix}-")
+        if len(parts) != size or not name.startswith(f"{prefix}-") or not is_word_led_slug(slug):
+            return target(path_issue=f"{label} must be stored at {docs_root}/{directory}/{shape}")
+        return target(slug=slug, expected_id=name, expected_area=parts[2] if row.area_scoped else "")
 
     return grammar
 
@@ -316,9 +350,9 @@ _LIVING_GRAMMARS: dict[Kind, _Grammar] = {
     Kind.USECASE: _area_slug("Use case", "usecases", "UC"),
     Kind.UX: _area_slug("UX document", "ux", "UX"),
     Kind.ARCHITECTURE: _architecture,
-    Kind.DESIGN: _role("Design", "designs", "DESIGN"),
-    Kind.DOMAIN: _role("Domain", "domain", "DOMAIN"),
-    Kind.OPERATIONS: _role("Operations", "operations", "OPS"),
+    Kind.DESIGN: _role("Design", Kind.DESIGN),
+    Kind.DOMAIN: _role("Domain", Kind.DOMAIN),
+    Kind.OPERATIONS: _role("Operations", Kind.OPERATIONS),
 }
 
 
@@ -340,6 +374,13 @@ def _living_spec(path: str, kind: Kind, docs_root: str, registered: tuple[Namesp
     if area_scoped and not found.path_issue and not found.expected_area:
         raise KindTableError(f"area-scoped kind {kind} has a path grammar in {RULE_ID} that sets no area")
     return found
+
+
+def _support_target(path: str, kind: Kind, problem: str, registered: tuple[Namespace, ...]) -> _Target:
+    """The target of a role support file with ``problem``; a stray inside a bundle names its promotion."""
+    stray = problem == BUNDLE_STRAY.format(prefix=definition(kind).prefix, anchor=definition(kind).layout_anchor)
+    remediation = stray_remediation(path, registered) if stray else ""
+    return _Target(path, kind, path_issue=problem, remediation=remediation)
 
 
 def _markdown(ctx: RuleContext, directory: str) -> list[str]:
@@ -396,25 +437,24 @@ def _targets(ctx: RuleContext) -> list[_Target]:
                 artifact, problem = artifact_state(ctx, path, registered)
                 if artifact:
                     if problem:
-                        targets.append(_Target(path, row.kind, path_issue=problem))
+                        targets.append(_support_target(path, row.kind, problem, registered))
                 elif not path.endswith("/README.md"):
                     targets.append(_living_spec(path, row.kind, docs_root, registered))
     # Binary support needs an owner too; do not read its contents or pretend it has an ID.
     for docs_root in docs_roots(registered):
-        for directory in ("designs", "domain", "operations"):
-            for candidate in ctx.cache.find_files(ctx.workspace_root / docs_root / directory, extensions=None):
+        for row in role_rows():
+            for candidate in ctx.cache.find_files(ctx.workspace_root / docs_root / row.directory, extensions=None):
                 path = ctx.cache.relative_name(candidate)
                 if path.endswith(".md"):
                     continue
                 artifact, problem = artifact_state(ctx, path, registered)
                 if artifact and problem:
-                    kind = {"designs": Kind.DESIGN, "domain": Kind.DOMAIN, "operations": Kind.OPERATIONS}[directory]
-                    targets.append(_Target(path, kind, path_issue=problem))
+                    targets.append(_support_target(path, row.kind, problem, registered))
     covered = {target.path for target in targets}
     for document in document_index(ctx).documents:
         if document.kind is Kind.MILESTONE and document.path not in covered:
             targets.append(_Target(document.path, Kind.MILESTONE, path_issue=_MILESTONE_PATH_ISSUE))
-        if document.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS} and document.path not in covered:
+        if document.kind in ROLE_KINDS and document.path not in covered:
             targets.append(
                 _Target(document.path, document.kind, path_issue="formal role ID is outside its canonical docs root")
             )
@@ -520,7 +560,7 @@ class IdConventionRule(BaseRule):
             name="slug-identifier-convention-check",
             description=(
                 "ADR, Change Spec and Feedback documents use slug identifiers in date-partitioned paths, Living Spec"
-                " identifiers are their file stems, and no reference is date- or number-based."
+                " identifiers are their file stems or bundle directory names, and no reference is date- or number-based."
             ),
             phase=Phase.LINTER,
             severity=Severity.ERROR,
@@ -582,7 +622,12 @@ class IdConventionRule(BaseRule):
     def _target(self, ctx: RuleContext, target: _Target, owners: dict[str, list[str]], add: Add) -> None:
         path = target.path
         if target.path_issue:
-            add(path, 1, f"Invalid partition path: {target.path_issue}", _path_remediation(target.kind))
+            add(
+                path,
+                1,
+                f"Invalid partition path: {target.path_issue}",
+                target.remediation or _path_remediation(target.kind),
+            )
             return
         text = ctx.cache.read_text(path)
         block = _block(text)
@@ -595,7 +640,7 @@ class IdConventionRule(BaseRule):
             )
         else:
             declared = _field(block.header, target.field)
-            if target.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}:
+            if target.kind in ROLE_KINDS:
                 with suppress(FrontmatterError):
                     declared = (ctx.cache.get_frontmatter(path) or {}).get(target.field, "")
             if declared != target.expected_id:
@@ -608,13 +653,14 @@ class IdConventionRule(BaseRule):
                 )
             area = _field(block.header, "area")
             if target.expected_area and area != target.expected_area:
-                directory = definition(target.kind).directory
+                row = definition(target.kind)
+                moved = "the bundle directory" if row.bundled else "the file"
                 add(
                     path,
                     1,
                     f'Frontmatter area is "{area}" but the directory requires "{target.expected_area}"',
                     f"Run `{FIX_COMMAND}` or set area: {target.expected_area}"
-                    f" (or move the file to {target.docs_root}/{directory}/{area}/)",
+                    f" (or move {moved} to {target.docs_root}/{row.directory}/{area}/)",
                     fixable=True,
                 )
         heading = _heading(text)
@@ -635,7 +681,7 @@ class IdConventionRule(BaseRule):
                 f"Rewrite the heading as `# [{target.expected_id}] <title>`; an ID later in the heading is read as a"
                 " reference, so the fix leaves it",
             )
-        if target.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}:
+        if target.kind in ROLE_KINDS:
             try:
                 metadata = ctx.cache.get_frontmatter(path) or {}
             except FrontmatterError:
@@ -676,7 +722,7 @@ class IdConventionRule(BaseRule):
                 updated = updated[:start] + target.heading_id() + updated[end:]
             if block is not None:  # a missing id or reconcile_id becomes the first line, a missing area follows id
                 declared = _field(block.header, target.field)
-                if target.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}:
+                if target.kind in ROLE_KINDS:
                     with suppress(FrontmatterError):
                         declared = (ctx.cache.get_frontmatter(path) or {}).get(target.field, "")
                 if declared != target.expected_id:

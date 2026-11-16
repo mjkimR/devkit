@@ -356,3 +356,43 @@ def test_monorepo_namespace_milestones_pass_at_both_locations(tmp_path: Path) ->
     }
     assert check(RULE, tmp_path, files) == []
     assert check(RULE, tmp_path, targets=[path for path in files if path != CONFIG]) == []
+
+
+def _role(identifier: str, extra: str = "") -> str:
+    return f'---\nid: {identifier}\ntitle: S\nstatus: active\nsummary: "S."\n{extra}---\n# [{identifier}] S\n'
+
+
+def test_area_is_allowed_exactly_on_area_scoped_roles(tmp_path: Path) -> None:
+    files = {
+        CONFIG: _namespaces("api"),
+        "docs/designs/core/DESIGN-x/design.md": _role("DESIGN-x", "area: core\nentrypoints: []\n"),
+        "docs/packages/api/domain/core/DOMAIN-y.md": _role("DOMAIN-y", "area: core\n"),
+        "docs/designs/core/DESIGN-x/notes.md": "# Notes\nSupport for `DESIGN-x`.\n",
+        "docs/designs/core/DESIGN-x/deep/notes.md": "# Deep notes\nSupport for `DESIGN-x`.\n",
+    }
+    assert _found(check(RULE, tmp_path, files)) == []
+    operations = "docs/operations/OPS-z.md"
+    assert _found(check(RULE, tmp_path, {operations: _role("OPS-z", "area: core\n")})) == [
+        (operations, 1, "frontmatter field 'area' is inapplicable to this role")
+    ]
+
+
+def test_a_bundle_anchor_derives_its_id_and_title_from_the_bundle_directory(tmp_path: Path) -> None:
+    raw = "docs/designs/core/DESIGN-x/design.md"
+    blank = "docs/packages/api/designs/core/DESIGN-y/design.md"
+    files = {
+        CONFIG: _namespaces("api"),
+        raw: "Body without a heading.\n",
+        blank: '---\nid: ""\ntitle: Y\nstatus: active\nsummary: "S."\narea: core\ncreated_at: 2026-01-01\n---\n# Y\n',
+    }
+    found = check(RULE, tmp_path, files, fix=True)
+    assert {(v.file, v.message, v.fixed) for v in found if v.message.startswith(("frontmatter is", "document"))} == {
+        (raw, "document has no YAML frontmatter block (--- ... --- on the first line)", True),
+        (blank, "frontmatter is missing the required field 'id'", True),
+    }
+    assert (
+        (tmp_path / raw)
+        .read_text()
+        .startswith(f"---\nid: DESIGN-x\ntitle: DESIGN-x\nstatus: draft\ncreated_at: {TODAY}\n---\n")
+    )
+    assert (tmp_path / blank).read_text().startswith("---\nid: DESIGN-y\ntitle: Y\n")
