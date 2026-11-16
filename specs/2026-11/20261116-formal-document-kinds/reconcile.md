@@ -149,3 +149,8 @@ The evidence measures formal identity coverage0→5 from exact baseline bytes, n
 `PROP-design-document-viewer` owns required V1–V4 rendering/public frontend/handbook behavior. Both accepted
 proposal destinations exist. Core F1–F6 does not claim their evidence or milestone completion. No required core
 criterion or known implementation defect is deferred.
+
+The final acceptance sweep also tested the parser's alternate reconcile_id route. Artifact rejection and document
+parsing now share IDENTITY_FIELDS, so every recognized identity entry route is forbidden on support artifacts
+while fenced YAML identity examples remain valid. This closes the existing ID-free/never-indexed artifact contract;
+it adds no identity syntax or new role field. The matching regression covers each role and parser identity field.

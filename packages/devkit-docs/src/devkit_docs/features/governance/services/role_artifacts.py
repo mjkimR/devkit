@@ -9,6 +9,7 @@ from devkit_core.core import FrontmatterError
 
 from devkit_docs.features.documents.models.ids import is_word_led_slug
 from devkit_docs.features.documents.models.markdown import body_start, visible_lines
+from devkit_docs.features.documents.models.model import IDENTITY_FIELDS
 from devkit_docs.features.documents.models.namespace import Namespace
 from devkit_docs.features.documents.services.namespaces import living_path
 from devkit_docs.features.governance.services.documents import document_index
@@ -63,7 +64,9 @@ def artifact_state(ctx: RuleContext, path: str, registered: tuple[Namespace, ...
         ),
         "",
     )
-    if (data is not None and "id" in data) or re.match(r"# (?:\[|`)[A-Z]+-", heading):
+    if (data is not None and any(field in data for field in IDENTITY_FIELDS)) or re.match(
+        r"# (?:\[|`)[A-Z]+-", heading
+    ):
         return True, "role artifact must be ID-free; promote independent Markdown to a canonical peer"
     if re.search(rf"(?<![A-Za-z0-9_-]){re.escape(parent)}(?![A-Za-z0-9_-])", text) is None:
         return True, "role artifact must name its canonical parent in its text"

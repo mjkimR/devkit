@@ -489,3 +489,23 @@ def test_quoted_yaml_identity_keys_are_valid_and_fix_is_idempotent(
     assert not check(IdConventionRule(), tmp_path, {path: text}, fix=True)
     assert not check(SpecFormatRule(), tmp_path)
     assert (tmp_path / path).read_text() == text
+
+
+@pytest.mark.parametrize(("directory", "prefix", "kind"), ROLES)
+def test_artifacts_reject_every_parser_identity_field_but_allow_fenced_examples(
+    tmp_path: Path, directory: str, prefix: str, kind: Kind
+) -> None:
+    del kind
+    from devkit_docs.features.documents.models.model import IDENTITY_FIELDS
+
+    parent = f"{prefix}-parent"
+    path = f"docs/{directory}/{parent}/artifacts/detail.md"
+    owner = {f"docs/{directory}/{parent}.md": doc(parent)}
+    for identity_field in IDENTITY_FIELDS:
+        text = f"---\n{identity_field}: REC-support\n---\n# Detail\nSupport for `{parent}`.\n"
+        found = check(IdConventionRule(), tmp_path, {**owner, path: text})
+        assert any(v.file == path and "ID-free" in v.message for v in found), identity_field
+    examples = "\n".join(f"{field}: REC-example" for field in IDENTITY_FIELDS)
+    text = f"```yaml\n{examples}\n```\n# Detail\nSupport for `{parent}`.\n"
+    assert not check(IdConventionRule(), tmp_path, {**owner, path: text})
+    assert [d.id for d in DocumentIndex.load(tmp_path).documents] == [parent]

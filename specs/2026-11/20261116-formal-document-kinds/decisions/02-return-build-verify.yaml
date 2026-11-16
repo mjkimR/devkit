@@ -1,0 +1,8 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Final acceptance probe found reconcile_id can index a supposedly ID-free role
+  artifact; reject every identity field and add regression before integration
+at: '2026-11-16T06:15:49.651667Z'

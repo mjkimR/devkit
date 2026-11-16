@@ -251,7 +251,8 @@ aliases are rewritten as current references. Aliases remain same-prefix identity
 or cycle constraint is introduced. IDs and aliases remain repository-wide across namespace roots.
 
 Independent Markdown detail has a formal peer ID. Parent-owned support under `<ROLE-ID>/artifacts/` has one same-root
-canonical parent; supporting Markdown names that parent and MUST NOT declare id or an H1 ID token. CSV/images need
+canonical parent; supporting Markdown names that parent and MUST NOT declare any parser-recognized identity field
+(`id` or `reconcile_id`) or an H1 ID token. CSV/images need
 no fake IDs. Canonical artifacts are ID-free and unindexed; invalid/orphan/identified artifacts and stray nested
 independent Markdown fail identity governance. README remains optional navigation. Same-kind rename/root move carries
 the artifact subtree and repairs ordinary links; split/reclassification assigns every retained artifact one parent.
