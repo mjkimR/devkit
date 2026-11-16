@@ -2,7 +2,7 @@
 id: PROP-design-document-lifecycle
 title: Formal documentation authoring and reconciliation lifecycle
 summary: "Integrates complete authoring, Planning, review, reconciliation and maintenance for formal design, domain and operations kinds under SDD and adaptive-dev."
-status: draft
+status: accepted
 created_at: 2026-11-16
 target_area: delivery/
 priority: high
@@ -12,16 +12,17 @@ dev_effort: high
 milestone: MS-documentation-system-evolution
 boundaries:
   owns:
-  - packages/devkit-docs/src/devkit_docs/bundles/
   - packages/devkit-spec/
   - packages/devkit-adaptive/
   - docs/capabilities/delivery/
-  - docs/capabilities/documents/
-  - docs/architecture/
+  - docs/capabilities/traceability/
+  - docs/usecases/governance/
+  - docs/usecases/delivery/
+  - docs/usecases/harness/
   - docs/decisions/
-  - docs/development/
   - docs/proposals/PROP-design-document-lifecycle/
   excludes:
+  - packages/devkit-docs/
   - packages/devkit-viewer/
 task_kind: feature
 workflow: sdd-proposal
@@ -75,9 +76,32 @@ This phase and `PROP-design-document-viewer` are required to complete `MS-docume
 - Preserve materials as historical evidence and decisions under the selected approach. Do not create a parallel
   registry, fixed whole-layer reading order or additional approval/recovery engine.
 
+### Planning decisions
+
+1. Extend existing delivery boundaries, consuming the shared ownership and Kind policy from
+   `PROP-formal-document-kinds`. The comparison and source evidence are in
+   [integration contract](materials/integration-contract.md); the lasting choice is
+   `PADR-formal-document-delivery-integration`. No parallel applicability registry or workflow engine is added.
+2. Planning, implementation review and reconciliation assess all three formal responsibilities against the actual
+   change. Record affected IDs, source evidence and required actions in existing proposal/plan/reconcile or review
+   bodies. Record a bounded reason for an unaffected responsibility; do not manufacture empty documents or edits.
+3. Canonical IDs, aliases, relation fields, detail identity, status and entrypoint eligibility are supplied by the
+   core. Delivery consumes them; it does not extend CAP↔UC reciprocity, doorway restrictions or ADR supersession
+   automatically to formal roles. The selected interface is pinned in [core interface](materials/core-interface-pin.md); delivered runtime/assets
+   and their evidence are required before Development handoff.
+4. The lifecycle phase owns spec/adaptive consumers and `CAP-TRACE-code-entrypoints` derivation/review/apply
+   integration. Core owns neutral docs assets, canonical migration and shared schema/policy contracts. Viewer owns
+   presentation and handbook. These are required milestone owners; no phase may claim the others' completion.
+5. This remains one L spec: one integration contract, two existing delivery approaches, one runtime scaffold and
+   reused entrypoint flow. No independent engine or migration platform is introduced. Development effort remains
+   high because shipped agent-facing guidance and cross-package semantics change.
+
 ### Expected acceptance evidence
 
-- **L1 — Authoring and maintenance**: All three kinds have verified create/update/split/rename/retire paths using
+`PROP-design-document-lifecycle-target` and [verification matrix](materials/integration-contract.md#5-verification-matrix)
+name exact source/test owners and the required per-kind scenario cross-product. Planning records no passing code tests.
+
+- **L1 — Authoring and maintenance**: All three kinds have verified create/update/split/rename/reclassify/retire paths using
   the formal schemas. Real migrated documents and supporting artifacts retain correct IDs, aliases, references,
   owner boundaries and source agreement. Lifecycle applicability is explicit for every kind.
 - **L2 — SDD integration**: A multi-role change and a single-role change traverse proposal target-docs, Planning,
@@ -98,3 +122,12 @@ available before integration depends on them. This remains one L feature proposa
 Acceptance and handoff follow existing gates. Retirement requires L1–L4, current contract reconciliation and
 verified SDD/adaptive authoring and maintenance paths for every formal kind. Core completion alone does not retire
 this phase or complete the milestone.
+
+
+### Dependency readiness
+
+The selected future core interface is pinned at 504e2e12006ab3e2aad2b8ce470607646ad4c4ac with verified artifact hash
+in [core interface](materials/core-interface-pin.md). It settles schema consumption for Planning. Handoff still
+requires delivered core definitions, templates, writing instructions, migration ledger and entrypoint policy at an
+identified implementation revision; the selected contract is not runtime evidence.
+L1–L4 remain mandatory if any interface value changes. No unverified generic path counts as support.
