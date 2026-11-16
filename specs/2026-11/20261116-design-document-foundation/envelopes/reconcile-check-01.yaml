@@ -1,0 +1,28 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T03:23:20.521683Z'
+status: completed
+summary: 'Independent Reconcile Reviewer PASS no findings: seven targets and Living Spec reflection agree with implementation and approved contract.'
+findings: []
+assumptions:
+- 'Emulated read-only role boundary: absolute worktree scopes, author quiescence, matching parent snapshots; no explicit outside-worktree reads or mutations reported.'
+- Pending status intentional before return; implementer will resolve only administrative reconcile/spec status.
+unverified_areas:
+- Trials/native tests assessed through committed evidence, not repeated; entrypoint derivation caller-supplied but rationale checked against actual diff.
+- No runtime recovery, viewer, universal discovery or actual package demand verified or claimed.
+checks:
+  reflection: PASS all seven changed docs targets exactly listed; no required mismatch waived
+  contract: PASS twelve routing cases, ARCH boundaries, unique authority, generic assets and accepted ADR agreement
+  source: PASS reviewer inspected require_writable/apply_changes/recover_locked and supporting symbols
+  navigation: PASS relative capability-entry-detail-source and detail-entry paths exist; both design files useful and ID-free
+  assets: PASS cmp source/managed equality for both instructions and template
+  scope: PASS no runtime/identity/namespace/dependency/home expansion; no-impact usecase/UX/glossary rationale agrees
+  evidence: PASS F1-F6 qualitative comparison, setup/test failures and fixture limitations correctly bounded
+  whitespace: PASS reviewer exact-range diff --check
+  tests: SKIP reviewer did not rerun; review-01 reports caller verification at 386c6b0b296a9dae48230b73a90ccf4963c58ee4; only review envelope and reconcile draft differ afterward
+  snapshot: PASS initial/final HEADc0a8baebcad86264899008ccb4a3e7d667a30b85 treeb2e68a773edf038ea569fde7c0878d4a6dbc10ea clean
+diff_scope:
+  base: db9d230adfe2c8bd221996e9c5f910e67d3c3151
+  head: c0a8baebcad86264899008ccb4a3e7d667a30b85

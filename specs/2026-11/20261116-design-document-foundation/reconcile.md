@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-document-foundation
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     resolution: modified
@@ -58,4 +58,6 @@ an integration test are not runtime doorway code, while the transaction capabili
 Independent Code Reviewer passed actual db9d230..386c6b0 scope with no findings, global route/source/link audit,
 source-asset byte/generic checks, sync and whitespace verification. It audited committed package/consumer evidence
 without rerunning those readers. Review provenance distinguishes executed checks from caller-supplied native tests.
-Separate Reconcile Reviewer verifies this complete reflection and target set before resolution.
+Separate Reconcile Reviewer passed this complete reflection and all seven targets without findings.
+Entrypoint derivation returned eight candidates (both instructions, template and integration test for both CAPs);
+all were rejected as non-runtime doorways. No entrypoint was written.
