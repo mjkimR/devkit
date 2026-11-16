@@ -27,7 +27,7 @@ owner per statement and existing safety, recovery and permission contracts.
 
 `SPEC-formal-document-kinds` owns one coherent core Kind integration and migration. Its Planning confirms proposed
 prefixes DESIGN, DOMAIN and OPS and appropriate per-kind schema, status, relations and source-entrypoint policy.
-`PROP-design-document-lifecycle` and `PROP-design-document-viewer` are mandatory integration phases after that core.
+`PROP-design-document-lifecycle` and `SPEC-design-document-viewer` are mandatory integration phases after that core.
 Planning settles the implementation, without reopening whether these three roles receive formal identity.
 Audit every existing relevant supported surface; reuse a generic mechanism when verification proves full support.
 Implementation minimization is not a success criterion.

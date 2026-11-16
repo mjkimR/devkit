@@ -100,7 +100,7 @@ whether an extension is justified.
 
 `SPEC-design-document-foundation` consumes these drafts, ledger and trials, with source identity and limits above.
 `SPEC-domain-model-documents` owns domain representation; ~~`PROP-operations-documents`~~ (source Git `534ad541e9d1e87beffa6bbc4f1afa95c71f6106`) owns operations representation;
-`PROP-design-document-lifecycle` owns change-specific lifecycle integration; `PROP-design-document-viewer` owns actual
+`PROP-design-document-lifecycle` owns change-specific lifecycle integration; `SPEC-design-document-viewer` owns actual
 viewer verification after representation choices. All five existing IDs were resolved successfully. No follow-up
 proposal was created or modified. Restart each deferred implementation only after its Planning accepts representation
 and verifies the relevant missing discovery path; expected checks are owner uniqueness, useful question-specific

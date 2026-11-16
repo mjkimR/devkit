@@ -1,41 +1,26 @@
 ---
-id: PROP-design-document-viewer
+id: SPEC-design-document-viewer
 title: First-class formal documentation in the repository viewer
-summary: "Provides complete navigation, identity, references, metadata, artifact access and packaged viewer support for formal design, domain and operations kinds."
-status: accepted
-created_at: 2026-11-16
-target_area: viewer/
-priority: high
-size: L
-planning_effort: high
-dev_effort: high
-milestone: MS-documentation-system-evolution
-boundaries:
-  owns:
-  - packages/devkit-viewer/
-  - docs/capabilities/viewer/
-  - docs/capabilities/delivery/CAP-DLV-release-handbook.md
-  - docs/usecases/
-  - docs/ux/
-  - docs/architecture/
-  - docs/decisions/
-  - docs/development/reference/
-  - docs/steering/ux-objects.md
-  - docs/proposals/PROP-design-document-viewer/
-  - scripts/handbook.py
-  - tools/devkit-dev/tests/integration/test_handbook_script.py
-  excludes:
-  - packages/devkit-docs/src/devkit_docs/bundles/
-  - packages/devkit-spec/
-task_kind: feature
-workflow: sdd-proposal
+summary: Provides complete navigation, identity, references, metadata, artifact access and packaged viewer support for formal design, domain and operations kinds.
+status: planned
+created: 2026-11-16
 depends_on:
-- SPEC-formal-document-kinds
+  - SPEC-formal-document-kinds
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-design-document-viewer] First-class formal documentation in the repository viewer
+# [SPEC-design-document-viewer] First-class formal documentation in the repository viewer
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-design-document-viewer on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-design-document-viewer`
+- Target Docs Blueprint: `PROP-design-document-viewer-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `SPEC-formal-document-kinds` establishes formal design, domain and operations identities and core contracts.
 The repository viewer must expose these as first-class kinds throughout existing relevant supported surfaces.
@@ -46,7 +31,26 @@ The core proposal replaces the earlier operations prerequisite. `SPEC-design-doc
 `SPEC-domain-model-documents` remain historical context. This required phase and
 `PROP-design-document-lifecycle` complete integration under `MS-documentation-system-evolution`.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement First-class formal documentation in the repository viewer so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which kind/prefix allowlists, group ordering and reference recognizers need extension in the frontend,
   public frontend library and static generation? Which backend paths already work and need verification?
@@ -57,7 +61,7 @@ The core proposal replaces the earlier operations prerequisite. `SPEC-design-doc
 - **Q4**: How must `scripts/handbook.py` recognize prefixes and locate sources? What deliberate inclusion policy
   governs handbook pages, separately from support for formal identity and source lookup?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Consume all three core Kind definitions and canonical schemas. Provide explicit navigation/group labels and
   ordering, list/search participation, IDs and deep links for global and registered namespace documents.
@@ -80,7 +84,7 @@ The core proposal replaces the earlier operations prerequisite. `SPEC-design-doc
 - Declare any required cross-feature dependencies in Planning. Coordinate core schema changes with the core
   owner and avoid viewer-only identity or relation rules.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
 - **V1 — Kind parity**: Each real kind has navigation/groups, ID/deep-link access, prose references, applicable
   metadata, incoming/outgoing reference graph and statement supersession recognition. Positive and negative tests
@@ -95,7 +99,7 @@ The core proposal replaces the earlier operations prerequisite. `SPEC-design-doc
   inclusion policy, with focused regression evidence. Changed interactions have drafted screens, UX review and
   reconciled use case/UX contracts. Unchanged generic paths still have complete new-kind verification.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Plan against the required formal core contract and consume its delivered schemas before dependent implementation
 verification. This remains one L feature proposal. Acceptance and handoff follow existing gates. Retirement
@@ -103,7 +107,7 @@ requires V1–V4, public/static package verification and complete support eviden
 Core loading, generic rendering or a small/no-code diff alone cannot establish completion. The milestone also
 requires lifecycle integration and preserves its planned status until completion is reviewed.
 
-## 5. Planning decisions
+### 5. Planning decisions
 
 - Complete formal support is required. Select explicit browser-side presentation/recognition integration consuming
   the core contract; compare the registry-transport alternative in `PROP-design-document-viewer-target`. Do not add a
@@ -122,10 +126,11 @@ requires lifecycle integration and preserves its planned status until completion
 - One L viewer feature spec remains coherent: frontend behavior, backend proof, handbook lookup and shipped output
   verify one reading capability. No required surface is deferred to preserve that classification.
 
-### Planning evidence and limits
+#### Planning evidence and limits
 
 Two read-only Scouts inspected source/public/static and current-contract/UX impact at
 `f75da999fcdff9e68559a01793efe620b3f2f570`. Their batch before/after tracked-plus-nonignored tree was
 `f6901151eecf483bfe62180c8622739e903e00bf`, with unchanged HEAD. This is an emulated boundary check, not native
-confinement. [Source support](materials/support-matrix.md) and [incoming references](materials/incoming-refs.md)
+confinement. [Source support](../../../docs/materials/2026-11/20261116-design-document-viewer/support-matrix.md) and [incoming references](../../../docs/materials/2026-11/20261116-design-document-viewer/incoming-refs.md)
 separate inspection evidence from future Development checks. No implementation or frontend test pass is claimed.
+

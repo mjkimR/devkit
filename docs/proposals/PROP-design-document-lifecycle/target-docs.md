@@ -20,7 +20,7 @@ targets:
 
 This is future-state Planning for `PROP-design-document-lifecycle`. Current contracts continue to describe current
 behavior until implementation reconciles them. Core identity/schema and neutral docs assets belong to
-`SPEC-formal-document-kinds`; presentation belongs to `PROP-design-document-viewer`.
+`SPEC-formal-document-kinds`; presentation belongs to `SPEC-design-document-viewer`.
 
 ## 1. System capabilities plan
 

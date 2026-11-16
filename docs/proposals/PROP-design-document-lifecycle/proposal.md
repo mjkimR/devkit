@@ -41,7 +41,7 @@ points so every supported formal kind participates completely without an unrelat
 
 The core proposal replaces the earlier operations prerequisite. `SPEC-design-document-foundation` and
 `SPEC-domain-model-documents` are historical context, not substitutes for the formal core prerequisite.
-This phase and `PROP-design-document-viewer` are required to complete `MS-documentation-system-evolution`.
+This phase and `SPEC-design-document-viewer` are required to complete `MS-documentation-system-evolution`.
 
 ## 2. Technical Spike Questions
 

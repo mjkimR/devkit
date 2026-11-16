@@ -3,7 +3,7 @@ id: PROP-design-document-viewer-target
 title: Formal document viewer target blueprint
 summary: "Plans complete formal-kind reading, references, artifacts, namespace navigation and public/static viewer delivery."
 status: draft
-proposal: PROP-design-document-viewer
+proposal: SPEC-design-document-viewer
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
   - file: docs/usecases/viewer/UC-read-formal-document.md
@@ -17,7 +17,7 @@ targets:
 
 # [PROP-design-document-viewer-target] Formal document viewer target blueprint
 
-This is a future contract for `PROP-design-document-viewer`; current owner documents remain unchanged in Planning.
+This is a future contract for `SPEC-design-document-viewer`; current owner documents remain unchanged in Planning.
 New UC/UX identifiers below are proposed names, not references to existing documents.
 
 ## 1. Direction and options
@@ -35,7 +35,7 @@ frontend module where that removes inconsistent recognizers. No package, feature
 
 `SPEC-formal-document-kinds` is a hard implementation prerequisite, including the decision superseding ID-free
 clauses in `ADR-documentation-ownership-and-linked-design-entries` and `ADR-linked-domain-relationship-views`.
-The selected future core contract is pinned in [core contract](materials/core-contract.md). Artifact adapter is
+The selected future core contract is pinned in [core contract](../../../docs/materials/2026-11/20261116-design-document-viewer/core-contract.md). Artifact adapter is
 `local`, repository namespace `7a98ea4b0c7772e588edcd66b2dc51119340c3fcb7b9cb304c1e67ffbe3d8302`, source commit
 `504e2e12006ab3e2aad2b8ce470607646ad4c4ac`, generation `074444d7a3e0468892b50274650c69f2`, content SHA-256
 `1d724834426991e04904fd9f1677f60235de49764d9a1863ad9c8d112c55f413`. Adapter/namespace/source/hash were compared
@@ -272,7 +272,7 @@ view raw/download/Back. Original source control is represented in the formal nod
 
 ## 6. Implementation and verification
 
-The complete per-kind matrix and exact source/test owners are [support matrix](materials/support-matrix.md).
+The complete per-kind matrix and exact source/test owners are [support matrix](../../../docs/materials/2026-11/20261116-design-document-viewer/support-matrix.md).
 Cold Files participation and permissive underscore-ID/alias recognition are required alongside book paths.
 Every row must be completed for design/domain/operations, with actual new-kind fixtures and existing-kind controls.
 Generic code reuse is permitted only with passing behavior evidence. Public TypeScript/HTTP contracts remain
