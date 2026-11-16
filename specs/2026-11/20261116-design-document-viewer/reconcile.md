@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-document-viewer
-status: resolved
+status: pending
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     resolution: modified
@@ -98,3 +98,12 @@ pending phase evidence. Its decision, partial supersession clauses and core sche
 Independent integration reflection verification confirmed both additional targets and all prior targets;
 `envelopes/reconcile-check-03.yaml` records the zero-finding result and matching full-tree snapshot.
 Viewer runtime and generated static bytes are unchanged from the accepted worker.
+
+
+## Delivered grammar adoption pending
+
+Main advanced to the published design bundle/domain area grammar after the original Viewer worker completed.
+Task 5 and AC-08 consume that current core interface and directly address `FB-viewer-adopts-bundle-grammar`.
+Previous implementation evidence remains source-identified history; current grammar compatibility and this
+reconciliation remain pending until the continuation is verified. No core grammar or later template work is adopted
+by changing its owner here.

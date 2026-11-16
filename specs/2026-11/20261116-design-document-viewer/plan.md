@@ -54,3 +54,13 @@ Run `just lint-check devkit-viewer`, `just check devkit-viewer`, focused handboo
 Run `just viewer install`, `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer pack`,
 `just viewer build`, and `uv run devkit generated check viewer-assets`. Native tests run synchronously here.
 The Host owns integrated-result verification. HIGH independent code and reconcile reviews use frozen snapshots.
+
+
+## Host continuation: delivered core interface
+
+Consume `SPEC-design-bundle-layout` at `002241b56fd8e5a446cbfa4f2e4bf42d25484455` within the existing Viewer
+consumer goal. Design anchors are `<root>/designs/<area>/DESIGN-<slug>/design.md`; every other bundle file is
+support. Domain uses `<root>/domain/<area>/DOMAIN-<slug>.md` and same-area parent artifacts. OPS remains flat.
+Keep the immutable original pin as provenance and add a current delivered-interface comparison. Native return to
+build-verify requires fresh HIGH code/reconcile verification for changed consumer semantics before integration.
+No core implementation, architecture edge or required public host callback changes belong to this continuation.

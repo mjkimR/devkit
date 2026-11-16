@@ -2,7 +2,7 @@
 id: SPEC-design-document-viewer
 title: First-class formal documentation in the repository viewer
 summary: "Makes formal design, domain and operations directly readable through canonical and alias links, reference context, source-safe artifacts and shipped viewer output."
-status: completed
+status: in-progress
 created: 2026-11-16
 depends_on: [SPEC-formal-document-kinds]
 related_capabilities: [CAP-VIEW-repository-viewer, CAP-DLV-release-handbook]
@@ -67,6 +67,11 @@ alone does not establish support. The accepted blueprint `PROP-design-document-v
 - **Given** formal canonical IDs/aliases cited by a handbook author and the accepted screen drafts
 - **When** source lookup/staleness and implemented reading interactions are checked
 - **Then** all prefixes are recognized while CAP/UC required coverage and ADR/SPEC generated membership remain unchanged; use cases, UX register and current viewer contracts agree.
+
+### [AC-08] Delivered bundle and area grammar
+- **Given** the design bundle and domain area grammar delivered by `SPEC-design-bundle-layout` at `002241b56fd8e5a446cbfa4f2e4bf42d25484455`
+- **When** current formal documents, supporting files and area/root/rename moves are read in Read, Files and handbook source lookup
+- **Then** designs and domain nodes are grouped by area, design anchors display their canonical bundle ID, all non-anchor bundle files are parent-owned support, Domain/OPS retain their applicable support paths, and current real retained documents and public source callbacks work without a second identity registry.
 
 ## 5. Screens
 
@@ -195,3 +200,16 @@ Baseline 5d1cb2661871cd3fe12cf806b58ac2515a3ffaf4 has zero explicit formal group
 The head has three explicit groups and the shared Read/Files panel, verified through all three kinds. This is
 functional coverage, not a performance claim. Source-specific commands and package evidence are in
 [development evidence](../../../docs/materials/2026-11/20261116-design-document-viewer/development-evidence.md).
+
+## Source feedback
+
+`FB-viewer-adopts-bundle-grammar` is a direct-fix source. Consume the delivered core path/area/support policy in
+viewer navigation, metadata, graph and supporting-file discovery, handbook source lookup, tests and current UX.
+Resolve it only after verified implementation and reconciliation; the core grammar itself remains core-owned.
+
+## Delivered core reconciliation
+
+The initial flat-contract pin remains immutable Planning provenance. The published core at
+`002241b56fd8e5a446cbfa4f2e4bf42d25484455` and `ADR-area-scoped-design-bundles` now supply the current path and
+area policy. This compatibility work preserves the accepted reading goals, IDs, source isolation and public
+callbacks. A separate delivered-interface record distinguishes the current contract from the historical pin.

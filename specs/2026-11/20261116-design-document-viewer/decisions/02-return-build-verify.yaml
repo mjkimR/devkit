@@ -1,0 +1,9 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Adopt published area-scoped design bundles and domain areas from delivered core002241b;
+  resolve FB-viewer-adopts-bundle-grammar before integration
+by: host
+at: '2026-11-16T08:57:32.081667Z'
