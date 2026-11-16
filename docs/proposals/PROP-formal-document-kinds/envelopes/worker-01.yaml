@@ -1,0 +1,27 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T05:22:13.569139Z'
+status: completed
+summary: Settled complete formal DESIGN/DOMAIN/OPS identity, strict schema, typed relations, detail/artifact and source-entrypoint contracts; full F1-F6 support/migration blueprint and superseding PADR; Scout plus two fresh Challenger rounds, final round clear. Proposal remains reviewing for Host plan-accept; no code implementation or handoff.
+findings: []
+assumptions:
+- 'Codex host is emulated: explicit own-worktree absolute paths/cwd and per-operation approvals; frozen author writes with full snapshots verified for Scout and both Challengers, no native boundary guarantee.'
+- Required lifecycle L1-L4 and viewer V1-V4 remain separately owned mandatory milestone phases; core is one complete L integration unit, not scope minimization.
+unverified_areas:
+- No production code or code tests run; full new-kind matrix, all five canonical migrations, docs-only built-wheel and sibling implementation evidence remain Development obligations.
+- Incoming-reference lists were complete, but body reading was bounded as recorded; no universal source-body coverage claim.
+checks:
+  rules: PASS scoped 22 rules errors=0 warnings=0; proposal boundary check clear
+  envelopes: PASS blocked=false pending_questions=[] malformed_workers=[] errors=[] before sole worker
+  review: PASS Scout recorded; challenger-01 two P2 resolved in reverify-01; fresh challenger-02 zero findings
+  whitespace: PASS git diff --check against assigned base
+  scope: PASS all tracked changes inside docs/proposals/PROP-formal-document-kinds; no production edits
+  feedback: PASS run swept repo-and-upstream recorded=0 duplicates=0
+  proposal_check: SKIP expected exit 1 SPEC_PROPOSAL_IN_PLANNING Backlog mutability refusal, not Planning validation
+  tests: SKIP Planning only, no implementation tests claimed
+diff_scope:
+  base: bde0a923192aaea7f6a467bb6a575db4ca447f9e
+  head: 6253fd85949dfae938e9589541ef38fb9c513ad0
+activity_effort: high

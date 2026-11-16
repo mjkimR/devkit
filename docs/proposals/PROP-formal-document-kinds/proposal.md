@@ -2,7 +2,7 @@
 id: PROP-formal-document-kinds
 title: First-class design, domain and operations document kinds
 summary: "Registers design, domain and operations as formal document kinds with complete identity, governance, authoring, discovery and migration support, replacing the ID-free direction."
-status: draft
+status: accepted
 created_at: 2026-11-16
 target_area: documents/
 priority: high
@@ -19,6 +19,8 @@ boundaries:
     - docs/capabilities/documents/
     - docs/capabilities/distribution/
     - docs/capabilities/delivery/
+    - docs/capabilities/governance/CAP-GOV-spec-rules.md
+    - docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md
     - docs/usecases/
     - docs/architecture/
     - docs/decisions/
@@ -143,9 +145,20 @@ triggered only by a pilot failure. Their separate ownership keeps this proposal 
 
 ## 4. Lifecycle & Retirement Criteria
 
-Backlog records the corrected direction; this proposal remains draft. Planning settles the schemas and complete
+The corrected direction is in Planning review. Planning settles the schemas and complete
 implementation contract before acceptance and handoff. One L core integration spec is the intended handoff.
 Acceptance requires the planned formal-kind support matrix, migration inventory and superseding decision scope.
 Development retirement requires F1–F6 evidence and reconciliation of current contracts and shipped assets.
 The milestone additionally requires the lifecycle and viewer phases. Neither small code size nor owner-linked
 ID-free navigation can substitute for formal support.
+
+## 5. Planning decisions
+
+The selected implementation contract is [core-contract](materials/core-contract.md). DESIGN/design,
+DOMAIN/domain and OPS/operations use flat prefixed filenames, required metadata and optional typed relations.
+Independent detail is a formal peer node. Status is draft, active or retired; only design accepts optional source
+entrypoints. Parent-owned artifacts have a narrow explicit path exception. The three formal templates/instructions,
+current migrations, public compatibility and required lifecycle/viewer interfaces are part of the core contract.
+PADR-formal-role-document-identities records the lasting schema and partial supersession choice. No unresolved
+user direction is inferred from the superseded ID-free sources. HIGH Development remains appropriate for public
+Kind/identity/output contracts. Implementation size is not a criterion for dropping required runtime or governance.

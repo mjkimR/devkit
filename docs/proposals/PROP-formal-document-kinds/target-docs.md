@@ -1,7 +1,7 @@
 ---
 id: PROP-formal-document-kinds-target
 title: Formal document kinds target blueprint
-summary: "Plans formal-kind contracts, canonical document migration and complete source/interface support matrices for design, domain and operations."
+summary: "Fixes exact formal role schemas, complete existing-system support, canonical migrations and required lifecycle and viewer interfaces."
 status: draft
 proposal: PROP-formal-document-kinds
 targets:
@@ -10,105 +10,176 @@ targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-lookup.md
   - file: docs/capabilities/documents/CAP-DOCS-document-search.md
   - file: docs/capabilities/documents/CAP-DOCS-namespaces.md
+  - file: docs/capabilities/governance/CAP-GOV-spec-rules.md
+  - file: docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md
   - file: docs/usecases/documents/UC-find-the-right-documents.md
+  - file: docs/usecases/governance/UC-keep-the-living-spec-consistent.md
   - file: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
   - file: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
+  - file: docs/architecture/ARCH-05-2-components.md
+  - file: docs/decisions/2026-11/20261116-documentation-ownership-and-linked-design-entries.md
+  - file: docs/decisions/2026-11/20261116-linked-domain-relationship-views.md
+  - file: docs/designs/DESIGN-distribution-transactions.md
+  - file: docs/designs/DESIGN-distribution-file-directory-replacement.md
+  - file: docs/domain/DOMAIN-delivery-relationships.md
+  - file: docs/domain/DOMAIN-bundle-selection-and-installation.md
+  - file: docs/operations/OPS-distribution-sync.md
   - file: docs/steering/glossary.md
   - file: docs/README.md
 ---
 
-# [PROP-formal-document-kinds-target] Target Living Spec structure for formal document kinds
+# [PROP-formal-document-kinds-target] Formal role document target blueprint
 
-This blueprint plans future contracts and migration for `PROP-formal-document-kinds`. Current documents continue
-to describe the retained implementation until Development reconciles them. Proposed new IDs below are plain text;
-Planning confirms their spelling and paths before creating references to them.
+The [selected contract](materials/core-contract.md) is normative for Development planning of this proposal.
+Current source is unchanged. Planned new IDs in this blueprint are plain text until created. All support cells
+below require implementation evidence; none claims a current passing implementation or inherits old pilot tests.
 
-## 1. System capabilities plan
+## 1. Exact core source scope and architecture
 
-| Current owner | Planned change | Boundary preserved |
+Production scope is `packages/devkit-docs/`, plus the exact Living Spec targets above, deleted/replaced canonical
+paths in §3, and the new handoff-promoted ADR-formal-role-document-identities at its generated dated decision path.
+No other capability or architecture behavior changes are authorized by the broad nearest-existing-parent `docs/`
+boundary; it permits the planned operations directory only. Archived materials and completed records remain intact.
+
+| Existing source boundary | Concrete implementation contract |
+| --- | --- |
+| features/documents/models/kinds.py | Append DESIGN/domain/operations rows exactly as core-contract §1, complete coverage/unique prefix+field assertions |
+| models/ids.py; models/parse.py; models/model.py | Derived prefix parsing/prose scanning; three new LIST_FIELDS and typed relation definitions; same-prefix aliases and serialization unchanged; test memo round-trip/fingerprint impact |
+| repositories/index.py, config.py; services/namespaces.py, rewrite.py | Reuse index/alias/memo/global identity/selection/canonical rewriting with new-kind proof; no namespace schema changes |
+| usecases/browse.py, search.py; cli/commands.py, cli/search.py | Existing operations/flags/output contracts, additive kind values; update manual help/inventory text; role status filters/history and exact pinning |
+| governance/usecases/id_convention.py | Explicit flat role grammars/coverage, canonical path/prefix/H1/stem/slug, outside-root role IDs and narrow artifact-parent/ID exclusions |
+| governance/usecases/spec_format.py | Required fields, strict role status vocabulary and reserved/inapplicable fields, new-kind scope and existing safe fixes |
+| governance/usecases/document_summary.py, document_reference.py | Required summaries; typed list relations, aliases, current/provenance distinction, ID links/fixes |
+| governance/usecases/code_entrypoints.py, services/entrypoint_paths.py | Optional DESIGN paths, liveness, snapshot deleted-path reporting and canonical role-path applicability; DOMAIN/OPS rejection is format schema |
+| bundles/docs/bundle/ | Registered three instructions, three formal templates, legacy template pointer; neutral constitutions/AGENTS/seed hierarchy/guides agree |
+| tests/unit/features/{documents,governance}/; tests/integration/features/{documents,governance}/ | Extend existing owned tiers and helpers; new formal-kind integration fixture may be test_formal_kinds.py in existing documents tier |
+| bundle/rules/{id_convention,spec_format,document_reference,document_summary,code_entrypoints}/ | Corresponding guides, wrapper tests and deterministic codes/actions reflect formal support; no new rule tier |
+| tests/integration/bundles/docs/test_distribution.py; tests/e2e/bundles/docs/test_installed_consumer.py | Exact shipped inventory, source-to-consumer selection/sync/get-context and docs-only wheel proof |
+| packages/devkit-docs/README.md | Public Kind/Python/JSON/CLI schema/help/path/status/reference/authoring documentation |
+
+Documents owns Kind/model/query; governance uses the declared documents edge. All existing exposed operations
+retain BaseUseCase/adapters contracts. No new feature edge, package, layer or test tier is needed. No docs-to-spec
+import is permitted. `devkit-docs` has no published docs MCP service; parity covers its real library/CLI/bundle/
+context/config extension surfaces. A fabricated server is outside scope. Existing feature edges and package
+isolation remain covered by architecture/lint/type and affected tests.
+
+## 2. Living Spec authority and decision reflection
+
+| Exact owner | Planned reflection |
+| --- | --- |
+| `CAP-DOCS-document-model` | Kind rows and required schema/status/path/H1; typed relations, aliases/current/provenance/supersession distinctions; public strings/JSON and shipped inventory |
+| `CAP-DOCS-documentation-ownership` | Equal formal role standing; domain conceptual authority/design mechanism/ops routing; independent detail versus parent-owned artifact policy; remove every current ID-free denial |
+| `CAP-DOCS-document-lookup` | Three kinds, filters/order/history, --file DESIGN applicability, resolve/refs; applicable ADR-only supersession refusal and unchanged outputs |
+| `CAP-DOCS-document-search` | Every new kind in selection/modes/pinning and namespace/history; existing ranking policy unchanged |
+| `CAP-DOCS-namespaces` | Formal role homes and rule applicability in registered roots; global identity unchanged |
+| `CAP-GOV-spec-rules` | Catalog/applicability of identity/strict format/status/summary/reference/entrypoint rules and artifact boundary; existing codes/fixes remain authoritative |
+| `CAP-TRACE-code-entrypoints` §§1,3.1–3.3 | Neutral DESIGN declarations/liveness/reverse lookup; DOMAIN/OPS non-applicability; no semantic correctness/public adapter claim |
+| `UC-find-the-right-documents` | Unknown role question → search/filter → direct ID → needed relation/source/artifact; global/package, retired/missing controls |
+| `UC-keep-the-living-spec-consistent` | Author from formal template, validate, rename via alias, source changes and design liveness; lifecycle phase owns its workflow integration clauses |
+| `ARCH-05-2-components` | Docs ownership of formal definitions/governance and neutral assets; no dependency-direction change |
+| Two earlier ADR files listed in targets | Exact matching partial-supersession pointers from PADR; retain accepted status and retained clauses, no rationale rewrite |
+| ADR-formal-role-document-identities (planned) | Handoff promotion of PADR; exact schema/layout/authority/partial supersession decision and restatement traces |
+| `CAP-DIST-sync-and-transactions`, `CAP-DLV-proposal-lifecycle`, glossary | Repair existing ingress only; no guarantee or permission transfer |
+| docs/README.md and devkit-docs README | Hierarchy, canonical paths, syntax/public values and useful author routing |
+
+Current contract restatements are rewritten together with the implementation and migration. The new decision
+supersedes identity/runtime-denial clauses; existing capability validity, distribution transactions, journal
+compatibility, recovery permissions and readiness remain authoritative. No historical result is restated as proof
+of formal integration. Architecture and behavioral authority are selected by responsibility, not document length.
+
+## 3. Complete canonical migration and ingress ledger
+
+The HEAD-pinned Scout inventory found exactly four current canonical role files, zero current operations files,
+no docs/packages directory and no registered namespaces. Development repeats the bounded role-root inventory at
+its starting HEAD; any additional canonical role file is included by this same policy, not left ID-free.
+
+| Old canonical/input path | New path and formal ID | Required repair / content invariant |
 | --- | --- | --- |
-| `CAP-DOCS-document-model` | Register design/domain/operations identity, schema, aliases, references, namespace and serialization contracts | Existing kind values and public compatibility |
-| `CAP-DOCS-documentation-ownership` | Replace ID-free role clauses with canonical formal kinds, per-kind metadata and detail/artifact policy | One authoritative statement owner, architectural and behavioral responsibility boundaries |
-| `CAP-DOCS-document-lookup`, `CAP-DOCS-document-search`, `CAP-DOCS-namespaces` | Cover list/filter/search/pinning/resolve/refs for every kind and namespace | Existing selection, ordering and output/error contracts |
-| `CAP-DIST-sync-and-transactions` | Repair domain/design ingress to migrated IDs and detail destinations | Selection, receipt, transaction, recovery and readiness guarantees |
-| `CAP-DLV-proposal-lifecycle` | Repair domain ingress to formal identity | Approval, dependency, provenance and handoff authority |
+| docs/designs/distribution-transactions.md | docs/designs/DESIGN-distribution-transactions.md; DESIGN-distribution-transactions | Active metadata/H1; full ID link to independent detail; CAP/ARCH authority retained |
+| docs/designs/distribution-transactions/file-directory-replacement.md | docs/designs/DESIGN-distribution-file-directory-replacement.md; DESIGN-distribution-file-directory-replacement | Active independent node; source transaction.py relative link changes from ../../../packages to ../../packages; entry relation uses full ID; eligibility/recovery remain CAP-owned |
+| docs/domain/delivery-relationships.md | docs/domain/DOMAIN-delivery-relationships.md; DOMAIN-delivery-relationships | Active metadata/H1; conceptual membership/prerequisite/provenance composition; validation/transformation remain existing owners |
+| docs/domain/bundle-selection-and-installation.md | docs/domain/DOMAIN-bundle-selection-and-installation.md; DOMAIN-bundle-selection-and-installation | Active metadata/H1; available/selection/asset/projection/receipt distinctions preserved |
+| proposal materials/legacy-operations/docs/operations/distribution-sync.md.txt | docs/operations/OPS-distribution-sync.md; OPS-distribution-sync | New active main node copied from archived content input, all relative references checked; four symptom/evidence rows and normal-state route; no duplicated recovery actions |
 
-The target list must expand to every actual canonical migration and owner before handoff; it is not an example cap.
+Current direct ingress to old role paths:
 
-## 2. Use cases and formal document migration
+- `CAP-DIST-sync-and-transactions` line 114 → DOMAIN-bundle-selection-and-installation; line 370 → DESIGN-distribution-transactions.
+- `CAP-DLV-proposal-lifecycle` line 43 → DOMAIN-delivery-relationships.
+- `docs/steering/glossary.md` lines 16/48 → the corresponding DOMAIN IDs.
+- The design entry and independent detail → each other's full formal ID where useful, never old relative paths.
+- Current source living-spec-writing, ownership capability and design-template → formal paths/IDs or placeholder syntax.
+- Distribution inventory test's old template assumption → formal template/pointer contract.
 
-Planning identifies existing author/search/resolve/reference use cases and records the applicable three-kind
-scenarios. New use cases are warranted only for distinct goals; existing scenarios must include formal-kind
-selection and expected results. Viewer screens and user interactions are owned by `PROP-design-document-viewer`.
+A scoped `rg` over docs, specs and devkit-docs found additional historical old-path mentions in these retained
+records: specs/2026-11/20261116-design-document-foundation/{tasks,reconcile}.md;
+specs/2026-11/20261116-domain-model-documents/{tasks,target-docs,reconcile}.md;
+docs/materials/2026-11/20261116-design-document-foundation/{development-evidence,target-docs}.md;
+docs/materials/2026-11/20261116-domain-model-documents/development-evidence.md. The old ADRs' ID-free policies also
+remain historical decisions with partial pointers. Preserve historical file bytes and old source-path text;
+record their source-history provenance and the old→new mapping in migration evidence. The source commit
+bde0a923192aaea7f6a467bb6a575db4ca447f9e preserves all four pre-migration canonical files. The archived operations
+source retains its halted commit provenance 55bc46fb5ce350e0a84666d6df338f8947e54e1b and .txt bytes.
 
-| Current canonical content/input | Planned canonical identity | Migration work |
+No path-shaped aliases are legal. Historical paths in retained records are source-history coordinates, not a
+promise of a live filesystem redirect. Development's migration evidence classifies every scoped old-path hit as
+repaired current ingress, preserved historical coordinate or intentional legacy-template compatibility pointer;
+any unmatched live ingress fails F5. No duplicate ID-free live canonical path is left behind. Do not mass-convert
+historical materials or completed spec bodies. No parent artifacts currently need moving; add a parent-owned
+artifact fixture to prove this policy, and check all actual ordinary source/artifact links after canonical moves.
+
+## 4. Three-kind complete support matrix (F1–F6)
+
+D = DESIGN/design, M = DOMAIN/domain, O = OPS/operations. Each cell states applicability and the test obligation;
+shared owner/mechanism columns apply to every cell. Every listed test is planned, not executed in Planning.
+Generic code counts only with all three actual new-kind nodes. Existing owned tiers above supply test locations.
+
+| Surface / criterion | D | M | O | Owner, changed or reused mechanism; exact verification obligation |
+| --- | --- | --- | --- | --- |
+| Kind/ID/Python/JSON F1,F6 | Supported DESIGN/design | Supported DOMAIN/domain | Supported OPS/operations | docs models, append enum/rows; test definitions order/coverage, exports, prefix/kind_of/parse and unchanged record keys; existing member values/order regression |
+| Canonical path/H1/namespace F1,F3 | designs/DESIGN-slug.md | domain/DOMAIN-slug.md | operations/OPS-slug.md | id_convention explicit grammars; per-kind valid global/package; wrong prefix/directory/nesting/case/word-led slug/stem/id/H1/missing token/duplicate ID controls and safe-fix idempotence |
+| Required schema/status/summary F1,F3 | Exact common fields/status | Exact common fields/status | Exact common fields/status | spec_format+summary; missing block/field, non-string, malformed YAML, blank/too-long summary, invalid status/reserved area/delivery/replacement fields; missing field fixes only, invalid value no guessed fix; retired history filters; retiring DESIGN with source deletion clears/replaces obsolete entrypoints in the same snapshot and still passes governance while resolve/refs/aliases/history retain the node |
+| Aliases/rename F1,F2,F5 | Same DESIGN prefix | Same DOMAIN prefix | Same OPS prefix | parse/index/reference reuse; valid alias resolves/pins, own/repeat/non-list/wrong-prefix/legacy/colliding aliases fail; current rewrite preserves aliases and historical records; composed global→package and package→global parent rename/move carries artifact subtree, verifies single parent and all ordinary links |
+| Typed/prose refs F1,F2,F3 | related_designs target | related_domains target | related_operations target | model LIST_FIELDS+definition target map; all three sources and CAP/UC source fixture, list/empty/scalar/mapping/non-string/wrong-prefix/missing/duplicate/alias target, prose masking, incoming/outgoing canonical grouping and rewrite |
+| Provenance/ADR supersession F1,F3,F6 | Role reserved fields fail | Role reserved fields fail | Role reserved fields fail | spec_format new-kind schema; existing Unit provenance outside refs preserved; role supersession query returns existing ARGUMENT_INVALID; ADR/PADR supersession tests unchanged |
+| List/filter/order/text/JSON F2 | Direct node | Direct node | Direct node | browse/CLI reuse plus help change; each kind choice, combined filters/status/where, pagination/ID ordering/empty/malformed controls; exact public strings/keys and legacy kinds |
+| Search/pinning F2 | Direct ranked/pinned | Direct ranked/pinned | Direct ranked/pinned | search reuse; lexical actual fixture, auto selection, dense/hybrid deterministic embedder fixture plus existing missing-extra contract; ID/alias/path/filename pin first once; filters/history/glossary selection |
+| Resolve/refs/namespaces F2 | Global+package | Global+package | Global+package | index/config/namespaces reuse; same global/selected/all namespace fixture, cross-package/global resolution/in/out refs, unknown namespace/conflicting selectors, missing/duplicate IDs; current repo absence is not proof |
+| Entrypoints F3,F5 | Optional supported paths | Inapplicable; field fails format | Inapplicable; field fails format | governance existing path model; DESIGN missing/empty/valid file/dir, malformed/external/symlink/deleted-snapshot paths, --file exact/ancestor coverage; canonical role-artifact/README excluded; DOMAIN/OPS ordinary links remain valid |
+| Detail/artifact F1,F5 | Independent detail ID + support fixture | Same canonical/artifact policy | Same canonical/artifact policy | id grammar/classification, per-kind valid canonical parent+ID-free Markdown/data/image artifact; orphan/mismatched-parent/ID-bearing artifact and un-ID'd independent nested Markdown fail; inspect links and node visibility |
+| Templates/instructions F4 | design.md + design-writing | domain.md + domain-writing | operations.md + operations-writing | bundle registration/core and templates directory; fill template into valid node, required fields/H1/relations, meaningful kind prompts, legacy design-template pointer destination |
+| Shipped consumer F4,F6 | Formal assets discoverable | Formal assets discoverable | Formal assets discoverable | exact 11 instruction/9 template inventory; source sync/get-context list+read, built-wheel docs-only consumer with spec absent, no SDD gates/records/retention requirements |
+| Canonical migration F5 | Two active migrated nodes | Two active migrated nodes | One active archived-input node | whole §3 ledger and source/link audit; current IDs found by CLI, all live ingress repaired, retained old evidence unchanged, migration old-path classification complete |
+| Maintenance F5 | create/update/split/rename/retire walkthrough | Same formal lifecycle inputs | Same formal lifecycle inputs | core fixtures prove schema/aliases/terminal/reference behavior plus artifact-owning rename/root move/split/cross-kind transfer and retirement/source-deletion cleanup; lifecycle L1–L4 proves end-to-end SDD+adaptive maintenance, no transfer/duplicate statement owner |
+| Existing system regression F6 | Additive supported kind | Additive supported kind | Additive supported kind | same document/governance/bundle suites including CAP/UC reciprocity, UX/ARCH/ADR/Unit behavior, memo/parser round-trip, no docs-to-spec import, no output/error/exit regressions |
+
+Core unit Development runs lint, type checks and `just test-affected` with mode=full fallback; targeted owned
+unit/integration/rule/built-wheel E2E tests above remain mandatory even if affected selection omits a consumer.
+Use existing deterministic search test providers to avoid network dependence; any real external model download
+needs separately authorized environment access, not an assumption in acceptance. No quantitative before/after
+performance claim is made, so no borrowed-machine baseline or checkout is required.
+
+## 5. Required phase contract and acceptance evidence
+
+| Owner | Required phase evidence | Core interface consumed |
 | --- | --- | --- |
-| docs/designs/distribution-transactions.md | DESIGN-distribution-transactions | Formal frontmatter/H1/path and ID ingress |
-| docs/designs/distribution-transactions/file-directory-replacement.md | Formal detail identity determined in Planning | Choose independently maintained formal Markdown node or parent-owned supporting detail, define one canonical identity and repair source/detail links |
-| docs/domain/delivery-relationships.md | DOMAIN-delivery-relationships | Formal schema and ID ingress from delivery/glossary |
-| docs/domain/bundle-selection-and-installation.md | DOMAIN-bundle-selection-and-installation | Formal schema and distribution/glossary ingress |
-| Archived unmerged docs/operations/distribution-sync.md | OPS-distribution-sync | Reuse the symptom composition as input; create current formal operations document with existing action authorities |
-| Any additional canonical design/domain/operations document found at Planning | Kind-appropriate formal ID | Include all current global/registered namespace role documents in migration ledger |
+| `PROP-design-document-lifecycle` L1 | Planning, reconciliation and source-impact routing know all three formal roles | Exact homes/IDs/schema; equal formal standing and content authority |
+| Lifecycle L2 | Create/update/split/rename/reclassify/retire scenarios in global/package fixtures | Active/retired with continuing governance; same-kind aliases, independent detail IDs; move artifact ownership/links on rename/root move/split/cross-kind transfer; remove obsolete DESIGN entrypoints on retirement/source deletion |
+| Lifecycle L3 | SDD skills/scaffold/adoption/baseline use formal targets and DESIGN source anchors | Neutral docs instructions/templates; shared entrypoint_bearing and existing declared feature edge |
+| Lifecycle L4 | Adaptive documenter and installed-consumer guidance preserve approach neutrality | Same schema with no implicit SDD records/gates/history |
+| `PROP-design-document-viewer` V1 | Groups/order/navigation/prose IDs and deep links | design/domain/operations, DESIGN/DOMAIN/OPS, global IDs and namespace selection |
+| Viewer V2 | Metadata/relationships/ref graph and retired/missing states | related_* current edges, aliases identity, provenance/ADR supersession distinct |
+| Viewer V3 | Canonical detail and parent-owned artifact rendering, package/deep-link parity | Flat role IDs, explicit artifact parent path and ordinary link contract |
+| Viewer V4 | Public library/static/distributed assets and deliberate handbook inclusion tests | Stable core JSON/Kind strings, source identity recognized; no accidental exclusion |
 
-Confirm DESIGN, DOMAIN and OPS prefixes and their path grammar in Planning. Define nested design detail naming
-and identity coherently before migration. Independent canonical role documents must migrate; parent-owned support
-files have documented purpose and links without pretending to be separate formal nodes. CSV, diagrams, images and
-other artifacts do not need document IDs. Archived materials, completed specs and dated pilot evidence retain
-historical representation and provenance. No duplicate live ID-free canonical route remains.
+Core acceptance cannot be credited with unrun sibling evidence. Core F1–F6 is a complete one-L integration unit;
+these two separately owned mandatory phases complete the milestone. Source overlap for CAP-TRACE and shared use
+case clauses is section-scoped and ordered core then lifecycle by Host; no concurrent cross-proposal writes.
+Viewer owns its screens/interaction draft/review and frontend verification. Core defines no screens in this turn.
 
-## 3. Architecture and decision impact
+## 6. Planning evidence and limits
 
-- Review `ARCH-05-2-components` and the document subsystem architecture for Kind ownership, existing CLI/adapters,
-  feature dependency edges and package independence. Runtime behavior remains in the docs package's existing
-  document/governance features. Planning declares new edges if actually needed.
-- Follow `ARCH-08-1-agent-output`, `CAP-ADV-agent-advisory-protocol` and `CAP-CLI-agent-cli-toolkit` for public output.
-  Document CLI kind choices/help, public Python symbols and JSON kind strings as compatibility surfaces.
-- Create a new ADR that supersedes the ID-free design clauses of
-  `ADR-documentation-ownership-and-linked-design-entries` and domain clauses of
-  `ADR-linked-domain-relationship-views`. State retained responsibility/authority clauses and their current
-  restatements. Do not rewrite historical decisions to conceal the direction change.
-- Treat the archived operations decision/source as superseded-direction evidence. Its unmerged implementation
-  is not current main. Existing recovery, journal compatibility and readiness contracts are unchanged.
-
-## 4. Development conventions, governance and source interfaces
-
-| Surface | Core planned ownership | Required result |
-| --- | --- | --- |
-| Kind enum/definition/coverage; ID parsing and Living Spec grammar | packages/devkit-docs document model and governance | Three registered kinds with explicit prefix/directory/schema/status/summary/relations and applicable entrypoints |
-| Metadata and references | Document parser/model and reference rules | Alias identity, prose/structured refs, provenance and applicable supersession remain distinct |
-| Index/list/search/pinning/resolve/refs | Existing docs repositories, browse/search use cases and CLI | Complete new-kind behavior in global and registered namespaces; public Python/JSON/CLI compatibility |
-| ID, format, summary and entrypoint policy | Existing governance rules/use cases/tests | Positive/negative metadata/path/prefix/H1/alias/reference tests; appropriate per-kind applicability |
-| Authoring assets | packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/ | Formal design/domain/operations templates and writing instructions, registered in bundle.toml/core; neutral guidance |
-| Hierarchy/pointers | Source AGENTS.md, seed/docs/README.md, repo docs/README.md, architecture-writing and living-spec-writing | Formal role homes and read/write routing agree; remove current ID-free denial of index standing |
-| Distribution | Docs integration inventories and installed-consumer E2E | Shipped template-directory asset and instruction inventory agree; sync/get-context visibility, docs-only wheel without spec |
-| SDD/adaptive lifecycle | Required dependent lifecycle proposal | spec-plan/spec-sync/spec-entrypoints, proposal scaffold, adoption and adaptive documenter integrate formal impact targets |
-| Viewer/public frontend/static/handbook | Required dependent viewer proposal | Groups, IDs/deep links, prose refs, metadata/graph, artifacts, namespaces and packaged assets; deliberate handbook inclusion policy |
-
-No document MCP server is currently published by `devkit-docs`. Verify existing published surfaces; do not create
-one merely to fill an assumed interface row. Required runtime or CLI changes are authorized Planning scope,
-not automatically excluded. A required cross-package extension must name its boundary/owner and dependency.
-
-## 5. System before and after
-
-| Dimension | Before | Required after |
-| --- | --- | --- |
-| Identity | Maintained design/domain entries are ID-free; operations exists only in halted worktree | All canonical role documents have formal identity and applicable schema |
-| Discovery | Indexed owners link to role files; role nodes absent from search/resolve/refs | All three kinds participate directly in index/list/search/pin/resolve/refs and namespaces |
-| Governance | Existing explicit Living Spec grammar omits these kinds | Every applicable identity/format/summary/reference/entrypoint rule supports them |
-| Authoring | Optional ID-free design template and role text | Registered per-kind formal templates/instructions, seed/pointers and shipped consumer evidence |
-| Maintenance | Owner-led link review with historical ID-free pilot evidence | Formal migration and complete SDD/adaptive create/update/split/rename/retire integration |
-| Viewer | Generic reading plus hardcoded prefix/group/related-field lists | Full formal-kind navigation, IDs, references, metadata, artifacts and shipped static parity |
-| Handbook | Limited recognized prefixes can silently exclude a source | Recognized formal identities/source lookup and explicit inclusion policy |
-
-## 6. Required acceptance matrices
-
-Planning produces a row for each of design, domain and operations across every surface in §4, including public
-Python/JSON compatibility and CLI help. Each cell states applicability, implementation owner, changed/reused
-mechanism and exact verification. Reuse requires new-kind evidence. No cell passes through an indexed owner link.
-
-The verification matrix must cover F1–F6 in the proposal, including valid/invalid metadata/path/prefix/H1/alias
-and relations; global plus registered namespace list/filter/search/exact-ID/pinning/resolve/incoming/outgoing refs;
-source authoring to migration to sync/get-context consumer to maintenance; all canonical migration paths;
-old-kind regressions and docs-only built-wheel consumption. Record lifecycle L1–L4 and viewer V1–V4 as required
-milestone dependencies with their owners, not unowned deferred gaps. The audit in
-[materials](materials/support-audit.md) is source inspection, not passing implementation evidence.
+[Scout evidence](materials/scout-evidence.md) distinguishes source inspection, incoming-ref counts, body sampling,
+read scopes and full snapshot verification. [Support audit](materials/support-audit.md) is the earlier baseline
+inspection; it is not formal-kind runtime proof. [Core contract](materials/core-contract.md) §8 compares formal
+layout/schema alternatives and assigns deterministic schema enforcement. The PADR records partial supersession.
+Development tests, all five migrations and dependent lifecycle/viewer evidence remain unimplemented in Planning.
