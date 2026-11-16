@@ -125,3 +125,7 @@ See `ADR-example`.
 capabilities:
   - CAP-AREA-example
 ```
+
+## Formal roles
+
+related_designs, related_domains and related_operations are typed lists on any indexed kind. Reject malformed shapes, wrong prefixes, missing targets and repeated canonical targets. Same-prefix aliases are identity, never edges; current references are canonically rewritten. Role relations have no reciprocal or cycle obligation.

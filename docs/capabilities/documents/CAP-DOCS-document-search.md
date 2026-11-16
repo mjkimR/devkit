@@ -141,3 +141,7 @@ accept=..., glossary_paths=...)` returns `SpecSearchResult` (`query`, `expanded`
 `metadata` (the embedded text) expose the policy steps. `load_glossary(root)` defaults to the global file;
 `load_glossary(root, paths)` merges the supplied paths. The search use case supplies paths from its existing
 namespace selection; a library caller selecting candidates with `accept` supplies matching glossary paths explicitly.
+
+Formal design/domain/operations nodes are candidates in all existing search modes, kind/namespace filters and
+exact-ID/path pinning. Retired nodes require --history; their aliases continue to resolve. Related role fields
+supply current reference navigation without becoming mandatory ranking or reciprocal-link obligations.

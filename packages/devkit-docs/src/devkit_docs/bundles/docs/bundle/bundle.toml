@@ -132,8 +132,26 @@ id = "docs-pointer"
 kind = "guidance"
 source = "guidance/docs-pointer.md"
 
+[[assets]]
+id = "design-writing"
+kind = "instruction"
+source = "instructions/design-writing.md"
+
+[[assets]]
+id = "domain-writing"
+kind = "instruction"
+source = "instructions/domain-writing.md"
+
+[[assets]]
+id = "operations-writing"
+kind = "instruction"
+source = "instructions/operations-writing.md"
+
 [presets.core]
 assets = [
+    "design-writing",
+    "domain-writing",
+    "operations-writing",
     "ux-writing",
     "usecase-writing",
     "contract-authoring",

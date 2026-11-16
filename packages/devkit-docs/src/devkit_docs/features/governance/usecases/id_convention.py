@@ -63,6 +63,7 @@ from devkit_docs.features.documents.models.namespace import Namespace
 from devkit_docs.features.documents.repositories.index import is_document_file
 from devkit_docs.features.documents.services.namespaces import docs_roots, living_path
 from devkit_docs.features.governance import FIX_COMMAND, document_index, explicitly_targeted, namespaces
+from devkit_docs.features.governance.services.role_artifacts import artifact_state
 
 RULE_ID = "RULE-id-convention"
 type Add = Callable[..., None]
@@ -298,12 +299,25 @@ def _architecture(target: Callable[..., _Target], parts: list[str], stem: str, d
     return target(slug=match.group(3), expected_id=stem)
 
 
+def _role(label: str, directory: str, prefix: str) -> _Grammar:
+    def grammar(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
+        slug = stem.removeprefix(f"{prefix}-")
+        if len(parts) != 3 or not stem.startswith(f"{prefix}-") or not is_word_led_slug(slug):
+            return target(path_issue=f"{label} must be stored at {docs_root}/{directory}/{prefix}-{{word-led-slug}}.md")
+        return target(slug=slug, expected_id=stem)
+
+    return grammar
+
+
 # The path and stem grammar of each Living Spec kind: every Living Spec row of the kind table needs one.
 _LIVING_GRAMMARS: dict[Kind, _Grammar] = {
     Kind.CAPABILITY: _capability,
     Kind.USECASE: _area_slug("Use case", "usecases", "UC"),
     Kind.UX: _area_slug("UX document", "ux", "UX"),
     Kind.ARCHITECTURE: _architecture,
+    Kind.DESIGN: _role("Design", "designs", "DESIGN"),
+    Kind.DOMAIN: _role("Domain", "domain", "DOMAIN"),
+    Kind.OPERATIONS: _role("Operations", "operations", "OPS"),
 }
 
 
@@ -378,12 +392,31 @@ def _targets(ctx: RuleContext) -> list[_Target]:
             if not row.living_spec:
                 continue
             for path in _markdown(ctx, f"{docs_root}/{row.directory}"):
-                if not path.endswith("/README.md"):
+                artifact, problem = artifact_state(ctx, path, registered)
+                if artifact:
+                    if problem:
+                        targets.append(_Target(path, row.kind, path_issue=problem))
+                elif not path.endswith("/README.md"):
                     targets.append(_living_spec(path, row.kind, docs_root, registered))
+    # Binary support needs an owner too; do not read its contents or pretend it has an ID.
+    for docs_root in docs_roots(registered):
+        for directory in ("designs", "domain", "operations"):
+            for candidate in ctx.cache.find_files(ctx.workspace_root / docs_root / directory, extensions=None):
+                path = ctx.cache.relative_name(candidate)
+                if path.endswith(".md"):
+                    continue
+                artifact, problem = artifact_state(ctx, path, registered)
+                if artifact and problem:
+                    kind = {"designs": Kind.DESIGN, "domain": Kind.DOMAIN, "operations": Kind.OPERATIONS}[directory]
+                    targets.append(_Target(path, kind, path_issue=problem))
     covered = {target.path for target in targets}
     for document in document_index(ctx).documents:
         if document.kind is Kind.MILESTONE and document.path not in covered:
             targets.append(_Target(document.path, Kind.MILESTONE, path_issue=_MILESTONE_PATH_ISSUE))
+        if document.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS} and document.path not in covered:
+            targets.append(
+                _Target(document.path, document.kind, path_issue="formal role ID is outside its canonical docs root")
+            )
     return targets
 
 
@@ -594,6 +627,19 @@ class IdConventionRule(BaseRule):
                 f"Rewrite the heading as `# [{target.expected_id}] <title>`; an ID later in the heading is read as a"
                 " reference, so the fix leaves it",
             )
+        if target.kind in {Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS}:
+            try:
+                metadata = ctx.cache.get_frontmatter(path) or {}
+            except FrontmatterError:
+                metadata = {}
+            expected = f"# [{target.expected_id}] {metadata.get('title', '')}"
+            if heading is None or heading.text.rstrip() != expected:
+                add(
+                    path,
+                    heading.number if heading else 1,
+                    "Role heading must be # [ID] title matching frontmatter",
+                    f"Write {expected}",
+                )
         sharing = owners.get(target.expected_id, [])
         if len(sharing) > 1:
             add(

@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-documentation-ownership
 title: Documentation ownership and linked entries
-summary: "Assigns one normative owner per documentation responsibility and question-specific routes to maintained ID-free design and domain explanations, without extending document identity or runtime support."
+summary: "Assigns one normative owner per responsibility and question-specific navigation among formal design, domain and operations documents, independent detail and parent-owned support."
 area: documents
 status: active
 usecases: []
@@ -12,15 +12,14 @@ usecases: []
 ## 1. Summary
 
 Documentation responsibilities determine ownership. Domain meaning, current implementation design and operations
-composition are distinct roles alongside architecture and behavioral contracts. A role does not require its own
-indexed Kind. `ADR-documentation-ownership-and-linked-design-entries` records the representation decision.
+composition are distinct roles alongside architecture and behavioral contracts. All three have formal indexed Kinds and prefixes. `ADR-formal-role-document-identities` records the representation decision.
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: shared semantic ownership, architecture overlap and question-specific ID-free design and domain navigation.
+- **In-Scope**: shared semantic ownership, architecture overlap and question-specific formal design, domain and operations navigation.
 - **Out-of-Scope**: identity/index/placement grammar (`CAP-DOCS-document-model`), search
   (`CAP-DOCS-document-search`), lookup (`CAP-DOCS-document-lookup`) and namespaces (`CAP-DOCS-namespaces`).
-  Operations home, lifecycle and viewer support remain with `SPEC-formal-document-kinds`, `PROP-design-document-lifecycle` and `PROP-design-document-viewer`.
+  Lifecycle and viewer integration remain with `PROP-design-document-lifecycle` and `PROP-design-document-viewer`.
 
 ## 3. Business Rules & Policies
 
@@ -68,39 +67,30 @@ use cases retain actor goals. Cross-cutting technical concepts differ from domai
 contracts. Deployment states topology; operations selects existing diagnosis/recovery owners. Quality and risk
 already belong to arc42. These are responsibility boundaries, not a chapter tutorial.
 
-### 3.3 Representation
+### 3.3 Formal roles and useful detail
 
-1. **Entry**: Authors SHOULD maintain current design explanations as ID-free `docs/designs/<slug>.md` entries,
-   with analogous `designs/` under a registered package's docs root.
-2. **Independent usefulness**: Authors SHOULD make the entry useful alone for its question, mechanism overview,
-   authority boundary and next action, and each detail independently understandable.
-3. **Supporting content**: WHEN useful content exceeds the entry's question, authors SHOULD link only the needed
-   detail, diagrams, examples or datasheets, optionally under `<slug>/`.
-4. **Discovery**: Authors SHOULD add selected question-specific links from existing owners to needed design entries.
-5. **No identity borrowing**: Authors MUST keep ID-free design entries and supporting files outside indexed document identity.
+1. **Formal standing**: Authors MUST give independently maintained design, domain and operations Markdown its own
+   DESIGN, DOMAIN or OPS ID and canonical flat path in the corresponding global or registered package docs root
+   (`CAP-DOCS-document-model`, `RULE-id-convention`).
+2. **Independent usefulness**: Authors SHOULD state the reader question, overview, authority boundary and next useful
+   action. An independent detail, worked example or datasheet has its own question/maintenance seam and formal peer ID.
+3. **Supporting artifacts**: Parent-owned support MUST live under `<PARENT-ID>/artifacts/` in the same role root,
+   with one canonical same-kind parent. Supporting Markdown MUST be ID-free and name that parent; non-Markdown
+   files need no fake identity. An alias does not authorize an orphan old-ID subtree (`RULE-id-convention`).
+4. **Maintenance**: WHEN renaming, moving roots, splitting or reclassifying content, authors MUST retain one canonical
+   artifact owner and repair ordinary links; a cross-kind predecessor remains retired with its replacement named.
+5. **Navigation**: Authors SHOULD use selected full-ID links or typed related_* lists for the reader's question;
+   no reciprocal registry, all-pairs links, whole-layer prerequisite or fixed hop count is required.
 
-A small design may need only its entry. No empty hierarchy, all-pairs links, reciprocal registry, whole-layer reading
-prerequisite or fixed hop cap is required. Full IDs cite indexed owners; ordinary Markdown links reach ID-free
-content. `docs refs` retains indexed reverse lookup; ordinary design links create no index/search/resolve/refs node.
-
-### 3.4 Domain representation
-
-1. **Domain home**: Authors SHOULD maintain conceptual relationship entries as ID-free `docs/domain/<slug>.md`,
-   with analogous `domain/` under a registered package's docs root.
-2. **Independent usefulness**: Authors SHOULD give each entry its reader question, relationship overview,
-   authority boundary and next useful step, splitting only useful supporting detail.
-3. **Discovery**: Authors SHOULD add selected question-specific links from existing owners to needed domain entries.
-4. **No identity borrowing**: Authors MUST keep ID-free domain entries and supporting files outside indexed document identity.
-
-Domain entries compose concepts, identity, relationships and lifecycles alongside structure and contracts.
-They need no class catalog, schema catalog, fixed authoring order, reciprocal registry, all-pairs links,
-whole-layer prerequisite or fixed hop cap. Full IDs cite indexed owners; ordinary links reach ID-free entries.
-Existing owner lookup/search and indexed reverse references remain available; domain entries create no independent
-index/search/resolve/refs node. `ADR-linked-domain-relationship-views` records the representation choice.
+Domain owns conceptual knowledge alongside structure and contracts. Design owns implementation explanation,
+examples and datasheets. Operations selects existing diagnosis/action owners from evidence and normal-state
+observations; it does not gain their recovery authority. A normative behavioral statement keeps its existing owner
+unless transferred explicitly under §3.1. This migration transfers no distribution or delivery guarantees.
 
 ## 4. Interfaces & Data Contracts
 
-The optional `.devkit/managed/docs/templates/design-template.md` is an authoring aid, not a schema or generator.
-The docs bundle supplies generic instructions and this template through its existing templates asset.
-Semantic ownership, source agreement and ordinary navigation are **Review only**; document rules check applicable
-identity/frontmatter/references without validating these semantics or ID-free ordinary links.
+The docs bundle supplies formal design/domain/operations templates and corresponding writing instructions.
+`templates/design-template.md` remains a compatibility pointer to `design.md`. Formal nodes participate directly
+in index/list/search/resolve/refs with `CAP-DOCS-document-model` identity and typed relation rules. Semantic ownership,
+source agreement and ordinary artifact/source link destinations are Review only; applicable structural rules do
+not prove those semantic or ordinary-link properties. `ADR-formal-role-document-identities` defines the schema.

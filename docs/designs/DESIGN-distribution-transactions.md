@@ -1,4 +1,12 @@
-# Journaled replacement of a file and directory
+---
+id: DESIGN-distribution-transactions
+title: "Journaled replacement of a file and directory"
+status: active
+summary: "Explains journaled file and directory replacement, its independent mechanism detail and authoritative distribution boundaries."
+related_designs: [DESIGN-distribution-file-directory-replacement]
+---
+
+# [DESIGN-distribution-transactions] Journaled replacement of a file and directory
 
 **Reader question:** How can one managed path become a directory or the reverse without losing rollback information?
 
@@ -10,7 +18,7 @@ content from directories created or replaced during that change set.
 `ARCH-05-4-distribution-components` §3 locates the installation service that implements them.
 `ARCH-06-runtime-view` §1 supplies system interaction context; it is not prerequisite reading for the mechanism.
 
-Next read [replacement detail](distribution-transactions/file-directory-replacement.md): it explains preflight, journal content, deletion ordering
+Next read `DESIGN-distribution-file-directory-replacement`: it explains preflight, journal content, deletion ordering
 and rollback, and links the implementing symbols. The detail is independently readable for a reader arriving at it
 directly. Source links provide the implementing artifacts.
 

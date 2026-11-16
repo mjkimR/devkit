@@ -54,3 +54,7 @@ entrypoints:
   - src/example/engine.py
   - src/example/cli/
 ```
+
+## Formal roles
+
+Canonical flat DESIGN documents optionally declare the same safe existing workspace-relative paths as capabilities/use cases. Role README/artifact paths do not qualify; DOMAIN/OPS declarations fail format checks. Retired DESIGN nodes still receive liveness and snapshot source-deletion checks. Remove or replace obsolete declarations in the source deletion change.

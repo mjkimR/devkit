@@ -33,14 +33,23 @@ def test_the_id_grammar_keeps_its_values() -> None:
         ("FB", Kind.FEEDBACK),
         ("MAT", Kind.MATERIAL),
         ("MS", Kind.MILESTONE),
+        ("DESIGN", Kind.DESIGN),
+        ("DOMAIN", Kind.DOMAIN),
+        ("OPS", Kind.OPERATIONS),
     ]
-    assert ids.ID_SOURCE == r"(?:CAP|UC|UX|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT|MS)-[A-Za-z0-9][A-Za-z0-9_-]*"
+    assert (
+        ids.ID_SOURCE
+        == r"(?:CAP|UC|UX|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT|MS|DESIGN|DOMAIN|OPS)-[A-Za-z0-9][A-Za-z0-9_-]*"
+    )
     assert kind_of("UX-login") is Kind.UX
     assert kind_of("MS-roadmap") is Kind.MILESTONE and kind_of("XX-a") is None and kind_of("MS-") is None
     assert {
         Kind.FEEDBACK: frozenset({"resolved", "promoted", "dismissed", "forwarded"}),
         Kind.DECISION: frozenset({"superseded"}),
         Kind.PROPOSAL: frozenset({"rejected"}),
+        Kind.DESIGN: frozenset({"retired"}),
+        Kind.DOMAIN: frozenset({"retired"}),
+        Kind.OPERATIONS: frozenset({"retired"}),
     } == TERMINAL_STATUSES
 
 
@@ -48,14 +57,22 @@ def test_the_rows_keep_each_kind_fact() -> None:
     def kinds_where(predicate) -> set[Kind]:
         return {row.kind for row in definitions() if predicate(row)}
 
-    assert kinds_where(lambda row: row.living_spec) == {Kind.CAPABILITY, Kind.USECASE, Kind.UX, Kind.ARCHITECTURE}
+    assert kinds_where(lambda row: row.living_spec) == {
+        Kind.CAPABILITY,
+        Kind.USECASE,
+        Kind.UX,
+        Kind.ARCHITECTURE,
+        Kind.DESIGN,
+        Kind.DOMAIN,
+        Kind.OPERATIONS,
+    }
     assert kinds_where(lambda row: row.area_scoped) == {Kind.CAPABILITY, Kind.USECASE, Kind.UX}
-    assert kinds_where(lambda row: row.entrypoints) == {Kind.CAPABILITY, Kind.USECASE}
+    assert kinds_where(lambda row: row.entrypoints) == {Kind.CAPABILITY, Kind.USECASE, Kind.DESIGN}
     assert {row.prefix for row in definitions() if row.heading_token} == {
-        "SPEC", "PLAN", "TASKS", "REC", "ADR", "FB", "CAP", "UC", "UX", "ARCH", "MS",
+        "SPEC", "PLAN", "TASKS", "REC", "ADR", "FB", "CAP", "UC", "UX", "ARCH", "MS", "DESIGN", "DOMAIN", "OPS",
     }  # fmt: skip
     assert kinds_where(lambda row: row.summary is Summary.ALWAYS) == {
-        Kind.CAPABILITY, Kind.USECASE, Kind.UX, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE,
+        Kind.CAPABILITY, Kind.USECASE, Kind.UX, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE, Kind.DESIGN, Kind.DOMAIN, Kind.OPERATIONS,
     }  # fmt: skip
     assert {row.kind: row.anchor for row in definitions() if row.summary is Summary.ANCHOR} == {
         Kind.PROPOSAL: "proposal.md",
@@ -74,6 +91,9 @@ def test_the_rows_keep_each_kind_fact() -> None:
         "plan": "PLAN-",
         "milestone": "MS-",
         "depends_on": "MS-",
+        "related_designs": "DESIGN-",
+        "related_domains": "DOMAIN-",
+        "related_operations": "OPS-",
     }
 
 
@@ -86,7 +106,7 @@ def test_by_prefix_reads_the_prefix_before_the_first_dash() -> None:
 @pytest.mark.parametrize(
     ("rows", "fragment"),
     [
-        (ROWS[:-1], "missing: milestone"),
+        (ROWS[:-1], "missing: operations"),
         ((ROWS[1], ROWS[0], *ROWS[2:]), "enum order"),
         ((*ROWS, ROWS[-1]), "enum order"),
         ((replace(ROWS[0], prefix="UC"), *ROWS[1:]), "prefix 'UC'"),
@@ -115,8 +135,8 @@ def test_an_inconsistent_table_is_refused(rows, fragment: str) -> None:
 
 def test_a_kind_without_a_row_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(kinds, "_TABLE", ROWS[:-1])
-    with pytest.raises(KindTableError, match="milestone has no row"):
-        definition(Kind.MILESTONE)
+    with pytest.raises(KindTableError, match="operations has no row"):
+        definition(Kind.OPERATIONS)
 
 
 def test_the_parse_memo_fingerprint_covers_the_table() -> None:

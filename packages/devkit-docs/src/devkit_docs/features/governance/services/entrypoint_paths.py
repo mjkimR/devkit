@@ -17,7 +17,8 @@ from pathlib import Path
 
 from devkit_core.core import UnsafePathError, resolve_within
 
-from devkit_docs.features.documents import definitions
+from devkit_docs.features.documents import Kind, definitions
+from devkit_docs.features.documents.models.ids import is_word_led_slug
 from devkit_docs.features.documents.services.namespaces import living_path
 from devkit_docs.utils.paths import ROOT
 
@@ -29,6 +30,16 @@ def entrypoint_bearing(path: str) -> bool:
     """
     living = living_path(path, namespaces=None)
     directories = tuple(f"docs/{row.directory}/" for row in definitions() if row.entrypoints)
+    for row in definitions():
+        if row.kind is Kind.DESIGN and living.startswith(f"docs/{row.directory}/"):
+            parts = living.split("/")
+            stem = Path(living).stem
+            return (
+                len(parts) == 3
+                and living.endswith(".md")
+                and stem.startswith(f"{row.prefix}-")
+                and is_word_led_slug(stem.removeprefix(f"{row.prefix}-"))
+            )
     return living.startswith(directories) and living.endswith(".md")
 
 

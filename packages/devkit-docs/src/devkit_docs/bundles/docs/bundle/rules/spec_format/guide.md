@@ -99,3 +99,7 @@ capabilities:
   - CAP-HARN-context-pack-slicing
 ---
 ```
+
+## Formal roles
+
+Formal design/domain/operations require nonempty string id/title/status and a double-quoted English summary. Status is exactly draft, active or retired. Reject area, proposal, decomposed_from, depends_on, milestone, supersedes and superseded_by; DOMAIN/OPS also reject entrypoints. Valid ID-free parent-owned Markdown artifacts are exempt. Missing fields use existing deterministic fixes; invalid values are never guessed.

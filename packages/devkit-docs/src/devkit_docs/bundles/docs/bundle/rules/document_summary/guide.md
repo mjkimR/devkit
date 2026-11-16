@@ -68,3 +68,7 @@ summary: Ranks documents for a query by meaning, pinning exact IDs and narrowing
 status: active
 ---
 ```
+
+## Formal roles
+
+Formal design/domain/operations summaries receive the existing required English string and maximum-length checks, including retired nodes. The format rule additionally enforces role summary double quoting.

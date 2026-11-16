@@ -1,4 +1,11 @@
-# Bundle selection and installation
+---
+id: DOMAIN-bundle-selection-and-installation
+title: "Bundle selection and installation"
+status: active
+summary: "Relates available bundles, requested selection, conceptual assets, projected paths and receipt evidence."
+---
+
+# [DOMAIN-bundle-selection-and-installation] Bundle selection and installation
 
 ## Question
 

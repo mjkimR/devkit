@@ -1,14 +1,23 @@
-# File/directory replacement: the transaction mechanism
+---
+id: DESIGN-distribution-file-directory-replacement
+title: "File/directory replacement: the transaction mechanism"
+status: active
+summary: "Explains preflight, journal evidence, forward ordering and rollback for distribution file and directory replacement."
+entrypoints:
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/transaction.py
+---
+
+# [DESIGN-distribution-file-directory-replacement] File/directory replacement: the transaction mechanism
 
 **Reader question:** Which ordering and recorded evidence let a managed file become a directory, and the reverse?
 
 This non-normative detail explains the current transaction.py implementation.
 `CAP-DIST-sync-and-transactions` §3 owns eligibility, safety and recovery guarantees.
-For orientation, the [design entry](../distribution-transactions.md) locates this mechanism within distribution.
+For orientation, the `DESIGN-distribution-transactions` locates this mechanism within distribution.
 
 ## Preflight and the change set
 
-In [transaction.py](../../../packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/transaction.py),
+In [transaction.py](../../packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/transaction.py),
 `require_writable` uses `_removed_owned`, `blocked_parent` and `_emptied` to distinguish a path freed by this
 change set from an obstruction. It returns the directories that a file will replace. This makes both directions
 part of the planned change rather than a blind overwrite.

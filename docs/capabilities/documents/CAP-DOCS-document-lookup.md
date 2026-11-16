@@ -86,7 +86,7 @@ changes an argument, output, code or exit status.
 ### 3.4 `devkit docs list [KIND]...`
 
 1. **Kinds**: `KIND...` restricts to `capability`, `usecase`, `ux`, `architecture`, `decision`, `proposal`,
-   `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material`, `milestone` (default: all).
+   `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material`, `milestone`, `design`, `domain`, `operations` (default: all).
 2. **Filters** (all combine with AND; `list` has no text filter: look up an ID or title text with `devkit docs search`,
    `CAP-DOCS-document-search`):
    - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. A given `--status` replaces the default
@@ -226,3 +226,8 @@ notices always exit `0`.
 | `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
 | `DOCS_OVERLAY_FAILED` | `WARNING` | `devkit_docs.base.errors.OverlayFailedWarning` | `list`: a `devkit.docs.status_overlay` extension failed to load, raised, returned a malformed result, named a field that is no lower-case identifier or set a reserved field (3.6); its result is left out and the detail names it. The exit code is that of any other warning (4.4). |
 | `DOCS_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_docs.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (3.6), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |
+
+Formal DESIGN, DOMAIN and OPS IDs participate in resolve/refs and kind filtering exactly as the other indexed kinds.
+Their retired status is hidden by default and visible with --history or explicit --status retired; aliases still
+resolve repository-wide. DESIGN optional source entrypoints also participate in --file; DOMAIN/OPS do not declare
+them. `docs supersession` remains ADR/PADR-only and refuses role IDs with ARGUMENT_INVALID.

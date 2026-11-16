@@ -145,3 +145,8 @@ created_at: 2026-10-13
 - **Given**: an ADR that is superseded in part
 - **When**: the agent runs `devkit docs supersession <ID>`
 - **Then**: it receives a `[SUPERSEDED_BY: ...]` line with `scope=partial` and the statement text and exits `0`
+
+For an unknown implementation, conceptual or operational question, the agent searches/filters design, domain or
+operations, resolves the selected full ID, then reads only the useful related node, source path or ordinary support
+artifact. Package selection includes global nodes; resolve/refs remain repository-wide. A retired node is reachable
+with history/direct ID, while a missing ID reports the existing unresolved result. No whole-layer reading is needed.

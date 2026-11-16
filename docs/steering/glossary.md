@@ -13,7 +13,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 ## 1. Distribution and Packaging
 
 For relationships among availability, requested selection, asset identity, destinations and evidence, read
-[Bundle selection and installation](../domain/bundle-selection-and-installation.md).
+`DOMAIN-bundle-selection-and-installation`.
 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
@@ -45,7 +45,7 @@ For relationships among availability, requested selection, asset identity, desti
 ## 3. Delivery Workflows and Tasks
 
 For proposal/spec identity and the difference between membership, prerequisite and provenance, read
-[Delivery relationships](../domain/delivery-relationships.md).
+`DOMAIN-delivery-relationships`.
 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |

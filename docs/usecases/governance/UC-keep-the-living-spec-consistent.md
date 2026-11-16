@@ -108,3 +108,8 @@ created_at: 2026-10-13
 - **Given**: a commit marks a spec's `reconcile.md` `resolved` with a `modified` target that the commit does not change
 - **When**: the commit gate runs `devkit rules check --staged`
 - **Then**: `RULE-reconcile-contract` reports the target, and committing the Living Spec edit with the record clears it
+
+For formal role authoring, the agent starts from the matching neutral template, gives independent detail its own
+ID, validates metadata/references and reviews artifact destinations. A same-kind rename retains a same-prefix alias
+and moves parent-owned support; a retired DESIGN removes obsolete source entrypoints in the source-deletion change.
+Role format checks do not judge conceptual meaning or semantic source agreement.

@@ -30,22 +30,16 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
   keep recovery steps and permissions with that owner.
 - If transferring a normative statement, replace its previous normative restatement in the same change and name
   the receiving owner; otherwise use a concise non-normative summary citing the owner.
-- For a current mechanism question, write an ID-free `docs/designs/<slug>.md` entry, or `designs/<slug>.md` under
-  the registered package docs root, with question, overview, authority boundary and next useful action.
-- For a conceptual relationship question, write an ID-free `docs/domain/<slug>.md` entry, or `domain/<slug>.md`
-  under the registered package docs root, with question, relationship overview, authority boundary and next useful step.
-- Link selected owners to domain entries for the reader's question; retain validity and transformation contracts
-  with their existing owners, and keep term definitions in the glossary.
-- Keep domain entries outside indexed identity; use ordinary links without promising independent search/resolve/refs nodes.
-- Add only useful supporting detail, examples, diagrams or datasheets; make each detail directly understandable,
-  and keep a small design in its entry without an empty hierarchy.
-- Link selected owners to the entry for the reader's question; use full IDs for indexed owners and ordinary links
-  for ID-free content without borrowing indexed identity or promising search/resolve/refs coverage.
-- Load only the owner or linked detail needed for the current question; require no reciprocal registry, all-pairs
-  links, whole-layer reading or fixed hop count.
-- Review owner uniqueness, source agreement and ordinary link destinations; choose content by responsibility,
-  never by length or numerical detail.
-- Use `../templates/design-template.md` only as an optional authoring aid; adapt its prompts to useful content.
+- Give design, domain and operations entries first-class IDs: `DESIGN-<slug>` in `designs/`, `DOMAIN-<slug>` in
+  `domain/`, and `OPS-<slug>` in `operations/` under the global or registered package docs root.
+- Read `design-writing.md`, `domain-writing.md` or `operations-writing.md` before editing its role; use the matching
+  template in `../templates/`. Keep these roles equally formal without a fixed authoring sequence.
+- Give independently maintained Markdown details/examples/datasheets their own formal peer IDs; reserve
+  `<PARENT-ID>/artifacts/` for parent-owned support, with no fake IDs for CSV or images.
+- Use full IDs for current document navigation and optional typed related_* lists only where useful; require no
+  reciprocal registry, all-pairs links, whole-layer reading or fixed hop count.
+- Review owner uniqueness, source agreement and ordinary artifact/source link destinations; choose content by
+  responsibility, never by length or numerical detail.
 
 ## Completed Specs and Traceability
 

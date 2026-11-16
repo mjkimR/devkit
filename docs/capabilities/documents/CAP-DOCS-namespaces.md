@@ -147,3 +147,8 @@ and the other registered namespaces' mirrors to mention; when the working direct
 and every registered namespace's mirror to mention; and nothing without registered namespaces or for another
 directory. A malformed registry raises `DOCS_CONFIG_INVALID`, which the command reports as a
 `CONTEXT_DOCUMENTS_EXTENSION_FAILED` warning.
+
+Formal roles have the same flat canonical homes under every registered docs root: designs/DESIGN-slug.md,
+domain/DOMAIN-slug.md and operations/OPS-slug.md. Their ID/format/summary/reference rules apply there as globally;
+only DESIGN accepts optional workspace-relative entrypoints. Parent-owned artifacts require a same-kind canonical
+parent in that same root. Namespace selection never permits duplicate IDs/aliases or limits resolve/refs.

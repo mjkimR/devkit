@@ -59,7 +59,7 @@ commit.
 | `RULE-spec-lifecycle` | A spec's `status`, its task checklist and its `reconcile.md` status agree. | Sets `status: completed` on a stale `spec.md`. |
 | `RULE-spec-progress` | A `draft` or `planned` spec with a checked task is marked `in-progress`. | Sets `status: in-progress`. |
 | `RULE-reconcile-contract` | A `reconcile.md` is well formed; in a snapshot run its `modified` targets changed in the diff. | none |
-| `RULE-code-entrypoints` | Every `entrypoints` path of a capability or use case is a valid, existing workspace path. | none |
+| `RULE-code-entrypoints` | Every `entrypoints` path of a capability, use case or canonical DESIGN document is a valid, existing workspace path. | none |
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
 | `RULE-steering-documents` | `docs/steering/` and each registered namespace's `docs/packages/<name>/steering/` are flat and hold ID-free files with a `title` and a short English `summary`, within the per-directory file-count and body-size caps; optional namespace glossary and UX registers follow the root contract, and legacy package glossaries receive manual migration findings. | none |
@@ -519,3 +519,16 @@ keys have the same meaning as plain keys. Current rules use run-scoped cached ow
 prior ownership through the generic rule repository, without requiring installed workflow definitions.
 `packages/devkit-spec/tests/integration/features/policy/test_adaptive_dev.py` and
 `packages/devkit/tests/integration/features/rules/test_ownership.py` cover applicability and normal binding spellings.
+
+### Formal role validation
+
+RULE-id-convention checks the flat DESIGN/DOMAIN/OPS path/stem/id/H1 grammar in global and registered roots and
+reports role IDs declared outside their canonical root. It validates the narrow parent-owned artifact exception:
+same-root/same-kind canonical parent, ID-free supporting Markdown naming the parent, no stray nested independent
+Markdown. Binary artifacts need an owner but no fake ID. These checks never move files.
+
+RULE-spec-format requires nonempty string metadata, exact draft/active/retired status, double-quoted summary and
+rejects reserved/inapplicable role fields. DOMAIN/OPS entrypoints are rejected; DESIGN paths receive the existing
+liveness and snapshot deletion checks. RULE-document-reference checks the three typed related_* role lists,
+including canonical-target duplicates and alias rewriting. RULE-document-summary applies the existing English and
+length checks. Retired role nodes remain checked; semantic ownership and ordinary artifact/source links are reviewed.

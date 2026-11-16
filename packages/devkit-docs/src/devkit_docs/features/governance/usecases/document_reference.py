@@ -156,7 +156,18 @@ class DocumentReferenceRule(BaseRule):
             historical = index.is_historical(document)
             for issue in document.issues:
                 add(document, issue.line, issue.message, "Use the documented relation field type")
+            seen_role_relations: set[tuple[str, str]] = set()
             for ref in document.references:
+                if ref.field in {"related_designs", "related_domains", "related_operations"}:
+                    key = (ref.field, index.canonical_id(ref.target))
+                    if key in seen_role_relations:
+                        add(
+                            document,
+                            ref.line,
+                            f"{ref.field} repeats target {key[1]}",
+                            "Keep each canonical target once in the relation list",
+                        )
+                    seen_role_relations.add(key)
                 self._reference(index, document, ref, historical, add)
             for ref in document.provenance:
                 if ref.field in {"decomposed_from", "supersedes"} and (
