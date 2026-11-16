@@ -2,7 +2,7 @@
 id: PROP-proposal-precedence-edges
 title: Enforced ordering between proposals
 summary: Makes an ordering claim between proposals visible to the handoff gate or to Planning start, so a draft whose premise depends on other proposals not yet being handed off surfaces when that premise is stale.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-16
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
