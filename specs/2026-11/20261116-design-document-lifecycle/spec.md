@@ -1,38 +1,26 @@
 ---
-id: PROP-design-document-lifecycle
+id: SPEC-design-document-lifecycle
 title: Formal documentation authoring and reconciliation lifecycle
-summary: "Integrates complete authoring, Planning, review, reconciliation and maintenance for formal design, domain and operations kinds under SDD and adaptive-dev."
-status: accepted
-created_at: 2026-11-16
-target_area: delivery/
-priority: high
-size: L
-planning_effort: high
-dev_effort: high
-milestone: MS-documentation-system-evolution
-boundaries:
-  owns:
-  - packages/devkit-spec/
-  - packages/devkit-adaptive/
-  - docs/capabilities/delivery/
-  - docs/capabilities/traceability/
-  - docs/usecases/governance/
-  - docs/usecases/delivery/
-  - docs/usecases/harness/
-  - docs/decisions/
-  - docs/proposals/PROP-design-document-lifecycle/
-  excludes:
-  - packages/devkit-docs/
-  - packages/devkit-viewer/
-task_kind: feature
-workflow: sdd-proposal
+summary: Integrates complete authoring, Planning, review, reconciliation and maintenance for formal design, domain and operations kinds under SDD and adaptive-dev.
+status: planned
+created: 2026-11-16
 depends_on:
-- SPEC-formal-document-kinds
+  - SPEC-formal-document-kinds
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-design-document-lifecycle] Formal documentation authoring and reconciliation lifecycle
+# [SPEC-design-document-lifecycle] Formal documentation authoring and reconciliation lifecycle
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-design-document-lifecycle on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-design-document-lifecycle`
+- Target Docs Blueprint: `PROP-design-document-lifecycle-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `SPEC-formal-document-kinds` supplies formal identity, core governance, neutral authoring assets and migration.
 Delivery integration must treat design, domain and operations as first-class impact targets throughout their
@@ -43,7 +31,26 @@ The core proposal replaces the earlier operations prerequisite. `SPEC-design-doc
 `SPEC-domain-model-documents` are historical context, not substitutes for the formal core prerequisite.
 This phase and `PROP-design-document-viewer` are required to complete `MS-documentation-system-evolution`.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Formal documentation authoring and reconciliation lifecycle so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which Planning, review and reconciliation boundaries must consult each formal kind, and how does impact
   assessment select affected statements without requiring unaffected layers for every change?
@@ -54,7 +61,7 @@ This phase and `PROP-design-document-viewer` are required to complete `MS-docume
 - **Q4**: How do proposal target-docs scaffolds, brownfield adoption and SDD baseline coverage expose the formal
   roles? How does adaptive-dev maintain the same documents without implicit SDD Units, envelopes or gates?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Use the formal core schemas and Kind definitions. Document when an agent reads or creates each role, identifies
   its authoritative owner, and selects affected formal documents as required impact/reconciliation targets.
@@ -76,18 +83,18 @@ This phase and `PROP-design-document-viewer` are required to complete `MS-docume
 - Preserve materials as historical evidence and decisions under the selected approach. Do not create a parallel
   registry, fixed whole-layer reading order or additional approval/recovery engine.
 
-### Planning decisions
+#### Planning decisions
 
 1. Extend existing delivery boundaries, consuming the shared ownership and Kind policy from
    `SPEC-formal-document-kinds`. The comparison and source evidence are in
-   [integration contract](materials/integration-contract.md); the lasting choice is
-   `PADR-formal-document-delivery-integration`. No parallel applicability registry or workflow engine is added.
+   [integration contract](../../../docs/materials/2026-11/20261116-design-document-lifecycle/integration-contract.md); the lasting choice is
+   `ADR-formal-document-delivery-integration`. No parallel applicability registry or workflow engine is added.
 2. Planning, implementation review and reconciliation assess all three formal responsibilities against the actual
    change. Record affected IDs, source evidence and required actions in existing proposal/plan/reconcile or review
    bodies. Record a bounded reason for an unaffected responsibility; do not manufacture empty documents or edits.
 3. Canonical IDs, aliases, relation fields, detail identity, status and entrypoint eligibility are supplied by the
    core. Delivery consumes them; it does not extend CAP↔UC reciprocity, doorway restrictions or ADR supersession
-   automatically to formal roles. The selected interface is pinned in [core interface](materials/core-interface-pin.md); delivered runtime/assets
+   automatically to formal roles. The selected interface is pinned in [core interface](../../../docs/materials/2026-11/20261116-design-document-lifecycle/core-interface-pin.md); delivered runtime/assets
    and their evidence are required before Development handoff.
 4. The lifecycle phase owns spec/adaptive consumers and `CAP-TRACE-code-entrypoints` derivation/review/apply
    integration. Core owns neutral docs assets, canonical migration and shared schema/policy contracts. Viewer owns
@@ -96,9 +103,9 @@ This phase and `PROP-design-document-viewer` are required to complete `MS-docume
    reused entrypoint flow. No independent engine or migration platform is introduced. Development effort remains
    high because shipped agent-facing guidance and cross-package semantics change.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
-`PROP-design-document-lifecycle-target` and [verification matrix](materials/integration-contract.md#5-verification-matrix)
+`PROP-design-document-lifecycle-target` and [verification matrix](../../../docs/materials/2026-11/20261116-design-document-lifecycle/integration-contract.md#5-verification-matrix)
 name exact source/test owners and the required per-kind scenario cross-product. Planning records no passing code tests.
 
 - **L1 — Authoring and maintenance**: All three kinds have verified create/update/split/rename/reclassify/retire paths using
@@ -115,7 +122,7 @@ name exact source/test owners and the required per-kind scenario cross-product. 
   `get-context` and affected bundle/integration tests pass with existing lifecycle and CAP/UC behavior preserved.
   Reused mechanisms have complete new-kind evidence; their existence alone does not establish support.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Start Planning against the required formal core contract; handoff ordering must make its delivered schemas
 available before integration depends on them. This remains one L feature proposal covering delivery integration.
@@ -124,10 +131,11 @@ verified SDD/adaptive authoring and maintenance paths for every formal kind. Cor
 this phase or complete the milestone.
 
 
-### Dependency readiness
+#### Dependency readiness
 
 The selected future core interface is pinned at 504e2e12006ab3e2aad2b8ce470607646ad4c4ac with verified artifact hash
-in [core interface](materials/core-interface-pin.md). It settles schema consumption for Planning. Handoff still
+in [core interface](../../../docs/materials/2026-11/20261116-design-document-lifecycle/core-interface-pin.md). It settles schema consumption for Planning. Handoff still
 requires delivered core definitions, templates, writing instructions, migration ledger and entrypoint policy at an
 identified implementation revision; the selected contract is not runtime evidence.
 L1–L4 remain mandatory if any interface value changes. No unverified generic path counts as support.
+

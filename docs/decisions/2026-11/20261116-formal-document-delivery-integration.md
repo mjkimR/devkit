@@ -1,15 +1,15 @@
 ---
-id: PADR-formal-document-delivery-integration
+id: ADR-formal-document-delivery-integration
 title: Consume formal documentation policy at delivery boundaries
 summary: "For formal document maintenance across delivery approaches, we consume shared document policy at existing delivery boundaries, to preserve complete impact coverage and ownership, accepting explicit per-change semantic review."
-proposal: PROP-design-document-lifecycle
-status: draft
+proposal: SPEC-design-document-lifecycle
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-formal-document-delivery-integration] Consume formal documentation policy at delivery boundaries
+# [ADR-formal-document-delivery-integration] Consume formal documentation policy at delivery boundaries
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---
@@ -62,6 +62,6 @@ them. Development waits for the delivered core interface and reruns affected com
 
 ## 6. Confirmation
 
-`target-docs.md` names source and current-contract owners. `materials/integration-contract.md` §5 maps L1–L4 to
+`target-docs.md` names source and current-contract owners. `docs/materials/2026-11/20261116-design-document-lifecycle/integration-contract.md` §5 maps L1–L4 to
 scaffold, entrypoint, bundle, installed-consumer and scripted lifecycle scenarios. Semantic owner/source agreement
 is Review only with source-identified comparisons; actual document/reference checks supplement it.
