@@ -11,6 +11,7 @@ plan: PLAN-viewer-internal-simplification
 - [x] **Task 1.1**: Remove the npm library packaging, the `pack` action, its CI step and `FRONTEND_CHECK` entry,
   with the two devkit tests updated
   - **_Boundary**: `packages/devkit-viewer/frontend/package.json`, `packages/devkit-viewer/frontend/package-lock.json`,
+    `packages/devkit-viewer/frontend/.prettierignore`,
     `scripts/viewer.sh`, `justfile`, `.github/workflows/ci.yml`, `scripts/affected_tests.py`,
     `packages/devkit/tests/integration/package/test_viewer_script.py`,
     `packages/devkit/tests/e2e/package/test_affected_tests.py`
