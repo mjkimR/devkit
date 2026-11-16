@@ -27,7 +27,7 @@ def test_the_seed_holds_the_ux_directory_but_no_register() -> None:
     assert (seed / "ux/README.md").is_file()
     assert not (seed / "steering/ux-objects.md").exists()
     assert "| **`ux/`** | UX Documents |" in raw("seed/docs/README.md")
-    assert "templates/{capability,usecase,ux,decision,milestone}.md" in text(DOCS / "AGENTS.md")
+    assert "templates/{capability,usecase,ux,decision,milestone,design,domain,operations}.md" in text(DOCS / "AGENTS.md")
 
 
 def test_ux_writing_is_a_core_instruction_with_the_agreed_rules() -> None:

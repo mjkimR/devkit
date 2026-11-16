@@ -36,6 +36,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+import yaml
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
@@ -59,6 +60,7 @@ from devkit_docs.features.documents import (
     Kind,
     by_prefix,
     definitions,
+    field_node,
     in_source_directory,
     is_document_file,
 )
@@ -178,10 +180,11 @@ def _problems(ctx: RuleContext, path: str, registered: tuple[Namespace, ...]) ->
             problems.append(
                 _Problem("role summary must be a nonempty string", "Write an English double-quoted summary")
             )
-        elif not re.search(
-            r'^summary:[ \t]*"(?:[^"\\]|\\.)*"[ \t]*(?:#[^\n]*)?$', ctx.cache.read_text(path), re.MULTILINE
-        ):
-            problems.append(_Problem("role summary must be double-quoted", "Quote summary with YAML double quotes"))
+        else:
+            block = locate(ctx.cache.read_text(path))
+            node = field_node(block.header, "summary") if block else None
+            if node is None or not isinstance(node[1], yaml.ScalarNode) or node[1].style != '"':
+                problems.append(_Problem("role summary must be double-quoted", "Quote summary with YAML double quotes"))
     if is_proposal_anchor(path):
         for field in EFFORT_FIELDS:
             if field not in data:

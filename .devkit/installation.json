@@ -2116,7 +2116,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "ab6c7c745c79cd6fefdafc9236afed605a432e27791f0e1176dde6f834feadbc"
+      "sha256": "7262bc62f8035ac7c31687ba2114531bbdd31bea7ceb3b29b27620faea82ff01"
     },
     ".devkit/managed/docs/rules/document_reference/rule.py": {
       "mode": 420,

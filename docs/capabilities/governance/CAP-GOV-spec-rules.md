@@ -80,7 +80,8 @@ commit.
    rewritten by a fix. `RULE-spec-lifecycle` is the exception: its conditions concern completed bundles, so it checks
    them in every run.
 4. **Materials**: `docs/materials/` (and any `/materials/` directory, including `docs/packages/<name>/materials/`)
-   is free-form and exempt from every authoring rule.
+   is free-form and exempt from authoring rules, except identity declarations and the explicitly declared
+   related_designs/related_domains/related_operations typed metadata contract. Freeform material prose stays exempt.
 5. **Namespaces**: `docs/packages/<name>/` follows the conventions of `docs/` (`CAP-DOCS-namespaces`); IDs and
    references stay repository-wide.
 6. **Malformed `[tool.docs]`**: a malformed `[tool.docs]` table is not a violation. It MUST fail the run

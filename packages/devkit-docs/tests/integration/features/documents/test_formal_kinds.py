@@ -306,3 +306,186 @@ def test_role_aliases_reject_own_repeated_cross_prefix_legacy_and_colliding_iden
             f"docs/{directory}/{prefix}-other.md": doc(f"{prefix}-other"),
         },
     )
+
+
+def test_summary_quoting_uses_actual_yaml_value_not_body_examples(tmp_path: Path) -> None:
+    path = "docs/designs/DESIGN-summary.md"
+    unquoted = doc("DESIGN-summary", body='```yaml\nsummary: "Body example."\n```\n').replace(
+        'summary: "Sample formal role concepts and mechanisms."', "summary: Unquoted summary."
+    )
+    assert any("double-quoted" in v.message for v in check(SpecFormatRule(), tmp_path, {path: unquoted}))
+    quoted_key = doc("DESIGN-summary").replace("summary:", '"summary":')
+    assert not check(SpecFormatRule(), tmp_path, {path: quoted_key})
+
+
+@pytest.mark.parametrize(
+    "field,prefix,directory",
+    [
+        ("related_designs", "DESIGN", "designs"),
+        ("related_domains", "DOMAIN", "domain"),
+        ("related_operations", "OPS", "operations"),
+    ],
+)
+def test_material_opt_in_role_metadata_is_typed_without_policing_its_prose(
+    tmp_path: Path, field: str, prefix: str, directory: str
+) -> None:
+    material = "docs/materials/MAT-evidence.md"
+    parent = f"docs/{directory}/{prefix}-sample.md"
+    for value in ["not-a-list", "[12]", "[UC-wrong]", f"[{prefix}-absent]", f"[{prefix}-sample, {prefix}-sample]"]:
+        assert check(
+            DocumentReferenceRule(),
+            tmp_path,
+            {parent: doc(f"{prefix}-sample"), material: doc("MAT-evidence", f"{field}: {value}\n")},
+        )
+    body = "Historical freeform `UC-absent` remains as written.\n"
+    files = {
+        parent: doc(f"{prefix}-sample", f"aliases: [{prefix}-old]\n"),
+        material: doc("MAT-evidence", f"{field}: [{prefix}-old]\n", body),
+    }
+    assert not [v for v in check(DocumentReferenceRule(), tmp_path, files, fix=True) if not v.fixed]
+    text = (tmp_path / material).read_text()
+    assert f"{field}: [{prefix}-sample]" in text and body in text
+
+
+def test_artifact_parent_must_be_indexed_and_not_a_symlink(tmp_path: Path) -> None:
+    write_files(
+        tmp_path,
+        {"support/real.md": doc("DESIGN-parent"), "docs/designs/DESIGN-parent/artifacts/data.csv": "a,b\n1,2\n"},
+    )
+    (tmp_path / "docs/designs/DESIGN-parent.md").symlink_to(tmp_path / "support/real.md")
+    assert not DocumentIndex.load(tmp_path).documents
+    assert any("eligible canonical parent" in v.message for v in check(IdConventionRule(), tmp_path))
+
+
+def test_artifact_uses_exact_parent_id_and_visible_first_heading(tmp_path: Path) -> None:
+    path = "docs/designs/DESIGN-parent/artifacts/data.md"
+    owner = {"docs/designs/DESIGN-parent.md": doc("DESIGN-parent")}
+    assert check(IdConventionRule(), tmp_path, {**owner, path: "# Data\nDESIGN-parent-extra\n"})
+    good = "```markdown\n# [DESIGN-example] Fenced example\n```\n# Data\nSupport for `DESIGN-parent`.\n"
+    assert not check(IdConventionRule(), tmp_path, {**owner, path: good})
+
+
+def test_parent_snapshot_deletion_checks_unchanged_artifacts_and_honors_exclusions(tmp_path: Path) -> None:
+    import subprocess
+
+    from devkit_agt.features.rules import RuleContext, evaluate_rules, git_snapshot
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    git("init", "-q", "-b", "main")
+    git("config", "user.email", "test@example.com")
+    git("config", "user.name", "Test")
+    parent = "docs/designs/DESIGN-parent.md"
+    artifact = "docs/designs/DESIGN-parent/artifacts/data.csv"
+    write_files(tmp_path, {parent: doc("DESIGN-parent"), artifact: "a,b\n1,2\n"})
+    git("add", "-A")
+    git("commit", "-qm", "base")
+    git("rm", "-q", parent)
+    snapshot = git_snapshot(tmp_path, staged=True)
+    ctx = RuleContext(workspace_root=tmp_path, changed_files=list(snapshot.changed), snapshot=snapshot)
+    result = evaluate_rules(ctx, [IdConventionRule()])
+    assert not result.errors
+    assert [v.file for v in result.violations] == [artifact]
+    excluded = RuleContext(
+        workspace_root=tmp_path,
+        changed_files=list(snapshot.changed),
+        snapshot=snapshot,
+        exclude=["docs/designs/DESIGN-parent/artifacts/**"],
+    )
+    assert not evaluate_rules(excluded, [IdConventionRule()]).violations
+    # Composed rename moves the support subtree too, so the staged snapshot is valid.
+    dest = tmp_path / "docs/designs/DESIGN-renamed.md"
+    dest.write_text(doc("DESIGN-renamed", "aliases: [DESIGN-parent]\n"))
+    (tmp_path / "docs/designs/DESIGN-parent").rename(tmp_path / "docs/designs/DESIGN-renamed")
+    git("add", "-A")
+    snapshot = git_snapshot(tmp_path, staged=True)
+    result = evaluate_rules(
+        RuleContext(workspace_root=tmp_path, changed_files=list(snapshot.changed), snapshot=snapshot),
+        [IdConventionRule()],
+    )
+    assert not result.errors and not result.violations
+
+
+def test_persistent_memo_roundtrip_rebuilds_all_role_kinds_and_relations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from devkit_docs.features.documents.repositories import index as index_module
+
+    (tmp_path / ".devkit/transient").mkdir(parents=True)
+    write_files(
+        tmp_path,
+        {
+            "docs/designs/DESIGN-sample.md": doc("DESIGN-sample", "related_domains: [DOMAIN-sample]\n"),
+            "docs/domain/DOMAIN-sample.md": doc("DOMAIN-sample", "related_operations: [OPS-sample]\n"),
+            "docs/operations/OPS-sample.md": doc("OPS-sample", "related_designs: [DESIGN-sample]\n"),
+        },
+    )
+    first = DocumentIndex.load(tmp_path)
+    assert (tmp_path / ".devkit/transient/docs/document-index.json").is_file()
+    index_module._parsed.clear()
+
+    def no_fresh_parse(relative: str, text: str) -> None:
+        raise AssertionError(f"Unexpected fresh parse: {relative}")
+
+    monkeypatch.setattr(index_module, "_fresh", no_fresh_parse)
+    second = DocumentIndex.load(tmp_path)
+    assert [(d.id, d.kind, d.references) for d in first.documents] == [
+        (d.id, d.kind, d.references) for d in second.documents
+    ]
+
+
+def test_persistent_role_memo_is_reused_in_a_separate_process(tmp_path: Path) -> None:
+    import subprocess
+    import sys
+
+    (tmp_path / ".devkit/transient").mkdir(parents=True)
+    write_files(
+        tmp_path,
+        {
+            "docs/designs/DESIGN-sample.md": doc("DESIGN-sample", "related_domains: [DOMAIN-sample]\n"),
+            "docs/domain/DOMAIN-sample.md": doc("DOMAIN-sample", "related_operations: [OPS-sample]\n"),
+            "docs/operations/OPS-sample.md": doc("OPS-sample", "related_designs: [DESIGN-sample]\n"),
+        },
+    )
+    # First process writes the memo; the second refuses every fresh parse.
+    program = """
+import json, sys
+from pathlib import Path
+from devkit_docs.features.documents import DocumentIndex
+from devkit_docs.features.documents.repositories import index as module
+assert not module._parsed
+if sys.argv[2] == 'reuse':
+    def forbidden(*args):
+        raise AssertionError('fresh parse would hide missing persistent-memo support')
+    module._fresh = forbidden
+index = DocumentIndex.load(Path(sys.argv[1]))
+print(json.dumps([(d.id, str(d.kind), [(r.field, r.target) for r in d.references]) for d in index.documents]))
+"""
+    outputs = []
+    for phase in ("write", "reuse"):
+        result = subprocess.run(
+            [sys.executable, "-c", program, str(tmp_path), phase], text=True, capture_output=True, check=False
+        )
+        assert result.returncode == 0, result.stderr
+        outputs.append(json.loads(result.stdout))
+    assert outputs[0] == outputs[1] and len(outputs[1]) == 3
+    assert {row[1] for row in outputs[1]} == {"design", "domain", "operations"}
+
+
+@pytest.mark.parametrize(("directory", "prefix", "kind"), ROLES)
+def test_quoted_yaml_identity_keys_are_valid_and_fix_is_idempotent(
+    tmp_path: Path, directory: str, prefix: str, kind: Kind
+) -> None:
+    del kind
+    path = f"docs/{directory}/{prefix}-quoted.md"
+    text = (
+        doc(f"{prefix}-quoted")
+        .replace("id:", '"id":')
+        .replace("title:", '"title":')
+        .replace("status:", '"status":')
+        .replace("summary:", '"summary":')
+    )
+    assert not check(IdConventionRule(), tmp_path, {path: text}, fix=True)
+    assert not check(SpecFormatRule(), tmp_path)
+    assert (tmp_path / path).read_text() == text

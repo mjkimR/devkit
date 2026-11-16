@@ -17,7 +17,7 @@ plan: PLAN-formal-document-kinds
   - **Verification**: Rule unit/integration/wrapper suites and maintenance fixtures.
 
 - [x] **Task 3**: Shipped formal authoring assets and neutral installed-consumer coverage
-  - **_Boundary**: `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`, `packages/devkit-docs/tests/integration/bundles/docs/`, `packages/devkit-docs/tests/e2e/bundles/docs/`, `packages/devkit-docs/README.md`, `.devkit/installation.json` (sync output), `packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`, `packages/devkit-spec/tests/integration/bundles/spec/test_writing_guidance.py`
+  - **_Boundary**: `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`, `packages/devkit-docs/tests/integration/bundles/docs/`, `packages/devkit-docs/tests/e2e/bundles/docs/`, `packages/devkit-docs/README.md`, `.devkit/installation.json` (sync output), `packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`, `packages/devkit-spec/tests/integration/bundles/spec/test_writing_guidance.py`, `packages/devkit-spec/tests/integration/bundles/spec/test_ux_guidance.py`
   - _Requirements: AC-05, AC-07_
   - **Verification**: Distribution inventories, sync/get-context and built-wheel consumer E2E.
 
