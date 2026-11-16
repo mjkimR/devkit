@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from devkit_agt.features.workflow.models.envelope import Envelope
-from devkit_agt.features.workflow.models.errors import EnvelopeCommitInvalidError
+from devkit_agt.features.workflow.models.envelope import KIND_COMMANDS, Envelope
+from devkit_agt.features.workflow.models.errors import EnvelopeCommitInvalidError, workflow_command
 
 
 def commit_message(anchor_id: str, envelope: Envelope) -> tuple[str, str]:
@@ -24,16 +24,38 @@ def commit_message(anchor_id: str, envelope: Envelope) -> tuple[str, str]:
     return subject, body
 
 
-def require_authored(envelope: Envelope, workflow: str, segment: int, stages: set[str]) -> None:
-    """A summary and exact current identity exclude unfilled skeletons and stale segments."""
-    if (
-        not envelope.summary.strip()
-        or envelope.stage not in stages
-        or envelope.workflow != workflow
-        or envelope.segment != segment
-    ):
-        raise EnvelopeCommitInvalidError(
-            "envelope needs a nonempty summary, a declared stage and the current workflow/segment",
-            target_files=[envelope.file],
-            fix="Finish this existing envelope with its current Unit identity, or commit it manually",
+def require_authored(
+    envelope: Envelope, workflow: str, segment: int, stages: set[str], *, unit: str = "", retry: str = ""
+) -> None:
+    """A summary and exact current identity exclude unfilled skeletons and stale segments.
+
+    The refusal names every failing field and the writer flag that fills it; ``unit`` (shell-quoted,
+    workspace-relative) completes the writer command and ``retry`` is the same-file commit command its fix ends with.
+    """
+    problems: list[str] = []
+    flags: list[str] = []
+    if not envelope.summary.strip():
+        problems.append("summary is empty")
+        flags.append('--summary "<1-3 line judgment>"')
+    if envelope.stage not in stages:
+        problems.append(f"stage {envelope.stage!r} is not a stage of workflow {workflow}")
+        flags.append("--stage <a declared stage>")
+    stale = envelope.workflow != workflow or envelope.segment != segment
+    if stale:
+        problems.append(
+            f"workflow/segment {envelope.workflow or '-'}/{envelope.segment} is not the current {workflow}/{segment}"
         )
+    if not problems:
+        return
+    writer = f"envelope {envelope.kind}" if envelope.kind in KIND_COMMANDS else f"envelope new --kind {envelope.kind}"
+    if unit:
+        writer += f" --unit {unit}"
+    added = f" plus {' and '.join(flags)}" if flags else ""
+    where = " in the current segment" if stale else ""
+    then = f", then run `{retry}`" if retry else ""
+    raise EnvelopeCommitInvalidError(
+        f"envelope is not authored: {'; '.join(problems)}",
+        target_files=[envelope.file],
+        fix=f"Remove the uncommitted [TARGET] and write it again{where} with `{workflow_command(writer)}` and its"
+        f" original options{added}{then}",
+    )

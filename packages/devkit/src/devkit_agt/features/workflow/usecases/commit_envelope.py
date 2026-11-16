@@ -67,7 +67,14 @@ class CommitEnvelopeUseCase(BaseUseCase):
                 raise EnvelopeCommitInvalidError("selected envelope is malformed", *(str(e) for e in errors))
             if envelope.kind == "reverify" and not any(e.name == envelope.review for e in loaded.all()):
                 raise EnvelopeCommitInvalidError("reverify names no existing review/challenger round")
-            require_authored(envelope, ref.doc.id, ref.binding.segment, {s.id for s in ref.doc.stages})
+            require_authored(
+                envelope,
+                ref.doc.id,
+                ref.binding.segment,
+                {s.id for s in ref.doc.stages},
+                unit=shlex.quote(unit),
+                retry=retry,
+            )
             subject, body = commit_message(str(anchor_doc.get("id", "")), envelope)
             target = path.relative_to(workspace.root).as_posix()
             already = repo.preflight(target, content, before)

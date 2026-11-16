@@ -502,6 +502,13 @@ def compose_envelope(
                 target_files=["--scope-extensions-file"],
                 fix="Pass a YAML list of exact paths, positive task ordinals, reasons and AC requirements",
             ) from exc
+    if kind == "reverify" and not (flags.summary or "").strip():
+        # The judgment closing a round; the explicit commit refuses an empty summary, so refuse it before writing.
+        raise EnvelopeFlagError(
+            "a reverify needs --summary: the judgment that closes the round",
+            target_files=["--summary"],
+            fix='Add --summary "<1-3 line judgment of the round>" to the same command',
+        )
     draft = Envelope(
         kind=kind,
         status=status,
