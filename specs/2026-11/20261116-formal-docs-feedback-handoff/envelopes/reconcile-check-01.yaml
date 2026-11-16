@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:17:37.382682Z'
+status: completed
+summary: 'reconcile-reviewer: two docs targets match the only Living Spec files changed; no-impact reasoning, domain placement, entrypoints and listed feedback confirmed; no normative statement moved; later fc76c9ebf wording fixes change no target'
+findings: []
+assumptions:
+- reviewer verified head 966a2f634; fc76c9ebf only rewords four sentences in the two targets
+checks:
+  lint: PASS devkit rules check --ci --base cdbcdf224 (reviewer, exit 0)
+  diff_check: PASS git diff --check cdbcdf224..HEAD (reviewer)
+diff_scope:
+  base: cdbcdf22427e99ae31a40ca20c9922e6bb6a6382
+  head: 966a2f6344bf2e35110d71692d8f814135df2747
