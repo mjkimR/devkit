@@ -22,7 +22,7 @@ routes symptoms that only a comparison of these surfaces separates.
 A refused tool call returns `{"error": {...}}` with the advisory `code` as structured content and marks the result as
 an error. `uv run devkit mcp status --format json` reports `package`, `runtime` (`absent`, `unknown`, `unavailable` or
 `available`), per-host `project` `state` and `collisions`, and refused plans under `errors`; text prints
-`[MCP: action=status package= runtime=]` and one `[MCP_HOST: ...]` line per host. `devkit sync`, `devkit sync
+`[MCP: action=status package=<package> runtime=<runtime>]` and one `[MCP_HOST: ...]` line per host. `devkit sync`, `devkit sync
 --registrations-only` and `devkit mcp setup` report registration advisories under `notices`.
 
 | Symptom or state | Discriminating evidence | Next useful owner |
