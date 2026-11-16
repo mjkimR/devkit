@@ -82,24 +82,6 @@ documents.
   document moves between areas or docs roots while keeping its ID?
 - **Q4**: Who updates the flat-grammar pins of `PROP-design-document-lifecycle` and `PROP-design-document-viewer`,
   and do both proposals take a prerequisite edge to this proposal before their handoff?
-- **Q5**: How do the design, domain and operations templates change? The leading item is the question section.
-  - **Question section.** The design template opens with `## 1. Reader question and mechanism` and the domain
-    template with `## 1. Conceptual question`; the operations template has none. In the delivered documents the
-    question restates the frontmatter `summary` as an interrogative: `DOMAIN-bundle-selection-and-installation` has
-    the summary "Relates available bundles, requested selection, conceptual assets, projected paths and receipt
-    evidence." and the question "How do available bundles, requested selection, conceptual assets, projected paths
-    and receipt evidence relate?". A reader arriving from `devkit docs list` or search has already read the summary.
-    Proposed resolution: remove the question section and label from the templates. Open each document with a
-    problem statement per kind: the problem the mechanism solves for design, the concepts readers confuse for
-    domain, the observed symptom for operations. Move the scoping function to the writing instructions as an
-    authoring step: settle the one question the document answers before writing, and split or drop a document
-    that has none. Planning confirms this against `CAP-DOCS-documentation-ownership` §3.3, which asks authors to
-    state the reader question.
-  - **Other gaps.** The five delivered documents follow none of the templates' numbered sections and no rule
-    checks sections. The templates carry no authority boundary section although
-    `CAP-DOCS-documentation-ownership` §3.3 asks for one. Template guidance is body prose rather than comments.
-    The operations and domain templates describe their routing and relationship tables in prose only. Planning
-    selects which of these this proposal fixes.
 
 ## 3. Proposed Design & Impact
 
@@ -124,8 +106,8 @@ documents.
   ownership and entrypoint clauses stay in force.
 - **Contracts and assets.** Update the path grammar in `CAP-DOCS-document-model`, `CAP-DOCS-documentation-ownership`,
   `CAP-DOCS-namespaces` and `CAP-TRACE-code-entrypoints`, the kind definition rows, the affected rules and their
-  tests, `docs/README.md`, and the design template and writing instruction in the docs bundle. Template alignment
-  for all three kinds, starting with the question section, follows Q5. The domain template and writing instruction take the area path.
+  tests, `docs/README.md`, and the design and domain templates and writing instructions in the docs bundle. These
+  asset edits change path, `area` and support-file statements only.
 - **Dependent proposals.** `PROP-design-document-lifecycle` and `PROP-design-document-viewer` consume the grammar
   this proposal delivers; Q4 settles how their pins change.
 
@@ -135,6 +117,8 @@ documents.
   boundaries between roles.
 - No viewer or lifecycle implementation; those stay with their proposals.
 - No area or bundle for operations documents, and no bundle for domain documents.
+- No change to template sections or authoring guidance; `PROP-formal-document-templates` owns that alignment and
+  follows this proposal.
 - No registry or validation of area names beyond the directory and `area` field match.
 
 ### Expected acceptance evidence
@@ -150,6 +134,6 @@ documents.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning settles Q1–Q5 and records the layout choice as a PADR. This stays one M feature proposal. Acceptance and
+Planning settles Q1–Q4 and records the layout choice as a PADR. This stays one M feature proposal. Acceptance and
 handoff follow the existing gates, and handoff precedes the handoff of `PROP-design-document-lifecycle` and
 `PROP-design-document-viewer`. Retirement requires B1–B4.
