@@ -69,7 +69,7 @@ workflow *args:
 gate *args:
     uv run --no-active --package devkit-agt devkit gate "$@"
 
-# Frontend of devkit-viewer (needs Node): install, lint, check, test, build (the committed page) or pack [dir]
+# Frontend of devkit-viewer (needs Node): install, lint, check, test, or build (the committed page)
 viewer action *args:
     bash scripts/viewer.sh "$@"
 

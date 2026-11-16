@@ -125,10 +125,7 @@ ALL_SOURCES_TESTS = (f"{DEVKIT}/tests/integration/package/test_agent_output_cont
 # The devkit-viewer frontend: a change there names the frontend checks (Node and npm), as the CI viewer job runs them,
 # rebuilding the committed page last; it selects only the pytest tests that read it by a literal path.
 FRONTEND_PREFIXES = ("packages/devkit-viewer/frontend/", "scripts/viewer.sh")
-FRONTEND_CHECK = (
-    "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer pack"
-    " && just viewer build"
-)
+FRONTEND_CHECK = "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer build"
 
 # Paths that select no test unless a test reads them by a literal path: agent projections, guides, the handbook
 # snapshot, CI and smoke scripts.

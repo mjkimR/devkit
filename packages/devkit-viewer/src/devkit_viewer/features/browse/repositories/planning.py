@@ -1,9 +1,8 @@
-"""Planning sources: the ``plan-<slug>`` worktrees and refs whose proposal directory overlays the checkout's.
+"""Planning sources: the ``plan-<slug>`` worktrees and local branches whose proposal directories overlay the checkout's.
 
-A source is a worktree on ``plan-<slug>`` (read from its files), else the local branch ``plan-<slug>``, else the
-remote-tracking ``<remote>/plan-<slug>`` whose remote sorts first. Each contributes only
-``docs/proposals/PROP-<slug>/``. One scan starts ``git worktree list``, ``git for-each-ref`` and one
-``git cat-file --batch``; nothing fetches or writes.
+A source is another worktree on ``plan-<slug>`` (read from its files), else the local branch ``plan-<slug>``;
+remote-tracking refs are never sources. Each contributes only ``docs/proposals/PROP-<slug>/``. One scan starts
+``git worktree list``, ``git for-each-ref`` and one ``git cat-file --batch``; nothing fetches or writes.
 """
 
 from __future__ import annotations
@@ -27,7 +26,6 @@ from devkit_viewer.features.browse.repositories.worktree import TreeItem, Workin
 
 _SLUG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 _LOCAL = re.compile(r"refs/heads/plan-(?P<slug>[^/]+)")
-_REMOTE = re.compile(r"refs/remotes/(?P<remote>[^/]+)/plan-(?P<slug>[^/]+)")
 _SKIPPED_MODES = (b"120000", b"160000")  # symlinks and submodules are never served
 
 
@@ -84,7 +82,7 @@ def planning_sources(root: Path) -> tuple[dict[str, PlanningSource], list[str]]:
     """The winning source of each slug by ID, and the enumeration failures.
 
     The checkout's own ``plan-<slug>``, known from the worktree list, has no source: the checkout already shows it.
-    A branch or remote-tracking ref merged into the checkout's ``HEAD`` holds nothing newer and is skipped; a worktree
+    A local branch merged into the checkout's ``HEAD`` holds nothing newer and is skipped; a worktree
     stays a source, because it can hold saved, uncommitted edits.
     """
     root = root.resolve()
@@ -106,24 +104,14 @@ def planning_sources(root: Path) -> tuple[dict[str, PlanningSource], list[str]]:
             "--no-merged=HEAD",
             "--format=%(refname)%00%(objectname)",
             "refs/heads/plan-*",
-            "refs/remotes/*/plan-*",
         ).decode("utf-8", errors="surrogateescape")
     except GitError as exc:
         errors.append(f"git for-each-ref: {exc}")
         output = ""
-    local: list[PlanningSource] = []
-    remote: list[tuple[str, PlanningSource]] = []
     for line in output.splitlines():
         refname, _, commit = line.partition("\0")
         if (match := _LOCAL.fullmatch(refname)) and (slug := _slug(match["slug"])):
-            local.append(PlanningSource(f"branch:plan-{slug}", "branch", f"plan-{slug}", slug, commit))
-        elif (match := _REMOTE.fullmatch(refname)) and (slug := _slug(match["slug"])):
-            name = f"{match['remote']}/plan-{slug}"
-            remote.append((match["remote"], PlanningSource(f"remote:{name}", "remote", name, slug, commit)))
-    for source in local:
-        by_slug.setdefault(source.slug, source)
-    for _, source in sorted(remote, key=lambda item: (item[1].slug, item[0])):
-        by_slug.setdefault(source.slug, source)
+            by_slug.setdefault(slug, PlanningSource(f"branch:plan-{slug}", "branch", f"plan-{slug}", slug, commit))
     by_slug.pop(own or "", None)
     return {source.id: source for source in sorted(by_slug.values(), key=lambda s: s.slug)}, errors
 

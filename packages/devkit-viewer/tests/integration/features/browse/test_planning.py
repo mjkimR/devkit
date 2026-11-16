@@ -1,4 +1,4 @@
-"""Planning sources over real repositories: a linked worktree, local plan branches and remote-tracking refs."""
+"""Planning sources over real repositories: a linked worktree and local plan branches; remote-tracking refs never."""
 
 from __future__ import annotations
 
@@ -32,7 +32,8 @@ def proposal(slug: str, text: str) -> str:
 
 @pytest.fixture
 def repo(make_repo: MakeRepo, tmp_path: Path) -> Path:
-    """``main`` checkout; ``plan-a`` in a linked worktree with saved edits; local and remote-tracking plan refs."""
+    """``main`` checkout; ``plan-a`` in a linked worktree with saved edits; local plan branches; ``plan-c`` only as
+    remote-tracking refs."""
     root = make_repo(
         "repo",
         {
@@ -84,13 +85,12 @@ def repo(make_repo: MakeRepo, tmp_path: Path) -> Path:
     return root
 
 
-def test_sources_follow_worktree_branch_remote_precedence(repo: Path) -> None:
+def test_sources_follow_worktree_then_local_branch_precedence(repo: Path) -> None:
     sources, errors = planning_sources(repo)
     assert errors == []
     assert {source_id: source.label for source_id, source in sources.items()} == {
         "worktree:plan-a": "worktree plan-a",
         "branch:plan-b": "plan-b",
-        "remote:origin/plan-c": "origin/plan-c",
         "branch:plan-empty": "plan-empty",
         "branch:plan-new": "plan-new",
         "branch:plan-sym": "plan-sym",
@@ -99,7 +99,19 @@ def test_sources_follow_worktree_branch_remote_precedence(repo: Path) -> None:
     items = {item["source"]: item for item in result["items"]}  # type: ignore[union-attr]
     assert "saved a" in items["worktree:plan-a"]["content"]
     assert "local b" in items["branch:plan-b"]["content"]
-    assert "remote c" in items["remote:origin/plan-c"]["content"]
+
+
+def test_remote_tracking_refs_contribute_no_source(repo: Path) -> None:
+    sources, errors = planning_sources(repo)
+    assert errors == []
+    assert not any(source.slug == "c" for source in sources.values())
+    assert all(source.kind != "remote" for source in sources.values())
+    result = planning_proposals(repo)
+    assert all(source["kind"] != "remote" for source in result["sources"])  # type: ignore[union-attr]
+    assert not [item for item in result["items"] if "PROP-c" in item["path"]]  # type: ignore[union-attr]
+    with pytest.raises(ReadError) as caught:
+        source_blob(repo, "remote:origin/plan-c", "docs/proposals/PROP-c/proposal.md")
+    assert caught.value.code == "VIEWER_SOURCE_UNKNOWN"
 
 
 def test_each_plan_branch_contributes_only_its_own_proposal(repo: Path) -> None:
@@ -107,7 +119,6 @@ def test_each_plan_branch_contributes_only_its_own_proposal(repo: Path) -> None:
     assert [(item["source"], item["path"]) for item in result["items"]] == [  # type: ignore[union-attr]
         ("worktree:plan-a", "docs/proposals/PROP-a/proposal.md"),
         ("branch:plan-b", "docs/proposals/PROP-b/proposal.md"),
-        ("remote:origin/plan-c", "docs/proposals/PROP-c/proposal.md"),
         ("branch:plan-new", "docs/proposals/PROP-new/proposal.md"),
     ]
     assert [error for error in result["errors"] if "plan-sym" in error]  # type: ignore[union-attr]
@@ -242,10 +253,9 @@ def test_http_planning_endpoints(served: ViewerServer) -> None:
     )
 
 
-def test_refs_merged_into_the_checkout_are_not_sources(repo: Path) -> None:
+def test_local_branches_merged_into_the_checkout_are_not_sources(repo: Path) -> None:
     git(repo, "switch", "-q", "-c", "plan-done")
     commit_files(repo, {"docs/proposals/PROP-done/proposal.md": proposal("done", "planned done")})
-    git(repo, "update-ref", "refs/remotes/origin/plan-done", "HEAD")
     git(repo, "switch", "-q", "main")
     git(repo, "merge", "-q", "--no-ff", "-m", "integrate", "plan-done")
     commit_files(repo, {"docs/proposals/PROP-done/proposal.md": proposal("done", "completed on main")})

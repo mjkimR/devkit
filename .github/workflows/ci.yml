@@ -82,6 +82,5 @@ jobs:
       - run: just viewer lint
       - run: just viewer check
       - run: just viewer test
-      - run: just viewer pack
       # Rebuilds the page from the lockfile in a clean checkout and fails when the committed build differs.
       - run: uv run --no-active devkit generated check viewer-assets

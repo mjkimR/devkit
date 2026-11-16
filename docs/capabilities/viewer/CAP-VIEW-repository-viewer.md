@@ -1,14 +1,13 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local repository page and Svelte library with formal references, source-safe artifacts, Planning overlays, dashboard lists, roadmaps, decision supersession and handbook-first reading."
+summary: "A read-only local repository page served by `devkit viewer serve`, with formal references, source-safe artifacts, Planning overlays, dashboard lists, roadmaps, decision supersession and handbook-first reading."
 area: viewer
 status: active
 usecases: [UC-read-decision-supersession, UC-read-formal-document]
 entrypoints:
   - packages/devkit-viewer/src/devkit_viewer/
-  - packages/devkit-viewer/frontend/src/app/
-  - packages/devkit-viewer/frontend/src/lib/
+  - packages/devkit-viewer/frontend/src/
 created_at: 2026-10-19
 ---
 
@@ -16,9 +15,9 @@ created_at: 2026-10-19
 
 The `devkit-viewer` distribution gives people a screen for what agents read through `devkit spec`: the Living Spec,
 proposals, specs and milestones (`ADR-roadmap-and-milestones-ledger`). It mounts
-`devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
-consumes its component library as a vendored tarball. The server's choices, including proposals under Planning, are
-`ADR-repository-viewer`, and `ADR-release-handbook` shapes the reading tab. Command quick reference:
+`devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). It is an internal tool with one host,
+`devkit viewer serve`, and no published or vendored library. The server's choices, including proposals under
+Planning, are `ADR-internal-repository-viewer`, and `ADR-release-handbook` shapes the reading tab. Command quick reference:
 [reference](../../development/reference/viewer.md).
 
 ## 1. Serving
@@ -63,17 +62,16 @@ The dashboard listing reads candidate frontmatter through the closing YAML delim
 
 ### 2.1 Planning sources
 
-A proposal under Planning is edited on its `plan-<slug>` branch. The server reads that proposal's directory from local
-sources only (`ADR-repository-viewer`). A source has the ID `worktree:plan-<slug>`, `branch:plan-<slug>`
-or `remote:<remote>/plan-<slug>`, the label `worktree plan-<slug>`, `plan-<slug>` or `<remote>/plan-<slug>`, and its
-kind; `<slug>` matches `[A-Za-z0-9][A-Za-z0-9._-]*` without `..`.
+A proposal under Planning is edited on its `plan-<slug>` branch. The server reads that proposal's directory from this
+machine's worktrees and local branches only (`ADR-internal-repository-viewer`); remote-tracking refs are not read. A
+source has the ID `worktree:plan-<slug>` or `branch:plan-<slug>`, the label `worktree plan-<slug>` or `plan-<slug>`,
+and its kind; `<slug>` matches `[A-Za-z0-9][A-Za-z0-9._-]*` without `..`.
 
-- **Precedence**: For each slug, the server MUST use, in order, another existing worktree whose branch is
-  `plan-<slug>` (its saved files, uncommitted and untracked included), the local branch `plan-<slug>`, or the
-  remote-tracking `<remote>/plan-<slug>` whose remote name sorts first, as of the last fetch. Check:
+- **Precedence**: For each slug, the server MUST use another existing worktree whose branch is `plan-<slug>` (its
+  saved files, uncommitted and untracked included), else the local branch `plan-<slug>`. Check:
   `tests/integration/features/browse/test_planning.py`.
-- **Merged refs**: IF a local branch or remote-tracking ref is already merged into the checkout's `HEAD`, THEN the
-  server MUST NOT use it as a source; a worktree stays a source. Check:
+- **Merged refs**: IF a local branch is already merged into the checkout's `HEAD`, THEN the server MUST NOT use it as
+  a source; a worktree stays a source. Check:
   `tests/integration/features/browse/test_planning.py`.
 - **Own branch**: WHILE the registered checkout is on `plan-<slug>`, the server MUST report no source for that slug.
   Check: `tests/integration/features/browse/test_planning.py`.
@@ -111,7 +109,7 @@ else is `404`, so no encoded `..` or absolute path reaches a file outside the bu
 
 ## 4. The page
 
-The page is the viewer moved from autohub, with a repository picker and a label for the checked-out branch. Its tabs read the registered working tree; the Dashboard proposal section and the Proposals tab add the Planning overlay (§4.2):
+The page is one application with a repository picker and a label for the checked-out branch. Its tabs read the registered working tree; the Dashboard proposal section and the Proposals tab add the Planning overlay (§4.2):
 
 - **Dashboard**: milestones, proposal anchors and feedback load independently (§4.1).
 - **Read** (view id `book`): the release handbook where `handbook/manifest.json` exists, and on request the Living
@@ -129,44 +127,37 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
 ### 4.1 Dashboard loading and tab caches
 
 - **Selective reads**: WHEN a local dashboard section opens, it MUST list frontmatter only for global and namespace milestone files matching §5, `docs/proposals/PROP-*/proposal.md` anchors, or non-README Markdown below any `feedback/` directory within `docs/` or `specs/`. Check: `tests/integration/features/browse/test_worktree.py` and `tests/integration/features/browse/test_namespace_roadmap.py`.
-- **Initial pages**: WHEN a section opens through a source with `dashboardList`, it MUST request full bodies only for its first 6 eligible milestones, 9 proposals or 6 feedback entries. All candidate headers are read once to determine global ordering and exact counts. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
-- **Page ordering**: WHEN Load more is selected, the section MUST append at most one page using the same ordered list. Milestones order by active then planned; proposals by review, draft then accepted; open feedback by critical, blocked, workaround then friction, followed by unknown severities. Each group sorts by ID, then path to resolve ties. Membership and sort metadata stay fixed until Refresh or a fresh tab load after expiry. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
-- **Page failure**: IF a body page fails, THEN the section MUST retain its previous cards and cursor and offer Retry for that page. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
-- **Independent sections**: WHEN a section finishes, the dashboard MUST display its cards without waiting for other sections. Pending and failed sections MUST show loading or error state with an unknown count instead of a successful empty state. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
-- **Cache reuse**: WHEN the same source identity and branch reopen a dashboard section within 30 seconds of successful list completion, the viewer MUST reuse its list and successfully displayed pages, including the expanded card count. Page loads MUST NOT renew the list expiry. Full document indexes and roadmap results remain reusable for 30 seconds after their successful completion. Each source retains at most eight purpose entries. Failed pages MUST NOT replace a successful cached snapshot; aborted scans MUST NOT be cached. Check: `frontend/src/lib/features/dashboard/loading.test.ts`, `frontend/src/lib/features/dashboard/DashboardView.test.ts` and `frontend/src/lib/RoadmapView.test.ts`.
-- **Freshness**: WHEN the dashboard Refresh button is selected, the viewer MUST invalidate that source's result caches and reload the sections. Expired entries reload on the next access. Browser reload clears memory; there is no background filesystem subscription. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
-- **Disposal**: WHEN the repository or branch changes or a view is disposed, pending work MUST NOT publish to the replacement view or populate a refreshed cache generation. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts` and `frontend/src/lib/features/dashboard/loading.test.ts`.
+- **All eligible cards**: WHEN a section opens, it MUST list frontmatter once through `dashboardList`, read the body of every eligible entry and display all of them; there is no body paging, Load more or per-page Retry. Check: `frontend/src/features/dashboard/loading.test.ts` and `frontend/src/features/dashboard/DashboardView.test.ts`.
+- **Ordering**: A section MUST display its cards in this order: milestones by active then planned; proposals by review, draft then accepted; open feedback by critical, blocked, workaround then friction, followed by unknown severities. Each group sorts by ID, then path to resolve ties. Check: `frontend/src/features/dashboard/loading.test.ts`.
+- **Partial failure**: IF some body reads of a section fail, THEN the section MUST show the cards that read successfully and each failed path with its error, and its count MUST include the failed entries; Refresh is the retry. Check: `frontend/src/features/dashboard/loading.test.ts` and `frontend/src/features/dashboard/DashboardView.test.ts`.
+- **Independent sections**: WHEN a section finishes, the dashboard MUST display its cards without waiting for other sections. Pending and failed sections MUST show loading or error state with an unknown count instead of a successful empty state. Check: `frontend/src/features/dashboard/DashboardView.test.ts`.
+- **No dashboard cache**: Each dashboard load MUST list and read its sections again; the viewer keeps no dashboard list or page cache. Full document indexes and roadmap results remain reusable for 30 seconds after their successful completion for the same source identity and branch, and each source retains at most eight purpose entries. Aborted scans MUST NOT be cached. Check: `frontend/src/features/dashboard/DashboardView.test.ts` and `frontend/src/features/roadmap/RoadmapView.test.ts`.
+- **Freshness**: WHEN the dashboard Refresh button is selected, the viewer MUST clear that source's caches and reload the sections. Expired entries reload on the next access. Browser reload clears memory; there is no background filesystem subscription. Check: `frontend/src/features/dashboard/DashboardView.test.ts`.
+- **Disposal**: WHEN the repository or branch changes or a view is disposed, pending work MUST NOT publish to the replacement view or populate a refreshed cache generation. Check: `frontend/src/features/dashboard/DashboardView.test.ts` and `frontend/src/features/dashboard/loading.test.ts`.
 
 ### 4.2 Planning overlay
 
 The overlay covers proposals only: specs, feedback, milestones, the Living Spec, the Files tab and the roadmap read the
 registered working tree.
 
-- **Checkout first**: WHEN the proposals section opens through a source with `planningProposals`, the dashboard MUST
-  request the overlay separately and MUST display the checkout's cards without waiting for it. Check:
-  `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
+- **Checkout first**: WHEN the proposals section opens, the dashboard MUST request the overlay through
+  `planningProposals` separately and MUST display the checkout's cards without waiting for it. Check:
+  `frontend/src/features/dashboard/DashboardView.test.ts`.
 - **In place**: WHEN the overlay arrives, the dashboard MUST show the Planning title, status, summary and source badge
-  on the matching cards in their positions. Planning-only active proposals are appended after the last checkout card
-  once no page remains, and the active count includes them. Check:
-  `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
+  on the matching cards in their positions. Planning-only active proposals are appended after the last checkout card,
+  and the active count includes them. Check: `frontend/src/features/dashboard/DashboardView.test.ts`.
 - **Overlay failure**: IF the overlay fails, THEN the dashboard MUST keep the checkout cards and count and show a
-  non-alert note. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
-- **Ordering seed**: WHEN a proposals list is built, it MUST merge the overlay last loaded for that source and branch
-  into its order and membership, and take a seeded proposal's body from that overlay. Membership and order then stay
-  fixed until the next build. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
-- **Withdrawn source**: WHEN a fresh overlay no longer reports a seeded proposal's source, the dashboard MUST show that
-  card with the checkout's header in place, or drop it when the checkout lacks it, and count accordingly. Check:
-  `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
-- **Overlay cache**: An overlay answered with an empty `errors` list MUST be reused for 30 seconds and discarded by
-  Refresh; an overlay with errors is applied and seeds the next list build but is not cached, so the next visit asks
-  again. Aborted or superseded work MUST NOT publish or populate a refreshed cache generation. Check:
-  `frontend/src/lib/api/planning.test.ts`.
+  non-alert note. Check: `frontend/src/features/dashboard/DashboardView.test.ts`.
+- **No overlay cache**: Each dashboard or Proposals load MUST request `planningProposals` again; the overlay is not
+  cached, and a list build MUST take its order and membership from the checkout only. Aborted or superseded work MUST
+  NOT publish. Check: `frontend/src/api/planning.test.ts` and
+  `frontend/src/features/dashboard/DashboardView.test.ts`.
 - **Proposals tab**: WHEN the Proposals tab lists proposals, an overlaid proposal MUST replace its checkout entry with
   a source badge and a Planning-only one joins in path order. WHEN an overlaid proposal is selected, its bundle MUST be
   read through `planningTree` and `planningBlob` with its source, and no "View raw" button opens the checkout copy.
-  Check: `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
+  Check: `frontend/src/features/knowledge/KnowledgeViews.test.ts`.
 - **Card selection**: WHEN a Dashboard proposal card is selected, the page MUST open that proposal in the Proposals
-  tab, and the request MUST NOT apply in another tab. Check: `frontend/src/lib/SddViewer.test.ts`.
+  tab, and the request MUST NOT apply in another tab. Check: `frontend/src/SddViewer.test.ts`.
 
 ### 4.3 Reading tab
 
@@ -177,74 +168,69 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
 
 - **Detection**: WHEN the tab opens without a book request, the viewer MUST read `handbook/manifest.json` through
   `blob` and treat a rejection matching `/^HTTP 404(?:\b|:)/` (§6) as no handbook. Check:
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Read budget**: WHEN the tab opens without a book request, it MUST read at most the manifest, `VERSION` and one
   page where a manifest exists, and the manifest alone where none does. Check:
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **No index before the request**: WHILE the book is not requested, the tab MUST NOT list or read anything under
   `docs/` or `specs/`; following handbook links and switching languages read only `handbook/` pages. Check:
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Absence**: IF the manifest is absent, THEN the tab MUST show that the repository has no `handbook/manifest.json`
-  and a `Living Spec book` control. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  and a `Living Spec book` control. Check: `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Manifest failure**: IF the manifest read fails otherwise, is not JSON, or lacks a string `tag` or an `en` entry in
   `langs`, THEN the tab MUST show that error and the `Living Spec book` control. Check:
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Book on request**: The viewer MUST render book chapters only while the tab is shown and the book is requested,
   also after Proposals or Specs loaded the document index. Once computed, the book keeps the chapter groups and order
-  of §4. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  of §4. Check: `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Chapter groups**: The book MUST group `docs/` (and each `docs/packages/<name>/` as `docs/`) in the order Overview,
   Architecture, Domain, Capabilities, Use Cases, UX, Designs, Operations, Steering, Decisions, Development; UX documents (`ux/`) form the UX group.
-  Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  Check: `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **ID links**: A `[ID]` prose reference or an inline code span holding exactly one ID of a document in the index,
-  UX, DESIGN, DOMAIN and OPS IDs and unambiguous same-prefix aliases included, MUST link to that document. Check: `frontend/src/lib/documents.test.ts`.
+  UX, DESIGN, DOMAIN and OPS IDs and unambiguous same-prefix aliases included, MUST link to that document. Check: `frontend/src/api/documents.test.ts`.
 - **One index**: For a data source and branch, the document index MUST start only with a Proposals or Specs view,
   a book request, a rendered Files decision/formal node or an identified document declaring a typed formal relation; a view change MUST reuse an unexpired completed index. Check:
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
-- **Request lifetime**: The book request MUST last for the life of `SddViewer` across rail switches and host prop
-  changes, and MUST hold only for the data source and branch it was made for, so a change of either returns the tab to
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
+- **Request lifetime**: The book request is internal to `SddViewer`. It MUST last for the life of `SddViewer` across
+  rail switches, and MUST hold only for the data source and branch it was made for, so a change of either returns the tab to
   the handbook without indexing the new one. A `Handbook` control in the book returns the tab to the handbook and keeps
-  the index. Check: `frontend/src/lib/SddViewer.test.ts` and
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
-- **Host deep links**: WHERE a host passes `initialView` `book` with an `initialPath` naming a file under `docs/`, the
-  viewer MUST treat it as the book request and open that document; an `initialPath` of
-  `handbook/<lang>/<page>` MUST open that page. Check: `frontend/src/lib/SddViewer.test.ts`.
+  the index. Check: `frontend/src/SddViewer.test.ts` and
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Pages**: A handbook page MUST render through the Markdown and DOMPurify path without the document index. Check:
-  `frontend/src/lib/api/handbook.test.ts`.
+  `frontend/src/api/handbook.test.ts`.
 - **Links**: After sanitizing, a relative `.md` link inside the page's `handbook/<lang>/` MUST open that page in the
   tab; any other relative link MUST be shown as unavailable and read nothing; an `http` or `https` link MUST open a
-  new browsing context with `rel="noopener noreferrer"`. Check: `frontend/src/lib/api/handbook.test.ts` and
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  new browsing context with `rel="noopener noreferrer"`. Check: `frontend/src/api/handbook.test.ts` and
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Fragments**: A fragment MUST scroll to the element whose `id` equals it, else to the matching heading, so heading
   slugs and raw `<a id>` anchors both resolve. A missing page shows its error and a `Handbook home` entry. Check:
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Language**: The language switch MUST list the manifest's `langs` and keep the page path; the choice is remembered
   in browser storage for all repositories, and without one the tab starts with the browser language when listed,
-  else `en`. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+  else `en`. Check: `frontend/src/features/knowledge/HandbookMode.test.ts`.
 - **Staleness**: The header MUST order the manifest tag against `v<VERSION>` read as a file
   (`ADR-release-handbook`): ahead names the snapshot as prepared for the upcoming release, equal shows
   the tag and generation date, behind adds a non-alert note naming both versions and pointing to the book, and an
   absent or unparsable `VERSION` shows the tag and date only. Check:
-  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
-- **Location**: WHILE the tab shows the handbook, `sdd:path-change` MUST carry `view: "book"` and the
-  `handbook/<lang>/<page>` path. Check: `frontend/src/lib/SddViewer.test.ts`.
+  `frontend/src/features/knowledge/HandbookMode.test.ts`.
 
-The local source supports recursive metadata requests to avoid one HTTP call per directory. Library hosts without `dashboardList` retain selective full-document discovery to determine ordering and counts; their cold load may read all matching bodies, while the UI still pages cards. Other library hosts use a queue of at most six concurrent requests per scan; a completed request immediately frees its worker for queued work.
+The local source answers recursive metadata requests (§2), so a scan makes no HTTP call per directory.
 
 ### 4.4 Decision supersession
 
 `UC-read-decision-supersession`, `UX-view-decision` and `UX-decision-supersession` describe the reader's flow and surfaces.
 `ADR-viewer-indexed-decision-supersession` records the browser derivation and inline placement decision.
 
-1. **Surfaces**: WHEN a rendered ADR opens in Read or Files, the viewer MUST show outgoing Supersedes and incoming Superseded by groups below the header and above the body. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
-2. **Derivation**: The viewer MUST derive outgoing edges from the subject's supersedes and incoming edges only from later ADR supersedes fields in the full checkout index, before namespace filters. Body pointers alone create no edge. Check: `frontend/src/lib/features/document/supersession.test.ts`.
-3. **Identity**: The viewer MUST resolve canonical IDs before aliases and refuse ambiguous target navigation; missing or ambiguous written identities remain visible without links. Rows sort by canonical ID, written ID and path. Check: `frontend/src/lib/features/document/supersession.test.ts`.
-4. **Replacement scope**: A relation MUST be whole only when the earlier ADR is superseded and its superseded_by resolves to the later decision; otherwise it is partial. Check: `frontend/src/lib/features/document/supersession.test.ts`.
-5. **Statement text**: The viewer MUST read the later decision's first matching visible Supersedes in part statement using the source-aware Markdown boundaries of `CAP-DOCS-document-lookup`; it MUST preserve literal inline markup as escaped text and show Replacement scope not recorded when absent. Check: `frontend/src/lib/features/document/supersession.test.ts`, `frontend/src/lib/features/document/SupersessionSummary.test.ts`.
-6. **Proposed changes**: WHEN a PADR is rendered, the viewer MUST show outgoing Proposed supersession only, retain the actual Planning source badge when applicable, and exclude PADRs from applied ADR incoming lists. A proposal-detail related ADR opens its checkout copy in Files. Check: `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
-7. **Loading and uncertainty**: IF indexing is pending or partly fails, THEN the viewer MUST keep the selected body readable, identify loading or Incomplete state, retain successful relations, list failed paths and offer Reload relations. An incomplete empty incoming list says No incoming relations found in the documents read. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/document/SupersessionSummary.test.ts`.
-8. **Freshness**: WHEN relations reload, the viewer MUST refresh peer documents while each summary continues using its exact displayed subject metadata and statement. Files opens saved subjects independently of the index TTL. Source or branch changes MUST prevent older loads publishing. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
-9. **Read budget**: For supersession context, Files MUST request the existing document index lazily only for a rendered ADR or PADR; §4.5 defines the additional formal-context triggers. This supersession trigger MUST NOT start a scan for raw mode, ordinary files, supporting artifacts, dashboard or handbook-only navigation. Read reuses its existing index; reload invalidates the source cache. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
-10. **Navigation and safety**: Resolved targets MUST use focusable same-view links; Read reveals another namespace when needed. Relation metadata and statement text MUST render escaped, without inserting source HTML. Check: `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`, `frontend/src/lib/features/document/SupersessionSummary.test.ts`.
+1. **Surfaces**: WHEN a rendered ADR opens in Read or Files, the viewer MUST show outgoing Supersedes and incoming Superseded by groups below the header and above the body. Check: `frontend/src/SddViewer.test.ts`, `frontend/src/features/knowledge/KnowledgeViews.test.ts`.
+2. **Derivation**: The viewer MUST derive outgoing edges from the subject's supersedes and incoming edges only from later ADR supersedes fields in the full checkout index, before namespace filters. Body pointers alone create no edge. Check: `frontend/src/features/document/supersession.test.ts`.
+3. **Identity**: The viewer MUST resolve canonical IDs before aliases and refuse ambiguous target navigation; missing or ambiguous written identities remain visible without links. Rows sort by canonical ID, written ID and path. Check: `frontend/src/features/document/supersession.test.ts`.
+4. **Replacement scope**: A relation MUST be whole only when the earlier ADR is superseded and its superseded_by resolves to the later decision; otherwise it is partial. Check: `frontend/src/features/document/supersession.test.ts`.
+5. **Statement text**: The viewer MUST read the later decision's first matching visible Supersedes in part statement using the source-aware Markdown boundaries of `CAP-DOCS-document-lookup`; it MUST preserve literal inline markup as escaped text and show Replacement scope not recorded when absent. Check: `frontend/src/features/document/supersession.test.ts`, `frontend/src/features/document/SupersessionSummary.test.ts`.
+6. **Proposed changes**: WHEN a PADR is rendered, the viewer MUST show outgoing Proposed supersession only, retain the actual Planning source badge when applicable, and exclude PADRs from applied ADR incoming lists. A proposal-detail related ADR opens its checkout copy in Files. Check: `frontend/src/features/knowledge/KnowledgeViews.test.ts`.
+7. **Loading and uncertainty**: IF indexing is pending or partly fails, THEN the viewer MUST keep the selected body readable, identify loading or Incomplete state, retain successful relations, list failed paths and offer Reload relations. An incomplete empty incoming list says No incoming relations found in the documents read. Check: `frontend/src/SddViewer.test.ts`, `frontend/src/features/document/SupersessionSummary.test.ts`.
+8. **Freshness**: WHEN relations reload, the viewer MUST refresh peer documents while each summary continues using its exact displayed subject metadata and statement. Files opens saved subjects independently of the index TTL. Source or branch changes MUST prevent older loads publishing. Check: `frontend/src/SddViewer.test.ts`, `frontend/src/features/knowledge/KnowledgeViews.test.ts`.
+9. **Read budget**: For supersession context, Files MUST request the existing document index lazily only for a rendered ADR or PADR; §4.5 defines the additional formal-context triggers. This supersession trigger MUST NOT start a scan for raw mode, ordinary files, supporting artifacts, dashboard or handbook-only navigation. Read reuses its existing index; reload invalidates the source cache. Check: `frontend/src/SddViewer.test.ts`, `frontend/src/features/knowledge/HandbookMode.test.ts`.
+10. **Navigation and safety**: Resolved targets MUST use focusable same-view links; Read reveals another namespace when needed. Relation metadata and statement text MUST render escaped, without inserting source HTML. Check: `frontend/src/features/knowledge/KnowledgeViews.test.ts`, `frontend/src/features/document/SupersessionSummary.test.ts`.
 
 ### 4.5 Formal documents and supporting files
 
@@ -254,60 +240,60 @@ The local source supports recursive metadata requests to avoid one HTTP call per
 
 1. **Identity**: WHEN a formal document is read, the viewer MUST resolve canonical identities before same-prefix
    aliases and leave missing or ambiguous written IDs unavailable. The permissive ID recognizers include
-   underscores; canonical path validity remains a core governance concern. Check: `frontend/src/lib/features/document/formal.test.ts`.
+   underscores; canonical path validity remains a core governance concern. Check: `frontend/src/features/document/formal.test.ts`.
 2. **Independent detail**: The book MUST exclude role artifacts and README files from canonical navigation,
    counts, search and graph identities while retaining independently identified peer details. Check:
-   `frontend/src/lib/features/document/formal.test.ts` and `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+   `frontend/src/features/document/formal.test.ts` and `frontend/src/features/knowledge/FormalReading.test.ts`.
 3. **Search**: WHEN the reader searches the book, the viewer MUST match title, canonical ID, aliases, summary and
-   body in the selected structural namespace plus global context. Check: `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+   body in the selected structural namespace plus global context. Check: `frontend/src/features/knowledge/FormalReading.test.ts`.
 4. **Retirement**: Normal book navigation MUST hide retired formal nodes until Include retired is selected.
-   Check: `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+   Check: `frontend/src/features/knowledge/FormalReading.test.ts`.
 5. **Direct targets**: WHEN an explicit path, canonical ID, alias or reference selects a filtered or retired node,
    the viewer MUST materialize that target with status without enabling unrelated history; a later explicit filter change expires that selection override. Check:
-   `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+   `frontend/src/features/knowledge/FormalReading.test.ts`.
 6. **Current context**: Rendered formal nodes and identified documents declaring related_designs, related_domains or related_operations in Read and Files MUST share outgoing/incoming typed and visible
    prose references over the loaded index, including references from any indexed kind. Rows retain direction,
    field, written alias, canonical identity and status; aliases create no graph edge. Check:
-   `frontend/src/lib/features/document/formal.test.ts` and `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+   `frontend/src/features/document/formal.test.ts` and `frontend/src/features/knowledge/FormalReading.test.ts`.
 7. **Uncertainty**: IF known metadata is malformed or an index read fails, THEN the panel MUST retain the body,
    successful rows and incomplete information with reload; missing/ambiguous targets have no arbitrary link.
-   Check: `frontend/src/lib/features/document/SupportingArtifact.test.ts` and `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+   Check: `frontend/src/features/document/SupportingArtifact.test.ts` and `frontend/src/features/knowledge/FormalReading.test.ts`.
 8. **Provenance**: The formal panel MUST label historical origin separately from current references and retain
    unknown metadata in inspectable metadata/raw source. Declared source entrypoints are not a source-liveness or
-   semantic-validity claim. Check: `frontend/src/lib/features/document/formal.test.ts`.
+   semantic-validity claim. Check: `frontend/src/features/document/formal.test.ts`.
 9. **Source controls**: WHEN View raw or Rendered is selected in Read, the viewer MUST switch the exact document
    source/body in place. Back from a reference or supporting file restores the prior reading context and position.
-   Check: `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+   Check: `frontend/src/features/knowledge/FormalReading.test.ts`.
 10. **Supporting reads**: WHEN a relative document/image/support link opens, the viewer MUST resolve it from the
     origin path and source through existing blob callbacks, preserving decoded fragments and cancellation.
-    Planning content never falls back to checkout content. Check: `frontend/src/lib/api/artifacts.test.ts` and
-    `frontend/src/lib/features/document/SupportingArtifact.test.ts`.
+    Planning content never falls back to checkout content. Check: `frontend/src/api/artifacts.test.ts` and
+    `frontend/src/features/document/SupportingArtifact.test.ts`.
 11. **Bytes and formats**: The supporting reader MUST preserve UTF-8/base64 bytes, preview Markdown/Mermaid,
     readable CSV/diagram/source text and PNG/JPEG/GIF/WebP/AVIF or sanitized SVG, and leave other formats explicit
     with download from available bytes. It MUST NOT decode binary data as UTF-8 text. Check:
-    `frontend/src/lib/api/artifacts.test.ts` and `frontend/src/lib/features/document/SupportingArtifact.test.ts`.
+    `frontend/src/api/artifacts.test.ts` and `frontend/src/features/document/SupportingArtifact.test.ts`.
 12. **Image bounds**: A supporting preview MUST cap each blob at 8 MiB and each rendered article at 32 repository
     images and 16 MiB of image bytes. Relative image sources and srcset MUST NOT reach the viewer origin before
-    source hydration; generated object URLs are revoked on replacement/disposal. Check: `frontend/src/lib/api/artifacts.test.ts`.
+    source hydration; generated object URLs are revoked on replacement/disposal. Check: `frontend/src/api/artifacts.test.ts`.
 13. **Unavailable files**: IF a supporting read is missing, invalid or unsupported, THEN the reader MUST retain
     path, format/source context, explanation and Back; Retry applies to failed reads; raw/download controls require available readable
-    source/bytes. Check: `frontend/src/lib/features/document/SupportingArtifact.test.ts`.
+    source/bytes. Check: `frontend/src/features/document/SupportingArtifact.test.ts`.
 14. **Index budget**: Raw files, supporting artifacts and handbook reads MUST NOT request an identity index solely
     by opening. Switching a formal Files node to rendered mode may request it. Check:
-    `frontend/src/lib/features/knowledge/FormalReading.test.ts` and `frontend/src/lib/SddViewer.test.ts`.
+    `frontend/src/features/knowledge/FormalReading.test.ts` and `frontend/src/SddViewer.test.ts`.
 
 15. **Delivered layout**: The viewer MUST group DESIGN and DOMAIN entries by area and label DESIGN anchors by
     canonical bundle ID alongside their title. Core `CAP-DOCS-document-model` owns canonical path/area validity.
-    Check: `frontend/src/lib/api/layout.test.ts`, `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+    Check: `frontend/src/api/layout.test.ts`, `frontend/src/features/knowledge/FormalReading.test.ts`.
 16. **Support inventory**: WHEN a formal context is indexed, the viewer MUST list every non-anchor DESIGN bundle
     file at any depth, or the adjacent ID/artifacts files for DOMAIN/OPS, from the same source tree inventory.
     List selection uses the existing source-bound supporting reader and Back. Check:
-    `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+    `frontend/src/features/knowledge/FormalReading.test.ts`.
 17. **Support identity isolation**: The viewer MUST exclude all non-anchor DESIGN bundle files from canonical
     identities, graph nodes, search and counts, including stray identified Markdown, nested anchors and README.
-    Orphan support has no canonical node; generic Files still reads it. Check: `frontend/src/lib/api/layout.test.ts`.
+    Orphan support has no canonical node; generic Files still reads it. Check: `frontend/src/api/layout.test.ts`.
 18. **Inventory budget**: Supporting lists MUST reuse the document scan's tree inventory without per-document
-    whole-tree scans or reading supporting blobs until requested. Check: `frontend/src/lib/api/layout.test.ts`.
+    whole-tree scans or reading supporting blobs until requested. Check: `frontend/src/api/layout.test.ts`.
 
 The viewer does not repair stale source anchors, orphan artifacts or repository governance errors. Canonical aliases
 follow current identities; ordinary obsolete file paths remain unavailable rather than becoming alias redirects.
@@ -319,72 +305,56 @@ Tree/blob APIs retain the existing byte, traversal and symlink guards for all fo
   `docs/roadmap/_archive/MS-*.md`, `docs/packages/<name>/roadmap/MS-*.md` and
   `docs/packages/<name>/roadmap/_archive/MS-*.md`, with one nonempty package-directory segment and a flat archive.
   Check: `tests/integration/features/browse/test_namespace_roadmap.py` and
-  `frontend/src/lib/api/milestones.test.ts`.
+  `frontend/src/api/milestones.test.ts`.
 - **Registration independence**: Discovery MUST use structural paths without reading namespace registration;
   unregistered package directories also appear, and absent or malformed namespace configuration does not affect
   the candidate set. This visibility does not certify governance validity or exact CLI parity. Check:
-  `tests/integration/features/browse/test_namespace_roadmap.py` and `frontend/src/lib/api/milestones.test.ts`.
+  `tests/integration/features/browse/test_namespace_roadmap.py` and `frontend/src/api/milestones.test.ts`.
 - **Partial reads**: IF a listed directory or candidate cannot be read, THEN the loader MUST retain successful
   results and name that failed path in its errors. Missing optional roots are empty; failed or aborted results do
   not enter caches. Check: `tests/integration/features/browse/test_namespace_roadmap.py` and
-  `frontend/src/lib/api/milestones.test.ts`.
+  `frontend/src/api/milestones.test.ts`.
 - **Order**: `active`, then `planned`; `done` and `dropped` appear only with the history toggle. Within a status, by
   ID.
 - **Readiness**: a milestone is ready when every milestone in its `depends_on` is `done` or `dropped`. A `depends_on`
   naming no milestone is shown as unknown and never counts as satisfied.
 - **Source**: milestones and members come from the registered working tree. Other branches are not enumerated and the
-  Planning overlay does not apply. Check: `frontend/src/lib/RoadmapView.test.ts`.
+  Planning overlay does not apply. Check: `frontend/src/features/roadmap/RoadmapView.test.ts`.
 - **Members**: direct PROP anchors whose `milestone` names the milestone in the registered working tree. Rejected proposals are not members.
   SPEC milestone metadata is ignored, including historical metadata; SPECs never replace proposals by slug.
   The roadmap loader reads structural milestone and direct proposal anchors only. It resolves the complete global
   and namespace milestone set before filtering history, so hidden done/dropped prerequisites remain satisfied across roots. Direct proposals do not certify completion.
   One member per slug is displayed.
 
-Archived milestone discovery MUST work through optimized dashboard headers and generic tree/blob sources,
-including post-load classification: done/dropped increase totalCount but not openCount. The generic dashboard and
-roadmap readers share shallow discovery through docs, direct package directories, their roadmap and reserved flat
-archive directories; they do not scan unrelated package document bodies. History/detail/deep
+Archived milestone discovery MUST work through the dashboard header listing and the roadmap's `tree`/`blob` reads,
+including post-load classification: done/dropped increase totalCount but not openCount. The roadmap reader uses
+shallow structural discovery through docs, direct package directories, their roadmap and reserved flat archive
+directories; it does not scan unrelated package document bodies. History/detail/deep
 links retain archived paths; reopened active files return to root browsing. Checks: dashboard loading/extraction,
 roadmap and RoadmapView frontend tests; backend working-tree selective-header tests.
 
-## 6. The library for autohub
+## 6. Frontend build and data source
 
-`packages/devkit-viewer/frontend/` is one Svelte 5 source with two outputs:
+`packages/devkit-viewer/frontend/` is one Svelte 5 Vite application with one source tree under `frontend/src/`
+(`ADR-internal-repository-viewer`). It is not packaged as a library: there is no component-library build output,
+package `exports`, peer dependency or tarball.
 
-- the page, built by Vite into `src/devkit_viewer/static/` and committed. It is the tracked generated artifact
-  `viewer-assets` in `.devkit/generated.toml` (`CAP-GEN-tracked-artifacts`): `devkit generated check viewer-assets`
-  rebuilds it from the lockfile in a clean checkout and fails when the committed build differs. Installing devkit from
-  Git therefore needs no Node; only changing the frontend does.
-- the component library `devkit-viewer` (`svelte-package`), whose `npm pack` tarball autohub commits under its
-  `vendor/` and depends on with `file:`. Its root entry exports `SddViewer`, `KnowledgeViews`, `RoadmapView`,
-  `httpDataSource`, `normalizeTree`, `buildRoadmap` and the `RepositoryDataSource`, `PlanningSource` and
-  `PlanningProposals` types; `svelte` is a peer
-  dependency; the tarball holds no file of the page or the server. Nothing is published to a registry.
+- **Committed build**: The application MUST be built by Vite into `src/devkit_viewer/static/` and committed. It is the
+  tracked generated artifact `viewer-assets` in `.devkit/generated.toml` (`CAP-GEN-tracked-artifacts`):
+  `devkit generated check viewer-assets` rebuilds it from the lockfile in a clean checkout and fails when the
+  committed build differs. Installing devkit from Git therefore needs no Node; only changing the frontend does.
+- **One data source**: The page MUST read through one `RepositoryDataSource`, the local HTTP API of §2, whose members
+  are all required: `info`, `tree(path)`, `treeRecursive(path)`, `blob(path)`, `dashboardList(section)`,
+  `planningProposals()`, `planningTree(source, path)` and `planningBlob(source, path)`, each taking an optional
+  `AbortSignal`. It has no `refs` member and no `ref` argument, and the frontend keeps no discovery path for a source
+  without these members.
+- **Absent file**: `blob` MUST signal an absent file by rejecting with an error whose message starts with `HTTP 404`;
+  the reading tab treats any other rejection of `handbook/manifest.json` as a failure (§4.3).
 
-A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`, `treeRecursive(path, ref)`, `dashboardList(section, ref, signal)`, `planningProposals(signal)`, `planningTree(source, path, signal)` and `planningBlob(source, path, signal)`), keeping
-authentication and renewal on its side. Its `blob` MUST signal an absent file by rejecting with an error whose
-message starts with `HTTP 404`, as `httpDataSource` does; the reading tab treats any other rejection of `handbook/manifest.json` as a failure
-(§4.3). A standalone `KnowledgeViews` takes an optional bindable `bookRequested` prop; a host binds it to keep the
-book request across mounts. autohub's Git browser and run and decision panels are not part of the
-library.
-
-Generic roadmap discovery uses the host-returned tree/blob types and cannot independently certify filesystem
-symlink identity; it adds no metadata field or host obligation. Local `WorkingTreeReader` retains the filesystem
-symlink exclusions of §2. Check: `frontend/src/lib/api/milestones.test.ts` and
+The roadmap's structural discovery reads `tree` and `blob` and adds no metadata field; `WorkingTreeReader` applies the
+filesystem symlink exclusions of §2. Check: `frontend/src/api/milestones.test.ts` and
 `tests/integration/features/browse/test_namespace_roadmap.py`.
 
-
-## Immutable local proposal review page
-
-`GET /review/<registered-repository-id>/<32-hex-generation-id>` reads exactly one `proposal-review` artifact
-through the registered repository's configured local shared adapter. This exact-generation route is the exception in
-`ADR-repository-viewer`; ordinary working-tree reads remain unchanged. The route accepts no path,
-remote URL, adapter selector or revision expression. Remote adapters are unavailable here. It calls only exact
-`get`, never list, put or sweep. Namespace, kind, digest and expiry are validated. Source SHA, language and expiry
-are prominent; the artifact is evidence for that source, not a claim that the branch is still current.
-
-The page displays escaped Markdown source inside a readable preformatted block: hostile HTML, links and scripts
-cannot execute. It uses no-store and a restrictive Content-Security-Policy. Existing loopback, Host, no-CORS and
-GET-only controls apply. Missing/remote reports return 404, expired reports 410 and malformed/corrupt reports 400,
-with refresh instructions for the Host; the viewer never regenerates. No frontend rebuild or automatic viewer
-launch is involved. The backend has a narrow dependency on shared.api, shared.errors and shared.local for this read.
+The viewer reads no shared artifacts: `/review/<repo>/<generation>` and any shared path answer `404 VIEWER_NOT_FOUND`
+like any other unknown endpoint, and a `proposal-review` artifact is read through `devkit shared` or the MCP shared
+tools (`CAP-COLL-shared-artifacts`).

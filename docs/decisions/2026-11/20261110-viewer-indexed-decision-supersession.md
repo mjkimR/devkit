@@ -57,6 +57,6 @@ This adds viewer behavior without replacing an existing ADR decision.
 ## 6. Confirmation
 
 Development adds parser/identity/component and Read/Files integration tests under
-`packages/devkit-viewer/frontend/src/lib/`, then runs frontend lint/check/test/build and viewer-assets verification.
+`packages/devkit-viewer/frontend/src/`, then runs frontend lint/check/test/build and viewer-assets verification.
 `CAP-VIEW-repository-viewer` restates the retained contract; review confirms the Screens, use case and register
 reflection. No performance improvement is claimed.

@@ -2,7 +2,8 @@
 id: ADR-repository-viewer
 title: Repository viewer distribution and read-only working-tree server
 summary: "For viewing devkit repositories locally, we ship a devkit-viewer wheel with committed built assets and a loopback-only GET server reading the checked-out working tree plus Planning proposal overlays, to need no Node or writes, accepting committed build output and no other-branch view."
-status: accepted
+status: superseded
+superseded_by: ADR-internal-repository-viewer
 created_at: 2026-11-02
 aliases:
   - ADR-viewer
@@ -17,7 +18,7 @@ aliases:
 
 Superseded in part by `ADR-internal-repository-viewer`: every decision (distribution and frontend, autohub consumption, server, working-tree reads, proposal-review route and Planning proposal overlay); the ADR becomes superseded after handoff.
 
-- **Status**: Accepted
+- **Status**: Superseded by `ADR-internal-repository-viewer`
 - **Date**: 2026-11-02
 - **Deciders**: @minjae
 - **Involved Components/Capabilities**: `packages/devkit-viewer/` (Python package and `frontend/`),
