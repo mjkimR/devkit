@@ -9,8 +9,8 @@ worktree read was reported. The source Scout's architecture description was corr
 are docs package definitions, while viewer browse is lines169–172 and declares only project/shared. The frontend
 marker is outside the package: scripts/affected_tests.py:128–131, inspected by the worker after Scout completion.
 
-Core contract pin: source ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d; immutable generation
-5dd1435445b24d868e5854418cab4085; SHA-256 5aeb608668965e0eb46a3d786c5c50053542a4f7fe63d3f7cf49ff1f2994a20d.
+Core contract pin: source 504e2e12006ab3e2aad2b8ce470607646ad4c4ac; immutable generation
+074444d7a3e0468892b50274650c69f2; SHA-256 1d724834426991e04904fd9f1677f60235de49764d9a1863ad9c8d112c55f413.
 Adapter local and repository namespace matched Host. Exact artifact retained in core-contract.md and hash verified.
 This is selected future contract, not core runtime evidence. Values are design/DESIGN/designs, domain/DOMAIN/domain,
 operations/OPS/operations; flat prefixed peer files; required id/title/status/summary, draft|active|retired;
@@ -41,6 +41,7 @@ Each result must become a named passing test or walkthrough artifact in Developm
 | Static and Python wheel | P | P | P | vite.config.ts output and src/devkit_viewer/static/** generated via declared viewer-assets command; frontend checks, pack export checks, generated check and wheel asset inspection prove shipped page matches source |
 | Handbook source recognition | P | P | P | scripts/handbook.py:48,56,220; tools/devkit-dev/tests/integration/test_handbook_script.py: all prefixes/aliases recognized and cited source lookup/staleness verified with missing source control |
 | Handbook inclusion | P | P | P | CAP-DLV-release-handbook contract: formal sources citeable; generated decisions/changes/glossary and CAP/UC coverage requirements retain current scope; no auto page or release refresh |
+| Rename/rootmove/split/reclassify/retire | P | P | P | New core pin maintenance fixtures; alias opens canonical node with moved ID-owned artifact subtree, namespace/root move keeps source context, split/cross-kind each artifact has one parent; old file path missing rather than alias redirect; retired DESIGN removes/replaces dead entrypoints and shows historical prose+commit distinctly; core-invalid orphan/stale controls remain visible uncertainty |
 | Existing-kind compatibility | P | P | P | Existing CAP/UC/UX/ARCH/ADR/PADR/spec/proposal/milestone fixtures retain groups/linking/rendering; ADR/PADR summary decision-only; dashboard milestone/proposal/feedback scope unchanged |
 
 ## File ownership and boundaries
@@ -84,3 +85,13 @@ is excluded from canonical book nodes/counts/search/graph identity. Unsupported 
 from already available bytes. Assert no arbitrary browser-origin request, source confusion, unsafe SVG execution,
 path traversal/symlink bypass or binary-as-UTF8 assumption. Actual new tests under frontend/api and document
 components plus backend blob guards establish this; generic rendering alone is insufficient.
+
+## Core pin refresh provenance
+
+Initial round1–2 reviewed source ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d. Before final return Host supplied the
+updated immutable generation074444d7a3e0468892b50274650c69f2 at source504e2e12006ab3e2aad2b8ce470607646ad4c4ac.
+Adapter/repository namespace and exact content SHA-256 were verified. Prefix/Kind/schema/status values are unchanged;
+maintenance semantics now explicitly compose canonical ID-owned artifact moves, one-parent split/reclassification
+and live-entrypoint cleanup for retired DESIGN. The old pin and its role records remain in committed history.
+The uncommitted old-pin worker envelope was removed on Host instruction and is regenerated only after new review.
+No committed envelope was edited or removed. Fresh Challenger checks the updated maintenance consumer fixtures.

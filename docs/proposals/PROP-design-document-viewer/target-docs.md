@@ -37,8 +37,8 @@ frontend module where that removes inconsistent recognizers. No package, feature
 clauses in `ADR-documentation-ownership-and-linked-design-entries` and `ADR-linked-domain-relationship-views`.
 The selected future core contract is pinned in [core contract](materials/core-contract.md). Artifact adapter is
 `local`, repository namespace `7a98ea4b0c7772e588edcd66b2dc51119340c3fcb7b9cb304c1e67ffbe3d8302`, source commit
-`ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d`, generation `5dd1435445b24d868e5854418cab4085`, content SHA-256
-`5aeb608668965e0eb46a3d786c5c50053542a4f7fe63d3f7cf49ff1f2994a20d`. Adapter/namespace/source/hash were compared
+`504e2e12006ab3e2aad2b8ce470607646ad4c4ac`, generation `074444d7a3e0468892b50274650c69f2`, content SHA-256
+`1d724834426991e04904fd9f1677f60235de49764d9a1863ad9c8d112c55f413`. Adapter/namespace/source/hash were compared
 with the Host pin; local copy bytes match. This is selected contract data, not current-runtime proof. Development
 must consume the delivered core implementation and reconcile any material difference before dependent verification.
 
@@ -62,6 +62,23 @@ parent. ID-free Markdown artifacts must remain outside canonical node lists, kin
 identity, even though the generic file scanner reads Markdown. They stay accessible as supporting files. An ID-bearing
 artifact is invalid core input; viewer can still expose its file/raw content with uncertainty, never claim it is a
 valid peer canonical node. Independent details are flat formal peer files, not nested inherited identities.
+
+Updated core maintenance semantics are part of viewer fixtures. A same-kind rename moves the parent-owned
+`<OLD-ID>/artifacts/` subtree to `<NEW-ID>/artifacts/`; a docs-root move carries it into the selected new root.
+Identity aliases resolve only document IDs, never stale artifact paths or orphan old-ID folders. Follow repaired
+ordinary links from the current canonical parent and preserve current source context. Split/cross-kind artifact
+transfers have exactly one receiving canonical parent; cross-kind old nodes remain retired with an explicit
+replacement reference. The viewer displays historical materials/prose coordinates as historical, without implying
+an old path is a live artifact or source entrypoint. Retired DESIGN nodes remain rule-checked; deleted source
+entrypoints are removed/replaced by core/lifecycle maintenance, while useful live anchors remain visible. No new
+viewer recovery, path redirect or schema rule is introduced.
+
+Require fixture walkthroughs after same-kind rename and namespace/root move, split and cross-kind artifact transfer:
+old ID alias opens the canonical node and its moved artifacts; old ordinary file paths show missing rather than
+alias magic; parent identity/source is correct after every transition. A retired DESIGN fixture with removed source
+contains no obsolete live entrypoint, retains explicit source-commit prose when useful, and remains reachable by
+ID/alias/ref/history. Include malformed stale-entrypoint/orphan-artifact controls as invalid core input and visible
+unavailable file/source states; the viewer does not silently repair or validate repository governance.
 
 The viewer remains browser-parsed and accepts unknown metadata without rejecting older/newer repositories.
 Known formal fields get typed presentation and links. Unknown fields stay inspectable through metadata/raw source.
