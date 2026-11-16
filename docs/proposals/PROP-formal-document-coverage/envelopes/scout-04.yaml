@@ -1,0 +1,15 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T11:44:01.750276Z'
+status: completed
+summary: 'advisory, cli, mcp, integration, viewer: 1 conditional candidate kept (OPS-mcp-runtime-refusals); 13 dropped as already owned'
+findings:
+- issue: Kept OPS-mcp-runtime-refusals on condition it routes across tool-call, sync notice and status runtime surfaces without copying recovery text
+  evidence: materials/inventory.md candidate 5; CAP-MCP-runtime-registration; docs/development/reference/host.md MCP rows
+  suggested_action: Write discriminating rows only
+  resolution: open
+unverified_areas:
+- viewer UX/use cases checked by path only; CLI source beyond boundary and output modules not read
+checks: {}
