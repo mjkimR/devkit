@@ -25,3 +25,5 @@ Baseline accepted-turn HEAD cff2ca7c0b2e888b16c0c348a0f5deed099f162e: `just view
 returned 249 PASS / 1 FAIL. Actual retained-document read failed ENOENT on the removed flat DESIGN path.
 Additional current grammar tests are run RED before runtime fixes. Current grammar matrix results follow in the
 Task 5 evidence ledger. Old PASS cells in support-matrix.md describe the original flat-contract implementation.
+
+Delivered Kind-table source SHA-256: `d2883d6cf43263483e29dafa58a2ba2742af0cfe135d2d9980aa38965905d5af` at the current core commit.

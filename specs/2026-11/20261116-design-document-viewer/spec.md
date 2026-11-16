@@ -2,7 +2,7 @@
 id: SPEC-design-document-viewer
 title: First-class formal documentation in the repository viewer
 summary: "Makes formal design, domain and operations directly readable through canonical and alias links, reference context, source-safe artifacts and shipped viewer output."
-status: in-progress
+status: completed
 created: 2026-11-16
 depends_on: [SPEC-formal-document-kinds]
 related_capabilities: [CAP-VIEW-repository-viewer, CAP-DLV-release-handbook]
@@ -218,7 +218,7 @@ callbacks. A separate delivered-interface record distinguishes the current contr
 ## Delivered grammar screen refinement (before Task 5 production edits)
 
 The preceding screen arrangement remains selected. Its original flat-path assumptions are historical Planning
-provenance. Task 5 uses the delivered interface recorded in materials/delivered-interface.md.
+provenance. Task 5 uses the delivered interface recorded in [delivered interface](../../../docs/materials/2026-11/20261116-design-document-viewer/delivered-interface.md).
 
 UX-browse-formal-documents keeps Domain, Designs and Operations chapters. Within Domain and Designs, area
 subheadings group the entries in both the outline and reading chapters. Each design entry keeps its canonical

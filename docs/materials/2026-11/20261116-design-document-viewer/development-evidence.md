@@ -177,3 +177,11 @@ public-host/wheel evidence covers this consumer change. Host retains combined la
 Functional before/after: the baseline current-grammar fixture exposed eight nodes instead of four and no support
 inventory. The head exposes four canonical nodes, whole-directory support and area labels using the same scan.
 This is functional coverage, with explicit no-reread assertions, not a performance claim.
+
+
+Task 5 source boundary committed as `4f7b5a262b4e84bb1b0716c99d455514c97d5e2f`. The checks above ran on
+its identical implementation/static bytes; subsequent record/UX-link edits did not alter runtime or tests.
+Independent HIGH code review round 4 returned zero findings and no outside-tree read or authored write.
+Full tracked/nonignored before/after snapshot5925bd8bfaf3910e06e21e7dd9114abe36242517 and HEAD matched.
+The commit gate found a missing UC step5→relation-panel citation; the exact current linkage was repaired and the
+ordinary gate passed. No bypass or test weakening occurred.

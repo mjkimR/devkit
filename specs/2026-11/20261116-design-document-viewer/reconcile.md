@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-document-viewer
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     resolution: modified
@@ -21,6 +21,8 @@ targets:
   - file: docs/steering/ux-objects.md
     resolution: modified
   - file: docs/development/reference/viewer.md
+    resolution: modified
+  - file: specs/2026-11/20261116-design-bundle-layout/feedback/viewer-adopts-bundle-grammar.md
     resolution: modified
   - file: docs/materials/2026-11/20261116-design-document-viewer/delivered-interface.md
     resolution: modified
@@ -82,13 +84,13 @@ static, document and cross-owner candidates are rejected rather than appended me
 
 ## Completion and source feedback
 
-No required acceptance criterion is deferred. Task 5 directly addresses the explicitly linked `FB-viewer-adopts-bundle-grammar`; its final disposition follows independent verification.
+No required acceptance criterion is deferred. Task 5 directly addresses the explicitly linked `FB-viewer-adopts-bundle-grammar`; its disposition resolves the source after current tests and independent code review round 4 verified the complete fix.
 All findings in code review rounds 1 and 2 are corrected; fresh round 3 has no findings. The review's independent
 probes and the worker's frontend250, affected294, backend/handbook155, public-host and exact wheel100 evidence
 remain distinguished by their recorded source identities. Independent reconcile round 1 verified all targets; its P2 read-budget wording finding is corrected exactly by qualifying the supersession-only trigger and citing the existing formal-context clause. The whole reflection is rechecked in reconcile-check-02; this wording-only correction changes no implementation or contract meaning.
 
 Integration, lifecycle reference transactions and combined landed-head verification remain Host-owned. This
-reflection does not close the documentation evolution milestone or adopt later unapproved layout/template work.
+reflection does not close the documentation evolution milestone. Task 5 consumes delivered layout; later template work remains independent.
 
 ## Host integration reflection
 
@@ -99,14 +101,14 @@ The formal-role ADR Confirmation now names both completed implementation evidenc
 pending phase evidence. Its decision, partial supersession clauses and core schema remain unchanged.
 Independent integration reflection verification confirmed both additional targets and all prior targets;
 `envelopes/reconcile-check-03.yaml` records the zero-finding result and matching full-tree snapshot.
-Viewer runtime and generated static bytes are unchanged from the accepted worker.
+At that pre-adoption Host checkpoint, Viewer runtime and generated static bytes were unchanged from the accepted worker. Task 5 source4f7b5a262 now supersedes that byte-parity claim for the compatibility change.
 
 
 ## Delivered grammar adoption
 
 Main advanced to the published design bundle/domain area grammar after the original Viewer worker completed.
 Task 5 and AC-08 consume that current core interface and directly address `FB-viewer-adopts-bundle-grammar`.
-Previous implementation evidence remains source-identified history. Task 5 current grammar implementation and checks are recorded in development-evidence.md; independent HIGH review remains pending. No core grammar or later template work is adopted
+Previous implementation evidence remains source-identified history. Task 5 current grammar implementation and checks are recorded in development-evidence.md; independent HIGH code review round 4 passed with zero findings; reconciliation verification covers the complete reflection. No core grammar or later template work is adopted
 by changing its owner here.
 
 
@@ -118,3 +120,18 @@ DESIGN/DOMAIN/OPS canonical owner documents and migrations are read-only inputs:
 entrypoints and action-owner routes do not change, so no role document regeneration or migration is needed.
 Host-owned documentation ownership and ADR Confirmation changes are preserved, without further authored edits.
 The later `PROP-formal-document-templates` remains independent and untouched.
+
+
+`FB-viewer-adopts-bundle-grammar` is resolved with source-specific tests and independent code review evidence.
+The exact source feedback file is a modified target; its original diagnostic remains historical context and its
+Disposition identifies the full fix. No other feedback status or proposal changed.
+
+Native entrypoint derivation was rerun. Retain existing Viewer backend/frontend doorway directories and the use
+case's SddViewer/KnowledgeViews entrypoints; no source ownership changed. Reject broad package candidates,
+all test/helper/static/docs paths and cross-owner handbook/viewer pairs rather than mechanically applying them.
+Current incoming references for CAP-VIEW and CAP-DLV were inspected; generic serving, release membership,
+architecture and ADR responsibilities remain unchanged. No new role document or contract owner is needed.
+
+Current implementation source `4f7b5a262b4e84bb1b0716c99d455514c97d5e2f` has independent code review04.
+Before/after full tracked/nonignored snapshot5925bd8bfaf3910e06e21e7dd9114abe36242517 and clean HEAD match.
+This is emulated read isolation with author freeze, explicit own-tree cwd and scoped commits, not native confinement.

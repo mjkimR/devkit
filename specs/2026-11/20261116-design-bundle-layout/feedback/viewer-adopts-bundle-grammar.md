@@ -8,7 +8,7 @@ target: PROP-design-document-viewer
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -102,3 +102,18 @@ Migrated paths on this branch: docs/designs/distribution/DESIGN-distribution-tra
   docs/domain/distribution/DOMAIN-bundle-selection-and-installation.md,
   docs/domain/delivery/DOMAIN-delivery-relationships.md
 ```
+
+
+## Disposition
+
+Resolved by `SPEC-design-document-viewer` Task 5 at implementation source
+`4f7b5a262b4e84bb1b0716c99d455514c97d5e2f`, independently verified by HIGH code review round 4
+(`review-04.yaml` in that unit, zero findings). The Viewer consumes the delivered DESIGN bundle/DOMAIN area
+policy, groups areas, labels canonical IDs and lists whole-bundle support from the existing source scan.
+Stray/nested/orphan support never becomes canonical identity, search/count or graph data. DOMAIN/OPS support
+controls, source/ref/Back and public callbacks are preserved; handbook source lookup excludes identified support.
+The current target/plan/Screens and support matrix distinguish delivered policy from the immutable original pin.
+Verification: frontend265/22, affected296 against delivered core, focused backend/handbook207, lint/type0,
+pack/build/generated-stale0/public-host1/external-tsc and wheel100 exact static files. Current retained-five plus
+CAP routes read real repository bytes. Full scope/evidence is retained in the Viewer development-evidence.md;
+core schema and later template/body policy are unchanged. Independent reconciliation follows in that unit.
