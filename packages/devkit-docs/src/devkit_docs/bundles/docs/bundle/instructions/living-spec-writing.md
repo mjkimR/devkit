@@ -32,6 +32,11 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
   the receiving owner; otherwise use a concise non-normative summary citing the owner.
 - For a current mechanism question, write an ID-free `docs/designs/<slug>.md` entry, or `designs/<slug>.md` under
   the registered package docs root, with question, overview, authority boundary and next useful action.
+- For a conceptual relationship question, write an ID-free `docs/domain/<slug>.md` entry, or `domain/<slug>.md`
+  under the registered package docs root, with question, relationship overview, authority boundary and next useful step.
+- Link selected owners to domain entries for the reader's question; retain validity and transformation contracts
+  with their existing owners, and keep term definitions in the glossary.
+- Keep domain entries outside indexed identity; use ordinary links without promising independent search/resolve/refs nodes.
 - Add only useful supporting detail, examples, diagrams or datasheets; make each detail directly understandable,
   and keep a small design in its entry without an empty hierarchy.
 - Link selected owners to the entry for the reader's question; use full IDs for indexed owners and ordinary links

@@ -12,6 +12,9 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 
 ## 1. Distribution and Packaging
 
+For relationships among availability, requested selection, asset identity, destinations and evidence, read
+[Bundle selection and installation](../domain/bundle-selection-and-installation.md).
+
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
 | **Release version** | One human-selected X.Y.Z assigned to changed distributions and their exact-pin dependents; excludes unchanged package and bundle identities. | `ADR-selective-package-versions` |  | `VERSION`, `release` |
@@ -40,6 +43,9 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | **UX object register** | The steering file `docs/steering/ux-objects.md` listing each object's representations and calls to action per role, for the objects the use cases with UX documents touch; created with a project's first UX document, never seeded. | `ADR-ux-screens` | object model | `docs/steering/ux-objects.md` |
 
 ## 3. Delivery Workflows and Tasks
+
+For proposal/spec identity and the difference between membership, prerequisite and provenance, read
+[Delivery relationships](../domain/delivery-relationships.md).
 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |

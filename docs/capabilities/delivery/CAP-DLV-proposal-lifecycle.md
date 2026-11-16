@@ -39,6 +39,9 @@ Composed acceptance and handoff also perform guarded Git lifecycle effects under
 
 ### 4.1 Handoff Steps
 
+For how milestone membership, Unit prerequisites and provenance differ across proposal/spec handoff, read
+[Delivery relationships](../../domain/delivery-relationships.md). The contracts below retain handoff authority.
+
 Before its first write, handoff MUST validate the projected live unit dependency graph: replace the source
 PROP anchor with the new SPEC, carry outgoing edges and rewrite live incoming depends_on targets, written with the
 proposal's ID or one of its aliases, in memory; every other document keeps its aliases in the projection.

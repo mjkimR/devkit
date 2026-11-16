@@ -1,13 +1,13 @@
 ---
 id: CAP-DOCS-documentation-ownership
-title: Documentation ownership and design entries
-summary: "Assigns one normative owner per documentation responsibility and question-specific routes to maintained ID-free design explanations, without extending document identity or runtime support."
+title: Documentation ownership and linked entries
+summary: "Assigns one normative owner per documentation responsibility and question-specific routes to maintained ID-free design and domain explanations, without extending document identity or runtime support."
 area: documents
 status: active
 usecases: []
 ---
 
-# [CAP-DOCS-documentation-ownership] Documentation ownership and design entries
+# [CAP-DOCS-documentation-ownership] Documentation ownership and linked entries
 
 ## 1. Summary
 
@@ -17,11 +17,10 @@ indexed Kind. `ADR-documentation-ownership-and-linked-design-entries` records th
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: shared semantic ownership, architecture overlap and question-specific ID-free design navigation.
+- **In-Scope**: shared semantic ownership, architecture overlap and question-specific ID-free design and domain navigation.
 - **Out-of-Scope**: identity/index/placement grammar (`CAP-DOCS-document-model`), search
   (`CAP-DOCS-document-search`), lookup (`CAP-DOCS-document-lookup`) and namespaces (`CAP-DOCS-namespaces`).
-  Domain and operations homes, lifecycle and viewer support remain with `SPEC-domain-model-documents`,
-  `PROP-operations-documents`, `PROP-design-document-lifecycle` and `PROP-design-document-viewer`.
+  Operations home, lifecycle and viewer support remain with `PROP-operations-documents`, `PROP-design-document-lifecycle` and `PROP-design-document-viewer`.
 
 ## 3. Business Rules & Policies
 
@@ -83,6 +82,21 @@ already belong to arc42. These are responsibility boundaries, not a chapter tuto
 A small design may need only its entry. No empty hierarchy, all-pairs links, reciprocal registry, whole-layer reading
 prerequisite or fixed hop cap is required. Full IDs cite indexed owners; ordinary Markdown links reach ID-free
 content. `docs refs` retains indexed reverse lookup; ordinary design links create no index/search/resolve/refs node.
+
+### 3.4 Domain representation
+
+1. **Domain home**: Authors SHOULD maintain conceptual relationship entries as ID-free `docs/domain/<slug>.md`,
+   with analogous `domain/` under a registered package's docs root.
+2. **Independent usefulness**: Authors SHOULD give each entry its reader question, relationship overview,
+   authority boundary and next useful step, splitting only useful supporting detail.
+3. **Discovery**: Authors SHOULD add selected question-specific links from existing owners to needed domain entries.
+4. **No identity borrowing**: Authors MUST keep ID-free domain entries and supporting files outside indexed document identity.
+
+Domain entries compose concepts, identity, relationships and lifecycles alongside structure and contracts.
+They need no class catalog, schema catalog, fixed authoring order, reciprocal registry, all-pairs links,
+whole-layer prerequisite or fixed hop cap. Full IDs cite indexed owners; ordinary links reach ID-free entries.
+Existing owner lookup/search and indexed reverse references remain available; domain entries create no independent
+index/search/resolve/refs node. `ADR-linked-domain-relationship-views` records the representation choice.
 
 ## 4. Interfaces & Data Contracts
 

@@ -40,12 +40,12 @@ Foundation retains domain as a distinct role and leaves its maintained home open
 Choose linked ID-free domain entries, conditional on independent global/package domain route validation in Development.
 
 - Conceptual relationship entries use `docs/domain/<slug>.md`, or analogous `domain/` under a registered package
-  docs root. → `CAP-DOCS-documentation-ownership` planned Domain representation subsection (SHOULD).
+  docs root. → `CAP-DOCS-documentation-ownership` §3.4 Domain representation (SHOULD).
 - An entry gives its question, relationship overview, authority boundary and next useful step; only useful detail
   is split. Selected owner links provide question-specific discovery without whole-layer prerequisites.
-  → `CAP-DOCS-documentation-ownership` planned Domain representation subsection (SHOULD).
+  → `CAP-DOCS-documentation-ownership` §3.4 Domain representation (SHOULD).
 - ID-free domain files do not borrow indexed identity or promise search/resolve/refs nodes.
-  → `CAP-DOCS-documentation-ownership` planned Domain representation subsection (MUST).
+  → `CAP-DOCS-documentation-ownership` §3.4 Domain representation (MUST).
 - Validity/transformation contracts retain their current owners; no normative statement transfers.
 - No Kind, runtime, namespace schema, template, viewer or lifecycle automation is selected.
 
