@@ -1,0 +1,15 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T11:44:01.625138Z'
+status: completed
+summary: 'governance, gate, harness, worktree, compact, collaboration, host: 1 candidate kept (OPS-host-hook-dispatch-routing); 18 dropped as already owned'
+findings:
+- issue: 'Kept OPS-host-hook-dispatch-routing: dispatch failures are silent by contract and the reference is keyed by emitted codes'
+  evidence: materials/inventory.md candidate 4; CAP-HOST-lifecycle-observation §4; packages/devkit-dist/src/devkit_dist/features/host/usecases/status.py, runner.py
+  suggested_action: Write routing rows only; normal state is host status state=ok with last_received for an observe-handler asset
+  resolution: open
+unverified_areas:
+- CAP-GATE-commit-gates §3-4, CAP-HARN-agent-guidance, CAP-HARN-command-design and CAP-GOV-rule-authoring bodies not read in full
+checks: {}
