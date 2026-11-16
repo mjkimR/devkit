@@ -126,26 +126,34 @@ consumers itself, and the viewer adopts it after it lands.
 
 - **Q1 — kind layout fact, not table rows alone.** `area_scoped` drives only hand-written Living Spec grammar
   entries, and `anchor` is coupled to anchor-derived summaries, so the kind table gains one layout fact per kind
-  (`flat`, `area` or `area-bundle` with its anchor file name). `RULE-id-convention`, the role support
+  (`flat`, `area` or `area-bundle` with its anchor file name). `area_scoped` becomes derived from that layout
+  (`area` or `area-bundle`), so the table holds one source of truth; the layout anchor is separate from the
+  summary `anchor`, so designs keep their summary rule. The table's Living Spec identity definition says the ID is
+  the file stem for `flat` and `area` kinds and the bundle directory name for `area-bundle` kinds.
+  `RULE-id-convention`, the role support
   classifier, `RULE-spec-format` (the `area` exemption and the derived ID of an anchor), `entrypoint_bearing` and
   the search file-name pin read that fact instead of kind checks. The index, `devkit docs resolve`, `refs`,
   `list --area` and `list --file` key on frontmatter IDs and need no change.
 - **Q2 — bundle support.** Inside a design bundle only `design.md` carries an ID. Every other file in the bundle is
   parent-owned support: Markdown stays ID-free and names its parent; non-Markdown needs no identity. An identified
   Markdown file inside a bundle is a stray, reported with a remediation to promote it to a peer bundle. A bundle
-  without its anchor is an orphan. Independent detail stays a peer bundle with its own DESIGN ID; bundles never
+  without its anchor is an orphan. Support may sit at any depth below the bundle directory; identified Markdown at
+  any depth, including a nested `DESIGN-*/design.md`, is a stray. `README.md` stays exempt everywhere, as today,
+  including inside bundles and area directories. Independent detail stays a peer bundle with its own DESIGN ID; bundles never
   nest. Domain support keeps `<ID>/artifacts/` beside the domain file in its area directory.
 - **Q3 — moves.** Aliases, `related_*`, canonical references and entrypoint reverse lookup are ID-keyed, so an area
   move keeps them; `area` follows the directory and `devkit rules fix` repairs a stale value but never moves files.
   A move across docs roots changes namespace membership, as today. Bundle anchor file names leave the search
   file-name pin, so `design.md` pins no bundle. Open spec units store literal target paths: the migration rewrites
   any open unit's target that names a moved document in the same commit; completed specs and materials stay as
-  written.
+  written. On the Planning base no open unit targets the moved paths; Development reports one it finds as a
+  problem to the Host instead of writing outside its scope.
 - **Q4 — landed lifecycle consumers.** Most lifecycle prose is grammar-neutral. Path and "artifact subtree"
   statements change in the spec-sync skill, the adaptive documents reference, the brownfield migration reference
   and the proposal scaffold text. Both composed lifecycle end-to-end scenarios (spec and adaptive) and the
   devkit-spec entrypoint and baseline fixtures are rebuilt on the bundle and area paths; lifecycle behavior does
-  not change. The work stays one feature spec, so the size rises to L instead of a split.
+  not change. The brownfield adoption skill and the spec completion reference mention supporting artifacts
+  without a path and stay as written. The work stays one feature spec, so the size rises to L instead of a split.
 
 ### Non-Goals
 
@@ -161,15 +169,22 @@ consumers itself, and the viewer adopts it after it lands.
 ### Expected acceptance evidence
 
 - **B1 — Grammar**: Positive and negative rule tests cover the design bundle path, the domain area path, the
-  `area` match, the anchor file, bundle support files and a stray identified document, in the global root and a
-  registered namespace root.
+  `area` match, the anchor file, bundle support files at the top and a nested depth, a stray identified document
+  (including a nested bundle), an anchor-less bundle and a bundle `README.md`, in the global root and a registered
+  namespace root. A kind-table test proves `area_scoped` follows the layout. `devkit rules fix` derives a bundle
+  anchor's ID from its directory and repairs a stale `area` without moving files. `RULE-code-entrypoints` reports
+  a dead entrypoint in a bundle design.
 - **B2 — Identity preserved**: `devkit docs resolve`, `devkit docs refs`, search, list and `entrypoints` reverse
-  lookup return the migrated design and domain documents under unchanged IDs; an area move test keeps the ID and its references.
+  lookup return the migrated design and domain documents under unchanged IDs; an area move test keeps the ID and its references. `devkit spec entrypoints derive` accepts a bundle design target, and searching `design.md`
+  pins no bundle.
 - **B3 — Migration**: The delivered design and domain documents pass `devkit rules check` at their canonical paths with ordinary links repaired.
 - **B4 — Contracts**: The superseding ADR, the capability documents, templates and instructions, and the landed
   spec and adaptive lifecycle assets state one path grammar per kind; the lifecycle end-to-end scenarios pass on it.
-- **B5 — Viewer follow-up**: A recorded follow-up names the viewer's flat-grammar pins and the bundle grammar to
-  adopt.
+  A search of the owned contract and asset paths for a flat design path or a design-scoped `<ID>/artifacts/`
+  returns only domain and operations statements and historical records.
+- **B5 — Viewer follow-up**: A recorded follow-up names the viewer's flat-grammar pins, including its
+  delivered-core reconcile clause and support-layout statements in its target documents, and the bundle grammar to
+  adopt; until then the viewer tests against synthetic fixtures rather than this repository's moved documents.
 
 ## 4. Lifecycle & Retirement Criteria
 

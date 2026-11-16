@@ -48,14 +48,15 @@ Chosen option 2.
   The directory name is the ID, and the `area` field equals the area directory. Every other file in the bundle is
   parent-owned support: Markdown is ID-free and names its parent, and non-Markdown carries no identity. An
   identified Markdown file inside a bundle is a stray, and a bundle without its anchor is an orphan. Independent
-  detail is a peer bundle with its own DESIGN ID; bundles never nest.
+  detail is a peer bundle with its own DESIGN ID; bundles never nest. Support may sit at any depth in the bundle;
+  identified Markdown at any depth is a stray, and `README.md` stays exempt.
 - **Domain.** A domain document is `<docs-root>/domain/<area>/DOMAIN-<slug>.md` with a matching `area` field. Its
   support stays under `<ID>/artifacts/` in the same area directory.
 - **Operations.** Operations documents keep the flat grammar and carry no `area`.
 - **Areas.** An area is a directory name the project chooses; validation checks only that the `area` field equals
   the directory.
 - **Kind table.** The kind table records each kind's layout (`flat`, `area` or `area-bundle` with its anchor file
-  name), and identity, support, frontmatter, entrypoint and search rules read it.
+  name), from which `area_scoped` derives, and identity, support, frontmatter, entrypoint and search rules read it.
 
 Supersedes in part `ADR-formal-role-document-identities`: the flat canonical path clause and the
 `<ID>/artifacts/` support clause for design and domain documents. Its identity, prefix, status, relation,
