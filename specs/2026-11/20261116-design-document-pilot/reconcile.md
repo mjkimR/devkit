@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-document-pilot
-status: pending
+status: resolved
 targets:
   - file: docs/materials/2026-11/20261116-design-document-pilot/domain-entry.md
     resolution: modified
@@ -60,3 +60,13 @@ trials precede draft disclosure; supplied-entry reviewer repeats are not separat
 reply-skill read outside the assigned worktree is disclosed; content evidence uses the assigned worktree.
 No recovery run, package-context execution, viewer test or timing measurement is claimed. The actual worktree
 sync_start check passed before edits; documented-state recovery/readiness conclusions are separate evidence.
+
+## Independent reconciliation closure
+
+Nested Reconcile Reviewer PASS at `f028ba8c6c5ad6dd6558cc37fc709e98bf5271bf`, zero findings.
+All eight material targets appear exactly once; inspected source/contract agreement and five deferred proposal
+owners match the diff. No outside-worktree reads or mutations were reported. Before/after tree snapshots match
+`44323599a2004e20d5a2fd9a099d22d1c72d3274`. The reviewer audited retained trials rather than repeating them;
+caller-supplied tests/rules were SKIP for rerun. Final native checks remain the implementer's responsibility.
+Entrypoint derivation produced zero pairs: eight material targets are not entrypoint-bearing; no CAP/UC target was
+invented. The author finalized status after this independent semantic verification.

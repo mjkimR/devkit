@@ -2,7 +2,7 @@
 id: SPEC-design-document-pilot
 title: Early content pilot for domain, design and operations
 summary: "Tests domain, design and operations ownership on distribution examples without changing contracts or tooling."
-status: in-progress
+status: completed
 created: 2026-11-16
 related_capabilities: []
 related_usecases: []
