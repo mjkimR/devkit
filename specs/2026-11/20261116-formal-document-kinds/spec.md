@@ -1,46 +1,25 @@
 ---
-id: PROP-formal-document-kinds
+id: SPEC-formal-document-kinds
 title: First-class design, domain and operations document kinds
-summary: "Registers design, domain and operations as formal document kinds with complete identity, governance, authoring, discovery and migration support, replacing the ID-free direction."
-status: accepted
-created_at: 2026-11-16
-target_area: documents/
-priority: high
-size: L
-planning_effort: high
-dev_effort: high
-milestone: MS-documentation-system-evolution
-boundaries:
-  owns:
-    - packages/devkit-docs/
-    - docs/designs/
-    - docs/domain/
-    - docs/  # nearest existing parent for the planned docs/operations/ directory
-    - docs/capabilities/documents/
-    - docs/capabilities/distribution/
-    - docs/capabilities/delivery/
-    - docs/capabilities/governance/CAP-GOV-spec-rules.md
-    - docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md
-    - docs/usecases/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/development/reference/
-    - docs/steering/glossary.md
-    - docs/README.md
-    - docs/proposals/PROP-formal-document-kinds/
-  excludes:
-    - packages/devkit-spec/
-    - packages/devkit-adaptive/
-    - packages/devkit-viewer/
-    - scripts/handbook.py
-task_kind: feature
+summary: Registers design, domain and operations as formal document kinds with complete identity, governance, authoring, discovery and migration support, replacing the ID-free direction.
+status: planned
+created: 2026-11-16
 supersedes: PROP-operations-documents
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-formal-document-kinds] First-class design, domain and operations document kinds
+# [SPEC-formal-document-kinds] First-class design, domain and operations document kinds
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-formal-document-kinds on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-formal-document-kinds`
+- Target Docs Blueprint: `PROP-formal-document-kinds-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 The intended change is the documentation hierarchy as a supported system. Design, domain and operations require
 formal Kind, prefix and ID standing with the existing document toolchain. Linked ID-free entries do not satisfy
@@ -51,13 +30,32 @@ this requirement. Their useful content and responsibility boundaries remain inpu
 identity restriction. Planning must produce a new ADR superseding those clauses; it must preserve unique owners
 and existing capability guarantees. The superseded operations proposal's Development work is unmerged and halted
 at commit 55bc46fb5ce350e0a84666d6df338f8947e54e1b. Its copied source and evidence in
-[materials](materials/README.md) are historical inputs, not current main implementation or formal-kind proof.
+[materials](../../../docs/materials/2026-11/20261116-formal-document-kinds/README.md) are historical inputs, not current main implementation or formal-kind proof.
 
 One coherent core Kind integration spec can deliver the model, governance, authoring, discovery and migration
 contract. Required lifecycle and viewer integration remain separately owned by `PROP-design-document-lifecycle`
 and `PROP-design-document-viewer`. The milestone is complete only when all three phases are verified.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement First-class design, domain and operations document kinds so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: What exact directory, prefix, stem/H1 grammar, frontmatter, status and relation schema fits each kind?
   Proposed prefixes are DESIGN, DOMAIN and OPS. Each kind must receive a formal prefix; Planning confirms spelling
@@ -73,9 +71,9 @@ and `PROP-design-document-viewer`. The milestone is complete only when all three
 - **Q5**: How can migration preserve incoming links, details and historical evidence while retaining public Python,
   CLI and JSON compatibility and docs-only built-wheel operation without a spec package dependency?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Formal model and governance
+#### Formal model and governance
 
 - Extend `packages/devkit-docs` Kind enum and definitions, coverage assertions and Living Spec path grammars for
   all three kinds. Declare appropriate directory, area policy, H1 token, summary, status and relation semantics.
@@ -91,7 +89,7 @@ and `PROP-design-document-viewer`. The milestone is complete only when all three
   Planning may include runtime/core/CLI boundary changes actually needed for existing contracts; it must name any
   cross-package boundary extension and feature dependency rather than excluding runtime work by habit.
 
-### Authoring assets and migration
+#### Authoring assets and migration
 
 - Replace ID-free design authoring with formal design guidance and template; add domain and operations writing
   instructions and templates. Update docs bundle registration/core selection, source AGENTS pointers,
@@ -108,7 +106,7 @@ and `PROP-design-document-viewer`. The milestone is complete only when all three
   the current documentation-ownership and document-model contracts to formal standing. Do not silently rewrite
   the accepted historical decisions or retain ID-free canonical entries as an optional parallel route.
 
-### Ownership and integration
+#### Ownership and integration
 
 `packages/devkit-docs` owns core behavior and shipped neutral assets. The `docs/` boundary permits creation of
 `docs/operations/`; other documentation changes remain limited to the role directories and current owners named
@@ -122,7 +120,7 @@ scaffolding. `PROP-design-document-viewer` owns viewer frontend/backend, public 
 assets and handbook prefix/source lookup policy. These integrations are required phases, not optional fixes
 triggered only by a pilot failure. Their separate ownership keeps this proposal one L feature integration.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
 - **F1 — Identity and schema**: Real design, domain and operations nodes load in global and registered namespace
   roots. Positive and negative tests cover metadata, status, prefix, path, H1, aliases and each supported relation.
@@ -143,7 +141,7 @@ triggered only by a pilot failure. Their separate ownership keeps this proposal 
   compatibility pass appropriate regression checks. Required lifecycle/viewer evidence is tracked in their
   dependent proposals and prevents milestone completion until delivered.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 The corrected direction is in Planning review. Planning settles the schemas and complete
 implementation contract before acceptance and handoff. One L core integration spec is the intended handoff.
@@ -152,9 +150,9 @@ Development retirement requires F1–F6 evidence and reconciliation of current c
 The milestone additionally requires the lifecycle and viewer phases. Neither small code size nor owner-linked
 ID-free navigation can substitute for formal support.
 
-## 5. Planning decisions
+### 5. Planning decisions
 
-The selected implementation contract is [core-contract](materials/core-contract.md). DESIGN/design,
+The selected implementation contract is [core-contract](../../../docs/materials/2026-11/20261116-formal-document-kinds/core-contract.md). DESIGN/design,
 DOMAIN/domain and OPS/operations use flat prefixed filenames, required metadata and optional typed relations.
 Independent detail is a formal peer node. Status is draft, active or retired; only design accepts optional source
 entrypoints. Parent-owned artifacts have a narrow explicit path exception. The three formal templates/instructions,
@@ -162,3 +160,4 @@ current migrations, public compatibility and required lifecycle/viewer interface
 PADR-formal-role-document-identities records the lasting schema and partial supersession choice. No unresolved
 user direction is inferred from the superseded ID-free sources. HIGH Development remains appropriate for public
 Kind/identity/output contracts. Implementation size is not a criterion for dropping required runtime or governance.
+

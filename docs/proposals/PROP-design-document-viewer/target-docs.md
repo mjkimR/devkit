@@ -33,7 +33,7 @@ frontend module where that removes inconsistent recognizers. No package, feature
 
 ## 2. Core interface and sequencing
 
-`PROP-formal-document-kinds` is a hard implementation prerequisite, including the decision superseding ID-free
+`SPEC-formal-document-kinds` is a hard implementation prerequisite, including the decision superseding ID-free
 clauses in `ADR-documentation-ownership-and-linked-design-entries` and `ADR-linked-domain-relationship-views`.
 The selected future core contract is pinned in [core contract](materials/core-contract.md). Artifact adapter is
 `local`, repository namespace `7a98ea4b0c7772e588edcd66b2dc51119340c3fcb7b9cb304c1e67ffbe3d8302`, source commit

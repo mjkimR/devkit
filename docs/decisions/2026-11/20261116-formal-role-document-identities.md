@@ -1,16 +1,16 @@
 ---
-id: PADR-formal-role-document-identities
+id: ADR-formal-role-document-identities
 title: Formal role documents with canonical identities
 summary: "For independently maintained role documents, we register design, domain and operations with canonical IDs and complete tool support, to enable direct discovery and references, accepting schema and migration work."
-proposal: PROP-formal-document-kinds
+proposal: SPEC-formal-document-kinds
 supersedes: [ADR-documentation-ownership-and-linked-design-entries, ADR-linked-domain-relationship-views]
-status: draft
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-formal-role-document-identities] Formal role documents with canonical identities
+# [ADR-formal-role-document-identities] Formal role documents with canonical identities
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---
@@ -43,7 +43,7 @@ All viable options register formal Kind/prefix/ID. ID-free canonical content is 
 - Topic-grouped formal filenames with independent stem IDs: physical detail cohesion; path and pin migrations
   are needed on regrouping, and the folder taxonomy adds classification separate from globally unique identity.
 
-Status, relation-field and source-entrypoint comparisons are recorded in [the contract](../materials/core-contract.md).
+Status, relation-field and source-entrypoint comparisons are recorded in [the contract](../../materials/2026-11/20261116-formal-document-kinds/core-contract.md).
 No option is selected for implementation minimization.
 
 ## 4. Decision Outcome
