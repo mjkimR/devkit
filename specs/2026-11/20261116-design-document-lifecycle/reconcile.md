@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-document-lifecycle
-status: pending
+status: resolved
 targets:
 - file: docs/capabilities/delivery/CAP-DLV-adaptive-development.md
   resolution: modified
@@ -111,8 +111,7 @@ envelope or gate. Baseline source-invalidation and required formal gaps remain u
 Code review round1 found three issues; all were fixed, and fresh independent round2 verified six focused regressions,
 nine strengthened SDD E2E and22 rules. Frozen source b691875efb19cf504997e23c04657bcf32dfdf8f passed developer
 1878 affected unit/integration tests and sync check. Earlier unchanged adaptive/baseline matrix and installed-wheel
-consumer evidence remains recorded; source-specific exact commands/outcomes are in envelopes. Reconciliation remains
-pending until its separate HIGH reviewer verifies this whole reflection.
+consumer evidence remains recorded; source-specific exact commands/outcomes are in envelopes. Independent HIGH reconciliation round1 compared all29 targets and source/contract agreement with no findings.
 
 ## Required later work
 

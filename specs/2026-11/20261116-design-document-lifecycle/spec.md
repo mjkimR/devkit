@@ -2,7 +2,7 @@
 id: SPEC-design-document-lifecycle
 title: Formal documentation authoring and reconciliation lifecycle
 summary: "Integrates formal design, domain and operations impact, maintenance and source agreement into existing SDD and adaptive development."
-status: in-progress
+status: completed
 created: 2026-11-16
 depends_on:
   - SPEC-formal-document-kinds
