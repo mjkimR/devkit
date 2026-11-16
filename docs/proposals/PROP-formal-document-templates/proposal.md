@@ -2,7 +2,7 @@
 id: PROP-formal-document-templates
 title: Template alignment for formal design, domain and operations documents
 summary: "Aligns the design, domain and operations templates and writing instructions with the documents authors write, starting with removal of the question section that restates the summary."
-status: reviewing                       # draft | reviewing | accepted | rejected
+status: accepted                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-16
 target_area: documents/
 priority: medium                      # critical | high | medium | low
