@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:18:09.420923Z'
+status: completed
+summary: 'Development through the final change report: specify, DOMAIN-feedback-lifecycle in docs/domain/delivery (delivery activities own status changes) and DESIGN-proposal-handoff with worked example commit 93e72152c, review-01 four P3 fixed and reverified, reconcile-check passed, one feedback recorded; no scope extension, no index or README change; integration not run'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base cdbcdf224 18 passed (partial)
+  lint: PASS devkit rules check --ci --base cdbcdf224 0 errors; just lint-check
+  diff_check: PASS git diff --check cdbcdf224..HEAD
+diff_scope:
+  base: ''
+  head: 0a09d72a23fe3e6303dc6f427308094b7f1df62a
+activity_effort: medium
