@@ -110,3 +110,9 @@ fragments and URL disposal revokes the original object URL. The encoded SVG view
 Complete batch checks: frontend lint PASS, svelte-check0 errors/warnings, Vitest248/21 files PASS; pack and actual
 packed-host probe PASS; generated static stale0; Python wheel100 static files exact bytes PASS. No Python runtime
 or dependency changed in this batch. A fresh HIGH review covers these request, fragment and cancellation effects.
+
+The same image-fragment condition is also corrected on the actual Files supporting-image surface: following an SVG
+link reads the fragment-free source path, preserves the named-view fragment on the displayed URL, and revokes the
+base preview URL exactly once on disposal. Its permanent navigation regression was RED first. Final batch counts
+supersede the preceding248: Vitest249/21 files PASS, lint/type PASS, pack/public-host PASS, generated stale0 and
+wheel100 exact static bytes PASS. This same batch is submitted together to fresh review3.

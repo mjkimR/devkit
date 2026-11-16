@@ -193,3 +193,26 @@ it('direct Files artifact host anchors scroll initially and on same-path prop ch
 		vi.mocked(source.blob).mock.calls.filter(([candidate]) => candidate === path)
 	).toHaveLength(reads);
 });
+it('Files supporting SVG links preserve the view fragment and dispose the base preview URL exactly once', async () => {
+	const parent = 'docs/designs/DESIGN-a.md',
+		path = 'docs/designs/DESIGN-a/artifacts/figure.svg';
+	const source = repository({
+		[parent]: '# Parent\n\n[Figure](DESIGN-a/artifacts/figure.svg#named%20view)',
+		[path]:
+			'<svg xmlns="http://www.w3.org/2000/svg"><view id="named view" viewBox="0 0 10 10"/></svg>'
+	});
+	let serial = 0;
+	vi.mocked(URL.createObjectURL).mockImplementation(() => `blob:direct-image-${++serial}`);
+	const view = render(SddViewer, { dataSource: source, initialView: 'files', initialPath: parent });
+	await fireEvent.click(await screen.findByRole('link', { name: 'Figure' }));
+	const image = await screen.findByRole('img', { name: path });
+	expect(image.getAttribute('src')).toBe('blob:direct-image-2#named%20view');
+	expect(source.blob).toHaveBeenCalledWith(path, 'main', expect.anything());
+	expect(vi.mocked(source.blob).mock.calls.every(([candidate]) => !candidate.includes('#'))).toBe(
+		true
+	);
+	view.unmount();
+	expect(
+		vi.mocked(URL.revokeObjectURL).mock.calls.filter(([url]) => url === 'blob:direct-image-2')
+	).toHaveLength(1);
+});

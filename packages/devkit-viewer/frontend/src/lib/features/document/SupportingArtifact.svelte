@@ -160,7 +160,10 @@
 			>{/if}
 		{#if download}<a href={download} download={path.split('/').at(-1)}>Download file</a>{/if}
 		{#if raw && file.text !== null}<RawViewer content={file.text} />
-		{:else if file.kind === 'image' && preview}<img src={preview} alt={path} />
+		{:else if file.kind === 'image' && preview}<img
+				src={preview + (fragment ? `#${encodeURIComponent(fragment)}` : '')}
+				alt={path}
+			/>
 		{:else if file.kind === 'markdown' && rendered.error}<p role="status">
 				Markdown preview unavailable: {rendered.error}. View raw or download the source.
 			</p>
