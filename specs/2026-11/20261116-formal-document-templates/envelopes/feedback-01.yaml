@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T10:35:40.492186Z'
+status: completed
+summary: 'Swept this Development turn and its diff: recorded FB-handoff-skeleton-keeps-proposal-boundary; no duplicates; FB-scout-lacks-web-search from Planning stays open'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

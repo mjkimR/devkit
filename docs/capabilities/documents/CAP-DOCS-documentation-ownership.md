@@ -73,8 +73,12 @@ already belong to arc42. These are responsibility boundaries, not a chapter tuto
    DESIGN, DOMAIN or OPS ID and canonical path in the corresponding global or registered package docs root: a design
    bundle `designs/<area>/DESIGN-<slug>/design.md`, a domain file `domain/<area>/DOMAIN-<slug>.md` or a flat
    operations file `operations/OPS-<slug>.md` (`CAP-DOCS-document-model`, `RULE-id-convention`).
-2. **Independent usefulness**: Authors SHOULD state the reader question, overview, authority boundary and next useful
-   action. An independent detail, worked example or datasheet has its own question/maintenance seam and formal peer ID.
+2. **Independent usefulness**: Before writing, authors SHOULD settle the one reader question a document answers and
+   split or drop a document that has none. The document SHOULD open with the problem it answers (the problem the
+   mechanism solves, the concepts readers confuse or the observed symptom) with no question section or label, and
+   close with its authority boundary, naming what it does not settle and the owner that does by full ID, and its
+   maintenance trigger and next useful action (`ADR-problem-first-formal-document-openings`). An independent detail,
+   worked example or datasheet has its own question/maintenance seam and formal peer ID.
 3. **Supporting artifacts**: A design's parent-owned support MUST live inside its bundle beside `design.md`, at any
    depth; domain and operations support MUST live under `<PARENT-ID>/artifacts/` beside the parent file, with one
    canonical same-kind parent in the same root. Supporting Markdown MUST be ID-free and name that parent;
@@ -93,8 +97,9 @@ unless transferred explicitly under §3.1. This migration transfers no distribut
 
 ## 4. Interfaces & Data Contracts
 
-The docs bundle supplies formal design/domain/operations templates and corresponding writing instructions.
-`templates/design-template.md` remains a compatibility pointer to `design.md`. Formal nodes participate directly
+The docs bundle supplies formal design/domain/operations templates and corresponding writing instructions; each
+template opens with the problem lead, carries its guidance in HTML comments and closes with `## Authority boundary`
+and `## Maintenance and next action`. Formal nodes participate directly
 in index/list/search/resolve/refs with `CAP-DOCS-document-model` identity and typed relation rules. Semantic ownership,
 source agreement and ordinary artifact/source link destinations are Review only; applicable structural rules do
 not prove those semantic or ordinary-link properties. `ADR-formal-role-document-identities` defines the schema and

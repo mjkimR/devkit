@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T10:35:03.050202Z'
+status: completed
+summary: reconcile-reviewer verified all 7 reconcile.md targets (CAP-DOCS-documentation-ownership, CAP-DOCS-document-model, two DESIGN, two DOMAIN, OPS-distribution-sync) against diff and ADR; no-impact on use cases, architecture, UX, glossary and entrypoints confirmed; no findings
+findings: []
+checks:
+  rules: PASS devkit rules check docs/designs docs/domain docs/operations docs/capabilities/documents errors=0
+  sync: PASS devkit sync --check
+  tests: SKIP not rerun; caller reports PASS 3 passed at e955e0b187bcc5432cdf31929b9706eb79b5c92a
+diff_scope:
+  base: 93e72152c7ae635f976f7e9c1106e210e9634913
+  head: c0fa9ccbf5fb49d0e83645b8c2a2a4eb442ed089

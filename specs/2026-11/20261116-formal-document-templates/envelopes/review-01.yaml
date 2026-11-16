@@ -1,0 +1,27 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T10:32:27.894897Z'
+status: completed
+summary: 'Isolated code-reviewer: AC-01..AC-07 confirmed at 512e0c9ba by structural template script, base/head ID-link-code-section comparison of the five documents, rules check and sync check; two P3 wording findings'
+findings:
+- issue: DESIGN-distribution-transactions names its body section '## Mechanism detail', the generic label the revised template tells authors to avoid; the next-read pointer is repeated under Maintenance and next action.
+  evidence: docs/designs/distribution/DESIGN-distribution-transactions/design.md:17
+  failure_condition: A reader comparing the pilot with templates/design.md body comment and design-writing.md step 6 sees the generic heading the template forbids, weakening AC-05.
+  suggested_action: Rename the heading to its topic and drop the duplicated next-read sentence from one section.
+  resolution: open
+  severity: P3
+- issue: The design template lead comment asks for owner and architecture citations in the lead, while design-writing.md step 5 defines the lead as the problem only and places owners in the body and Authority boundary.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/design.md:18-19
+  failure_condition: An author following the template cites owners in the lead and again under Authority boundary, so template and instruction disagree against US-2.
+  suggested_action: Reduce the lead comment to the problem the mechanism solves; leave owner citations to the body and Authority boundary.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected --base 93e72152c 2663 passed; test_distribution + test_installed_consumer 3 passed
+  lint: PASS just lint; pyright 0 errors; devkit rules check --ci --base main errors=0
+  sync: PASS devkit sync --check OK
+diff_scope:
+  base: 93e72152c7ae635f976f7e9c1106e210e9634913
+  head: 512e0c9bafa057e3e3fb28eb10a2202bf0ad5459

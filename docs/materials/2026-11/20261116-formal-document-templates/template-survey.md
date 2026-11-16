@@ -1,8 +1,8 @@
 # Template survey for formal design, domain and operations documents
 
-Planning evidence for `PROP-formal-document-templates`. Four scouts ran on 2026-11-16 against worktree head
+Planning evidence for `SPEC-formal-document-templates`. Four scouts ran on 2026-11-16 against worktree head
 `94a6472c2`: one internal inventory and three external surveys (design-explanation templates, domain and operations
-templates, template lifecycle management). Envelopes: `envelopes/scout-01.yaml` to `envelopes/scout-04.yaml`.
+templates, template lifecycle management). Envelopes: historical Git `5664442947e15f78f81da1b2efcc65368d89b3ea:docs/proposals/PROP-formal-document-templates/envelopes/scout-01.yaml` to historical Git `5664442947e15f78f81da1b2efcc65368d89b3ea:docs/proposals/PROP-formal-document-templates/envelopes/scout-04.yaml`.
 
 ## 1. Internal inventory
 

@@ -1,30 +1,37 @@
 ---
 id: DESIGN-<slug>
-title: <Title>
-status: draft
+title: "<Title>"
+status: draft  # draft | active | retired
 summary: "<English sentence stating the subject and boundary.>"
-area: <area>
-related_capabilities: []
-related_usecases: []
-related_designs: []
-related_domains: []
-related_operations: []
-entrypoints: []
+area: <area>   # the area directory of designs/<area>/DESIGN-<slug>/design.md
+# Optional; list only useful IDs and delete unused lines:
+# related_capabilities: [CAP-<AREA>-<slug>]
+# related_usecases: [UC-<slug>]
+# related_designs: [DESIGN-<slug>]
+# related_domains: [DOMAIN-<slug>]
+# related_operations: [OPS-<slug>]
+# entrypoints: [<workspace-relative source path>]
 ---
 
 # [DESIGN-<slug>] <Title>
 
-## 1. Reader question and mechanism
+<!-- Lead paragraph: the problem the mechanism solves, beyond the summary. At most one sentence is a question. -->
 
-State the implementation question and explain the mechanism. Cite the capability/use case that owns behavioral
-guarantees and the architecture that constrains the mechanism. Add source links and optional entrypoints.
+## <Mechanism topic>
 
-## 2. Details, examples and datasheets
+<!-- Explain the mechanism with source links. Name topics by what they explain, never "Mechanism"; add headings as
+the mechanism needs. -->
 
-Keep useful worked examples here. Give independently maintained Markdown detail its own peer bundle with a formal
-DESIGN ID and an optional related_designs link. Put parent-owned support beside this design.md in the
-designs/<area>/DESIGN-<slug>/ bundle and link it from this body.
+## <Example or datasheet topic>
 
-## 3. Maintenance and next action
+<!-- Optional worked example or datasheet. Independent detail gets its own peer DESIGN bundle; parent-owned support
+sits in this bundle beside design.md, linked from here. -->
 
-Name source changes that require updating this design and the next useful reader action.
+## Authority boundary
+
+<!-- What this design does not settle and the owner that does, by full ID; the design transfers no normative
+statement. -->
+
+## Maintenance and next action
+
+<!-- The source change that requires updating this design, and the next useful reader action. -->

@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T10:36:54.669190Z'
+status: completed
+summary: Formal design, domain and operations templates and writing instructions aligned with ADR-problem-first-formal-document-openings; design-template pointer removed; five delivered documents restructured; CAP-DOCS-documentation-ownership and CAP-DOCS-document-model reconciled. Review PASS after two P3 fixes; reconcile-check PASS.
+findings: []
+checks:
+  tests: PASS just test-affected --base 93e72152c 2663 passed; test_installed_consumer e2e 1 passed
+  build: PASS uv build --package devkit-docs --wheel; just check devkit-docs pyright 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main errors=0; devkit sync --check OK
+diff_scope:
+  base: 93e72152c7ae635f976f7e9c1106e210e9634913
+  head: 7e8d271580ae309df60ca5baa8983f34b3b7b07a

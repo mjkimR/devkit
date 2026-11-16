@@ -8,9 +8,9 @@ summary: "Relates available bundles, requested selection, conceptual assets, pro
 
 # [DOMAIN-bundle-selection-and-installation] Bundle selection and installation
 
-## Question
-
-How do available bundles, requested selection, conceptual assets, projected paths and receipt evidence relate?
+Readers confuse available bundles, requested selection, conceptual assets, projected paths and receipt evidence: a
+deployed path or a receipt entry can look like a requested selection or a separate asset. This entry relates the
+chain and names the owner of each link.
 
 ## Relationship overview
 
@@ -23,7 +23,7 @@ An available bundle without auto-selection needs an explicit configuration entry
 narrowed or opted out. `CAP-DIST-sync-and-transactions` §2 owns selection inputs and effective configuration.
 `CAP-DIST-manifest-spec` §§2–3 owns assets, preset membership and manifest identity.
 
-| Concept | Relationship to the next concept | Authoritative detail |
+| Concept or relationship | Distinction | Authoritative owner |
 | --- | --- | --- |
 | Available bundle | Supplies assets and presets that selection can request | `CAP-DIST-content-packages` and `CAP-DIST-manifest-spec` |
 | Requested selection | Determines the selected assets and agent targets applied by sync | `CAP-DIST-sync-and-transactions` §2 |
@@ -41,11 +41,16 @@ Its `assets` associate deployed representations with their bundle/asset identity
 modes. Seeded targets have their separate evidence. `CAP-DIST-sync-and-transactions` §1 owns these distinctions.
 A path alone therefore does not establish a new asset identity or a requested selection.
 
-## Authority boundary and next useful step
+## Authority boundary
 
 This entry explains the relationship chain; it adds no transaction guarantee, readiness test or recovery procedure.
+Understanding this chain requires no schema or Python class catalog.
+
+## Maintenance and next action
+
+Update this entry when one of the owners below changes how these concepts relate.
 For why a bundle is available, resolve `CAP-DIST-content-packages` and read §§1–3.
 For what is requested or what the receipt proves, resolve `CAP-DIST-sync-and-transactions` and read §2 or §1.
 For asset/preset syntax, resolve `CAP-DIST-manifest-spec`; for a host destination, resolve `CAP-DIST-agent-projections`.
 For sync's implementation mechanism, follow the selected design link in the transaction capability.
-Read only the owner needed for the question; understanding this chain requires no schema or Python class catalog.
+Read only the owner needed for the question.

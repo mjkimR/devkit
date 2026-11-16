@@ -275,7 +275,7 @@ Cross-kind reclassification retains the old node retired; cross-prefix aliases r
 `ADR-formal-role-document-identities` owns this lasting schema decision, and `ADR-area-scoped-design-bundles` owns
 the design bundle and domain area path grammar. Existing public Kind values/order and
 Document/Reference JSON keys remain unchanged; design/domain/operations rows are appended. Templates include
-three formal role files and the legacy design-template compatibility pointer, for nine total files. No docs MCP
+three formal role files, for eight total files. No docs MCP
 service, docs-to-spec import or implicit delivery lifecycle is introduced.
 
 ### 3.3 References
@@ -442,7 +442,7 @@ file selection.
 ## Document asset distribution
 
 The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eleven writing instructions,
-ten document rule assets, eight formal templates plus the design-template compatibility pointer and the docs-pointer. Only docs declares the `docs/steering`
+ten document rule assets, eight formal templates and the docs-pointer. Only docs declares the `docs/steering`
 context directory and registers the `devkit.context_documents` provider that adds a registered namespace's steering
 directory for the working directory. `devkit get-context docs` lists steering summaries and document instructions.
 `docs:docs-skeleton` seeds absent files only when selected; seeded files remain project-owned.

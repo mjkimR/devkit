@@ -1,28 +1,41 @@
 ---
 id: DOMAIN-<slug>
-title: <Title>
-status: draft
+title: "<Title>"
+status: draft  # draft | active | retired
 summary: "<English sentence stating the subject and boundary.>"
-area: <area>
-related_capabilities: []
-related_usecases: []
-related_designs: []
-related_domains: []
-related_operations: []
+area: <area>   # the area directory of domain/<area>/DOMAIN-<slug>.md
+# Optional; list only useful IDs and delete unused lines:
+# related_capabilities: [CAP-<AREA>-<slug>]
+# related_usecases: [UC-<slug>]
+# related_designs: [DESIGN-<slug>]
+# related_domains: [DOMAIN-<slug>]
+# related_operations: [OPS-<slug>]
 ---
 
 # [DOMAIN-<slug>] <Title>
 
-## 1. Conceptual question
+<!-- Lead paragraph: the concepts readers confuse and why, beyond the summary. At most one sentence is a
+question. -->
 
-State the conceptual question and the boundary with behavioral contracts and architecture.
+## Relationship overview
 
-## 2. Concepts, identity and relationships
+<!-- Explain identities, relationships and lifecycles; one table row per concept or relationship, owner by full
+ID. Keep term definitions in the glossary. -->
 
-Explain the relevant concepts, how identities differ, relationships and lifecycles. Include an example that
-distinguishes easily confused concepts. Keep concise term definitions in the glossary.
+| Concept or relationship | Distinction | Authoritative owner |
+| --- | --- | --- |
+| <concept> | <what distinguishes it from its neighbour> | <full ID and section> |
+| <relationship> | <what it answers and what it does not> | <full ID and section> |
 
-## 3. Maintenance and next action
+## <Worked example topic>
 
-Name conceptual changes that require updating the model and relevant authoritative owners. No class/schema
-catalog or source entrypoint field is required.
+<!-- Optional: a nonexecuted example that separates the confused concepts. Delete the section when unused. -->
+
+## Authority boundary
+
+<!-- What this entry does not settle (validity, lifecycle permission, transformation) and the owner that does, by
+full ID. -->
+
+## Maintenance and next action
+
+<!-- The conceptual change that requires updating this entry, and the owner to read next for each question. -->

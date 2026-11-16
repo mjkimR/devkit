@@ -1,16 +1,16 @@
 ---
-id: PADR-problem-first-formal-document-openings
+id: ADR-problem-first-formal-document-openings
 title: Problem-first formal document openings
 summary: "For formal design, domain and operations documents, we open with the problem the document answers and keep the reader question as an authoring scoping step, to stop restating the summary, accepting that the question is no longer a visible section."
-proposal: PROP-formal-document-templates
+proposal: SPEC-formal-document-templates
 supersedes: [ADR-linked-domain-relationship-views]
-status: draft
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-problem-first-formal-document-openings] Problem-first formal document openings
+# [ADR-problem-first-formal-document-openings] Problem-first formal document openings
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-16
 
 ---
@@ -22,7 +22,7 @@ created_at: 2026-11-16
 turned that into an opening section. In the delivered documents that section restates the frontmatter `summary` as
 an interrogative, which a reader arriving from `devkit docs list` or search has already read. No surveyed external
 template places a question section beside a summary; a question appears at most as one sentence inside the problem
-statement or as an authoring prompt (`materials/template-survey.md` §2).
+statement or as an authoring prompt (`docs/materials/2026-11/20261116-formal-document-templates/template-survey.md` §2).
 
 This decision meets the admission criteria: it changes a lasting authoring rule in a capability and an accepted ADR
 clause, and it applies to three document kinds.

@@ -61,4 +61,4 @@ own formal ID (a peer bundle for a design); ID-free parent-owned support belongs
 PARENT-ID/artifacts/ beside a domain or operations document, and supporting Markdown names its parent. Rename, area
 and root moves carry support and repair ordinary links. Only DESIGN accepts optional safe existing
 workspace-relative entrypoints for source reading and reverse --file lookup; DOMAIN/OPS use body links instead.
-The docs core bundle ships eleven instructions and nine templates including the design-template compatibility pointer.
+The docs core bundle ships eleven instructions and eight templates.
