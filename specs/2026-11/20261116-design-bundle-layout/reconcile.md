@@ -57,6 +57,10 @@ with the code and rule tests at the review-03 head.
 | `docs/domain/DOMAIN-bundle-selection-and-installation.md` | `docs/domain/distribution/DOMAIN-bundle-selection-and-installation.md` | Resolves; incoming ref from `CAP-DIST-sync-and-transactions` remains |
 | `docs/domain/DOMAIN-delivery-relationships.md` | `docs/domain/delivery/DOMAIN-delivery-relationships.md` | Resolves; incoming ref from `CAP-DLV-proposal-lifecycle` remains |
 
+The handoff promoted `docs/proposals/PROP-design-bundle-layout/decisions/PADR-area-scoped-design-bundles.md` to
+`docs/decisions/2026-11/20261116-area-scoped-design-bundles.md` as `ADR-area-scoped-design-bundles` (accepted), and
+moved the proposal anchor and its feedback into this spec unit; no ordinary link named the old paths.
+
 Each moved file gained `area` equal to its area directory; no body statement changed. None had support files, and
 no ordinary Markdown link pointed at the old paths. Completed specs and materials that name the old paths stay as
 history.
