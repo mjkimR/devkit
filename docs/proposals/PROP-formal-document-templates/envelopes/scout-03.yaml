@@ -1,0 +1,32 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T07:32:14.620780Z'
+status: completed
+summary: Domain and operations templates open with purpose or symptom, never a question section; runbooks follow symptom, evidence, resolution and escalation; devkit's owner column has no external equivalent but makes the documents routers.
+findings:
+- issue: Ops templates are symptom-first with an identification step per cause; GitLab 'Identifyable by' matches devkit's discriminating evidence.
+  evidence: https://gitlab.com/gitlab-com/runbooks/-/blob/master/docs/README.md Suggested Runbook Layout; https://sre.google/sre-book/monitoring-distributed-systems/ Table 6-1
+  suggested_action: Ops template opens with the symptom and ships a Symptom / Discriminating evidence / Next useful owner skeleton.
+  resolution: open
+- issue: Glossary skeletons are Term | Definition (+Source); no external template has an owner-document column.
+  evidence: arc42 EN/adoc/12_glossary.adoc; https://gitlab.com/tgdp/templates/-/raw/main/glossary/template_glossary.md
+  suggested_action: Keep the owner column in the domain skeleton.
+  resolution: open
+- issue: Escalation and authority boundaries are named closing sections or links (GitLab Services/Escalation, MS Learn advanced troubleshooting, canvas Assumptions).
+  evidence: gitlab-com/runbooks docs/template-alert-playbook.md; https://learn.microsoft.com/en-us/community/templates/troubleshooting-template
+  suggested_action: Named authority-boundary section; for operations state that it routes and owns no recovery.
+  resolution: open
+- issue: Maintenance is owner/reviewed metadata or update-on-event; SRE updates playbooks when the page fires.
+  evidence: https://sre.google/workbook/on-call/; https://abseil.io/resources/swe-book/html/ch10.html
+  suggested_action: A one-line update trigger, no last_reviewed field.
+  resolution: open
+assumptions:
+- 'Route: role-worker emulating scout for WebSearch; read-only; no writes observed'
+unverified_areas:
+- Official PagerDuty and Atlassian runbook templates, ITIL known-error fields and the Evans DDD Reference were not confirmed
+checks: {}
+diff_scope:
+  base: ''
+  head: 94a6472c2db5bcadf8d6ead9c5de3d23aad21f07

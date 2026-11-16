@@ -1,0 +1,53 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T07:42:30.530472Z'
+status: completed
+summary: 'Medium pass: 2 P2, 4 P3, no P1. Decision coverage and boundaries hold; the template shape breaks no parser, rule or test. The Q3 recommendation omits the problem opening and the fixed opening heading matches no delivered document.'
+findings:
+- issue: The Q3 recommendation omits the PADR's problem-opening clause; after removing the question, both domain documents and DESIGN-distribution-file-directory-replacement open without a problem statement.
+  evidence: docs/proposals/PROP-formal-document-templates/proposal.md:130-133; docs/domain/DOMAIN-bundle-selection-and-installation.md:10-16; docs/domain/DOMAIN-delivery-relationships.md:10-18; docs/designs/DESIGN-distribution-file-directory-replacement.md:12-16
+  failure_condition: 'Q3 accepted as recommended: T3 passes while three of five documents break the revised §3.3 SHOULD.'
+  suggested_action: Restate the Q3 recommendation per PADR clause, including a problem opening where the question is removed.
+  resolution: open
+  severity: P2
+- issue: Fixed '## Problem'/'## Symptom' opening headings match no delivered document, contradicting the hypothesis.
+  evidence: docs/operations/OPS-distribution-sync.md:8-14; docs/designs/DESIGN-distribution-transactions.md:9-15; proposal.md:98-111
+  failure_condition: Every delivered document diverges from the template opening; authors copy a template that matches no example.
+  suggested_action: Open with an unheaded lead paragraph under the H1, prompted by an HTML comment; keep fixed headings for the kind-specific body and closing.
+  resolution: open
+  severity: P2
+- issue: HTML-comment guidance hides leftovers only in rendered output; agents reading raw Markdown still load them, and no step deletes them.
+  evidence: proposal.md:103,144; materials/template-survey.md:83-86
+  failure_condition: Copied comments stay in documents and every later agent read loads authoring directions.
+  suggested_action: 'Add an instruction step: delete the template''s HTML comments before devkit rules check.'
+  resolution: open
+  severity: P3
+- issue: Repairing the dead §3.4 references in ADR-linked-domain-relationship-views is unspecified; two of three traces belong to superseded clauses and retargeting them to §3.3 would misstate the ID-free MUST.
+  evidence: docs/decisions/2026-11/20261116-linked-domain-relationship-views.md:12,44-50; CAP-DOCS-documentation-ownership.md:72-74
+  failure_condition: Development retargets every trace to §3.3 and the accepted ADR traces a superseded MUST to a clause requiring formal IDs.
+  suggested_action: Drop the §3.4 repair; write only the Superseded in part pointer.
+  resolution: open
+  severity: P3
+- issue: T3 and T4 lack mechanical checks; 'every live reference' is undefined and other proposals' materials mention design-template.
+  evidence: proposal.md:152-156; docs/proposals/PROP-design-document-viewer/materials/core-contract.md:158-159
+  failure_condition: Development edits another proposal's materials, or leaves a question label while T3 passes.
+  suggested_action: Name rg checks for T3 and T4 and declare materials, specs and other proposals as history.
+  resolution: open
+  severity: P3
+- issue: No fallback if PROP-design-bundle-layout, still draft, is rejected or reshaped.
+  evidence: docs/proposals/PROP-design-bundle-layout/proposal.md:5; proposal.md:160-161
+  failure_condition: This proposal waits on a dependency that never resolves.
+  suggested_action: 'State: if PROP-design-bundle-layout is rejected, remove depends_on and start from the current templates.'
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native challenger subagent, read-only; diff snapshot before and after showed no writes'
+unverified_areas:
+- No tests or rules check run by the challenger; external sources not rechecked; whether docs search indexes HTML-comment text
+checks: {}
+diff_scope:
+  base: 94a6472c2db5bcadf8d6ead9c5de3d23aad21f07
+  head: db51c63f85559326f2fb1a37d5b22ba9d4ab898b
+activity_effort: medium
