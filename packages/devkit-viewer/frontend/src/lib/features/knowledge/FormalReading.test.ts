@@ -338,10 +338,10 @@ it('never indexes a no-ID typed declaration, ID-bearing artifact or handbook fil
 
 it('reads the five retained formal documents and their real capability ingress through shared book routes', async () => {
 	const capability = 'docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md';
-	const design = 'docs/designs/DESIGN-distribution-transactions.md';
-	const detail = 'docs/designs/DESIGN-distribution-file-directory-replacement.md';
-	const bundleDomain = 'docs/domain/DOMAIN-bundle-selection-and-installation.md';
-	const deliveryDomain = 'docs/domain/DOMAIN-delivery-relationships.md';
+	const design = 'docs/designs/distribution/DESIGN-distribution-transactions/design.md';
+	const detail = 'docs/designs/distribution/DESIGN-distribution-file-directory-replacement/design.md';
+	const bundleDomain = 'docs/domain/distribution/DOMAIN-bundle-selection-and-installation.md';
+	const deliveryDomain = 'docs/domain/delivery/DOMAIN-delivery-relationships.md';
 	const operations = 'docs/operations/OPS-distribution-sync.md';
 	const paths = [capability, design, detail, bundleDomain, deliveryDomain, operations];
 	const files = Object.fromEntries(
@@ -415,4 +415,39 @@ it('reads the five retained formal documents and their real capability ingress t
 	);
 	expect(chapter(operations).textContent).toContain('TRANSACTION_PENDING');
 	await follow(operations, capability, 'CAP-DIST-sync-and-transactions');
+});
+
+
+it('lists current bundle support at every depth without creating identities or rereading its tree', async () => {
+ const parent = 'docs/designs/alpha/DESIGN-parent/design.md';
+ const support = 'docs/designs/alpha/DESIGN-parent/examples/deep/table.csv';
+ const stray = 'docs/designs/alpha/DESIGN-parent/examples/stray.md';
+ const source = repository({
+  [parent]: page('DESIGN-parent', '[DESIGN-peer]', 'area: alpha\n'),
+  'docs/designs/beta/DESIGN-peer/design.md': page('DESIGN-peer', '', 'area: beta\n'),
+  [support]: 'a,b\n1,2',
+  [stray]: page('CAP-X-fake'),
+  'docs/designs/alpha/DESIGN-parent/README.md': '# Support readme',
+  'docs/designs/alpha/DESIGN-parent/nested/DESIGN-child/design.md': page('DESIGN-child'),
+  'docs/designs/alpha/DESIGN-orphan/note.md': page('DOMAIN-fake'),
+  'docs/domain/alpha/DOMAIN-real.md': page('DOMAIN-real', '', 'area: alpha\n'),
+  'docs/domain/alpha/DOMAIN-real/artifacts/example.md': page('ADR-fake'),
+  'docs/operations/OPS-real.md': page('OPS-real'),
+  'docs/operations/OPS-real/artifacts/example.csv': 'x,y'
+ });
+ render(KnowledgeViews, props(source, 'DESIGN-parent'));
+ await waitFor(() => expect(document.querySelectorAll('.chapter')).toHaveLength(4));
+ const chapter = document.getElementById(documentAnchor(parent))!;
+ const panel = within(chapter).getByRole('complementary', {name: 'References for DESIGN-parent'});
+ expect(within(panel).getByRole('button', {name: 'examples/stray.md'})).toBeTruthy();
+ expect(within(panel).getByRole('button', {name: 'README.md'})).toBeTruthy();
+ expect(within(panel).getByRole('button', {name: 'nested/DESIGN-child/design.md'})).toBeTruthy();
+ expect(screen.getAllByRole('heading', {name: 'alpha'}).length).toBeGreaterThan(0);
+ expect(screen.getAllByRole('heading', {name: 'beta'}).length).toBeGreaterThan(0);
+ expect(source.blob).not.toHaveBeenCalledWith(stray, 'main', expect.anything());
+ const reads = vi.mocked(source.treeRecursive!).mock.calls.length;
+ await fireEvent.click(within(panel).getByRole('button', {name: 'examples/deep/table.csv'}));
+ await screen.findByText(/a,b\s+1,2/);
+ await fireEvent.click(screen.getByRole('button', {name: 'Back to DESIGN-parent'}));
+ expect(vi.mocked(source.treeRecursive!).mock.calls.length).toBe(reads);
 });

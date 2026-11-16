@@ -213,3 +213,25 @@ The initial flat-contract pin remains immutable Planning provenance. The publish
 `002241b56fd8e5a446cbfa4f2e4bf42d25484455` and `ADR-area-scoped-design-bundles` now supply the current path and
 area policy. This compatibility work preserves the accepted reading goals, IDs, source isolation and public
 callbacks. A separate delivered-interface record distinguishes the current contract from the historical pin.
+
+
+## Delivered grammar screen refinement (before Task 5 production edits)
+
+The preceding screen arrangement remains selected. Its original flat-path assumptions are historical Planning
+provenance. Task 5 uses the delivered interface recorded in materials/delivered-interface.md.
+
+UX-browse-formal-documents keeps Domain, Designs and Operations chapters. Within Domain and Designs, area
+subheadings group the entries in both the outline and reading chapters. Each design entry keeps its canonical
+bundle ID beside the title; the shared filename design.md never serves as its identity label. Empty/search,
+retirement, namespace filtering and direct target pin behavior keep their preceding states and interactions.
+
+UX-formal-document-relations adds a secondary Supporting files list below current references. Its inventory
+comes from the already requested source tree: every non-anchor file in a DESIGN bundle at any depth; only the
+same-parent artifacts directory for Domain and OPS. Entries display bundle-relative paths. Empty means no
+support files in the complete tree; loading/error retains the existing incomplete/retry state. Selecting a file
+serves UC-read-formal-document 5 and opens UX-read-supporting-artifact through existing source-bound navigation.
+Back serves step 6 and restores the parent context. Stray identified Markdown and nested bundles remain files,
+without reference identities or graph nodes. Generic Files can still read them.
+
+The supporting-artifact screen retains path, source, safe preview, raw/download, missing/unsupported and Back.
+No style or separate navigation surface is added. These refinements were authored before Task 5 runtime edits.
