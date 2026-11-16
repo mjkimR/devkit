@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T12:23:41.386310Z'
+status: completed
+summary: 'Swept the Development turn and diff: no new observation; the documentation-only Red stage was handled with a recorded assumption as the bugfix workflow allows'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
