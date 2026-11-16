@@ -94,3 +94,19 @@ On the complete fix batch: frontend lint PASS, svelte-check0 errors/warnings, Vi
 and actual packed-host probe PASS; generated viewer-assets stale0; wheel100 files exact set/bytes PASS; Python
 viewer lint/type checks and scoped rules PASS. Static bytes come only from the declared generator. These checks
 supersede the earlier frontend239 count. A fresh independent HIGH round reviews the full batch and affected routes.
+
+## Review 2 direct requests and image fragments
+
+The new review finding is reproduced by a permanent direct Files artifact test: initial host anchors were lost.
+The correction carries the initial and subsequent host fragments into the existing artifact reader; encoded heading
+and raw-anchor targets scroll without another same-path blob read. Value-stable source/path/ref dependencies retain
+source-switch cancellation while avoiding unrelated host-prop refreshes. The regression was RED before the fix.
+
+A Host-requested adjacent SVG image test also reproduced a dropped preview fragment (blob URL lacked the authored
+named view). Rendering now retains its validated raw URI fragment separately from the blob read path, strips any
+authored private fragment marker, and adds the fragment only to the preview object URL. Source reads still exclude
+fragments and URL disposal revokes the original object URL. The encoded SVG view regression was RED before the fix.
+
+Complete batch checks: frontend lint PASS, svelte-check0 errors/warnings, Vitest248/21 files PASS; pack and actual
+packed-host probe PASS; generated static stale0; Python wheel100 static files exact bytes PASS. No Python runtime
+or dependency changed in this batch. A fresh HIGH review covers these request, fragment and cancellation effects.

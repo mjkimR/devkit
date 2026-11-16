@@ -219,6 +219,7 @@ export function renderDocument(
 			'data-doc-path',
 			'data-repo-path',
 			'data-repo-image',
+			'data-repo-image-fragment',
 			'data-origin-path',
 			'data-fragment',
 			'srcset'
@@ -231,8 +232,13 @@ export function renderDocument(
 		if (!src || /^https?:/i.test(src)) return;
 		image.removeAttribute('src');
 		const resolved = resolvePath(doc.path, src);
-		if (resolved) image.setAttribute('data-repo-image', resolved.path);
-		else image.setAttribute('alt', `Unavailable image: ${src}`);
+		if (resolved) {
+			image.setAttribute('data-repo-image', resolved.path);
+			image.setAttribute(
+				'data-repo-image-fragment',
+				src.includes('#') ? src.slice(src.indexOf('#') + 1) : ''
+			);
+		} else image.setAttribute('alt', `Unavailable image: ${src}`);
 	});
 	try {
 		wrapper.innerHTML = DOMPurify.sanitize(
@@ -294,6 +300,7 @@ export function renderDocument(
 		if (resolved) {
 			image.removeAttribute('src');
 			image.dataset.repoImage = resolved.path;
+			image.dataset.repoImageFragment = href.includes('#') ? href.slice(href.indexOf('#') + 1) : '';
 		} else if (!/^https?:/i.test(href)) {
 			image.removeAttribute('src');
 			image.alt = `Unavailable image: ${href}`;

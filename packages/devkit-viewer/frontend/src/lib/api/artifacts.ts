@@ -161,7 +161,8 @@ export function repositoryImages(
 				budget -= file.bytes.length;
 				const url = fileUrl(file, true);
 				urls.push(url);
-				image.src = url;
+				const fragment = image.dataset.repoImageFragment;
+				image.src = url + (fragment ? `#${fragment}` : '');
 				image.onerror = () => unavailable('image could not be displayed');
 			} catch (error) {
 				unavailable(String(error));

@@ -41,10 +41,13 @@
 	let preview = $state(''),
 		download = $state('');
 	let root: HTMLElement;
+	const repositorySource = $derived(source),
+		repositoryPath = $derived(path),
+		repositoryBranch = $derived(branch);
 	$effect(() => {
-		const repository = source,
-			target = path,
-			ref = branch;
+		const repository = repositorySource,
+			target = repositoryPath,
+			ref = repositoryBranch;
 		retry;
 		const controller = new AbortController();
 		let urls: string[] = [];

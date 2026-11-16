@@ -107,7 +107,17 @@
 		initialPath;
 		source;
 		branch;
-		fileAnchor = initialAnchor;
+		let requestedAnchor = initialAnchor;
+		try {
+			requestedAnchor = decodeURIComponent(requestedAnchor);
+		} catch {
+			// A literal malformed URI fragment still names the written target.
+		}
+		const requestedPath = initialPath;
+		untrack(() => {
+			fileAnchor = requestedAnchor;
+			if (fileSupport?.path === requestedPath) fileSupport.fragment = requestedAnchor;
+		});
 	});
 	let hostEl: HTMLElement | null = null;
 	let generation = 0;
@@ -229,11 +239,13 @@
 			? knowledgeRequest
 			: { path: '', anchor: '' };
 
+	// Anchor-only host updates keep the same repository request alive.
+	const fileBranch = $derived(branch);
 	// Only the current request may publish state or events.
 	$effect(() => {
 		const path = currentPath;
 		const repository = source;
-		const ref = branch;
+		const ref = fileBranch;
 		const id = ++generation;
 		const controller = new AbortController();
 		fileSupport = null;
@@ -244,7 +256,7 @@
 				currentBlob = null;
 				error = null;
 				loading = false;
-				fileSupport = { path, parent: '', fragment: '' };
+				fileSupport = { path, parent: '', fragment: untrack(() => fileAnchor) };
 				void repository
 					.tree(path.split('/').slice(0, -1).join('/'), ref, controller.signal)
 					.then((data) => {

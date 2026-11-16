@@ -140,3 +140,28 @@ it('does not trust authored renderer markers or picture srcset', () => {
 	expect(html).not.toContain('<source');
 	expect(html).toContain('data-repo-image="docs/relative.png"');
 });
+it('preserves the encoded SVG view fragment on preview URLs while reading only its source path', async () => {
+	vi.mocked(URL.createObjectURL).mockReturnValue('blob:svg-view');
+	const root = document.createElement('div');
+	root.innerHTML = renderDocument(
+		parseBlob(
+			'docs/designs/DESIGN-x.md',
+			'![diagram](DESIGN-x/artifacts/figure.svg#named%20view)',
+			'utf-8'
+		),
+		[]
+	).html;
+	expect(root.querySelector('img')?.hasAttribute('src')).toBe(false);
+	const repository = source(
+		'<svg xmlns="http://www.w3.org/2000/svg"><view id="named view" viewBox="0 0 10 10"/></svg>'
+	);
+	const action = repositoryImages(root, { source: repository, branch: 'planning-ref' });
+	await vi.waitFor(() => expect(root.querySelector('img')?.src).toBe('blob:svg-view#named%20view'));
+	expect(repository.blob).toHaveBeenCalledWith(
+		'docs/designs/DESIGN-x/artifacts/figure.svg',
+		'planning-ref',
+		expect.anything()
+	);
+	action.destroy();
+	expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:svg-view');
+});

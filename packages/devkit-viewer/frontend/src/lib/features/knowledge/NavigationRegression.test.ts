@@ -171,3 +171,25 @@ it('same-artifact fragments scroll without a second blob read or new document hi
 	expect(screen.queryByRole('button', { name: 'Back to previous document' })).toBeNull();
 	expect(source.treeRecursive).not.toHaveBeenCalled();
 });
+it('direct Files artifact host anchors scroll initially and on same-path prop changes without another read', async () => {
+	const path = 'docs/designs/DESIGN-a/artifacts/sample.md';
+	const source = repository({
+		[path]: '# Artifact\n\n<h2 id="first section">First</h2>\n\n<a id="raw anchor"></a>'
+	});
+	const view = render(SddViewer, {
+		dataSource: source,
+		initialView: 'files',
+		initialPath: path,
+		initialAnchor: 'first%20section'
+	});
+	await screen.findByRole('heading', { name: 'First' });
+	await waitFor(() => expect(scrolled).toContain(documentAnchor(path) + '--first section'));
+	const reads = vi
+		.mocked(source.blob)
+		.mock.calls.filter(([candidate]) => candidate === path).length;
+	await view.rerender({ initialAnchor: 'raw%20anchor' });
+	await waitFor(() => expect(scrolled).toContain(documentAnchor(path) + '--raw anchor'));
+	expect(
+		vi.mocked(source.blob).mock.calls.filter(([candidate]) => candidate === path)
+	).toHaveLength(reads);
+});
