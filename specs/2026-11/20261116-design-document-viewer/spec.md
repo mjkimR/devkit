@@ -1,136 +1,78 @@
 ---
 id: SPEC-design-document-viewer
 title: First-class formal documentation in the repository viewer
-summary: Provides complete navigation, identity, references, metadata, artifact access and packaged viewer support for formal design, domain and operations kinds.
-status: planned
+summary: "Makes formal design, domain and operations directly readable through canonical and alias links, reference context, source-safe artifacts and shipped viewer output."
+status: in-progress
 created: 2026-11-16
-depends_on:
-  - SPEC-formal-document-kinds
-related_capabilities: []
+depends_on: [SPEC-formal-document-kinds]
+related_capabilities: [CAP-VIEW-repository-viewer, CAP-DLV-release-handbook]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-design-document-viewer] First-class formal documentation in the repository viewer
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-design-document-viewer on 2026-11-16.
-- **Preserved Materials**: `docs/materials/2026-11/20261116-design-document-viewer`
-- Target Docs Blueprint: `PROP-design-document-viewer-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-`SPEC-formal-document-kinds` establishes formal design, domain and operations identities and core contracts.
-The repository viewer must expose these as first-class kinds throughout existing relevant supported surfaces.
-Generic backend loading or Markdown rendering alone does not prove frontend navigation, ID recognition,
-metadata, reference graph or packaged-static support.
-
-The core proposal replaces the earlier operations prerequisite. `SPEC-design-document-foundation` and
-`SPEC-domain-model-documents` remain historical context. This required phase and
-`PROP-design-document-lifecycle` complete integration under `MS-documentation-system-evolution`.
+The delivered formal core supplies identities and ownership. The browser viewer still lacks formal groups,
+alias links, retirement controls, current reference context and byte-safe supporting files. Generic loading
+alone does not establish support. The accepted blueprint `PROP-design-document-viewer-target` and its
+[complete matrix](../../../docs/materials/2026-11/20261116-design-document-viewer/support-matrix.md) control V1–V4.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement First-class formal documentation in the repository viewer so that system capabilities are extended.
+- **US-1**: As a reader, I find each formal kind and follow canonical, alias and incoming/outgoing references.
+- **US-2**: As a reader, I inspect a linked detail, image or datasheet and return to its exact source context.
+- **US-3**: As a host, I consume the public library and shipped page with existing source callbacks.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Core schema/governance or lifecycle changes; the core and lifecycle units own them.
+2. **Scope Excluded**: Editors, recovery actions, new required host callbacks or Python document-engine dependency.
+3. **Scope Excluded**: Handbook refresh/publication or automatic pages for every formal document.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Identity and navigation
+- **Given** DESIGN, DOMAIN and OPS nodes in global and structural package roots, aliases and independent details
+- **When** a reader browses, searches or follows a prose, code or direct reference
+- **Then** explicit Domain/Designs/Operations groups and canonical/alias resolution work with core permissive IDs; ambiguous/missing targets stay unavailable and artifacts stay outside canonical navigation.
 
-## 5. Carried Proposal Notes
+### [AC-02] Current and historical reading
+- **Given** active and retired formal nodes, filters and namespace selection
+- **When** normal browsing or a direct canonical/alias/reference link opens a node
+- **Then** normal navigation hides retired nodes, Include retired exposes them, and a hidden direct target alone is materialized with its status and source context.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Reference context and cold Files
+- **Given** any indexed source with current typed/prose references and separately labelled provenance
+- **When** a formal node opens in Read or cold rendered Files
+- **Then** one shared panel shows metadata, incoming/outgoing canonical references, unresolved/ambiguous and incomplete/error/retry states; raw/artifact/handbook reads do not trigger an identity scan.
 
-### 2. Technical Spike Questions
+### [AC-04] Source-safe supporting files
+- **Given** relative Markdown, image, CSV/diagram text or unsupported links from a document
+- **When** they are read through the existing data source
+- **Then** URI/path/source/abort context and bytes are preserved, safe images display, URLs are disposed, missing/unsupported states retain path and Back, and Planning never falls back to checkout.
 
-- **Q1**: Which kind/prefix allowlists, group ordering and reference recognizers need extension in the frontend,
-  public frontend library and static generation? Which backend paths already work and need verification?
-- **Q2**: How should per-kind metadata and applicable relationships appear without assuming only
-  related_capabilities/related_usecases or inventing a competing viewer schema?
-- **Q3**: How do global and registered namespaces expose formal nodes, independent details and supporting
-  artifacts, including empty, missing and unsupported states consistent with existing behavior?
-- **Q4**: How must `scripts/handbook.py` recognize prefixes and locate sources? What deliberate inclusion policy
-  governs handbook pages, separately from support for formal identity and source lookup?
+### [AC-05] Source controls and maintenance routes
+- **Given** a formal node and artifact after rename/root move/split/reclassification or retirement
+- **When** a reader follows an alias or ordinary path and toggles raw/rendered or Back
+- **Then** aliases find current identities, ordinary obsolete paths remain missing, source coordinates remain labelled, and parent context is retained without changing permissions.
 
-### 3. Proposed Design & Impact
+### [AC-06] Backend, public and packaged parity
+- **Given** the generic tree/blob backend and public RepositoryDataSource interface
+- **When** actual formal/namespace/artifact fixtures, frontend checks, library packaging and wheel inspection run
+- **Then** guards and bytes remain correct, public callbacks remain compatible, generated static output matches source and all required checks pass.
 
-- Consume all three core Kind definitions and canonical schemas. Provide explicit navigation/group labels and
-  ordering, list/search participation, IDs and deep links for global and registered namespace documents.
-- Audit and support prose ID links, statement-level supersession recognition, applicable metadata and reference
-  graph relationships. Extend hardcoded prefix/group/relationship lists where needed. Preserve current/provenance
-  distinctions and alias behavior supplied by the document model.
-- Support contract-to-design-to-detail/artifact, concept-to-contract and symptom-to-action-owner routes with real
-  migrated documents. Users must reach the formal node and its supporting files without guessing filesystem paths.
-- Verify rendering, relative links and artifact access for supported Markdown, examples, diagrams, CSV and images.
-  Existing preview/download/link behavior governs unsupported formats. Empty lists, missing documents or artifacts
-  and unresolved references use consistent existing states rather than disappearing silently.
-- Cover viewer backend APIs, public frontend libraries, static generation, generated assets and package contents.
-  A generic implementation may remain unchanged only with complete new-kind test and walkthrough proof.
-- Extend `scripts/handbook.py` prefix/ID recognition and source lookup policy where applicable. State handbook
-  inclusion/exclusion deliberately; an unrecognized prefix must not silently omit a supported source document.
-  Update the owning reference/contract and focused script tests for the chosen inclusion policy.
-- Draft screens before code and offer optional UX review when interactions change. Reconcile use cases and UX contracts
-  and their object register. A shared renderer/navigation can serve multiple kinds; no custom editor per kind or
-  proprietary-format editing engine is required.
-- Declare any required cross-feature dependencies in Planning. Coordinate core schema changes with the core
-  owner and avoid viewer-only identity or relation rules.
+### [AC-07] Handbook and UX
+- **Given** formal canonical IDs/aliases cited by a handbook author and the accepted screen drafts
+- **When** source lookup/staleness and implemented reading interactions are checked
+- **Then** all prefixes are recognized while CAP/UC required coverage and ADR/SPEC generated membership remain unchanged; use cases, UX register and current viewer contracts agree.
 
-#### Expected acceptance evidence
+## 5. Screens and baseline
 
-- **V1 — Kind parity**: Each real kind has navigation/groups, ID/deep-link access, prose references, applicable
-  metadata, incoming/outgoing reference graph and statement supersession recognition. Positive and negative tests
-  cover all prefix recognizers and relation handling, with existing-kind regressions.
-- **V2 — Context and artifacts**: Global and registered namespace walkthroughs reach migrated entries, canonical
-  details and supporting artifacts. Tests cover rendering, empty/missing/unresolved and unsupported-format
-  behavior. Owner boundaries and existing recovery permissions remain unchanged.
-- **V3 — Public and packaged output**: Backend/API and frontend-library tests cover formal kinds. Frontend lint,
-  check, tests, packaging and build pass; generated-static consistency checks and packaged-asset inspection prove
-  shipped output matches source. Run the repository's declared FRONTEND_CHECK command and required viewer checks.
-- **V4 — Handbook and UX**: Handbook source recognition/lookup handles the three prefixes under an explicit
-  inclusion policy, with focused regression evidence. Changed interactions have drafted screens, UX review and
-  reconciled use case/UX contracts. Unchanged generic paths still have complete new-kind verification.
-
-### 4. Lifecycle & Retirement Criteria
-
-Plan against the required formal core contract and consume its delivered schemas before dependent implementation
-verification. This remains one L feature proposal. Acceptance and handoff follow existing gates. Retirement
-requires V1–V4, public/static package verification and complete support evidence for every formal kind.
-Core loading, generic rendering or a small/no-code diff alone cannot establish completion. The milestone also
-requires lifecycle integration and preserves its planned status until completion is reviewed.
-
-### 5. Planning decisions
-
-- Complete formal support is required. Select explicit browser-side presentation/recognition integration consuming
-  the core contract; compare the registry-transport alternative in `PROP-design-document-viewer-target`. Do not add a
-  server dependency on each repository's installed document engine.
-- Preserve the existing Read/book task and add Domain, Designs and Operations chapters. Use one shared formal
-  document relation panel with explicit incoming/outgoing references and provenance separation. Screen drafts and
-  contrasting arrangements are in the target blueprint. Optional UX review is offered; it is not a gate.
-- Handbook recognizes formal sources and aliases for citation/source lookup and staleness. Keep its generated
-  use-case/capability/decision sections and required coverage set unchanged. An author can cite a formal source;
-  no automatic handbook page per formal document is introduced. No release handbook refresh is authorized here.
-- Core owns the Kind grammar, migrated canonical documents and the ADR replacing ID-free standing. This phase
-  waits for that delivered contract before implementation verification. The selected core future contract is hash-pinned
-  in the blueprint and materials; delivered runtime parity remains a Development prerequisite.
-- No additional PADR is needed: the viewer retains browser parsing, generic repository reads and decision-only
-  supersession UI from its existing ADRs. Core owns the lasting identity decision and its supersession.
-- One L viewer feature spec remains coherent: frontend behavior, backend proof, handbook lookup and shipped output
-  verify one reading capability. No required surface is deferred to preserve that classification.
-
-#### Planning evidence and limits
-
-Two read-only Scouts inspected source/public/static and current-contract/UX impact at
-`f75da999fcdff9e68559a01793efe620b3f2f570`. Their batch before/after tracked-plus-nonignored tree was
-`f6901151eecf483bfe62180c8622739e903e00bf`, with unchanged HEAD. This is an emulated boundary check, not native
-confinement. [Source support](../../../docs/materials/2026-11/20261116-design-document-viewer/support-matrix.md) and [incoming references](../../../docs/materials/2026-11/20261116-design-document-viewer/incoming-refs.md)
-separate inspection evidence from future Development checks. No implementation or frontend test pass is claimed.
-
+The three screen drafts and two completed pre-code UX rounds are retained in
+`PROP-design-document-viewer-target`: UX-browse-formal-documents, UX-formal-document-relations and
+UX-read-supporting-artifact. Implementation closes their retained findings against actual behavior.
+The selected Read/book arrangement preserves existing style and handbook-first loading. No further direction
+choice is needed. Baseline 5d1cb2661871cd3fe12cf806b58ac2515a3ffaf4 has zero explicit formal groups and no
+formal relation panel; measure the head's three groups and shared Read/Files coverage, not performance.
