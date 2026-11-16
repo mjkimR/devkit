@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T11:49:57.942207Z'
+status: completed
+summary: 'Isolated reconcile-reviewer: ARCH-06-runtime-view and CAP-DLV-proposal-lifecycle match the diff; no-impact claims for CAP-DOCS-document-lookup, scout tools, design/domain/operations and entrypoints hold; four feedback resolved'
+findings: []
+checks:
+  reconcile: PASS reconcile-reviewer, no findings, head ec7771bb3
+diff_scope:
+  base: a627466bb2451fa7bc6466ab2b309c1711b570ca
+  head: ec7771bb3c29dd3c14e35b08b72932d73d1dd7ee

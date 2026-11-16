@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-open-feedback-fixes
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-06-runtime-view.md
     resolution: modified
