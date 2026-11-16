@@ -1,13 +1,13 @@
 ---
-id: PADR-documentation-ownership-and-linked-design-entries
+id: ADR-documentation-ownership-and-linked-design-entries
 title: Documentation ownership and linked design entries
 summary: "For distinct documentation responsibilities, we retain unique owners and linked ID-free design entries, to expose mechanisms without widening identity contracts, accepting discovery through selected owner links."
-proposal: PROP-design-document-foundation
-status: draft
+proposal: SPEC-design-document-foundation
+status: accepted
 created_at: 2026-11-16
 ---
 
-# [PADR-documentation-ownership-and-linked-design-entries] Documentation ownership and linked design entries
+# [ADR-documentation-ownership-and-linked-design-entries] Documentation ownership and linked design entries
 
 ## 1. Context & Problem Statement
 

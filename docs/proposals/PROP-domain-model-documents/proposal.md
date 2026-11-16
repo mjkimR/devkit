@@ -28,7 +28,7 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 depends_on:
-- PROP-design-document-foundation
+- SPEC-design-document-foundation
 ---
 
 # [PROP-domain-model-documents] Domain-model documentation
@@ -49,7 +49,7 @@ The domain role is retained whether it needs a new indexed kind or existing docu
 
 ## 3. Proposed Design & Impact
 
-- Apply `PROP-design-document-foundation`'s matrix and early content evidence. Choose the domain home during
+- Apply `SPEC-design-document-foundation`'s matrix and early content evidence. Choose the domain home during
   Planning; `docs/domain/` is a candidate. Keep readable entry documents and split details only where useful.
 - Default to an integrated conceptual view citing existing authoritative validity and transformation contracts.
   Clarify term usage and relationship meaning without creating an independent copy of the same normative fact.

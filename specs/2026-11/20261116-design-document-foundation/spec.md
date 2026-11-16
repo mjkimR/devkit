@@ -1,42 +1,25 @@
 ---
-id: PROP-design-document-foundation
+id: SPEC-design-document-foundation
 title: Documentation ownership and minimal design foundation
-summary: "Uses the completed pilot to settle documentation ownership and linked ID-free design entries, without new indexed kinds or runtime support."
-status: accepted
-created_at: 2026-11-16
-target_area: documents/
-priority: high
-size: L
-planning_effort: high
-dev_effort: medium
-milestone: MS-documentation-system-evolution
-boundaries:
-  owns:
-  - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/
-  - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/
-  - docs/capabilities/documents/
-  - docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
-  - docs/architecture/README.md
-  - docs/decisions/
-  - docs/steering/glossary.md
-  - docs/proposals/PROP-design-document-foundation/
-  - docs/
-  excludes:
-  - packages/devkit-core/
-  - packages/devkit-cli/
-  - packages/devkit-mcp/
-  - packages/devkit-viewer/
-  - packages/devkit-spec/
-  - packages/devkit-docs/src/devkit_docs/features/
-task_kind: feature
-workflow: sdd-proposal
+summary: Uses the completed pilot to settle documentation ownership and linked ID-free design entries, without new indexed kinds or runtime support.
+status: planned
+created: 2026-11-16
 depends_on:
-- SPEC-design-document-pilot
+  - SPEC-design-document-pilot
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-design-document-foundation] Documentation ownership and minimal design foundation
+# [SPEC-design-document-foundation] Documentation ownership and minimal design foundation
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-design-document-foundation on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-design-document-foundation`
+
+### 1. Background & Hypothesis
 
 `SPEC-design-document-pilot` retained domain, design and operations examples with unique existing authorities.
 The supplied design entry reached an independent detail and source. Two independent contract-only trials found
@@ -46,12 +29,31 @@ no journal with desired-state drift: journal absence does not establish readines
 
 Clean ownership is the primary driver. Domain, design and operations remain distinct roles alongside contracts
 and architecture. Authors may know arc42; they need responsibility boundaries, not a chapter tutorial.
-`materials/direction.md` records options, evidence identity, incoming-ref scope and limitations.
+`docs/materials/2026-11/20261116-design-document-foundation/direction.md` records options, evidence identity, incoming-ref scope and limitations.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Documentation ownership and minimal design foundation so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 resolved for recommendation**: assign one normative owner by the statement's responsibility, with concise
-  non-normative orientation elsewhere. The routing cases and ownership treatment are in `materials/target-docs.md`.
+  non-normative orientation elsewhere. The routing cases and ownership treatment are in `docs/materials/2026-11/20261116-design-document-foundation/target-docs.md`.
 - **Q2 resolved for recommendation**: maintain an ID-free `docs/designs/<slug>.md` entry, with optional linked
   detail, diagrams, examples or datasheets only when useful. The retained mechanism needs entry plus one detail.
 - **Q3 bounded**: add one ordinary link from the transaction capability to its maintained entry. Keep the entry
@@ -61,11 +63,11 @@ and architecture. Authors may know arc42; they need responsibility boundaries, n
   architectural constraints, cross-cutting technical concepts, quality and risk. Domain meaning, behavioral
   contracts, local mechanisms and operational actions retain their distinct owners.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Recommended direction
+#### Recommended direction
 
-Adopt `PADR-documentation-ownership-and-linked-design-entries`. Separate physical home, identity and tools:
+Adopt `ADR-documentation-ownership-and-linked-design-entries`. Separate physical home, identity and tools:
 
 | Role | Content home | Kind / ID | Dedicated support |
 | --- | --- | --- | --- |
@@ -84,13 +86,13 @@ authoring order or required domain → architecture → design pipeline. Summari
 create a second normative owner. A genuine normative transfer removes/replaces the old restatement in the same
 change and names the receiving owner. This foundation selects no transfer of existing pilot statements.
 
-### Minimal implementation scope
+#### Minimal implementation scope
 
 1. Add the shared ownership contract CAP-DOCS-documentation-ownership (planned) under
    `docs/capabilities/documents/`; clarify the architecture boundary in `docs/architecture/README.md`.
    Add only three glossary role definitions if needed to avoid terminology ambiguity.
 2. Update source `living-spec-writing.md` with concise responsibility routing and conditional loading of the
-   relevant detail; update source `architecture-writing.md` with the ARCH overlap criteria in `materials/target-docs.md`.
+   relevant detail; update source `architecture-writing.md` with the ARCH overlap criteria in `docs/materials/2026-11/20261116-design-document-foundation/target-docs.md`.
    Add an ID-free `design-template.md` under the existing source templates directory. It is an optional authoring
    aid, not a generator, required folder scaffold, new bundle asset or runtime schema.
 3. Adapt the retained pilot mechanism into `docs/designs/distribution-transactions.md` and
@@ -109,9 +111,9 @@ requires runtime behavior, stop and return the missing outcome to the Host for s
 extending this plan. `dev_effort: medium` reflects content-only implementation with independent walkthrough and
 review; high Planning remains justified by distributed authoring conventions and cross-kind ownership.
 
-### Acceptance and verification
+#### Acceptance and verification
 
-- **F1 ownership**: route the cases in `materials/target-docs.md`, including pilot passages, to one normative owner. No
+- **F1 ownership**: route the cases in `docs/materials/2026-11/20261116-design-document-foundation/target-docs.md`, including pilot passages, to one normative owner. No
   transferred contract, duplicate recovery procedure or new authoring DAG is present in the actual diff.
 - **F2 representation**: the maintained entry works alone for overview and next action; the independent detail
   answers the mechanism question and reaches inspected source symbols. Optional artifacts need no independent ID.
@@ -136,7 +138,7 @@ Package probes are format/discovery validation, not evidence of real package doc
 is a required outcome to fix or return, not permission to declare a new kind necessary. There is no arbitrary hop
 cap. No runtime recovery, domain/operations unsupplied discovery or viewer success is claimed by this scope.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 This Planning turn recommends a concrete direction; `plan-accept` and `proposal-handoff` remain `ask` gates.
 It neither accepts nor hands off the proposal. No unresolved goal/scope question was found in this turn.
@@ -146,3 +148,4 @@ homes and unsupplied discovery; `PROP-operations-documents` owns operations home
 `PROP-design-document-lifecycle` owns change-specific lifecycle integration; `PROP-design-document-viewer` owns
 viewer verification. Those existing proposals remain unchanged. The pre-existing journal-ordering ambiguity
 stays with `FB-runtime-journal-ordering`; it does not authorize an architecture correction in this foundation.
+
