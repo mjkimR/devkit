@@ -1,0 +1,46 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T06:03:52.222990Z'
+status: completed
+review: review-01.yaml
+summary: All five round1 findings fixed with regression cases; fresh round2 required because validation semantics and snapshot dependency targeting changed
+findings:
+- issue: Summary quoting validation reads body examples instead of the actual YAML scalar.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/spec_format.py:181; review-01 probes reproduced body bypass and quoted-key rejection
+  failure_condition: An unquoted frontmatter summary passes with a body summary example; a valid quoted YAML key is rejected.
+  suggested_action: Inspect the actual frontmatter value node style and add both regression cases.
+  resolution: resolved
+  severity: P1
+- issue: Indexed materials bypass the new typed role-reference contract.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/document_reference.py:154; review-01 MAT probe
+  failure_condition: Indexed MAT declares malformed, duplicate, wrong-prefix or unresolved new related role metadata.
+  suggested_action: Validate new typed role fields on materials while preserving existing prose and unrelated exemptions.
+  resolution: resolved
+  severity: P1
+- issue: A symlink can masquerade as an artifact canonical parent.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:30; review-01 unindexed-parent probe
+  failure_condition: A parent symlink targets unindexed support content, so no canonical parent is indexed.
+  suggested_action: Require an eligible non-symlink parent at the exact same-root same-kind canonical path.
+  resolution: resolved
+  severity: P1
+- issue: Staged parent deletion leaves unchanged artifacts orphaned without a gate violation.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/id_convention.py:404; review-01 staged-deletion probe
+  failure_condition: The commit deletes or renames only the parent while unchanged artifacts remain.
+  suggested_action: Include dependent artifacts when a snapshot removes the canonical parent, honoring exclusions, and test deletion and composed rename.
+  resolution: resolved
+  severity: P1
+- issue: Artifact content checks confuse substrings and fenced examples with visible document identity.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:46; review-01 artifact-text probes
+  failure_condition: Only a longer ID mentions the parent substring, or a fenced H1 example precedes the real H1.
+  suggested_action: Match complete parent IDs and use the visible Markdown scanner for first H1.
+  resolution: resolved
+  severity: P2
+checks:
+  regressions: PASS 752 docs unit/integration/rule and UX inventory tests; formal34 including separate-process memo
+  types: PASS just check docs 0 errors
+  lint: PASS just lint-check docs
+diff_scope:
+  base: 7e33e2d68feb1ac5fd953bfd0eafef4bdd38fa3c
+  head: fa9efc174a9aecabed9196e5472ec831cc0e0341
