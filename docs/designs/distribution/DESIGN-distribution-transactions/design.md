@@ -14,7 +14,7 @@ one deletion frees a path another write needs. Rollback also needs to distinguis
 created or replaced during that change set. This non-normative mechanism overview follows the distribution
 transaction implementation.
 
-## Mechanism detail
+## Ordering and rollback detail
 
 `DESIGN-distribution-file-directory-replacement` explains preflight, journal content, deletion ordering and rollback,
 and links the implementing symbols. The detail is independently readable for a reader arriving at it directly. Source
@@ -32,4 +32,4 @@ This maintained explanation follows the installation service's current transacti
 when its source symbols change. Revisit architecture for changed system responsibilities and the capability for
 changed guarantees; implementation explanation does not transfer either authority.
 
-Next read `DESIGN-distribution-file-directory-replacement` for the ordering and rollback detail.
+Next read `DESIGN-distribution-file-directory-replacement`.

@@ -15,8 +15,7 @@ area: <area>   # the area directory of designs/<area>/DESIGN-<slug>/design.md
 
 # [DESIGN-<slug>] <Title>
 
-<!-- Lead paragraph: the problem the mechanism solves, beyond the summary. At most one sentence is a question.
-Cite the behavior owner and the architecture that constrains the mechanism by full ID. -->
+<!-- Lead paragraph: the problem the mechanism solves, beyond the summary. At most one sentence is a question. -->
 
 ## <Mechanism topic>
 
