@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T10:41:23.955925Z'
+status: completed
+summary: 'round 2; closes reconcile-check-01; self-verified at low effort: finding 1 fixed in authoring.py (both reverify hints pass --summary; test_fixes_suggesting_a_reverify_pass_summary), finding 2 fixed (reconcile names CAP-DLV-workflow-envelopes section 5 item 3 as the rule owner); whole reflection rechecked against afd532c6e'
+findings: []
+checks:
+  rules: PASS rules check clean
+  tests: PASS workflow integration tests 559 passed; ruff and pyright clean
+diff_scope:
+  base: 22b28c936c4d4b05d8465178ac6175fb6dfa8b2b
+  head: afd532c6e05e558bdb3bdacb28b75db40169ed6e
