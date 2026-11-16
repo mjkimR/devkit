@@ -1,0 +1,21 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T05:13:14.102990Z'
+status: completed
+summary: Incoming refs for six touched CAP/ADR IDs inventoried; current viewer/UX contracts require explicit formal navigation and source-aware metadata/reference states.
+findings:
+- issue: Current viewer contracts and UX register lack complete three-kind discovery/details.
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:195; docs/steering/ux-objects.md:7; docs/ux/viewer/UX-view-decision.md:14
+  failure_condition: Formal document navigation or relation interactions ship without a reconciled current contract.
+  suggested_action: Reconcile the blueprint targets and preserve core-owned supersession of ID-free standing.
+  resolution: open
+assumptions:
+- Emulated read-only scoped Scouts; frozen batch snapshots equal f6901151eecf483bfe62180c8622739e903e00bf; raw returns condensed without changing recommendations.
+unverified_areas:
+- No runtime tests; final core schema pending; see support matrix for corrections and source/body limits.
+checks: {}
+diff_scope:
+  base: bde0a923192aaea7f6a467bb6a575db4ca447f9e
+  head: f75da999fcdff9e68559a01793efe620b3f2f570
