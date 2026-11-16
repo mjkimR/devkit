@@ -2,7 +2,7 @@
 id: PROP-formal-document-kinds
 title: First-class design, domain and operations document kinds
 summary: "Registers design, domain and operations as formal document kinds with complete identity, governance, authoring, discovery and migration support, replacing the ID-free direction."
-status: reviewing
+status: accepted
 created_at: 2026-11-16
 target_area: documents/
 priority: high
