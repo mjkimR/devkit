@@ -2,7 +2,7 @@
 id: PROP-design-document-pilot
 title: Early content pilot for domain, design and operations
 summary: "Tests domain, design and operations ownership on small real devkit examples before selecting new document identities or implementing tooling."
-status: reviewing
+status: accepted
 created_at: 2026-11-16
 target_area: documents/
 priority: high
