@@ -75,3 +75,13 @@ specs and 249 hidden historical specs. Counts are inspection inputs, not test co
 The source/path ingress sweep and exact historical preservation paths are in target-docs §3. No external source
 was needed. The pre-existing missing PATH guesses during caller reads were corrected using rg discovery; no source
 content was inferred from nonexistent files.
+
+## Challenger round 1 and fix batch
+
+Nested Challenger reviewed whole selected bundle at 440302f0163f695ba3acb315ea1503890ec2c417. Before/after complete
+tree 6ddc5f02dbb380adc607fddd3d124af19071fb29, unchanged HEAD and clean real index/worktree verified; no outside-tree
+reads reported. It found two P2 maintenance composition gaps, recorded in challenger-01. The batch specifies
+artifact-carrying rename/root move/split/cross-kind transfer with ordinary-link repair, and continuing retired-node
+governance with source-deletion entrypoint cleanup. Target matrix adds composed fixtures. Flat layout rationale
+also names subject-qualified globally unique slugs and package-move/alias policy. These strengthen the contract,
+so a fresh HIGH Challenger round is required; this is not minor-fix self-verification.

@@ -25,6 +25,14 @@ single `-`; its first segment contains a letter (`is_word_led_slug`). The file s
 token `# [<ID>] <title>` agree. There is no area directory or `area` field on these kinds. Independent details use
 this same flat identity grammar. Additional hierarchy is navigation through IDs, not an inherited identity.
 
+Use a subject-qualified slug when a generic topic would collide or lose its scope across package catalogs
+(for example `api-session-state` versus `cli-session-state`). A namespace does not authorize a duplicate ID;
+reserve a distinct descriptive ID before authoring and validate repository-wide uniqueness. A package-root move
+can retain its ID if the subject is unchanged; a subject rename keeps a same-prefix alias. Flat organization
+scales through title/summary/search/kind/namespace filters and optional related_* navigation, rather than a
+mandatory single-area assignment. Reconsider area/grouping through an explicit compatibility decision only when
+observed catalog navigation needs a durable taxonomy that these mechanisms cannot express.
+
 IDs and aliases are repository-wide, including across namespaces. Namespace selection affects list/search only;
 resolve/refs remain repository-wide. Namespace registry schema and document record JSON keys do not change.
 Existing ID parser remains permissive as documented; canonical path/slug/H1 validation belongs to governance.
@@ -70,7 +78,11 @@ provenance interpretation on their owning kinds. Role retirement uses `status: r
 of the replacement, with the relevant optional `related_*` edge when a successor exists. No successor is required
 when a concept/mechanism simply ceases to exist. Same-kind rename preserves the old formal ID as an alias.
 Cross-kind reclassification preserves the retired old node and cites the receiving node; cross-prefix aliases
-remain invalid. `docs supersession` remains ADR/PADR-specific and returns existing ARGUMENT_INVALID for role IDs.
+remain invalid. Retired nodes remain subject to governance: terminal browsing status is not a rule exemption.
+When retiring DESIGN because source is removed, remove or replace obsolete entrypoints in that same change.
+Retain still-live useful anchors. Historical source locations may remain as explicitly historical prose coordinates
+with the source commit, never as live entrypoint declarations. Clean stale current references and ordinary links
+or identify historical coordinates explicitly; retirement does not authorize unresolved current references. `docs supersession` remains ADR/PADR-specific and returns existing ARGUMENT_INVALID for role IDs.
 This is applicable-surface parity, not missing role identity support.
 
 ## 3. Content ownership and independent detail
@@ -105,6 +117,17 @@ from canonical format/summary/H1 checks. No blanket exclusion of nested Markdown
 independent detail outside artifacts is invalid. Index selection stays generic: ID-free artifacts remain outside
 identity; the rules reject an accidentally indexed artifact. Ordinary artifact/source link integrity and semantic
 parent ownership are reviewed in F5; they are not claimed as indexed reference edges.
+
+A same-kind rename moves `<OLD-ID>/artifacts/` to `<NEW-ID>/artifacts/` in the same change as its canonical file,
+and keeps OLD-ID only as a valid identity alias. A move between docs roots carries the subtree to the new root
+(with no alias needed if the ID stays the same). Repair all current ordinary links to moved artifacts, plus
+relative source links in the moved document/artifacts. An alias never legalizes an orphan old-ID artifact directory.
+A split assigns every retained artifact exactly one resulting canonical parent; move it to that parent's subtree
+and repair links instead of creating a reciprocal ownership registry. A cross-kind transfer does the same under
+the receiving role directory while retaining the retired old node and its explicit replacement reference. An
+artifact no longer maintained as current support may be retained in separately identified historical materials;
+record its provenance and repair current ingress. Do not leave an unowned role-artifact subtree. Lifecycle consumes
+these composed invariants; viewer follows the resulting canonical parent/artifact destinations.
 
 ## 4. Source entrypoints and interface consumers
 
