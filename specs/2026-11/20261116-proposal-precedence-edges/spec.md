@@ -1,33 +1,23 @@
 ---
-id: PROP-proposal-precedence-edges
+id: SPEC-proposal-precedence-edges
 title: Ordering claims between proposals checked when made
 summary: Has Backlog and the first Planning turn verify a draft's claims about other proposals' handoff order against base status and Development branches, so a stale ordering premise surfaces before it shapes the draft or its first decision.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-16
-target_area: harness/
-priority: medium                      # critical | high | medium | low
-size: S                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - docs/proposals/PROP-proposal-precedence-edges/
-  excludes:
-    - packages/devkit-spec/src/devkit_spec/features/
-    - packages/devkit-spec/src/devkit_spec/base/
-    - packages/devkit-docs/
-    - packages/devkit/
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-16
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-proposal-precedence-edges] Ordering claims between proposals checked when made
+# [SPEC-proposal-precedence-edges] Ordering claims between proposals checked when made
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-proposal-precedence-edges on 2026-11-16.
+- **Preserved Materials**: `docs/materials/2026-11/20261116-proposal-precedence-edges`
+
+### 1. Background & Hypothesis
 
 `FB-draft-precedence-claim-unenforced`: a draft proposal stated in prose that its handoff precedes the handoff of
 two accepted proposals, and argued its change was cheap because neither had a spec yet. Nothing flagged the stale
@@ -36,18 +26,37 @@ premise: `depends_on` is declared only by the dependent, the accepted proposals 
 
 Planning found that the premise was false before the draft existed: both dependents were handed off two to five
 minutes before the draft was committed, and the base still showed them `accepted` because a handoff lives on
-`dev-<slug>` until integration (`materials/observed-case-timeline.md`). No handoff-time edge could have fired.
+`dev-<slug>` until integration (`docs/materials/2026-11/20261116-proposal-precedence-edges/observed-case-timeline.md`). No handoff-time edge could have fired.
 
 Hypothesis: checking each proposal a draft names as following it, by base `status` and by local or fetched
 `dev-<slug>` branches, when the claim is written and again at the first Planning turn, surfaces a stale ordering
 premise before it shapes the draft or its first decision; an ordering still in the future goes to the user as a
 sequencing decision.
 
-## Source feedback
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Ordering claims between proposals checked when made so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### Source feedback
 
 - `FB-draft-precedence-claim-unenforced`: the whole item (detection of a stale ordering premise between proposals).
 
-## 2. Technical Spike Questions
+### 2. Technical Spike Questions
 
 - **Q1** (settled): Should a draft declare a prerequisite edge onto accepted proposals (for example a `precedes:`
   list) that `devkit spec proposal handoff` checks, or should the existing `depends_on` on the dependents stay the
@@ -58,9 +67,9 @@ sequencing decision.
   Planning turn, reading base status and `dev-<slug>` branches; `proposal check` stays the editability guard
   (Planning decisions 2 to 4).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Planning decisions
+#### Planning decisions
 
 1. **No new ordering edge; accepted proposals stay unedited** (by: host, from repository evidence). A `precedes:` field
    would reverse the successor-declared edge chosen in `ADR-roadmap-and-milestones-ledger` (the both-ways `after` edge
@@ -88,7 +97,7 @@ sequencing decision.
    (`challenger-01.yaml` findings 4 and 5). Planning records no PADR: the steps restate no lasting policy beyond the
    accepted ADRs above.
 
-### Design, domain and operations impact
+#### Design, domain and operations impact
 
 - **Design**: unaffected; no component, interface or structure changes (guidance text only).
 - **Domain**: `DOMAIN-delivery-relationships` unaffected; prerequisite, membership and provenance semantics are
@@ -97,7 +106,7 @@ sequencing decision.
 - **Capability**: `CAP-HARN-agent-guidance` "Repository Backlog and next work" gains one statement owning the two
   checks (statement owner); the bundle references carry the procedure.
 
-### Assets
+#### Assets
 
 - `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/backlog.md.jinja`: decision 2.
 - `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md`: decision 3.
@@ -108,13 +117,13 @@ sequencing decision.
 Before editing a bundle reference, run `uv run devkit get-context authoring` and apply `agent-asset-writing`; keep
 the bundle within `test_bundle_budgets.py`.
 
-### Non-Goals
+#### Non-Goals
 
 - A `precedes:` field, a reverse `depends_on` on accepted proposals, or any change to `depends_on` semantics.
 - A handoff, accept or `proposal check` notice or refusal; any change under `packages/devkit-spec/src/devkit_spec/features/`.
 - Parsing ordering claims out of proposal prose.
 
-### Expected acceptance evidence
+#### Expected acceptance evidence
 
 - **AC-01**: `references/backlog.md` (local and cloud) states that a draft claiming to precede another proposal's
   handoff, or depending on its state, checks each named proposal's base `status` and local or fetched `dev-<slug>`
@@ -126,6 +135,7 @@ the bundle within `test_bundle_budgets.py`.
 - **AC-04**: no file under `packages/devkit-spec/src/devkit_spec/features/` or `packages/devkit-docs/` changes
   (`git diff --stat` of the Development range).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Retired when the accepted design is handed off and `FB-draft-precedence-claim-unenforced` is marked promoted to it.
+

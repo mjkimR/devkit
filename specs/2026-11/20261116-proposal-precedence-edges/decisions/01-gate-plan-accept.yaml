@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-proposal-precedence-edges
+by: user
+at: '2026-11-16T11:35:44.974488Z'
