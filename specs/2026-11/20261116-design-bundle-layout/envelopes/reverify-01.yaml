@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:15:34.849217Z'
+status: completed
+review: review-01.yaml
+summary: 'review-01 findings 1-3 fixed in 4c3ad32ea: support out of spec_format scope, README under <ID>/artifacts/ checked again, off-grammar role files reported; namespace stray and orphan tests added.'
+findings:
+- issue: RULE-spec-format fix gives invalid ID-free design bundle support Markdown an id from its file stem, turning it into a stray and reporting role-only problems on support.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/spec_format.py:137,265
+  failure_condition: rules fix on unnamed bundle support writes id plain; id_convention then reports a stray.
+  suggested_action: Keep role support paths out of spec_format scope and fix; add a rule test.
+  resolution: resolved
+  severity: P2
+- issue: README.md under domain/operations <ID>/artifacts/ is exempted in code, against AC-03 (existing checks kept) and the capability wording.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:136; docs/capabilities/documents/CAP-DOCS-document-model.md:268; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/id_convention/guide.md:123
+  failure_condition: An identified README under a domain artifacts directory passes.
+  suggested_action: Pick one scope and align code, guide, docstring and capabilities.
+  resolution: resolved
+  severity: P3
+- issue: Binary support left at the old flat domain path docs/domain/<ID>/artifacts/ is silently accepted.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/services/role_artifacts.py:76-78
+  failure_condition: An orphaned binary after a domain area move passes rules check.
+  suggested_action: Report off-grammar binary support shapes under role directories; add a test.
+  resolution: resolved
+  severity: P3
+checks: {}
