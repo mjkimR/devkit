@@ -64,4 +64,7 @@ to the Host before any runtime scope expansion. New Kind work needs its own evid
 
 Review only for semantic owner uniqueness, source agreement and ordinary navigation. D1–D6 in the blueprint require
 independent withheld-entry global/package walkthroughs, negative identity controls, source asset delivery and scoped
-checks. Domain discovery has not yet been demonstrated; Foundation's validated routes concern DESIGN only.
+checks. The bounded independent global and registered-package routes passed in
+[Development evidence](../../materials/2026-11/20261116-domain-model-documents/development-evidence.md).
+No independent baseline route measurement, timing improvement or universal discovery claim is established;
+Foundation's validated routes concern DESIGN only.
