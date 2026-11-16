@@ -8,7 +8,7 @@ target: CAP-DLV-adaptive-assignments
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-16
 ---
 
@@ -37,3 +37,7 @@ created_at: 2026-11-16
 packages/devkit-adaptive/src/devkit_adaptive/features/assignment/services/verification.py: list observation compares base with HEAD; verify base check uses final
 cli/commands.py joins an empty attention list; field_value renders it as -
 ```
+
+## Disposition
+
+- **Disposition**: Already covered: `CAP-DLV-adaptive-assignments` §4 states that `list` base-not-ancestor compares HEAD with the base, that the `verify` `base` check compares the return's final commit, that closed assignments render observed fields as `-` (`"observed": null` in JSON), and that each list line carries its own `status`; `head-moved` signals HEAD moving past the return. No contract edit needed.

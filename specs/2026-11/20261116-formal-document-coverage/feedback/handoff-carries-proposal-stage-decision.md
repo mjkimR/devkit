@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-16
 ---
 
@@ -37,3 +37,7 @@ created_at: 2026-11-16
 specs/2026-11/20261116-formal-document-kinds/decisions/01-gate-plan-accept.yaml: workflow sdd-spec-feature, stage direction-handoff
 specs/2026-11/20261116-formal-document-coverage/decisions/01-gate-plan-accept.yaml: same shape
 ```
+
+## Disposition
+
+- **Disposition**: Intended behavior, already documented: `CAP-DLV-proposal-planning` rule 12 states that the carried record retains the proposal stage under the spec's workflow binding, satisfies no spec stage and serves only the acceptance audit trail; `handoff.py` `_record_gates` and `test_proposal_handoff_records.py` pin this shape.
