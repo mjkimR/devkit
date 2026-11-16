@@ -9,7 +9,7 @@ priority: high
 size: L
 planning_effort: high
 dev_effort: high
-milestone: MS-implementation-design-documents
+milestone: MS-documentation-system-evolution
 boundaries:
   owns:
   - packages/devkit-docs/
@@ -28,6 +28,7 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 ---
+
 
 # [PROP-design-document-foundation] Design document ownership and document-system foundation
 
@@ -48,8 +49,8 @@ rules for what architecture retains and what it references, including adjacent d
 
 ## 2. Technical Spike Questions
 
-- **Q1**: What routing matrix distinguishes capability, architecture, use case, UX, ADR, materials, module
-  reference, development guide and implementation design? Which owner wins for ambiguous content?
+- **Q1**: What routing matrix distinguishes capability, architecture, domain model, use case, UX, ADR, materials,
+  module reference, development guide, operations, executable playbook and implementation design? Which owner wins for ambiguous content?
 - **Q2**: What belongs to a design entry document, an independently addressable detail document, or a supporting
   file such as a CSV datasheet? How are one-to-many and shared designs connected to existing contracts?
 - **Q3**: What identity, bundle layout, summaries and relationship fields support discovery and references in
@@ -72,7 +73,8 @@ rules for what architecture retains and what it references, including adjacent d
   views versus operational diagnosis and recovery procedures. Distinguish architectural significance from mere
   document size or level of detail; do not turn this into an arc42 tutorial or require unused chapters.
 - State the neighboring responsibilities of domain models and operations so architecture does not absorb them
-  implicitly. Introducing those layers, their schemas or tooling remains separate work.
+  implicitly. Their implementation is delivered by `PROP-domain-model-documents` and `PROP-operations-documents`;
+  this proposal establishes the common ownership vocabulary and reference boundaries first.
 - Define one authoritative home per statement and explicit links where another document needs that information.
   Keep authoritative contract limits in capabilities; keep historical evidence in materials. Do not reclassify
   all implementation detail in architecture or UX merely because designs now exist.
@@ -98,6 +100,7 @@ rules for what architecture retains and what it references, including adjacent d
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning settles document roles and the schema before implementation. This proposal delivers the document-system
-foundation; authoring lifecycle, viewer UX and repository migration are separate work. Acceptance and handoff use
+Planning settles ownership boundaries across all three proposed layers and the design schema before implementation.
+This proposal delivers the document-system foundation; authoring lifecycle, viewer UX and repository migration
+are separate work. Acceptance and handoff use
 the repository's proposal gates. Retirement requires verified runtime support and matching Living Spec contracts.

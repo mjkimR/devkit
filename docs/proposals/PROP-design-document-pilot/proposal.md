@@ -1,15 +1,15 @@
 ---
 id: PROP-design-document-pilot
-title: Pilot implementation-design separation on existing documents
-summary: "Applies design bundles to a bounded sample of existing documents and verifies ownership boundaries, preserved contracts and artifact discoverability."
+title: Pilot documentation ownership across domain, design and operations
+summary: "Validates domain-model, design and operations documentation on bounded devkit topics, preserving authoritative ownership and testing discovery across the layers."
 status: draft
 created_at: 2026-11-16
 target_area: documents/
 priority: high
-size: M
+size: L
 planning_effort: medium
 dev_effort: medium
-milestone: MS-implementation-design-documents
+milestone: MS-documentation-system-evolution
 boundaries:
   owns:
   - docs/
@@ -22,11 +22,14 @@ task_kind: feature
 workflow: sdd-proposal
 depends_on:
 - PROP-design-document-foundation
+- PROP-domain-model-documents
+- PROP-operations-documents
 - PROP-design-document-lifecycle
 - PROP-design-document-viewer
 ---
 
-# [PROP-design-document-pilot] Pilot implementation-design separation on existing documents
+
+# [PROP-design-document-pilot] Pilot documentation ownership across domain, design and operations
 
 ## 1. Background & Hypothesis
 
@@ -66,8 +69,22 @@ reducing capability line counts.
 - The pilot demonstrates a separate detail, example and datasheet path using real retained content or an explicitly
   illustrative fixture, and reports ownership ambiguities rather than hiding them behind shorter documents.
 
+### Expanded documentation-layer scope
+
+- Cover domain-model candidates for delivery (proposal/spec/milestone/decision relationships) and distribution
+  (package/bundle/asset/preset/projection/override/receipt relationships). Select a bounded representative scope
+  during Planning rather than require a complete repository model.
+- Include a current implementation-design example with split supporting artifacts, and an operational diagnosis
+  and recovery example such as interrupted synchronization or receipt mismatch. Verify actual supported commands;
+  do not infer recovery permission or execute destructive procedures merely to author documentation.
+- Account for the authoritative home of each extracted concept, rule and procedure. Preserve contract limits in
+  capabilities, choice rationale in ADRs and historical evidence in materials. Link executable playbooks instead
+  of maintaining duplicate recovery procedures.
+- Demonstrate concept-to-contract-to-design navigation and symptom-to-diagnosis-to-recovery-to-normal-state
+  navigation. Report gaps in the role boundaries as findings, not just changes in document length.
+
 ## 4. Lifecycle & Retirement Criteria
 
-Start after the foundation, authoring lifecycle and viewer support are delivered. Acceptance and handoff use the
+Start after foundation, domain-model, operations, authoring lifecycle and viewer support are delivered. Acceptance and handoff use the
 proposal gates. Retirement requires a verified bounded pilot and explicit destinations for concrete follow-up;
 this proposal does not migrate all existing documents.

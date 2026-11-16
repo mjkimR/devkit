@@ -1,7 +1,7 @@
 ---
 id: PROP-design-document-lifecycle
-title: Design authoring and reconciliation lifecycle
-summary: "Integrates design bundles and supporting artifacts into authoring, implementation review and Living Spec reconciliation without duplicating existing document responsibilities."
+title: Documentation-layer authoring and reconciliation lifecycle
+summary: "Integrates domain models, implementation designs and operational guidance into authoring, review and reconciliation with clear document ownership."
 status: draft
 created_at: 2026-11-16
 target_area: delivery/
@@ -9,7 +9,7 @@ priority: high
 size: L
 planning_effort: high
 dev_effort: medium
-milestone: MS-implementation-design-documents
+milestone: MS-documentation-system-evolution
 boundaries:
   owns:
   - packages/devkit-docs/src/devkit_docs/bundles/
@@ -27,9 +27,12 @@ task_kind: feature
 workflow: sdd-proposal
 depends_on:
 - PROP-design-document-foundation
+- PROP-domain-model-documents
+- PROP-operations-documents
 ---
 
-# [PROP-design-document-lifecycle] Design authoring and reconciliation lifecycle
+
+# [PROP-design-document-lifecycle] Documentation-layer authoring and reconciliation lifecycle
 
 ## 1. Background & Hypothesis
 
@@ -69,8 +72,19 @@ can duplicate existing contracts or become stale reference material.
 - A reviewed implementation change identifies affected design details and supporting files in reconciliation;
   an adaptive-dev example keeps the same document semantics without acquiring SDD records or approval gates.
 
+### Expanded documentation-layer scope
+
+- Apply the foundation ownership matrix to domain models, designs and operations, using the conventions delivered
+  by `PROP-domain-model-documents` and `PROP-operations-documents`. Preserve domain meaning, behavioral contracts,
+  implementation mechanisms and executable procedures in their respective authoritative sources.
+- Cover changes to concepts and relationships as well as runtime behavior. Review whether affected domain models,
+  design details and diagnosis/recovery instructions need updates; supporting files without IDs remain visible
+  in reconciliation. Keep the SDD and adaptive-dev lifecycle distinction.
+- Demonstrate one change that affects all three views and a change that affects only one. Do not require touching
+  every layer for every feature or copying the same statement into multiple documents.
+
 ## 4. Lifecycle & Retirement Criteria
 
-Start after the foundation's roles and schema are delivered. Acceptance and handoff use the proposal gates.
+Start after the foundation, domain-model and operations conventions are delivered. Acceptance and handoff use the proposal gates.
 Retirement requires deployed authoring guidance and verified review/reconciliation behavior, not pilot migration
 or viewer implementation.

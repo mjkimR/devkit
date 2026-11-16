@@ -1,15 +1,15 @@
 ---
 id: PROP-design-document-viewer
-title: Design bundle navigation in the repository viewer
-summary: "Makes design entry documents, related contracts and supporting artifacts navigable in the repository viewer while preserving document-kind boundaries."
+title: Documentation-layer navigation in the repository viewer
+summary: "Exposes domain models, design bundles and operational guidance with their contract links and supporting artifacts in the repository viewer."
 status: draft
 created_at: 2026-11-16
 target_area: viewer/
 priority: high
-size: M
+size: L
 planning_effort: medium
 dev_effort: medium
-milestone: MS-implementation-design-documents
+milestone: MS-documentation-system-evolution
 boundaries:
   owns:
   - packages/devkit-viewer/
@@ -27,9 +27,12 @@ task_kind: feature
 workflow: sdd-proposal
 depends_on:
 - PROP-design-document-foundation
+- PROP-domain-model-documents
+- PROP-operations-documents
 ---
 
-# [PROP-design-document-viewer] Design bundle navigation in the repository viewer
+
+# [PROP-design-document-viewer] Documentation-layer navigation in the repository viewer
 
 ## 1. Background & Hypothesis
 
@@ -62,7 +65,16 @@ that structure without treating designs as replacements for capability, architec
 - Missing artifacts and unsupported formats have explicit usable states; the implementation passes the viewer's
   required frontend checks and focused backend checks for changed artifact/navigation behavior.
 
+### Expanded documentation-layer scope
+
+- Expose domain models and operational guidance alongside designs using their delivered identities and
+  relationships. Keep conceptual relationships, implementation details and operational procedures distinguishable.
+- Verify navigation from a domain concept to its contracts and designs, and from an operational symptom to the
+  applicable procedure or reference. Support non-indexed artifacts through the chosen entry documents.
+- Reuse generic document navigation where possible. Do not create a separate schema or document editor per layer;
+  apply required viewer frontend checks to changed surfaces.
+
 ## 4. Lifecycle & Retirement Criteria
 
-Start after the foundation is delivered. Acceptance and handoff use the proposal gates. Retirement requires
+Start after the foundation, domain-model and operations conventions are delivered. Acceptance and handoff use the proposal gates. Retirement requires
 verified navigation and matching UX documentation. Repository-wide content migration is outside this proposal.
