@@ -34,7 +34,7 @@ definitions; this table separates the statuses by what each claims and who write
 | `open` | The only actionable status, and the only one capture writes. A new file starts here and stays here until a hygiene decision or a verified direct fix; capture, handoff and relocation never change it. | `CAP-DOCS-document-model` Feedback lifecycle; `CAP-HARN-agent-guidance` Feedback capture policy |
 | `promoted` | Tracking moved to identified follow-up work (a rule, playbook, ADR, proposal or spec) that actually received the item. Claims nothing about a fix; it stays `promoted` when that work finishes. | `ADR-feedback-lifecycle-ledger`; `CAP-DLV-delivery-workflows` Source feedback at completion |
 | `resolved` | A direct fix of an explicitly linked open source, fully addressed and verified by tests or review in a session or spec, without promotion. Partial, deferred or unverified fixes stay `open`. | `CAP-DOCS-document-model` Feedback lifecycle; `CAP-HARN-agent-guidance` Feedback capture policy |
-| `dismissed` | A reasoned decline: normal behavior, obsolete, already addressed or without observed evidence. No work is routed and no fix is claimed. | `CAP-DOCS-document-model` Feedback lifecycle; spec bundle `feedback-hygiene` playbook Step 3 |
+| `dismissed` | A reasoned decline: normal behavior, obsolete, already addressed or without observed evidence. No work is routed and no fix is claimed. | `CAP-DOCS-document-model` Feedback lifecycle; spec bundle `feedback-hygiene` playbook Steps 1 and 3 |
 | `forwarded` | An upstream report that was actually submitted under explicit external-send authorization, with its report location. A draft report or unresolved ownership stays `open`. | `CAP-HARN-agent-guidance` Feedback capture policy; `feedback-hygiene` Step 3 |
 | Promoted vs resolved | Both are terminal and both carry a Disposition. Promotion closes on routing, resolution on verification; completing promoted work never converts its source to `resolved`. | `CAP-DLV-delivery-workflows` Source feedback at completion |
 | Dismissed vs resolved | Both end without follow-up work. Dismissal records a reason that nothing needs fixing; resolution records the fixing SPEC ID or session paths, the outcome and the evidence. A recurrence reopens neither: the lookup below records a new item or nothing. | `CAP-HARN-agent-guidance` Feedback capture policy |
@@ -52,12 +52,12 @@ Four actors write feedback status, each at a fixed moment:
 2. **Backlog triage** (`feedback-hygiene`, in a session the user invoked or confirmed) sets `promoted`, `dismissed`
    or `forwarded` with the user's decision, and appends one `- **Disposition**:` line naming each destination ID,
    path or report location and a one-line summary or reason. Promotion here is the moment the proposal or other
-   follow-up work receives the item; the destination records the source FB ID in its `Source feedback` section
-   (`CAP-HARN-agent-guidance` §4.5 `feedback-hygiene`).
+   follow-up work receives the item; the destination records the source FB ID in its `Source feedback` section, or
+   a session in its agreed scope (`feedback-hygiene` Step 2; `CAP-DLV-proposal-planning` §3.1).
 3. **A fixing task at completion** sets `resolved` on an explicitly linked open source it fully addressed and
    verified, at `living-spec-draft` with the outcome recorded in `reconcile.md` for a spec, or at `report-session`
-   for a session, and appends a Disposition with the SPEC ID or changed paths, outcome and evidence. It may set its
-   own new resolution back to `open` when later changes invalidate the evidence; it never revisits pre-existing
+   for a session, and appends a Disposition with the SPEC ID or changed paths, outcome and evidence. It sets its own
+   new resolution back to `open` when later changes invalidate the evidence; it never revisits pre-existing
    terminal feedback (`CAP-DLV-delivery-workflows` Source feedback at completion; spec bundle
    `skills/spec/references/source-feedback.md`).
 4. **The user-invoked `feedback-consolidation` playbook** changes form, never outcome: it deletes eligible

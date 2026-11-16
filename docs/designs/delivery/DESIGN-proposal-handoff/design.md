@@ -83,7 +83,7 @@ refusal here writes nothing:
 5. **Projected dependency graph.** `_check_dependency_projection` runs last because it needs the rendered `spec.md`:
    it removes the proposal from an in-memory copy of the index, adds the new spec, points every live `depends_on`
    written with the proposal's ID or alias at the spec, and refuses a missing, ambiguous or wrong-kind target or a
-   cycle with `SPEC_PROPOSAL_INVALID` (`CAP-DLV-proposal-lifecycle` §4.1, first paragraph).
+   cycle with `SPEC_PROPOSAL_INVALID` (`CAP-DLV-proposal-lifecycle` §4.1, the paragraph before the numbered steps).
 
 ### 3. Writes, inside the rollback boundary
 
@@ -100,7 +100,8 @@ Any exception there runs `_restore` on the edited ADRs and `roll_back` in
 [specs.py](../../../../packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.py) on the rest: moves
 go back newest first, written paths are removed, and a directory still holding something that could not be moved
 back is kept. A complete rollback re-raises an advisory error unchanged; anything else, or an incomplete rollback,
-becomes `SPEC_PROPOSAL_HANDOFF_FAILED` with the leftovers in its details. The proposal is untouched in both cases.
+becomes `SPEC_PROPOSAL_HANDOFF_FAILED` with the leftovers in its details. `proposal.md` is kept in both cases; after an incomplete rollback, the paths listed in the details may still sit
+at their destinations.
 After the block, copied cross-file-system sources are removed.
 
 ### 4. Rewriting, removal and record carry
