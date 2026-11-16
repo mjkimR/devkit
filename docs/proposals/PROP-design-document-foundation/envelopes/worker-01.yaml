@@ -1,0 +1,26 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T02:39:40.669579Z'
+status: completed
+summary: Compared linked ID-free designs, ARCH deep dives, new Kind and existing contract/reference entry; recommend unique owners plus ID-free entry/detail and one transaction-capability link. Two Challenger rounds complete, round-1 coverage finding resolved; no goal/scope questions. Planning only; acceptance and handoff remain Host ask gates.
+findings: []
+assumptions:
+- 'Codex emulated: absolute assigned-worktree cwd, explicit proposal-only writes and read-only role instructions/snapshots substitute for native confinement; no native guarantee. Worker-owned status/envelope additions during Scout runs are disclosed in materials/direction.md; no role writes or outside reads reported.'
+- Minimal implementation is docs source living-spec/architecture instructions and optional template, shared ownership CAP, ARCH overview, optional glossary terms, two maintained design files and exact CAP-DIST link; no package feature edge or runtime code. Development effort medium.
+- Direction preserves domain/design/operations roles and unique normative owners. ID-free design content is absent from search/resolve/refs; entry discovery uses selected owner links. No normative pilot transfer, manual reciprocal links or whole-layer prerequisite.
+unverified_areas:
+- F1-F6 Development outcomes, especially withheld-entry global route, package fixture navigation and consuming-repository source asset distribution, not executed in Planning.
+- No viewer/recovery or unsupplied domain/operations discovery; largest original incoming-ref bodies bounded. Existing follow-up proposals retain those scopes.
+checks:
+  rules: PASS scoped proposal rules 22, zero errors/warnings; ordinary commit gates passed
+  envelopes: PASS unblocked, no pending questions/errors; challenger round 2 zero findings and round 1 reverified
+  whitespace: PASS git diff --check against assigned base
+  feedback: PASS repo-and-upstream sweep recorded=0 duplicates=0
+  tests: SKIP Planning documents only, no code change
+  proposal_guard: SKIP expected SPEC_PROPOSAL_IN_PLANNING refusal from Backlog mutability check, not a Planning pass
+diff_scope:
+  base: fab44e919c5d516adfa4666fff444096be14300c
+  head: bec51f2ed45a1d0aa0318e8f58612b1ff9f7ae5a
+activity_effort: high
