@@ -349,6 +349,13 @@ def test_remove_drops_the_override_of_a_removed_asset(item: InstalledBundle, tar
     create_override(target, [item], "team:review")
     newer = _without_asset(item, "review")
     sync_project(target, [newer])
+    # The kept record has no current upstream digest: list reports no drift, diff and accept refuse.
+    kept = {entry.asset: entry for entry in list_overrides(target, [newer])}
+    assert set(kept) == {"guide", "review"} and kept["review"].drift_detected is False
+    with pytest.raises(SelectionError, match="asset not found"):
+        diff_override(target, [newer], "team:review")
+    with pytest.raises(SelectionError, match="asset not found"):
+        accept_override(target, [newer], "team:review")
     result = remove_override(target, [newer], "team:review")
     assert result.paths == [
         f"{OVERRIDES_PATH}/team/skills/review/SKILL.md",
