@@ -115,8 +115,8 @@ requires lifecycle integration and preserves its planned status until completion
   use-case/capability/decision sections and required coverage set unchanged. An author can cite a formal source;
   no automatic handbook page per formal document is introduced. No release handbook refresh is authorized here.
 - Core owns the Kind grammar, migrated canonical documents and the ADR replacing ID-free standing. This phase
-  waits for that delivered contract before implementation verification. Pending exact schema inputs are recorded
-  in the blueprint; they are coordination inputs, not a question whether formal support is wanted.
+  waits for that delivered contract before implementation verification. The selected core future contract is hash-pinned
+  in the blueprint and materials; delivered runtime parity remains a Development prerequisite.
 - No additional PADR is needed: the viewer retains browser parsing, generic repository reads and decision-only
   supersession UI from its existing ADRs. Core owns the lasting identity decision and its supersession.
 - One L viewer feature spec remains coherent: frontend behavior, backend proof, handbook lookup and shipped output

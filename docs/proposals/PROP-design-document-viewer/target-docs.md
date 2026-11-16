@@ -35,10 +35,33 @@ frontend module where that removes inconsistent recognizers. No package, feature
 
 `PROP-formal-document-kinds` is a hard implementation prerequisite, including the decision superseding ID-free
 clauses in `ADR-documentation-ownership-and-linked-design-entries` and `ADR-linked-domain-relationship-views`.
-Before implementation, pin its delivered commit and consume its Kind values, prefixes, directories, nested stem/H1
-rules, status/summary schema, relation field applicability and scalar/list shapes, aliases, provenance/current refs,
-statement supersession grammar, independent-detail policy and entrypoint applicability. Exact pending values are
-coordination inputs; do not infer a competing schema from `related_capabilities` or add a viewer-only Kind.
+The selected future core contract is pinned in [core contract](materials/core-contract.md). Artifact adapter is
+`local`, repository namespace `7a98ea4b0c7772e588edcd66b2dc51119340c3fcb7b9cb304c1e67ffbe3d8302`, source commit
+`ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d`, generation `5dd1435445b24d868e5854418cab4085`, content SHA-256
+`5aeb608668965e0eb46a3d786c5c50053542a4f7fe63d3f7cf49ff1f2994a20d`. Adapter/namespace/source/hash were compared
+with the Host pin; local copy bytes match. This is selected contract data, not current-runtime proof. Development
+must consume the delivered core implementation and reconcile any material difference before dependent verification.
+
+| Kind / prefix / directory | Canonical shape | Applicable data |
+| --- | --- | --- |
+| design / DESIGN / designs | `<root>/designs/DESIGN-<word-led-slug>.md` | Optional source `entrypoints`; formal independent details use peer files with their own IDs |
+| domain / DOMAIN / domain | `<root>/domain/DOMAIN-<word-led-slug>.md` | Concept/identity/relationship/lifecycle knowledge; no entrypoints field |
+| operations / OPS / operations | `<root>/operations/OPS-<word-led-slug>.md` | Symptom/evidence/action-owner/normal-state routing; no entrypoints field |
+
+Roots are global docs or registered docs/packages/<name>. Required nonempty id/title/status/summary; H1 and stem
+match ID; no area field. Status draft/active/retired; default list/search hides retired, explicit history/status and
+direct reference resolution retain it. Aliases are same-prefix IDs, globally unique across namespaces. All indexed
+source kinds may use target-typed list fields related_designs, related_domains, related_operations, alongside
+applicable existing CAP/UC fields. Preserve generic spec/plan current references. Role documents reject delivery
+proposal/decomposed_from/depends_on/milestone and ADR supersedes/superseded_by fields. Role retirement is a status,
+prose replacement explanation and optional related_* successor, not ADR supersession. Existing provenance on its
+owning kinds remains distinct. No reciprocal relation requirement is introduced.
+
+Artifacts live under `<root>/<role-directory>/<PARENT-ID>/artifacts/<relative-path>` and link from their identified
+parent. ID-free Markdown artifacts must remain outside canonical node lists, kind counts/search and reference graph
+identity, even though the generic file scanner reads Markdown. They stay accessible as supporting files. An ID-bearing
+artifact is invalid core input; viewer can still expose its file/raw content with uncertainty, never claim it is a
+valid peer canonical node. Independent details are flat formal peer files, not nested inherited identities.
 
 The viewer remains browser-parsed and accepts unknown metadata without rejecting older/newer repositories.
 Known formal fields get typed presentation and links. Unknown fields stay inspectable through metadata/raw source.
@@ -79,7 +102,7 @@ update for every future code change. No operations recovery, proprietary editor 
 
 Chapter order: Overview, Architecture, Domain, Capabilities, Use Cases, UX, Designs, Operations, Steering, Decisions,
 Development. The three labels are explicit: Domain, Designs, Operations. Global and each structural package docs
-root use the same order; no formal role falls through to Overview. Formal independent nested detail nodes appear
+root use the same order; no formal role falls through to Overview. Formal independent detail peer nodes appear
 under their own identity in the appropriate group. Parent-owned artifacts remain links and never become invented
 formal IDs. README exclusions and historical material/proposal exclusions retain existing behavior.
 
@@ -89,7 +112,9 @@ or invoke repository-local Python to validate it. Test registered namespace fixt
 structural visibility separately. Preserve namespace selection, exact path/anchor deep links and source isolation.
 
 Book/group list and its search include all three kinds and canonical/alias IDs as well as current supported title
-and text fields. Reference/deep-link targets remain reachable when prior filters hide them; visibly select the
+and text fields. Default book navigation/search excludes retired formal nodes; Include retired exposes them. Keep the complete
+loaded identity index for direct ID/alias links and graph targets. Direct opening a retired node shows its retired
+status and the selected target without silently enabling other hidden history. Reference/deep-link targets remain reachable when prior filters hide them; visibly select the
 target context. Missing targets show their written ID/path with an unavailable explanation, never a silently empty
 or Overview result. Unsupported unknown kinds retain readable generic files without claiming formal validity.
 
@@ -117,10 +142,10 @@ reuse `frontend/src/lib/features/knowledge/KnowledgeSidebar.svelte`, document co
 ### UX-browse-formal-documents (screen draft)
 
 **Purpose:** Find and read a formal node. Facts: selected repository/branch, namespace, kind/group, canonical ID,
-title, summary and status. Primary region: selected document/book; secondary: chapter navigation and filters.
+title, summary and status. An Include retired control exposes historical formal nodes. Primary region: selected document/book; secondary: chapter navigation and filters.
 
 **Content tree:** Repository/branch context; Rendered/Raw source control; Read mode and Living Spec book control; namespace selector; chapter
-navigation with Domain, Designs, Operations; matching document ID/title entries; selected formal node header and
+navigation with Domain, Designs, Operations; Include retired control; matching document ID/title entries; selected formal node header and
 body; linked independent details and supporting artifacts; UX-formal-document-relations panel.
 
 | State | Representation and next action |
@@ -137,6 +162,7 @@ body; linked independent details and supporting artifacts; UX-formal-document-re
 | Trigger | Step | From | To | Target | Capability | Feedback |
 | --- | --- | --- | --- | --- | --- | --- |
 | Request Living Spec book | UC-read-formal-document 1 | handbook | loading | | `CAP-VIEW-repository-viewer` | Index progress then chapters |
+| Include retired | UC-read-formal-document 2 | populated/empty | populated/empty | | `CAP-VIEW-repository-viewer` | Historical nodes labelled retired; direct links still open without requiring this toggle |
 | Choose namespace/group or search | UC-read-formal-document 2 | populated | populated/empty | | `CAP-VIEW-repository-viewer` | Matching IDs/count, selected scope |
 | Open formal node/alias/deep link | UC-read-formal-document 3 | populated/loading | populated/missing | | `CAP-VIEW-repository-viewer` | Canonical ID/title and selected context |
 | Inspect relations | UC-read-formal-document 4 | populated | populated | UX-formal-document-relations | `CAP-VIEW-repository-viewer` | Source-aware reference rows |

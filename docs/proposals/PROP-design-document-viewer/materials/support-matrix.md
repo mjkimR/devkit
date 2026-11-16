@@ -9,11 +9,15 @@ worktree read was reported. The source Scout's architecture description was corr
 are docs package definitions, while viewer browse is lines169–172 and declares only project/shared. The frontend
 marker is outside the package: scripts/affected_tests.py:128–131, inspected by the worker after Scout completion.
 
-Core values remain provisional until Host supplies a pinned artifact: design/DESIGN/designs, domain/DOMAIN/domain,
-operations/OPS/operations; id/title/status/summary, draft|active|retired; same-kind aliases; related_designs,
-related_domains, related_operations plus applicable CAP/UC fields; design optional entrypoints, domain/ops none.
-Independent design details are formal nodes. No role supersedes field; ADR/PADR decision UI remains. Retired nodes
-must follow the delivered core's default/current and explicit historical lookup policy. Paths/layout not settled.
+Core contract pin: source ca386097a6fc4f7600acf5e9a9bc7253d5cc3b6d; immutable generation
+5dd1435445b24d868e5854418cab4085; SHA-256 5aeb608668965e0eb46a3d786c5c50053542a4f7fe63d3f7cf49ff1f2994a20d.
+Adapter local and repository namespace matched Host. Exact artifact retained in core-contract.md and hash verified.
+This is selected future contract, not core runtime evidence. Values are design/DESIGN/designs, domain/DOMAIN/domain,
+operations/OPS/operations; flat prefixed peer files; required id/title/status/summary, draft|active|retired;
+same-kind aliases; target-typed related_designs/domains/operations on any indexed source, no reciprocity;
+DESIGN optional entrypoints, DOMAIN/OPS none. Artifacts use <role>/<PARENT-ID>/artifacts/<relative>; ID-free artifacts
+are file-accessible but excluded from node navigation/search/graph. Include retired exposes historical formal nodes;
+direct IDs/aliases/refs retain them regardless of default list filter. ADR/PADR-only replacement UI stays unchanged.
 
 ## Three-kind-by-surface acceptance matrix
 
@@ -23,7 +27,7 @@ Each result must become a named passing test or walkthrough artifact in Developm
 | Surface and applicability | D | N | O | Mechanism/owner and exact planned proof |
 | --- | --- | --- | --- | --- |
 | Identity/prefix input | P | P | P | Core-delivered valid and invalid prefix/path/H1/status fixtures; frontend consumer parity test against core definitions, no new schema authority |
-| Group/order/namespace list | P | P | P | api/documents.ts:266–299 bookGroup/bookGroups; documents.test.ts; KnowledgeViews.test.ts; explicit group in global and registered fixture, nested formal detail and unregistered structural control; never Overview |
+| Group/order/namespace list | P | P | P | api/documents.ts:266–299 bookGroup/bookGroups; documents.test.ts; KnowledgeViews.test.ts; explicit group in global and registered fixture, independent formal peer detail and unregistered structural control; never Overview |
 | List/search/current/history | P | P | P | KnowledgeViews.svelte:193–201 and KnowledgeSidebar.svelte; test title/body/ID/alias matches, selected namespace, retired defaults and explicit deep-linked historical node |
 | Canonical ID/alias/deep links | P | P | P | api/documents.ts idIndex/renderDocument plus SddViewer.svelte; documents.test.ts and SddViewer.test.ts; canonical, alias, encoded path/anchor, duplicate/missing ID; hidden-filter target reachable |
 | Prose and statement references | P | P | P | api/documents.ts:240 and document/supersession.ts:27; documents.test.ts and supersession.test.ts; every core prefix positive plus malformed/fence/comment/indented/code controls, whole/partial ADR statement targets |
@@ -40,7 +44,7 @@ Each result must become a named passing test or walkthrough artifact in Developm
 
 ## File ownership and boundaries
 
-Viewer owns frontend/src/lib/api/documents.ts, features/document/supersession.ts, features/knowledge/KnowledgeViews.svelte,
+Viewer owns frontend/src/lib/api/documents.ts, a new api/artifacts.ts resolver if needed, features/document/supersession.ts, features/knowledge/KnowledgeViews.svelte,
 KnowledgeSidebar.svelte, document components and new helper/panel tests in those directories. frontend/src/lib/index.ts,
 api/repository.ts and public wrappers change only when an additive public interface is actually required. Generic
 backend code need not change; backend tests are mandatory. frontend/src/app/ and frontend tooling change only for
@@ -69,3 +73,13 @@ ADR-viewer-indexed-decision-supersession; ADR-documentation-ownership-and-linked
 ADR-linked-domain-relationship-views; UC-read-decision-supersession; UX-view-decision; UX-decision-supersession;
 CAP-DOCS-documentation-ownership; glossary/register. Incoming-ref inventory is materials/incoming-refs.md, with full
 lookup lists and an explicit historical-body limit. No historical record is rewritten to manufacture formal proof.
+
+## Artifact implementation refinement
+
+Source inspection api/documents.ts:219–229 rewrites only indexed Markdown anchors; it does not load img/src or
+non-indexed supporting files. Add relative a/img resolution with RepositoryDataSource.blob, safe MIME/format
+handling, image object-URL lifetime cleanup and text/CSV/Markdown/diagram source access. ID-free artifact Markdown
+is excluded from canonical book nodes/counts/search/graph identity. Unsupported file download remains read-only
+from already available bytes. Assert no arbitrary browser-origin request, source confusion, unsafe SVG execution,
+path traversal/symlink bypass or binary-as-UTF8 assumption. Actual new tests under frontend/api and document
+components plus backend blob guards establish this; generic rendering alone is insufficient.
