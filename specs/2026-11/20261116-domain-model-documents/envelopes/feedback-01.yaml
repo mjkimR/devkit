@@ -1,0 +1,12 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T04:22:31.325720Z'
+status: completed
+summary: Swept repository and upstream observations; recorded optional resolver path-anchor clarity as FB-resolve-package-path-anchor. No required D1-D6 outcome deferred or waived; no upstream finding.
+findings: []
+assumptions:
+- Historical feedback search/read found no same resolver-anchor observation; ordinary reader overreads and sandbox cache access were not product defects.
+checks:
+  swept: PASS recorded=1 duplicates=0
