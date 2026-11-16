@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T11:46:46.642459Z'
+status: completed
+summary: 'Development turn complete through the final change report; integration pending for the Host. Specified and planned from the handoff skeleton (dropped the removed proposal-directory boundary); backlog.md and planning.md gain the ordering-claim check (base status plus git branch -a --list ''dev-<slug>'' ''*/dev-<slug>''), CAP-HARN-agent-guidance owns it, test_ordering_claim_guidance.py covers rendered text (local/cloud) and the branch check on a Git fixture. review-01 (P2 cost-claim scope, P3 Planning sequencing) fixed and self-reverified; reconcile-check-01 (P3 first-turn recheck in CAP) fixed in reconcile-check-02; FB-draft-precedence-claim-unenforced resolved. Sync output: .devkit/installation.json (Task 2 boundary). Baseline: the new guidance tests failed (4 failed) on the handoff-head text before the bundle edit and pass after.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: 'PASS just test-affected --base d889ae40f: 1762 passed'
+  lint: PASS just lint-check; just check; devkit rules check --ci --base main
+  scope: PASS AC-05 git diff --stat of features/ and devkit-docs/ empty
+diff_scope:
+  base: ''
+  head: 08171a132f661bbed0c45771cbd0d6e83e87cdec
+activity_effort: medium
