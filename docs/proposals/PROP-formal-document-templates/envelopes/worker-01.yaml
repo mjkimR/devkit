@@ -1,0 +1,30 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T07:44:08.723699Z'
+status: needs_input
+summary: 'Planning run: four scouts (internal inventory; design, domain/ops and template-management surveys) folded into materials/template-survey.md; Q1 settled by PADR-problem-first-formal-document-openings, Q2 and Q4 settled in Planning decisions; one challenger round (2 P2, 4 P3) folded and reverified; Q3 open for the user.'
+findings: []
+checks:
+  rules: PASS proposal, PADR, feedback
+diff_scope:
+  base: ''
+  head: 22dc663ce7c1d26a39f8384dce17a714c3d032ea
+questions:
+- id: q3
+  title: 'Q3: delivered document changes'
+  prompt: Do the five delivered design, domain and operations documents change with the new templates?
+  context: The revised CAP-DOCS-documentation-ownership §3.3 asks for a problem opening without a question section, an authority boundary and a maintenance and next-action close. Four delivered documents currently break at least one clause. External copy-once systems (PEP, RFC, KEP, MADR) leave old documents alone, but devkit has only five, and agents read them as examples. This sets T3's Development scope.
+  options:
+  - id: a
+    description: 'Per-clause fixes only: remove question sections and labels and add a problem lead, add the authority-boundary heading to the designs, add a maintenance close where missing; keep topic headings and tables.'
+    recommended: true
+  - id: b
+    description: 'Full alignment: also restructure all five to the template''s body headings (Relationship overview, Routing, Normal-state observation) and table skeletons.'
+    recommended: false
+  - id: c
+    description: 'No change: templates govern only new or edited documents; four documents stay against the revised SHOULD until next touched.'
+    recommended: false
+  allow_note: true
+activity_effort: medium
