@@ -17,7 +17,9 @@ Checks the identifier targets:
 Formal role support (``role_artifacts``) is checked by path: every other file of a design bundle, at any depth, is
 ID-free support that names its parent; identified Markdown inside a bundle (a nested bundle anchor included) is a stray
 to promote to a peer bundle, and a bundle without its anchor is an orphan. Domain and operations support lives under
-``<ID>/artifacts/`` beside the document. ``README.md`` is exempt everywhere.
+``<ID>/artifacts/`` beside the document, where a ``README.md`` is supporting Markdown too; ``README.md`` stays exempt in
+area directories and bundles. A non-Markdown file under a role directory that fits no document or support path of
+its kind (one left at the flat ``<ID>/artifacts/`` path of an area kind among them) is reported off the convention.
 
 A target is reported for a path off the convention (and then nothing else), a missing frontmatter, an ``id`` /
 ``reconcile_id`` or ``area`` other than the path requires (fixable), a first H1 opened by an ``[ID]`` or `` `ID` ``
@@ -77,6 +79,7 @@ from devkit_docs.features.governance.services.role_artifacts import (
     ROLE_KINDS,
     artifact_parent,
     artifact_state,
+    off_grammar,
     role_rows,
     stray_remediation,
 )
@@ -450,6 +453,9 @@ def _targets(ctx: RuleContext) -> list[_Target]:
                 artifact, problem = artifact_state(ctx, path, registered)
                 if artifact and problem:
                     targets.append(_support_target(path, row.kind, problem, registered))
+                elif (stray := off_grammar(path, registered)) is not None:
+                    issue, remediation = stray
+                    targets.append(_Target(path, row.kind, path_issue=issue, remediation=remediation))
     covered = {target.path for target in targets}
     for document in document_index(ctx).documents:
         if document.kind is Kind.MILESTONE and document.path not in covered:

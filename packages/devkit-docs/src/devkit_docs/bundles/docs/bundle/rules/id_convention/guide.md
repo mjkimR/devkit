@@ -120,7 +120,8 @@ Formal role documents live in a global or registered namespace docs root:
 Their first H1 is `# [ID] title` matching metadata. Independent Markdown details require peer IDs (a peer bundle for
 a design). Every other file of a design bundle, at any depth, is parent-owned support of its `design.md`; domain and
 operations support lives under `{ID}/artifacts/` beside the document, in its directory. Supporting Markdown is
-ID-free and names its parent; binary support needs no fake ID. `README.md` is exempt everywhere.
+ID-free and names its parent; binary support needs no fake ID. `README.md` is exempt in area directories and bundles;
+a `README.md` under `{ID}/artifacts/` is supporting Markdown.
 
 - Identified Markdown inside a design bundle, a nested `DESIGN-{slug}/design.md` included: `Invalid partition path:
   identified Markdown inside a DESIGN bundle is a stray; only its design.md anchor carries an ID`. Promote it to a
@@ -130,5 +131,8 @@ ID-free and names its parent; binary support needs no fake ID. `README.md` is ex
 - A flat design or domain path, or a design file directly in an area directory: `Invalid partition path: Design
   must be stored at <root>/designs/{area}/DESIGN-{word-led-slug}/design.md` (`Domain must be stored at
   <root>/domain/{area}/DOMAIN-{word-led-slug}.md`).
+- A non-Markdown file under a role directory that fits no document or support path of its kind, such as one left at
+  the flat `domain/{ID}/artifacts/` path: `Invalid partition path: file under <root>/domain/ fits no DOMAIN
+  document or support path`. Move it to `<root>/domain/{area}/{ID}/artifacts/` beside its document, or remove it.
 - Orphan domain or operations support and ID-bearing support fail. Fix never moves files; it writes the bundle
   directory name as a design's `id` and the area directory as `area`.

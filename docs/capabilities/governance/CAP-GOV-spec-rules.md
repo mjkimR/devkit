@@ -534,13 +534,16 @@ their canonical root. It validates parent-owned support: inside a design bundle 
 depth, is support, and identified Markdown there, including a nested `DESIGN-*/design.md`, is a stray with a
 promote-to-peer-bundle remediation; a bundle without `design.md` is an orphan. Domain and operations support keeps
 the `<ID>/artifacts/` exception: same-root/same-kind canonical parent, ID-free supporting Markdown naming the parent,
-no stray nested independent Markdown. `README.md` stays exempt in area directories and bundles. Binary support
-needs an owner but no fake ID. In a snapshot, deleting a canonical parent checks its unchanged dependent support
+no stray nested independent Markdown. `README.md` stays exempt in area directories and bundles; under `<ID>/artifacts/`
+it is supporting Markdown. Binary support needs an owner but no fake ID, and a non-Markdown file under a role
+directory that fits no document or support path of its kind, such as one left at a flat `domain/<ID>/artifacts/`
+path, is reported with a move to its area path. In a snapshot, deleting a canonical parent checks its unchanged dependent support
 too, while honoring explicit artifact exclusions. A fix repairs a stale `area` from the directory; these checks
 never move files.
 
 RULE-spec-format requires nonempty string metadata, exact draft/active/retired status, double-quoted summary and
-rejects reserved/inapplicable role fields. DOMAIN/OPS entrypoints are rejected; DESIGN paths receive the existing
+rejects reserved/inapplicable role fields; parent-owned support, valid or not, is outside its scope and fix, so it
+never receives an ID. DOMAIN/OPS entrypoints are rejected; DESIGN paths receive the existing
 liveness and snapshot deletion checks. RULE-document-reference checks the three typed related_* role lists,
 including canonical-target duplicates and alias rewriting. RULE-document-summary applies the existing English and
 length checks. Retired role nodes remain checked; semantic ownership and ordinary artifact/source links are reviewed.

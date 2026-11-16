@@ -5,12 +5,14 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+import pytest
 from devkit_agt.features.rules import RuleContext, Violation, evaluate_rules
 from devkit_agt.features.rules.services.testing import check, load_rule, write_files
 
 RULE = load_rule(__file__)
 TODAY = date.today().isoformat()
 CONFIG = ".devkit/config.toml"
+PATH_ISSUE = "Invalid partition path: "
 
 
 def _found(violations: list[Violation]) -> list[tuple[str, int, str]]:
@@ -396,3 +398,48 @@ def test_a_bundle_anchor_derives_its_id_and_title_from_the_bundle_directory(tmp_
         .startswith(f"---\nid: DESIGN-x\ntitle: DESIGN-x\nstatus: draft\ncreated_at: {TODAY}\n---\n")
     )
     assert (tmp_path / blank).read_text().startswith("---\nid: DESIGN-y\ntitle: Y\n")
+
+
+@pytest.mark.parametrize("root", ["docs", "docs/packages/api"])
+def test_role_support_stays_id_free_and_out_of_scope_whatever_its_state(tmp_path: Path, root: str) -> None:
+    """Support is checked by `RULE-id-convention` alone: the fix never derives an ID for it from its file stem."""
+    id_convention = load_rule(str(Path(__file__).parents[2] / "id_convention" / "tests" / "test_rule.py"))
+    support = {
+        f"{root}/designs/core/DESIGN-x/sub/plain.md": "# Plain\n",
+        f"{root}/designs/core/notes/plain.md": "# Plain\nNames no bundle.\n",
+        f"{root}/designs/core/DESIGN-x/detail.md": "---\nid: DESIGN-detail\n---\n# Detail\nDESIGN-x\n",
+        f"{root}/domain/core/DOMAIN-y/artifacts/plain.md": "# Plain\n",
+        f"{root}/operations/misnamed/artifacts/plain.md": "# Plain\n",
+    }
+    files = {
+        CONFIG: _namespaces("api"),
+        f"{root}/designs/core/DESIGN-x/design.md": _role("DESIGN-x", "area: core\n"),
+        f"{root}/domain/core/DOMAIN-y.md": _role("DOMAIN-y", "area: core\n"),
+        **support,
+    }
+    assert check(RULE, tmp_path, files, fix=True) == []
+    assert {path: (tmp_path / path).read_text() for path in support} == support
+    assert sorted((v.file, v.message) for v in check(id_convention, tmp_path)) == sorted(
+        [
+            (
+                f"{root}/designs/core/DESIGN-x/sub/plain.md",
+                f"{PATH_ISSUE}role artifact must name its canonical parent in its text",
+            ),
+            (
+                f"{root}/designs/core/notes/plain.md",
+                f"{PATH_ISSUE}bundle directory must be named DESIGN-{{word-led-slug}}",
+            ),
+            (
+                f"{root}/designs/core/DESIGN-x/detail.md",
+                f"{PATH_ISSUE}identified Markdown inside a DESIGN bundle is a stray; only its design.md anchor carries an ID",
+            ),
+            (
+                f"{root}/domain/core/DOMAIN-y/artifacts/plain.md",
+                f"{PATH_ISSUE}role artifact must name its canonical parent in its text",
+            ),
+            (
+                f"{root}/operations/misnamed/artifacts/plain.md",
+                f"{PATH_ISSUE}role artifact needs a same-kind canonical parent ID directory",
+            ),
+        ]
+    )

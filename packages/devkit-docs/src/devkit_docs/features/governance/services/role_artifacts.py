@@ -6,7 +6,10 @@
 - A ``flat`` or ``area`` kind (operations, domain): files under ``<ID>/artifacts/`` beside the document, in its
   directory (in its area directory for an ``area`` kind), are support of ``<ID>.md``.
 
-``README.md`` is exempt from the identity and parent-naming checks, as everywhere.
+``README.md`` in a bundle is exempt from the identity and parent-naming checks, as in area directories; under
+``<ID>/artifacts/`` it is supporting Markdown like any other. A non-Markdown file under a role directory that is
+neither support nor in a document location (``off_grammar``), such as one left at the flat ``<ID>/artifacts/`` path of
+an ``area`` kind, fits no path of its kind.
 """
 
 from __future__ import annotations
@@ -35,6 +38,8 @@ BUNDLE_STRAY_REMEDIATION = (
     "Promote it to a peer bundle {root}/{directory}/{{area}}/{prefix}-{{slug}}/{anchor} with its own ID, or remove"
     " its ID and name the parent {parent} in its text"
 )
+OFF_GRAMMAR = "file under {directory}/ fits no {prefix} document or support path"
+OFF_GRAMMAR_REMEDIATION = "Move it to {location}, or remove it"
 
 
 def role_rows() -> tuple[KindDefinition, ...]:
@@ -58,14 +63,23 @@ class Support:
     docs_root: str
 
 
-def support_of(path: str, registered: tuple[Namespace, ...]) -> Support | None:
-    """The owner of the role support file at ``path``, from its path alone, or ``None`` when it is not support."""
+def _located(path: str, registered: tuple[Namespace, ...]) -> tuple[KindDefinition, list[str], list[str], int] | None:
+    """The role row of ``path``, its parts under ``docs/`` (``living_path``), its own parts and the index of its role
+    directory in them; ``None`` outside a role directory."""
     parts = living_path(path, namespaces=registered).split("/")
     row = role_row(parts[1]) if len(parts) > 1 and parts[0] == "docs" else None
     if row is None:
         return None
     original = path.split("/")
-    directory_index = len(original) - len(parts) + 1
+    return row, parts, original, len(original) - len(parts) + 1
+
+
+def support_of(path: str, registered: tuple[Namespace, ...]) -> Support | None:
+    """The owner of the role support file at ``path``, from its path alone, or ``None`` when it is not support."""
+    located = _located(path, registered)
+    if located is None:
+        return None
+    row, parts, original, directory_index = located
     docs_root = "/".join(original[:directory_index])
     if row.bundled:
         # <directory>/<area>/<ID>/<file...>: anything in the bundle but its anchor.
@@ -78,6 +92,30 @@ def support_of(path: str, registered: tuple[Namespace, ...]) -> Support | None:
         return None
     parent = original[: directory_index + owner - 1]
     return Support(row, "/".join([*parent, f"{parts[owner]}.md"]), parts[owner], docs_root)
+
+
+def off_grammar(path: str, registered: tuple[Namespace, ...]) -> tuple[str, str] | None:
+    """The problem and remediation of a non-Markdown file under a formal role directory that is not support of a
+    document of the kind, or ``None`` (Markdown, support, or outside a role directory). A file at the flat
+    ``<ID>/artifacts/`` path of an ``area`` or ``area-bundle`` kind is pointed at its area path."""
+    located = _located(path, registered)
+    if located is None or path.endswith(".md") or support_of(path, registered) is not None:
+        return None
+    row, parts, original, directory_index = located
+    base = "/".join([*original[:directory_index], row.directory])
+    slug = f"{row.prefix}-{{word-led-slug}}"
+    if row.area_scoped and len(parts) >= 5 and parts[3] == "artifacts" and _owner_named(row.prefix, parts[2]):
+        slug = parts[2]  # the flat ``<ID>/artifacts/`` shape the area layout replaced
+    if row.bundled:
+        location = f"the bundle {base}/{{area}}/{slug}/ beside its {row.layout_anchor}"
+    elif row.area_scoped:
+        location = f"{base}/{{area}}/{slug}/artifacts/ beside {base}/{{area}}/{slug}.md"
+    else:
+        location = f"{base}/{slug}/artifacts/ beside {base}/{slug}.md"
+    return (
+        OFF_GRAMMAR.format(directory=base, prefix=row.prefix),
+        OFF_GRAMMAR_REMEDIATION.format(location=location),
+    )
 
 
 def artifact_parent(path: str, registered: tuple[Namespace, ...]) -> str | None:
@@ -133,7 +171,8 @@ def artifact_state(ctx: RuleContext, path: str, registered: tuple[Namespace, ...
     if support is None:
         return False, ""
     row, parent = support.row, support.parent_id
-    markdown = path.endswith(".md") and path.rsplit("/", 1)[-1] != README
+    # A bundle's README.md is navigation, exempt like an area directory's; under <ID>/artifacts/ it is support.
+    markdown = path.endswith(".md") and not (row.bundled and path.rsplit("/", 1)[-1] == README)
     if row.bundled:
         if markdown:  # a stray is reported whatever its bundle holds
             identified = _identified(ctx, path)

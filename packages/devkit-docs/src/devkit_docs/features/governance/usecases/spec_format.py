@@ -19,6 +19,9 @@ proposal ``PROP-<slug>.md`` or a PADR ``PROP-<slug>/decisions/PADR-<name>.md`` (
 ``proposal.md`` (``PROP-<slug>``) and of its ``target-docs.md`` (``PROP-<slug>-target``); any other file under
 ``docs/proposals/`` derives none, so its missing ``id`` is reported but not fixed (the fix still fills the other
 fields). It never touches a file the check accepts, a malformed block or a field of the wrong type. Done/dropped milestone documents are history and checked only when explicitly targeted.
+Formal role support (``role_artifacts.support_of``: every file of a design bundle but its anchor, every file under a
+domain or operations ``<ID>/artifacts/``) is out of scope, valid or not: ``RULE-id-convention`` checks it, and the
+fix never gives it an ID.
 
 The ``namespace`` field of a bundle anchor (``docs/proposals/PROP-<slug>/proposal.md``, a single-file proposal
 ``docs/proposals/PROP-<slug>.md`` or ``specs/<month>/<bundle>/spec.md``), when present, must be a string naming ``global`` or a registered namespace; it is not fixable. Anchors are
@@ -74,7 +77,7 @@ from devkit_docs.features.governance import (
     namespaces,
     reportable,
 )
-from devkit_docs.features.governance.services.role_artifacts import ROLE_KINDS, artifact_state, role_row
+from devkit_docs.features.governance.services.role_artifacts import ROLE_KINDS, role_row, support_of
 
 RULE_ID = "RULE-spec-format"
 NAMESPACE_FIELD = "namespace"
@@ -262,7 +265,7 @@ def _scope(ctx: RuleContext, registered: tuple[Namespace, ...]) -> list[str]:
             relative = ctx.cache.relative_name(path)
             if (
                 is_document_file(path.name)
-                and artifact_state(ctx, relative, registered) != (True, "")
+                and support_of(relative, registered) is None
                 and in_source_directory(relative)
                 and "/materials/" not in relative
                 and ctx.is_file_targeted(relative)
@@ -274,7 +277,7 @@ def _scope(ctx: RuleContext, registered: tuple[Namespace, ...]) -> list[str]:
             document.kind in ROLE_KINDS
             and document.path not in paths
             and ctx.is_file_targeted(document.path)
-            and artifact_state(ctx, document.path, registered) != (True, "")
+            and support_of(document.path, registered) is None
         ):
             paths.append(document.path)
     return paths

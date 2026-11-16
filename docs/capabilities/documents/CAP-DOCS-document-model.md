@@ -266,7 +266,7 @@ token. CSV/images need no fake IDs. Canonical support is ID-free and unindexed. 
 design bundle, including a nested `DESIGN-*/design.md`, is a stray: bundles never nest, and independent detail
 becomes a peer bundle. A design bundle without `design.md` is an orphan. Invalid, orphan or identified support and
 stray Markdown fail identity governance. `README.md` remains optional navigation, exempt in area directories and
-bundles. An area move changes the path and `area` and keeps the ID, aliases and incoming references; `devkit rules
+bundles; under `<ROLE-ID>/artifacts/` it is supporting Markdown. An area move changes the path and `area` and keeps the ID, aliases and incoming references; `devkit rules
 fix` repairs a stale `area` but never moves files. A move across docs roots changes namespace membership. Same-kind
 rename/root move carries the bundle or artifact subtree and repairs ordinary links; split/reclassification assigns
 every retained support file one parent.

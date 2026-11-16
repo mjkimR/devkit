@@ -878,37 +878,104 @@ def test_design_and_domain_path_errors(tmp_path: Path, root: str) -> None:
     assert remediation.endswith(f"(or move the bundle directory to {root}/designs/elsewhere/)")
 
 
-def test_bundle_strays_and_orphans(tmp_path: Path) -> None:
-    anchor = "docs/designs/core/DESIGN-x/design.md"
-    write_files(tmp_path, {anchor: _role("DESIGN-x")})
+@pytest.mark.parametrize("root", ["docs", "docs/packages/api"])
+def test_bundle_strays_and_orphans(tmp_path: Path, root: str) -> None:
+    bundle = f"{root}/designs/core/DESIGN-x"
+    write_files(tmp_path, {".devkit/config.toml": _namespaces("api"), f"{bundle}/design.md": _role("DESIGN-x")})
     stray = "Invalid partition path: identified Markdown inside a DESIGN bundle is a stray; only its design.md anchor carries an ID"
     for path, text in {
-        "docs/designs/core/DESIGN-x/detail.md": _role("DESIGN-detail"),
-        "docs/designs/core/DESIGN-x/nested/DESIGN-inner/design.md": _role("DESIGN-inner"),
-        "docs/designs/core/DESIGN-x/deep/er/note.md": "# [DESIGN-note] Note\nDESIGN-x\n",
-        "docs/designs/core/DESIGN-x/record.md": "---\nreconcile_id: REC-x\n---\n# Record\nDESIGN-x\n",
+        f"{bundle}/detail.md": _role("DESIGN-detail"),
+        f"{bundle}/nested/DESIGN-inner/design.md": _role("DESIGN-inner"),
+        f"{bundle}/deep/er/note.md": "# [DESIGN-note] Note\nDESIGN-x\n",
+        f"{bundle}/record.md": "---\nreconcile_id: REC-x\n---\n# Record\nDESIGN-x\n",
     }.items():
         found = [v for v in check(RULE, tmp_path, {path: text}) if v.file == path]
         assert [(v.message, v.remediation) for v in found] == [
             (
                 stray,
-                "Promote it to a peer bundle docs/designs/{area}/DESIGN-{slug}/design.md with its own ID, or remove"
-                " its ID and name the parent DESIGN-x in its text",
+                f"Promote it to a peer bundle {root}/designs/{{area}}/DESIGN-{{slug}}/design.md with its own ID, or"
+                " remove its ID and name the parent DESIGN-x in its text",
             )
         ], path
         (tmp_path / path).unlink()
-    unnamed = "docs/designs/core/DESIGN-x/sub/plain.md"
+    unnamed = f"{bundle}/sub/plain.md"
     assert _found(check(RULE, tmp_path, {unnamed: "# Plain\n"})) == [
         (unnamed, 1, "Invalid partition path: role artifact must name its canonical parent in its text")
     ]
     (tmp_path / unnamed).unlink()
     orphan = "Invalid partition path: bundle has no eligible design.md anchor whose ID is the bundle directory name"
     files = {
-        "docs/designs/core/DESIGN-orphan/data.csv": "a,b\n",
-        "docs/designs/core/DESIGN-orphan/notes.md": "# Notes\nDESIGN-orphan\n",
-        "docs/designs/core/DESIGN-orphan/README.md": "# Readme\n",
+        f"{root}/designs/core/DESIGN-orphan/data.csv": "a,b\n",
+        f"{root}/designs/core/DESIGN-orphan/notes.md": "# Notes\nDESIGN-orphan\n",
+        f"{root}/designs/core/DESIGN-orphan/README.md": "# Readme\n",
     }
     assert sorted(_found(check(RULE, tmp_path, files))) == [(path, 1, orphan) for path in sorted(files)]
+
+
+@pytest.mark.parametrize("root", ["docs", "docs/packages/api"])
+def test_a_readme_under_domain_artifacts_is_supporting_markdown(tmp_path: Path, root: str) -> None:
+    artifacts = f"{root}/domain/core/DOMAIN-x/artifacts"
+    write_files(
+        tmp_path, {".devkit/config.toml": _namespaces("api"), f"{root}/domain/core/DOMAIN-x.md": _role("DOMAIN-x")}
+    )
+    readme = f"{artifacts}/README.md"
+    assert _found(check(RULE, tmp_path, {readme: "---\nid: DOMAIN-zz\n---\n# Readme\nDOMAIN-x\n"})) == [
+        (
+            readme,
+            1,
+            "Invalid partition path: role artifact must be ID-free; promote independent Markdown to a canonical peer",
+        )
+    ]
+    assert _found(check(RULE, tmp_path, {readme: "# Readme\n"})) == [
+        (readme, 1, "Invalid partition path: role artifact must name its canonical parent in its text")
+    ]
+    assert _found(check(RULE, tmp_path, {readme: "# Readme\nSupport for `DOMAIN-x`.\n"})) == []
+    # Under a misnamed owner directory the parent-naming problem is reported, as at any other support file.
+    misnamed = f"{root}/domain/core/notes/artifacts/README.md"
+    assert _found(check(RULE, tmp_path, {misnamed: "# Readme\n"})) == [
+        (misnamed, 1, "Invalid partition path: role artifact needs a same-kind canonical parent ID directory")
+    ]
+
+
+@pytest.mark.parametrize("root", ["docs", "docs/packages/api"])
+def test_binary_files_off_the_role_grammar_are_reported(tmp_path: Path, root: str) -> None:
+    accepted = {
+        ".devkit/config.toml": _namespaces("api"),
+        f"{root}/designs/core/DESIGN-x/design.md": _role("DESIGN-x", body="[Data](data.csv)\n"),
+        f"{root}/designs/core/DESIGN-x/data.csv": "a,b\n",
+        f"{root}/domain/core/DOMAIN-y.md": _role("DOMAIN-y"),
+        f"{root}/domain/core/DOMAIN-y/artifacts/a.png": "png",
+        f"{root}/operations/OPS-z.md": _role("OPS-z", area=None),
+        f"{root}/operations/OPS-z/artifacts/b.png": "png",
+    }
+    assert _found(check(RULE, tmp_path, accepted)) == []
+    flat = f"{root}/domain/DOMAIN-y/artifacts/a.png"
+    found = [v for v in check(RULE, tmp_path, {flat: "png"}) if v.file == flat]
+    assert [(v.message, v.remediation) for v in found] == [
+        (
+            f"Invalid partition path: file under {root}/domain/ fits no DOMAIN document or support path",
+            f"Move it to {root}/domain/{{area}}/DOMAIN-y/artifacts/ beside {root}/domain/{{area}}/DOMAIN-y.md, or"
+            " remove it",
+        )
+    ]
+    (tmp_path / flat).unlink()
+    loose = {
+        f"{root}/designs/loose.png": "DESIGN",
+        f"{root}/designs/core/loose.png": "DESIGN",
+        f"{root}/domain/core/loose.png": "DOMAIN",
+        f"{root}/domain/core/DOMAIN-y/other/c.png": "DOMAIN",
+        f"{root}/operations/OPS-z/other/b.png": "OPS",
+    }
+    found = check(RULE, tmp_path, dict.fromkeys(loose, "png"))
+    directories = {"DESIGN": "designs", "DOMAIN": "domain", "OPS": "operations"}
+    assert sorted(_found(found)) == sorted(
+        (
+            path,
+            1,
+            f"Invalid partition path: file under {root}/{directories[prefix]}/ fits no {prefix} document or support path",
+        )
+        for path, prefix in loose.items()
+    )
 
 
 def test_bundle_fix_writes_the_directory_id_and_area_without_moving_files(tmp_path: Path) -> None:
