@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:08:21.264158Z'
+status: completed
+summary: 'Viewer is an internal one-host tool: npm library, pack check, lib/app split, optional data-source members, ref argument, Shared tab, /review and shared API, dashboard paging and caches, remote Planning sources, overlay cache and host props removed; AC-01..AC-13 hold. Viewer source shrank 10852 to 9100 lines (tests 6504 to 5673).'
+findings: []
+assumptions:
+- Host-only props beyond the spec's list (initialAnchor, apiBase, onselectpath, HandbookView requestedPath/requestedAnchor) were removed under AC-11
+- No baseline measurement is named by the spec; the outcome measured is source size at base 4bd757276 versus head
+checks:
+  tests: PASS just test-affected --base 4bd757276 (mode=full) 7036 passed 4 skipped; just viewer test 244/244
+  build: PASS just viewer build; devkit generated check viewer-assets stale=0
+  lint: PASS just lint-check; just viewer lint; just viewer check 0 errors; devkit rules check --ci --base 4bd757276
+diff_scope:
+  base: 4bd757276a1eff450365e273315d8a98537ee8cb
+  head: fa2cc96581e5455f1ab6b9b1063a76d3c57d9c1e
