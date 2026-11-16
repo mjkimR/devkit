@@ -1,0 +1,24 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T02:26:34.407393Z'
+status: completed
+summary: Scout recommends ID-free design entry and details with observed owner-linked discovery; existing Kind placement prevents an indexed docs/designs home without new contracts.
+findings:
+- issue: Existing Kind placement does not admit an indexed docs/designs home.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:195-225
+  suggested_action: Select ID-free entry plus optional detail and verify the owner-linked route before runtime changes.
+  resolution: open
+- issue: Pilot establishes supplied-entry navigation, not withheld-name or package discovery.
+  evidence: docs/materials/2026-11/20261116-design-document-pilot/reader-trials.md:14-47
+  suggested_action: Observe contract-only route with entry filename withheld in global and package fixtures.
+  resolution: open
+assumptions:
+- Emulated read-only role, absolute cwd and snapshot comparison; only worker-owned draft-to-reviewing commit changed the initial tree; no outside-worktree reads reported.
+unverified_areas:
+- Largest incoming-ref sets paginated; withheld-entry ordinary-link route, package context and viewer untested.
+checks: {}
+diff_scope:
+  base: fab44e919c5d516adfa4666fff444096be14300c
+  head: 196af9770a513253f555c18436eb5f2bd99de6c8
