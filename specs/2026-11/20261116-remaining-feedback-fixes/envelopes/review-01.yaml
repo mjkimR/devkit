@@ -1,0 +1,16 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-16T12:20:56.210222Z'
+status: completed
+summary: 'code-reviewer PASS with no findings: AC-01 to AC-07 confirmed against SearchIndex, the advisory mode derivation of the MCP and host error classes, the override use cases, the host observer, status and runner, and the 18 capability areas'
+findings: []
+assumptions:
+- green-01 preserved check records 31 passed for test_override_tracking.py plus test_index.py; the actual run reported 33 passed
+checks:
+  tests: PASS pytest test_override_tracking.py -k removed_asset 2 passed by reviewer; just test-affected --base ad0d2f17f 41 passed
+  lint: PASS just lint-check exit 0; devkit rules check --ci --base ad0d2f17f exit 0
+diff_scope:
+  base: ad0d2f17f7fb00151cddd0f6df038e993371bd55
+  head: dda5bb514ef5a33f50d86cc89b67d7e67d1f175c
