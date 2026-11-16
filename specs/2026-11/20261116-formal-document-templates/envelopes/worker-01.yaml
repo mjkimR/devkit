@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T10:37:10.223720Z'
+status: completed
+summary: 'Development through final-change-report: specify, templates/instructions aligned (problem lead, HTML-comment guidance, Authority boundary and Maintenance and next action closes, domain/ops table skeletons), design-template pointer removed, CAP-DOCS-documentation-ownership §3.3/§4 and CAP-DOCS-document-model reconciled, five delivered documents restructured with all IDs/links preserved. Outcome vs base 93e72152c (head-side measurement of the same rg): question sections/labels 4 -> 0 across docs/designs, docs/domain, docs/operations. review-01 two P3 resolved (reverify-01); reconcile-check-01 PASS; FB-handoff-skeleton-keeps-proposal-boundary recorded. Sync output: .devkit/installation.json (declared in Task 1.1 boundary). Integration left to the Host.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base 93e72152c 2663 passed; test_distribution 2 passed; test_installed_consumer e2e 1 passed
+  lint: PASS just lint-check; pyright 0 errors; devkit rules check --ci --base main errors=0
+  sync: PASS devkit sync --check OK
+diff_scope:
+  base: ''
+  head: cfb4512e234ed9ea22b2f7364a807307c5c90eb2
+activity_effort: medium
