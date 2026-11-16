@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orc
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-16
 ---
 
@@ -54,3 +54,7 @@ sibling proposal files and documentation-system milestone.
 Orchestration: units whose horizon=current evidence overlaps run sequentially.
 Viewer checkpoint: only spec.md, plan.md and tasks.md changed; worktree clean.
 ```
+
+## Disposition
+
+- **Disposition**: `PROP-handoff-rewrite-overlap-scheduling`: queued as a draft proposal that settles whether handoff-rewritten paths count as scheduling overlap.
