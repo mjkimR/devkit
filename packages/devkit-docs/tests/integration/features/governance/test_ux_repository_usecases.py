@@ -42,7 +42,7 @@ def test_every_use_case_of_this_repository_parses() -> None:
                 "2": browse,
                 "3": browse,
                 "4": ("UX-formal-document-relations", "UX-browse-formal-documents"),
-                "5": ("UX-browse-formal-documents", "UX-read-supporting-artifact"),
+                "5": ("UX-formal-document-relations", "UX-browse-formal-documents", "UX-read-supporting-artifact"),
                 "6": ("UX-browse-formal-documents", "UX-formal-document-relations", "UX-read-supporting-artifact"),
                 "2a": browse,
                 "3a": browse,
