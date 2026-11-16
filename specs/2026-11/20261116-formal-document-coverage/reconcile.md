@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-formal-document-coverage
-status: pending
+status: resolved
 targets:
   - file: docs/designs/delivery/DESIGN-workflow-stage-evaluation/design.md
     resolution: modified

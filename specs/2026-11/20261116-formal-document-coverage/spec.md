@@ -2,7 +2,7 @@
 id: SPEC-formal-document-coverage
 title: Formal document coverage across capability areas
 summary: Adds one DESIGN, one DOMAIN and four OPS documents, written from the current code and Living Spec, for the delivery, host, mcp, distribution and search reader questions no existing owner answers, in three parallel Development units.
-status: in-progress
+status: completed
 created: 2026-11-16
 related_capabilities: []
 related_usecases: []
