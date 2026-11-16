@@ -1,0 +1,49 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-16T07:28:56.761136Z'
+status: completed
+summary: 'Q2/Q4: contracts conflict with the bundle on three statements (artifacts/ location, stem is ID, area inapplicable); landed lifecycle prose is mostly grammar-neutral, but both composed lifecycle e2e scenarios and devkit-spec fixtures need rework. Viewer source hardcodes no formal path; its proposal materials pin the flat grammar.'
+findings:
+- issue: Contracts state support MUST live under <PARENT-ID>/artifacts/, the ID is the file stem, and area is inapplicable to formal roles; each conflicts with a design bundle.
+  evidence: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md:77-81; docs/capabilities/documents/CAP-DOCS-document-model.md:212-213,240-241,253-258; docs/capabilities/governance/CAP-GOV-spec-rules.md:180,524-530
+  failure_condition: Contracts and rules disagree after the grammar change.
+  suggested_action: Reword the support, identity and area clauses per kind layout; add CAP-GOV-spec-rules to the write scope.
+  resolution: open
+  severity: P1
+- issue: Bundle assets (design and domain writing instructions, living-spec-writing, design template, rule guides, seed README) name the flat path and artifacts/ level.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/design-writing.md:2,6-7; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/design.md:24; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/id_convention/guide.md:35,112
+  failure_condition: Agents write flat designs after the change.
+  suggested_action: Edit path, area and support statements only.
+  resolution: open
+  severity: P2
+- issue: Landed spec and adaptive guidance mention an artifact subtree in spec-sync, adaptive documents reference, brownfield migration reference and proposal scaffold text.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-sync/SKILL.md:66-79; packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/documents.md:26-30; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/brownfield-adoption/references/migration.md:14-16,37-39; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py:441-446
+  failure_condition: Guidance names a support layout designs no longer use.
+  suggested_action: Reword to the per-kind support location; add these paths to the write scope.
+  resolution: open
+  severity: P2
+- issue: Both composed lifecycle e2e scenarios build flat paths and <ID>/artifacts/, and the spec copy's reconcile_snapshot identifies the canonical file as any non-artifacts .md; the orphan case becomes valid support under a bundle.
+  evidence: packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_formal_document_lifecycle_scenarios.py:19,150-264; packages/devkit-spec/tests/e2e/bundles/spec/test_formal_document_lifecycle_scenarios.py:113-168,395-516
+  failure_condition: The scenarios fail on the bundle grammar.
+  suggested_action: Rebuild the design cases around bundle anchors, keep domain cases on area paths with artifacts/, and rebuild the orphan case as an anchor-less bundle.
+  resolution: open
+  severity: P1
+- issue: The four delivered documents have no support directories and zero inbound path links; one outbound relative link needs two more levels after the move.
+  evidence: docs/designs/DESIGN-distribution-file-directory-replacement.md:20
+  failure_condition: The outbound source link breaks after the move.
+  suggested_action: Repair the one link in the migration.
+  resolution: open
+  severity: P3
+- issue: The viewer proposal's materials and target-docs pin the flat grammar; viewer source does not.
+  evidence: docs/proposals/PROP-design-document-viewer/target-docs.md:47-67; docs/proposals/PROP-design-document-viewer/materials/core-contract.md:108-124
+  failure_condition: The viewer delivers on stale pins without a recorded follow-up.
+  suggested_action: Record the viewer follow-up at landing (B5).
+  resolution: open
+  severity: P3
+assumptions:
+- Source and asset reading only; no tests or rules run.
+unverified_areas:
+- spec-entrypoints references beyond backfill.md; devkit-docs own tests.
+checks: {}

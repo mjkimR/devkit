@@ -6,9 +6,9 @@ status: reviewing                       # draft | reviewing | accepted | rejecte
 created_at: 2026-11-16
 target_area: documents/
 priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
+size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+dev_effort: high                      # low | medium | high (hint for Development)
 milestone: MS-documentation-system-evolution
 depends_on:
   - SPEC-formal-document-kinds
@@ -17,13 +17,15 @@ boundaries:
     - packages/devkit-docs/
     - docs/capabilities/documents/
     - docs/capabilities/traceability/
+    - docs/capabilities/governance/CAP-GOV-spec-rules.md
     - docs/designs/
     - docs/domain/
     - docs/decisions/
     - docs/README.md
     - docs/proposals/PROP-design-bundle-layout/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-entrypoints/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-plan/
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-sync/SKILL.md
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/brownfield-adoption/references/migration.md
+    - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
     - packages/devkit-spec/tests/
     - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/documents.md
     - packages/devkit-adaptive/tests/
@@ -106,7 +108,7 @@ consumers itself, and the viewer adopts it after it lands.
   bundles under the `distribution` area. Move `DOMAIN-bundle-selection-and-installation` under `distribution` and
   `DOMAIN-delivery-relationships` under `delivery`. Repair ordinary links. IDs do not change, so ID references need
   no rewrite.
-- **Decision record.** A new ADR supersedes in part the flat canonical path clause of
+- **Decision record.** `PADR-area-scoped-design-bundles` records the layout; at handoff it becomes an ADR that supersedes in part the flat canonical path and `<ID>/artifacts/` support clauses of
   `ADR-formal-role-document-identities` for the kinds this proposal changes. Its identity, status, relation,
   ownership and entrypoint clauses stay in force.
 - **Contracts and assets.** Update the path grammar in `CAP-DOCS-document-model`, `CAP-DOCS-documentation-ownership`,
@@ -119,6 +121,31 @@ consumers itself, and the viewer adopts it after it lands.
 - **Viewer.** `PROP-design-document-viewer` continues its Development on the flat grammar. When this proposal lands,
   it records a follow-up for the viewer to adopt the bundle grammar; the viewer's own unit or a later proposal does
   that work.
+
+### Planning decisions
+
+- **Q1 — kind layout fact, not table rows alone.** `area_scoped` drives only hand-written Living Spec grammar
+  entries, and `anchor` is coupled to anchor-derived summaries, so the kind table gains one layout fact per kind
+  (`flat`, `area` or `area-bundle` with its anchor file name). `RULE-id-convention`, the role support
+  classifier, `RULE-spec-format` (the `area` exemption and the derived ID of an anchor), `entrypoint_bearing` and
+  the search file-name pin read that fact instead of kind checks. The index, `devkit docs resolve`, `refs`,
+  `list --area` and `list --file` key on frontmatter IDs and need no change.
+- **Q2 — bundle support.** Inside a design bundle only `design.md` carries an ID. Every other file in the bundle is
+  parent-owned support: Markdown stays ID-free and names its parent; non-Markdown needs no identity. An identified
+  Markdown file inside a bundle is a stray, reported with a remediation to promote it to a peer bundle. A bundle
+  without its anchor is an orphan. Independent detail stays a peer bundle with its own DESIGN ID; bundles never
+  nest. Domain support keeps `<ID>/artifacts/` beside the domain file in its area directory.
+- **Q3 — moves.** Aliases, `related_*`, canonical references and entrypoint reverse lookup are ID-keyed, so an area
+  move keeps them; `area` follows the directory and `devkit rules fix` repairs a stale value but never moves files.
+  A move across docs roots changes namespace membership, as today. Bundle anchor file names leave the search
+  file-name pin, so `design.md` pins no bundle. Open spec units store literal target paths: the migration rewrites
+  any open unit's target that names a moved document in the same commit; completed specs and materials stay as
+  written.
+- **Q4 — landed lifecycle consumers.** Most lifecycle prose is grammar-neutral. Path and "artifact subtree"
+  statements change in the spec-sync skill, the adaptive documents reference, the brownfield migration reference
+  and the proposal scaffold text. Both composed lifecycle end-to-end scenarios (spec and adaptive) and the
+  devkit-spec entrypoint and baseline fixtures are rebuilt on the bundle and area paths; lifecycle behavior does
+  not change. The work stays one feature spec, so the size rises to L instead of a split.
 
 ### Non-Goals
 
@@ -146,7 +173,7 @@ consumers itself, and the viewer adopts it after it lands.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning settles Q1–Q4 and records the layout choice as a PADR. This stays one M feature proposal; if Q4 finds
-the lifecycle migration larger than path statements and fixtures, Planning raises the size or splits it. Acceptance
+Planning settles Q1–Q4 and records the layout choice as a PADR. This stays one L feature proposal: the layout
+code, migration and lifecycle fixtures form one change with one task kind. Acceptance
 and handoff follow the existing gates. It runs in parallel with the viewer's Development. Retirement requires
 B1–B5.
