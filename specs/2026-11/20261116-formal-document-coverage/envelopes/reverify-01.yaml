@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T12:02:09.287601Z'
+status: completed
+review: review-01.yaml
+summary: 'Worker verified all three P3 fixes at 91a64e759cb8d0b5eec0361287e3f86c51614c82: search row limits SEARCH_MODEL_INVALID to auto, dense and hybrid; override accept deferral carries the other-drift condition; mcp status line uses placeholders'
+findings:
+- issue: SEARCH_MODEL_INVALID row claims any mode, but --mode lexical never loads the model
+  evidence: docs/operations/OPS-search-mode-and-model-routing.md:24; packages/devkit-dist/src/devkit_dist/features/search/services/index.py:60-94
+  failure_condition: A lexical search with a broken model package returns results, not SEARCH_MODEL_INVALID
+  suggested_action: Say auto, dense and hybrid modes; extend feedback on CAP-SRCH every-mode wording
+  resolution: resolved
+  severity: P3
+- issue: Override accept deferral omits the condition that other deployed overrides still drift
+  evidence: docs/domain/distribution/DOMAIN-override-lifecycle.md:32; docs/capabilities/distribution/CAP-DIST-workspace-ownership.md:225-230
+  failure_condition: Under block with a single drifted override, accept synchronizes without OVERRIDE_SYNC_DEFERRED
+  suggested_action: Add the while-other-deployed-overrides-still-drift condition
+  resolution: resolved
+  severity: P3
+- issue: mcp status text line shown with empty values reads as literal output
+  evidence: docs/operations/OPS-mcp-runtime-refusals.md:25; packages/devkit-mcp/src/devkit_mcp/features/runtime/cli/output.py:57
+  failure_condition: A reader comparing literal text treats a populated line as different
+  suggested_action: Use <package> and <runtime> placeholders
+  resolution: resolved
+  severity: P3
+checks: {}
