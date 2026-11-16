@@ -1,0 +1,33 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T13:08:07.184236Z'
+status: completed
+summary: 'closes reconcile-check-01; implementer rechecked the whole reflection at 835f82fd1: namespace-roadmap Confirmation marked as decision-time, reconcile names the pointer ADRs, UX host wording handed off as feedback'
+findings:
+- issue: ADR-viewer-namespace-roadmap-discovery Confirmation, edited in this unit, still describes tests of six workers, optimized pages, paging and caches as current verification.
+  evidence: docs/decisions/2026-11/20261104-viewer-namespace-roadmap-discovery.md:74-76
+  failure_condition: A reader takes the Confirmation as current tests; it contradicts CAP-VIEW 4.1 All eligible cards and No dashboard cache.
+  suggested_action: Mark the lines as verified at decision time or name them in the reconcile Deferred work entry.
+  resolution: resolved
+  severity: P3
+- issue: 'reconcile.md precision: the entrypoints paragraph splits the comparison list, the two partial pointers are not named, and the package-ownership npm clause is already superseded by ADR-selective-package-versions.'
+  evidence: specs/2026-11/20261116-viewer-internal-simplification/reconcile.md:63-65,73,98-101
+  failure_condition: A later reader cannot tell which pointers are meant, or treats an already superseded clause as live debt.
+  suggested_action: Move the paragraph, name the pointer ADRs, and drop or relabel the package-ownership item.
+  resolution: resolved
+  severity: P3
+- issue: UX-view-decision keeps host wording that reads as variability between hosts.
+  evidence: docs/ux/viewer/UX-view-decision.md:21,26,48
+  failure_condition: A reader infers a library or embedding host for the decision screen.
+  suggested_action: Keep it in deferred feedback; reword in a later wording pass.
+  resolution: waived
+  waiver: Wording outside every task boundary and no contract mismatch; handed off as FB-viewer-host-wording-outside-unit
+  severity: P3
+checks:
+  rules: PASS devkit rules check --ci --base 4bd757276
+diff_scope:
+  base: 4bd757276a1eff450365e273315d8a98537ee8cb
+  head: 835f82fd11f24ac9174df0aa53ab796dfa2e3cf4
+activity_effort: medium
