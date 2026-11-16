@@ -1,0 +1,26 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T08:21:17.824413Z'
+status: completed
+summary: 'round 1; closes reconcile-check-01; implementer rechecked all15 targets after exact suggested wording correction; minor-fix conditions hold: named clause only, wording-only, contract meaning unchanged, whole reflection/source parity verified'
+findings:
+- issue: The existing read-budget clause still states an exclusive Files-wide ADR/PADR trigger.
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:246 now explicitly scopes the clause to supersession context and cites4.5; unchanged runtime confirms existing formal triggers
+  failure_condition: Section4.4 rule9 unqualified Files-only ADR/PADR clause excludes the formal and typed-relation triggers implemented and documented in4.3 and4.5.
+  suggested_action: Qualify4.4 rule9 as the supersession-context trigger and cross-reference4.5 additional formal-context triggers, preserving raw/ordinary/artifact/handbook exclusions.
+  resolution: resolved
+  severity: P2
+assumptions:
+- HIGH text-only minor-fix self-verification follows independent whole-reflection round1; no required mismatch waived or contract meaning changed
+checks:
+  reflection: PASS whole reflection12 modified3 waived and all changed docs covered
+  wording: PASS supersession-only qualifier and4.5 reference, all scan exclusions retained
+  runtime: PASS unchanged runtime/static since independent review3; only later acceptance test differs
+  rules: PASS 22 errors0 warnings0; spec completed via native fix
+  core_pin: PASS byte-identical SHA256
+diff_scope:
+  base: f32b831f7ca791566fad7934e13f537a40aaf787
+  head: 3095d725aafae80a63b73477a4385df117e38326
+activity_effort: high
