@@ -42,6 +42,10 @@ A design layer can close this gap only if its responsibility is distinguishable 
 Clean role separation is the primary design criterion. Neither document length nor the presence of numbers
 justifies moving content. Datasheets are a supporting-artifact use case, not a reason to relocate contract limits.
 
+Architecture authors may already know arc42. The missing guidance is architecture's ownership boundary within
+the complete documentation system, rather than an explanation of chapter numbers. New layers need explicit
+rules for what architecture retains and what it references, including adjacent domain-model and operations content.
+
 ## 2. Technical Spike Questions
 
 - **Q1**: What routing matrix distinguishes capability, architecture, use case, UX, ADR, materials, module
@@ -52,6 +56,8 @@ justifies moving content. Datasheets are a supporting-artifact use case, not a r
   global and registered package namespaces without creating duplicate authoritative statements?
 - **Q4**: Which existing index, CLI/MCP, search and rule paths already consume the kind registry, and which need
   changes to support designs and links to non-indexed artifacts?
+- **Q5**: Assuming arc42 knowledge, where does architecture's authority end relative to capability, domain model,
+  design, UX, ADR, references and operations? How should overlapping views cite their authoritative owner?
 
 ## 3. Proposed Design & Impact
 
@@ -60,6 +66,13 @@ justifies moving content. Datasheets are a supporting-artifact use case, not a r
 - Specify role boundaries before settling templates or runtime behavior. Cover an interface limit, an internal
   algorithm, a cross-cutting dependency, a screen interaction, a choice rationale, a historical benchmark, a
   command example and a developer procedure as routing examples. Preserve each existing owner's responsibility.
+- Define architecture's inclusion, exclusion and reference boundaries within the complete docs system. Exercise
+  solution strategy versus decision rationale, building blocks versus implementation detail, runtime views versus
+  use cases and algorithms, cross-cutting concepts versus domain meaning and common contracts, and deployment
+  views versus operational diagnosis and recovery procedures. Distinguish architectural significance from mere
+  document size or level of detail; do not turn this into an arc42 tutorial or require unused chapters.
+- State the neighboring responsibilities of domain models and operations so architecture does not absorb them
+  implicitly. Introducing those layers, their schemas or tooling remains separate work.
 - Define one authoritative home per statement and explicit links where another document needs that information.
   Keep authoritative contract limits in capabilities; keep historical evidence in materials. Do not reclassify
   all implementation detail in architecture or UX merely because designs now exist.
@@ -75,6 +88,9 @@ justifies moving content. Datasheets are a supporting-artifact use case, not a r
 ### Expected acceptance evidence
 
 - The routing matrix assigns a primary owner to every representative case and states when to link rather than copy.
+- An author familiar with arc42 can route the architecture overlap cases above without inferring ownership from
+  chapter names alone. Cross-document views preserve one authoritative owner for each statement and use references
+  for the other views; chapter guidance stays consistent with this boundary.
 - A small design works as one entry document; a larger fixture includes a separate detail, an example and a
   datasheet without treating every supporting file as a standalone indexed document.
 - Existing lookup, search and reference behavior works for the chosen identity in global and package namespaces.

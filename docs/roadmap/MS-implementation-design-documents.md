@@ -26,6 +26,9 @@ the concrete contracts and alternatives; this milestone frames the theme without
 
 - Authors can determine which existing document kind or design document owns a piece of information, including
   ambiguous cases, without maintaining the same authoritative statement in multiple places.
+- Architecture's responsibility within the complete documentation system is explicit. Authors may assume arc42
+  knowledge, but can distinguish architectural content from behavioral contracts, domain meaning, implementation
+  design and operational procedures, and know when to reference their owners instead of restating them.
 - Current implementation designs can group independently readable details, examples, datasheets and assets
   behind a discoverable entry document. Small designs need no empty supporting structure.
 - Document lookup, search, references, namespace handling and viewer navigation expose designs and their
@@ -41,6 +44,8 @@ the concrete contracts and alternatives; this milestone frames the theme without
   bundles, or classifying every detailed passage or numerical value as design content.
 - **Scope Excluded**: mandatory migration of all existing documents, mandatory subdirectories for every design,
   or a new general-purpose development-process methodology.
+- **Scope Excluded**: an arc42 tutorial or automatic creation of unused architecture chapters. Clarifying adjacent
+  domain-model and operations responsibilities does not introduce their document kinds or runtime support.
 - **Scope Excluded**: editing proprietary design formats, spreadsheet calculation engines, automatic design
   generation from source code, or moving historical evidence into current design ownership.
 
