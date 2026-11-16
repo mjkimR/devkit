@@ -131,8 +131,8 @@ a `README.md` under `{ID}/artifacts/` is supporting Markdown.
 - A flat design or domain path, or a design file directly in an area directory: `Invalid partition path: Design
   must be stored at <root>/designs/{area}/DESIGN-{word-led-slug}/design.md` (`Domain must be stored at
   <root>/domain/{area}/DOMAIN-{word-led-slug}.md`).
-- A non-Markdown file under a role directory that fits no document or support path of its kind, such as one left at
-  the flat `domain/{ID}/artifacts/` path: `Invalid partition path: file under <root>/domain/ fits no DOMAIN
-  document or support path`. Move it to `<root>/domain/{area}/{ID}/artifacts/` beside its document, or remove it.
+- A non-Markdown file other than a dotfile such as `.gitkeep` under a role directory that fits no document or
+  support path of its kind, such as one left at the flat `domain/{ID}/artifacts/` path: `Invalid partition path:
+  file under <root>/domain/ fits no DOMAIN document or support path`. Move it to `<root>/domain/{area}/{ID}/artifacts/` beside its document, or remove it.
 - Orphan domain or operations support and ID-bearing support fail. Fix never moves files; it writes the bundle
   directory name as a design's `id` and the area directory as `area`.

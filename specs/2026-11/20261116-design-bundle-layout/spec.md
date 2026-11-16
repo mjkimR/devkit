@@ -104,7 +104,9 @@ consumers itself, and the viewer adopts it after it lands.
 - **Then** ID-free support Markdown that names its parent passes at any depth without frontmatter; identified
   Markdown at any depth, including a nested `DESIGN-*/design.md`, fails as a stray with a promote-to-peer-bundle
   remediation; a bundle without `design.md` fails as an orphan; domain support under `<ID>/artifacts/` in the area
-  directory keeps its existing checks.
+  directory keeps its existing checks; a non-Markdown file other than a dotfile under a design, domain or
+  operations directory that fits no document or support path of its kind is reported, with a move to the area path
+  for one left at a flat domain `<ID>/artifacts/` path (discovered in review-01).
 
 ### [AC-04] Fixes, entrypoints and search on bundles
 - **Given** a bundle design anchor with a blank `id` or stale `area`, and a bundle design with entrypoints

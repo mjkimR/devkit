@@ -947,6 +947,9 @@ def test_binary_files_off_the_role_grammar_are_reported(tmp_path: Path, root: st
         f"{root}/domain/core/DOMAIN-y/artifacts/a.png": "png",
         f"{root}/operations/OPS-z.md": _role("OPS-z", area=None),
         f"{root}/operations/OPS-z/artifacts/b.png": "png",
+        f"{root}/designs/.gitkeep": "",
+        f"{root}/domain/core/.gitkeep": "",
+        f"{root}/operations/.gitkeep": "",
     }
     assert _found(check(RULE, tmp_path, accepted)) == []
     flat = f"{root}/domain/DOMAIN-y/artifacts/a.png"

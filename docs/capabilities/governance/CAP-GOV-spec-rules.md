@@ -536,7 +536,7 @@ promote-to-peer-bundle remediation; a bundle without `design.md` is an orphan. D
 the `<ID>/artifacts/` exception: same-root/same-kind canonical parent, ID-free supporting Markdown naming the parent,
 no stray nested independent Markdown. `README.md` stays exempt in area directories and bundles; under `<ID>/artifacts/`
 it is supporting Markdown. Binary support needs an owner but no fake ID, and a non-Markdown file under a role
-directory that fits no document or support path of its kind, such as one left at a flat `domain/<ID>/artifacts/`
+directory that fits no document or support path of its kind (dotfiles such as `.gitkeep` excepted), such as one left at a flat `domain/<ID>/artifacts/`
 path, is reported with a move to its area path. In a snapshot, deleting a canonical parent checks its unchanged dependent support
 too, while honoring explicit artifact exclusions. A fix repairs a stale `area` from the directory; these checks
 never move files.

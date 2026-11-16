@@ -2140,7 +2140,7 @@
     },
     ".devkit/managed/docs/rules/id_convention/guide.md": {
       "mode": 420,
-      "sha256": "e38f6896f6e4d0be7212d26588166edcdc7f0c45d33fb8cc51b1d1fecd5e95a7"
+      "sha256": "3c37801e0ea785ac8988bd18264e8f8e4ffc1f7770f1bac457d1f4a18eae7049"
     },
     ".devkit/managed/docs/rules/id_convention/rule.py": {
       "mode": 420,
@@ -2148,7 +2148,7 @@
     },
     ".devkit/managed/docs/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "40c631b32374dac79354f399c5cb173bf93f89a30c8498579ca5247501530413"
+      "sha256": "0377688651f71b4ec14dce29dd5d2b4e80d8faac65f5009ba44f19f4aa791cc0"
     },
     ".devkit/managed/docs/rules/spec_format/guide.md": {
       "mode": 420,

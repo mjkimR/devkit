@@ -96,15 +96,22 @@ def support_of(path: str, registered: tuple[Namespace, ...]) -> Support | None:
 
 def off_grammar(path: str, registered: tuple[Namespace, ...]) -> tuple[str, str] | None:
     """The problem and remediation of a non-Markdown file under a formal role directory that is not support of a
-    document of the kind, or ``None`` (Markdown, support, or outside a role directory). A file at the flat
-    ``<ID>/artifacts/`` path of an ``area`` or ``area-bundle`` kind is pointed at its area path."""
+    document of the kind, or ``None`` (Markdown, a dotfile such as ``.gitkeep``, support, or outside a role
+    directory). A file at the flat ``<ID>/artifacts/`` path of an ``area`` kind is pointed at its area path."""
     located = _located(path, registered)
-    if located is None or path.endswith(".md") or support_of(path, registered) is not None:
+    name = path.rsplit("/", 1)[-1]
+    if located is None or name.endswith(".md") or name.startswith(".") or support_of(path, registered) is not None:
         return None
     row, parts, original, directory_index = located
     base = "/".join([*original[:directory_index], row.directory])
     slug = f"{row.prefix}-{{word-led-slug}}"
-    if row.area_scoped and len(parts) >= 5 and parts[3] == "artifacts" and _owner_named(row.prefix, parts[2]):
+    if (
+        row.area_scoped
+        and not row.bundled
+        and len(parts) >= 5
+        and parts[3] == "artifacts"
+        and _owner_named(row.prefix, parts[2])
+    ):
         slug = parts[2]  # the flat ``<ID>/artifacts/`` shape the area layout replaced
     if row.bundled:
         location = f"the bundle {base}/{{area}}/{slug}/ beside its {row.layout_anchor}"
