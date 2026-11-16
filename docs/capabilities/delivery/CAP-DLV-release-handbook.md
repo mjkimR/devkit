@@ -157,3 +157,8 @@ findings, `2` could not run (an `[ERROR]` block on stderr).
 - **Glossary source**: the script reads `docs/steering/glossary.md` at the source commit and, for a commit before
   the glossary moved into the steering directory, `docs/glossary.md`; with neither it exits `2` with
   `HANDBOOK_GLOSSARY_MISSING`.
+
+Source lookup reads frontmatter identities at the paths owned by `CAP-DOCS-document-model`, including
+area-scoped DESIGN design.md anchors and DOMAIN files. Non-anchor DESIGN bundle files, including identified
+strays or nested anchors, and DOMAIN/OPS artifacts remain outside canonical source citations.
+Check: `tools/devkit-dev/tests/integration/test_handbook_script.py`.

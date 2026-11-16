@@ -22,6 +22,7 @@ The primary region is a safe preview or readable source. Context and Back remain
 - Parent identity, path, format and selected source/branch.
 - Safe image or shared Markdown/Mermaid preview; CSV/diagram/source text.
 - Raw/Rendered and download only for available readable source/bytes.
+- Entry from body links or the parent Supporting files inventory, including non-artifacts DESIGN paths.
 - Missing/unsupported explanation and Retry; Back to the parent.
 
 Existing viewer component/styles own visual treatment; this element adds no separate style system.

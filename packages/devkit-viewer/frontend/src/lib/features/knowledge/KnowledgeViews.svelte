@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { ID_PATTERN, identityResolver, isArtifactPath } from '../../api/identity';
+	import { ID_PATTERN, identityResolver, isArtifactPath, formalArea } from '../../api/identity';
 	import SupportingArtifact from '../document/SupportingArtifact.svelte';
 	import { planningDataSource } from '../../api/planning';
 	import { tick, untrack } from 'svelte';
 	import { clearRepositoryCache } from '../../api/cache';
-	import type { RepositoryDataSource } from '../../api/repository';
+	import type { RepositoryDataSource, TreeItem } from '../../api/repository';
 	import {
 		indexDocuments,
+		byBookArea,
 		taskProgress,
 		renderDocument,
 		documentAnchor,
@@ -53,6 +54,7 @@
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
+	let inventory = $state<TreeItem[]>([]);
 	let relationDocuments = $state<RepositoryDocument[]>([]);
 	let errors = $state<string[]>([]);
 	let loading = $state(false);
@@ -127,6 +129,7 @@
 		if (!keep) {
 			documents = [];
 			relationDocuments = [];
+			inventory = [];
 			errors = [];
 			resolvedRequest = '';
 			selectedPath = '';
@@ -142,6 +145,7 @@
 					if (controller.signal.aborted) return;
 					const subjects = keep ? untrack(() => documents) : [];
 					relationDocuments = result.documents;
+					inventory = result.files ?? [];
 					documents = [
 						...result.documents.map(
 							(doc) => subjects.find((subject) => subject.path === doc.path) ?? doc
@@ -247,7 +251,9 @@
 		);
 		const pinned = merged.find((doc) => doc.path === pinnedPath);
 		if (pinned && !matches.some((doc) => doc.path === pinned.path)) matches.push(pinned);
-		return bookGroups.flatMap((group) => matches.filter((doc) => bookGroup(doc) === group));
+		return bookGroups.flatMap((group) =>
+			byBookArea(matches.filter((doc) => bookGroup(doc) === group))
+		);
 	});
 	const candidates = $derived(
 		scoped.filter((d) =>
@@ -665,7 +671,11 @@
 								}}
 							/>
 						{/if}
-						{#each visibleDocs as doc (doc.path)}
+						{#each visibleDocs as doc, i (doc.path)}
+							{#if formalArea(doc) && (i === 0 || bookGroup(visibleDocs[i - 1]) !== bookGroup(doc) || formalArea(visibleDocs[i - 1]) !== formalArea(doc))}<h3
+								>
+									{formalArea(doc)}
+								</h3>{/if}
 							<ChapterSection
 								{doc}
 								source={view !== 'book' && selectedEntry && source
@@ -679,6 +689,8 @@
 								sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
 								{onOpen}
 								documents={relationDocuments}
+								files={inventory}
+								onSupportingOpen={(path) => openArtifact(path, doc.path)}
 								{relationLoading}
 								relationErrors={errors}
 								onReloadRelations={reloadRelations}

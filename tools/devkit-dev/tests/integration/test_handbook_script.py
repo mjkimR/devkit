@@ -503,7 +503,13 @@ def test_formal_sources_and_aliases_are_citeable_without_required_coverage_or_ge
 ):
     identifier = f"{prefix}-example_name"
     alias = f"{prefix}-old_name"
-    path = f"docs/{directory}/{identifier}.md"
+    path = (
+        f"docs/designs/distribution/{identifier}/design.md"
+        if prefix == "DESIGN"
+        else f"docs/domain/distribution/{identifier}.md"
+        if prefix == "DOMAIN"
+        else f"docs/{directory}/{identifier}.md"
+    )
     write(repo, {path: doc(identifier, "Formal example", aliases=f"[{alias}]", status="active")})
     revision = commit(repo)
     documents = script.load_documents(repo, revision)
@@ -535,3 +541,29 @@ def test_a_missing_formal_inline_source_is_reported_by_verification(script, hand
     assert result.exit_code == 1
     assert "HANDBOOK_ID_UNRESOLVED" in result.stdout
     assert f"{prefix}-missing" in result.stdout
+
+
+@pytest.mark.parametrize("root", ["docs", "docs/packages/registered"])
+def test_formal_bundle_source_inventory_excludes_identified_support_and_nested_orphans(script, repo, root):
+    write(
+        repo,
+        {
+            f"{root}/designs/alpha/DESIGN-parent/design.md": doc(
+                "DESIGN-parent", "Parent", aliases="[DESIGN-old]", area="alpha"
+            ),
+            f"{root}/designs/alpha/DESIGN-parent/examples/stray.md": doc("CAP-X-stray", "Invalid support"),
+            f"{root}/designs/alpha/DESIGN-parent/DESIGN-nested/design.md": doc("DESIGN-nested", "Nested"),
+            f"{root}/designs/alpha/DESIGN-orphan/note.md": doc("DOMAIN-orphan", "Orphan"),
+            f"{root}/domain/beta/DOMAIN-example.md": doc("DOMAIN-example", "Domain", area="beta"),
+            f"{root}/domain/beta/DOMAIN-example/artifacts/stray.md": doc("CAP-X-domain-stray", "Invalid support"),
+            f"{root}/operations/OPS-example.md": doc("OPS-example", "Operations"),
+            f"{root}/operations/OPS-example/artifacts/stray.md": doc("CAP-X-ops-stray", "Invalid support"),
+        },
+    )
+    revision = commit(repo)
+    documents = script.load_documents(repo, revision)
+    assert documents.get("DESIGN-old").path == f"{root}/designs/alpha/DESIGN-parent/design.md"
+    assert documents.get("DOMAIN-example").kind == "domain"
+    assert documents.get("OPS-example").kind == "operations"
+    for identifier in ["CAP-X-stray", "DESIGN-nested", "DOMAIN-orphan", "CAP-X-domain-stray", "CAP-X-ops-stray"]:
+        assert documents.get(identifier) is None

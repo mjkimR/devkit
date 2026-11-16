@@ -571,6 +571,7 @@
 						diagramAction={diagramRenderer}
 						{relationSubject}
 						relationDocuments={relationIndex.documents}
+						relationFiles={relationIndex.files ?? []}
 						{relationLoading}
 						relationErrors={relationIndex.errors}
 						onRelationOpen={navigateDocument}

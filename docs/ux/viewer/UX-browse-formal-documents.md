@@ -20,7 +20,8 @@ Find a formal node and retain its source context.
 The primary region is the selected book node; secondary navigation contains scope, search and history controls.
 
 - Selected repository/branch and handbook/book control.
-- Domain, Designs and Operations chapters with canonical ID/title/status.
+- Domain, Designs and Operations chapters with canonical ID/title/status; Domain and Designs group entries by area.
+- Design bundle entries show their canonical directory ID beside the title rather than using design.md as identity.
 - Search, Include retired and selected explicit target.
 - Formal body or original raw source; `UX-formal-document-relations` below the header.
 - Independent detail/support links and Back to previous document.

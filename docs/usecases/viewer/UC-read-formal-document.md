@@ -24,10 +24,10 @@ entrypoints:
 ## 2. Main Success Scenario
 
 1. The reader requests the Living Spec book (`CAP-VIEW-repository-viewer`, `UX-browse-formal-documents`).
-2. The reader selects a namespace/group or searches for the needed context (`CAP-VIEW-repository-viewer`, `UX-browse-formal-documents`).
+2. The reader selects a namespace/group, browses its area groups or searches for the needed context (`CAP-VIEW-repository-viewer`, `UX-browse-formal-documents`).
 3. The viewer displays the selected canonical document and source context (`CAP-VIEW-repository-viewer`, `UX-browse-formal-documents`).
 4. The reader inspects current references and historical origin, following a useful target (`CAP-VIEW-repository-viewer`, `UX-formal-document-relations`, `UX-browse-formal-documents`).
-5. The reader opens an independent detail or a parent-linked supporting file (`CAP-VIEW-repository-viewer`, `UX-browse-formal-documents`, `UX-read-supporting-artifact`).
+5. The reader opens an independent detail or selects a parent-linked supporting file from its inventory or body (`UX-formal-document-relations`, `CAP-VIEW-repository-viewer`, `UX-browse-formal-documents`, `UX-read-supporting-artifact`).
 6. The reader returns to the prior reading context (`CAP-VIEW-repository-viewer`, `UX-browse-formal-documents`, `UX-formal-document-relations`, `UX-read-supporting-artifact`).
 
 ## 3. Extensions
@@ -88,3 +88,12 @@ entrypoints:
 - **Given**: A pending old-source artifact or index read.
 - **When**: The repository/branch changes.
 - **Then**: Old results cannot publish and old object URLs are disposed.
+
+
+### Scenario 7: Delivered bundle support and area navigation
+
+- **Covers**: Main success scenario 2–6.
+- **Given**: DESIGN bundles and DOMAIN files in multiple areas, with nested parent-owned support and a peer bundle.
+- **When**: The reader selects the canonical bundle entry and a supporting-list file.
+- **Then**: Area groups and the canonical ID identify the parent; support opens in the same source and Back restores
+  the parent. Support, nested stray identities and orphan files never appear as canonical documents.

@@ -131,3 +131,49 @@ capability. Source-specific body assertions check transaction mechanism, receipt
 Frontend250/21 files PASS, with lint and svelte-check0 errors/warnings. This test-only addition closes the real
 retained-document row separately from the existing synthetic namespace/maintenance/artifact fixtures and native
 Kind-row comparison. Runtime/static/public bytes are unchanged from the independently reviewed correction source.
+
+
+## Task 5: delivered bundle grammar continuation
+
+Accepted-turn audit base `cff2ca7c0b2e888b16c0c348a0f5deed099f162e`; delivered core
+`002241b56fd8e5a446cbfa4f2e4bf42d25484455`. Screens refinement and current interface comparison were
+committed before runtime changes at `bcdb86605e02`. Immutable core-contract.md SHA-256 remains
+`1d724834426991e04904fd9f1677f60235de49764d9a1863ad9c8d112c55f413`.
+
+RED baseline: `just viewer test` returned 249/250 PASS and ENOENT for the old actual DESIGN flat path.
+After migrating the retained-five paths and adding the grammar regression, RED was 250/251: expected four
+canonical chapters, actual eight (stray/nested/orphan DESIGN support and DOMAIN support leaked into the index).
+GREEN after runtime changes: 265/265 across 22 frontend files. The added matrix uses current shapes in global
+and registered namespace for all three roles, multiple DESIGN/DOMAIN areas, root/rename alias and same-ID area
+moves, independent peers, whole-bundle support, nested/stray/orphan/README controls, cold Files support without
+indexing, shared graph and exact source/ref reads, Back and no tree rereads. Existing source/fragment/image/
+security/retirement/filter-pin/ambiguity/handbook/raw/unrelated budgets remain in the retained suite.
+The actual retained-five plus CAP ingress test reads current repository bytes and follows contract→design→peer,
+domain and OPS routes. Core row comparison pins AREA_BUNDLE/design.md, AREA and FLAT with no schema validator.
+
+Commands executed synchronously in this assigned worktree on the Task 5 implementation (before review):
+
+| Command | Result |
+| --- | --- |
+| `uv run devkit sync --check` before first edit | PASS exit0, no drift |
+| `just init` | PASS |
+| `just lint-check devkit-viewer`, `just check devkit-viewer` | PASS Ruff; Pyright0 errors/warnings |
+| `uv run ruff check scripts/handbook.py tools/devkit-dev/tests/integration/test_handbook_script.py` | PASS |
+| `uv run pytest tools/devkit-dev/tests/integration/test_handbook_script.py packages/devkit-viewer/tests/integration/features/browse -q` | PASS207; actual generic tree/blob/HTTP current paths, bytes, namespaces and guard controls |
+| `just test-affected --base 002241b56fd8e5a446cbfa4f2e4bf42d25484455 --tier unit-integration` | PASS296; partial20 selection, full fallback retained; runner log 20261116-181548-uv-run-yjm3oal9.log |
+| `just viewer install`, `just viewer lint`, `just viewer check`, `just viewer test` | PASS install243; formatting; Svelte0; 265/22 |
+| `just viewer pack`, `just viewer build` | PASS public tarball exports and native static generator |
+| `uv run devkit generated check viewer-assets` | PASS stale0 |
+| `just viewer probe <own ignored viewer-layout-adoption/public>` | PASS1 public dist host, tree/blob only, current three-role paths and whole-bundle support |
+| external `tsc --noEmit --skipLibCheck --moduleResolution bundler --module esnext --target es2022 .../public/consumer.ts` | PASS current public declaration consumer |
+| `uv build --package devkit-viewer --wheel --out-dir .venv/spec-probes/viewer-layout-adoption/wheels` plus zip comparison | PASS100 static files, exact set and bytes |
+| `uv run devkit rules check --ci --base 002241b56fd8e5a446cbfa4f2e4bf42d25484455` | PASS22 rules, 0 errors/warnings |
+
+New test-authoring expectation corrections were locale ordering and three distinct CAP rows (typed outgoing,
+body outgoing, alias incoming); no retained assertion was weakened. Frontend README formatting was fixed after
+lint caught it. No separate E2E tier or visual browser walkthrough was introduced; synchronous native DOM/HTTP/
+public-host/wheel evidence covers this consumer change. Host retains combined landed-head verification.
+
+Functional before/after: the baseline current-grammar fixture exposed eight nodes instead of four and no support
+inventory. The head exposes four canonical nodes, whole-directory support and area labels using the same scan.
+This is functional coverage, with explicit no-reread assertions, not a performance claim.

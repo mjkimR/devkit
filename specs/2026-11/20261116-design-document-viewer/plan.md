@@ -9,8 +9,8 @@ spec: SPEC-design-document-viewer
 
 Preserve `ARCH-05-2-components`, existing viewer browser parsing and structural namespace discovery,
 `CAP-VIEW-repository-viewer` loading/cache/source guards and decision-only supersession UI. No feature edge,
-package dependency or new ADR is needed. Core implementation at 5d1cb2661871cd3fe12cf806b58ac2515a3ffaf4
-matches the pinned core contract and supplies all five active migrated nodes.
+package dependency or new ADR is needed. Original implementation at 5d1cb2661871cd3fe12cf806b58ac2515a3ffaf4 matched the historical flat-contract pin.
+Task 5 consumes the published bundle/area contract at 002241b56fd8e5a446cbfa4f2e4bf42d25484455.
 
 ## 2. Architecture Overview & Impact
 
@@ -50,7 +50,7 @@ Map AC-01/02/03 to document, supersession, KnowledgeViews and SddViewer tests; A
 and composed maintenance fixtures; AC-06 to backend tree/blob regressions, public library import/pack, wheel
 static inspection and declared generated check; AC-07 to handbook script tests and reconciled UX contracts.
 Run `just lint-check devkit-viewer`, `just check devkit-viewer`, focused handbook/backend tests and
-`just test-affected --base 5d1cb2661871cd3fe12cf806b58ac2515a3ffaf4 --tier unit-integration` preserving full fallback.
+`just test-affected --base 002241b56fd8e5a446cbfa4f2e4bf42d25484455 --tier unit-integration` preserving full fallback.
 Run `just viewer install`, `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer pack`,
 `just viewer build`, and `uv run devkit generated check viewer-assets`. Native tests run synchronously here.
 The Host owns integrated-result verification. HIGH independent code and reconcile reviews use frozen snapshots.
@@ -64,3 +64,12 @@ support. Domain uses `<root>/domain/<area>/DOMAIN-<slug>.md` and same-area paren
 Keep the immutable original pin as provenance and add a current delivered-interface comparison. Native return to
 build-verify requires fresh HIGH code/reconcile verification for changed consumer semantics before integration.
 No core implementation, architecture edge or required public host callback changes belong to this continuation.
+
+
+Task 5 implementation choices: keep path classification in the existing shared identity module, consuming core
+layout without duplicating schema validation. Extend the existing source/ref index with an optional tree-file
+inventory collected in the same scan. Supporting lists use that inventory and existing navigation callbacks;
+no per-document tree scan, support blob prefetch, public required callback or Python docs-model dependency.
+Area grouping uses structural path ownership; schema-validating matching metadata remains core-owned.
+Handbook source collection already reads frontmatter IDs, including design.md; exclude bundle support before
+identity extraction so invalid identified support cannot become a cited canonical source.

@@ -17,8 +17,8 @@ targets:
 
 # [PROP-design-document-viewer-target] Formal document viewer target blueprint
 
-This is a future contract for `SPEC-design-document-viewer`; current owner documents remain unchanged in Planning.
-New UC/UX identifiers below are proposed names, not references to existing documents.
+This blueprint retains original Planning provenance for `SPEC-design-document-viewer`; current owner documents remain unchanged in Planning.
+The initial pin below remains historical; Task 5 consumes the delivered interface in materials/delivered-interface.md.
 
 ## 1. Direction and options
 
@@ -44,12 +44,11 @@ must consume the delivered core implementation and reconcile any material differ
 
 | Kind / prefix / directory | Canonical shape | Applicable data |
 | --- | --- | --- |
-| design / DESIGN / designs | `<root>/designs/DESIGN-<word-led-slug>.md` | Optional source `entrypoints`; formal independent details use peer files with their own IDs |
-| domain / DOMAIN / domain | `<root>/domain/DOMAIN-<word-led-slug>.md` | Concept/identity/relationship/lifecycle knowledge; no entrypoints field |
+| design / DESIGN / designs | `<root>/designs/<area>/DESIGN-<word-led-slug>/design.md` | Optional source `entrypoints`; formal independent details use peer bundles with their own IDs |
+| domain / DOMAIN / domain | `<root>/domain/<area>/DOMAIN-<word-led-slug>.md` | Concept/identity/relationship/lifecycle knowledge; no entrypoints field |
 | operations / OPS / operations | `<root>/operations/OPS-<word-led-slug>.md` | Symptom/evidence/action-owner/normal-state routing; no entrypoints field |
 
-Roots are global docs or registered docs/packages/<name>. Required nonempty id/title/status/summary; H1 and stem
-match ID; no area field. Status draft/active/retired; default list/search hides retired, explicit history/status and
+Roots are global docs or registered docs/packages/<name>. Required nonempty id/title/status/summary; H1 matches ID; the DESIGN bundle directory and DOMAIN/OPS stem match ID. DESIGN/DOMAIN require matching area; OPS has no area. Status draft/active/retired; default list/search hides retired, explicit history/status and
 direct reference resolution retain it. Aliases are same-prefix IDs, globally unique across namespaces. All indexed
 source kinds may use target-typed list fields related_designs, related_domains, related_operations, alongside
 applicable existing CAP/UC fields. Preserve generic spec/plan current references. Role documents reject delivery
@@ -57,14 +56,14 @@ proposal/decomposed_from/depends_on/milestone and ADR supersedes/superseded_by f
 prose replacement explanation and optional related_* successor, not ADR supersession. Existing provenance on its
 owning kinds remains distinct. No reciprocal relation requirement is introduced.
 
-Artifacts live under `<root>/<role-directory>/<PARENT-ID>/artifacts/<relative-path>` and link from their identified
-parent. ID-free Markdown artifacts must remain outside canonical node lists, kind counts/search and reference graph
+DESIGN support comprises every non-anchor file under its bundle at any depth. DOMAIN/OPS support lives under
+`<root>/<role-directory>/<area-if-DOMAIN>/<PARENT-ID>/artifacts/<relative-path>` beside the identified parent. ID-free Markdown artifacts must remain outside canonical node lists, kind counts/search and reference graph
 identity, even though the generic file scanner reads Markdown. They stay accessible as supporting files. An ID-bearing
 artifact is invalid core input; viewer can still expose its file/raw content with uncertainty, never claim it is a
-valid peer canonical node. Independent details are flat formal peer files, not nested inherited identities.
+valid peer canonical node. Independent DESIGN details are peer bundles; DOMAIN/OPS details are peer formal files. Nested DESIGN anchors remain support files.
 
 Updated core maintenance semantics are part of viewer fixtures. A same-kind rename moves the parent-owned
-`<OLD-ID>/artifacts/` subtree to `<NEW-ID>/artifacts/`; a docs-root move carries it into the selected new root.
+entire DESIGN bundle to the new ID directory, or the DOMAIN/OPS `<OLD-ID>/artifacts/` subtree to `<NEW-ID>/artifacts/`; a docs-root move carries all parent-owned support into the selected new root. Area moves preserve identity and references.
 Identity aliases resolve only document IDs, never stale artifact paths or orphan old-ID folders. Follow repaired
 ordinary links from the current canonical parent and preserve current source context. Split/cross-kind artifact
 transfers have exactly one receiving canonical parent; cross-kind old nodes remain retired with an explicit
@@ -284,3 +283,11 @@ Run the actual `[FRONTEND_CHECK: ...]` line from affected tests: `just viewer in
 committed static assets, then `uv run devkit generated check viewer-assets`; inspect packed library and Python
 wheel contents and exercise a host importing the public exports with generic RepositoryDataSource fixtures.
 No generated output is hand-edited. No release refresh, publishing, or downstream consumer write is in scope.
+
+
+### Delivered grammar refinement
+
+Task 5 retains these screen arrangements. Domain/Designs use area subheadings and canonical bundle-ID labels.
+The relation panel lists whole DESIGN bundle support at every depth and adjacent DOMAIN/OPS ID/artifacts files.
+Selecting a parent-relative inventory entry opens the existing supporting reader and Back restores the parent.
+The initial flat-contract pin remains historical; delivered-interface.md records the authoritative comparison.

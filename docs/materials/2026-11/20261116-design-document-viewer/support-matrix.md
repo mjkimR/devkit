@@ -1,6 +1,15 @@
 # Viewer support matrix and Scout evidence
 
-## Inspection and provenance
+## Current delivered grammar
+
+The original flat-contract pin and PASS matrix below are historical implementation evidence. Current Task 5
+policy and exact baseline are in [delivered interface](delivered-interface.md); executed current grammar results
+are in [development evidence](development-evidence.md). The historical core-contract.md bytes remain unchanged.
+DESIGN uses area-scoped bundles and whole-directory support. DOMAIN uses area-scoped files and adjacent
+ID/artifacts support. OPS remains flat. Current navigation groups DESIGN/DOMAIN by area, labels canonical IDs,
+and excludes all support from canonical counts/search/graph before reading blobs.
+
+## Historical inspection and provenance
 
 Source and contract Scouts completed at f75da999fcdff9e68559a01793efe620b3f2f570. No runtime test was run.
 Tracked-plus-nonignored snapshot before/after: f6901151eecf483bfe62180c8622739e903e00bf; HEAD unchanged.

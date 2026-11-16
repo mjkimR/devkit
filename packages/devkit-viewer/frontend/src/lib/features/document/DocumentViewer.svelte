@@ -1,7 +1,7 @@
 <script lang="ts">
 	import FormalReferences from './FormalReferences.svelte';
 	import { repositoryImages } from '../../api/artifacts';
-	import type { RepositoryDataSource } from '../../api/repository';
+	import type { RepositoryDataSource, TreeItem } from '../../api/repository';
 	import FrontmatterHeader from './FrontmatterHeader.svelte';
 	import SupersessionSummary from './SupersessionSummary.svelte';
 	import type { RepositoryDocument } from '../../api/documents';
@@ -23,6 +23,7 @@
 		diagramAction = undefined,
 		relationSubject = null,
 		relationDocuments = [],
+		relationFiles = [],
 		relationLoading = false,
 		relationErrors = [],
 		onRelationOpen = () => {},
@@ -45,6 +46,7 @@
 		diagramAction?: (node: HTMLElement) => { destroy: () => void };
 		relationSubject?: RepositoryDocument | null;
 		relationDocuments?: RepositoryDocument[];
+		relationFiles?: TreeItem[];
 		relationLoading?: boolean;
 		relationErrors?: string[];
 		onRelationOpen?: (path: string, fragment?: string) => void;
@@ -109,6 +111,8 @@
 				{#if relationSubject}<FormalReferences
 						subject={relationSubject}
 						documents={relationDocuments}
+						files={relationFiles}
+						onSupportingOpen={(path) => onSupportingOpen(path, '')}
 						loading={relationLoading}
 						errors={relationErrors}
 						onOpen={onRelationOpen}

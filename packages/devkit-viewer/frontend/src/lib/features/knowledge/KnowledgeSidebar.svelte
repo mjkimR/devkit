@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { RepositoryDocument, RenderedDocument } from '../../api/documents';
+	import { formalArea } from '../../api/identity';
 	import { bookGroups, bookGroup, documentAnchor } from '../../api/documents';
 
 	let {
@@ -124,7 +125,11 @@
 			{#if book.some((d) => bookGroup(d) === group)}
 				<h2>{group}</h2>
 			{/if}
-			{#each book.filter((d) => bookGroup(d) === group) as doc}
+			{#each book.filter((d) => bookGroup(d) === group) as doc, i}
+				{#if formalArea(doc) && (i === 0 || formalArea(book.filter((d) => bookGroup(d) === group)[i - 1]) !== formalArea(doc))}<h3
+					>
+						{formalArea(doc)}
+					</h3>{/if}
 				<button
 					class:active={currentAnchor === documentAnchor(doc.path) ||
 						currentAnchor === rendered.get(doc.path)?.headings[0]?.id}

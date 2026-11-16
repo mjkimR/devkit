@@ -226,6 +226,12 @@ def load_documents(root: Path, commit: str) -> Documents:
     for sha, path in entries:
         if sha not in texts:
             continue
+        local = re.sub(r"^docs/packages/[^/]+/", "docs/", path)
+        bundle = re.match(r"^docs/designs/[^/]+/DESIGN-[^/]+/(.+)$", local)
+        if bundle and bundle[1] != "design.md":
+            continue
+        if re.match(r"^docs/(?:domain/(?:[^/]+/)?|operations/|designs/)[^/]+/artifacts/", local):
+            continue
         meta, _ = frontmatter(texts[sha])
         identifier = meta.get("id")
         if not isinstance(identifier, str):

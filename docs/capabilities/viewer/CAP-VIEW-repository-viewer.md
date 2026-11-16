@@ -296,6 +296,19 @@ The local source supports recursive metadata requests to avoid one HTTP call per
     by opening. Switching a formal Files node to rendered mode may request it. Check:
     `frontend/src/lib/features/knowledge/FormalReading.test.ts` and `frontend/src/lib/SddViewer.test.ts`.
 
+15. **Delivered layout**: The viewer MUST group DESIGN and DOMAIN entries by area and label DESIGN anchors by
+    canonical bundle ID alongside their title. Core `CAP-DOCS-document-model` owns canonical path/area validity.
+    Check: `frontend/src/lib/api/layout.test.ts`, `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+16. **Support inventory**: WHEN a formal context is indexed, the viewer MUST list every non-anchor DESIGN bundle
+    file at any depth, or the adjacent ID/artifacts files for DOMAIN/OPS, from the same source tree inventory.
+    List selection uses the existing source-bound supporting reader and Back. Check:
+    `frontend/src/lib/features/knowledge/FormalReading.test.ts`.
+17. **Support identity isolation**: The viewer MUST exclude all non-anchor DESIGN bundle files from canonical
+    identities, graph nodes, search and counts, including stray identified Markdown, nested anchors and README.
+    Orphan support has no canonical node; generic Files still reads it. Check: `frontend/src/lib/api/layout.test.ts`.
+18. **Inventory budget**: Supporting lists MUST reuse the document scan's tree inventory without per-document
+    whole-tree scans or reading supporting blobs until requested. Check: `frontend/src/lib/api/layout.test.ts`.
+
 The viewer does not repair stale source anchors, orphan artifacts or repository governance errors. Canonical aliases
 follow current identities; ordinary obsolete file paths remain unavailable rather than becoming alias redirects.
 Tree/blob APIs retain the existing byte, traversal and symlink guards for all formal roots.

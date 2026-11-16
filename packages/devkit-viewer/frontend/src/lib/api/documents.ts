@@ -1,6 +1,13 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { ID_SOURCE, ID_PATTERN, documentId, identityResolver, isArtifactPath } from './identity';
+import {
+	ID_SOURCE,
+	ID_PATTERN,
+	documentId,
+	identityResolver,
+	isArtifactPath,
+	formalArea
+} from './identity';
 import { visibleLines } from './markdown';
 import { parseFrontmatter } from './frontmatter';
 import { normalizeTree, type RepositoryDataSource, type TreeItem } from './repository';
@@ -54,6 +61,8 @@ export function parseBlob(path: string, content: string, encoding: string): Repo
 export interface DocumentIndex {
 	documents: RepositoryDocument[];
 	errors: string[];
+	/** Source tree inventory, collected during the same scan without reading supporting blobs. */
+	files?: TreeItem[];
 }
 
 /** Continuous workers refill after each job, including newly discovered descendants. */
@@ -74,6 +83,7 @@ export async function scanDocuments(
 	}));
 	const seen = new Set<string>();
 	const documents: RepositoryDocument[] = [];
+	const files = new Map<string, TreeItem>();
 	const errors: string[] = [];
 	await new Promise<void>((resolve) => {
 		let active = 0;
@@ -99,6 +109,7 @@ export async function scanDocuments(
 									item.path.split('/').some((p) => p === '..' || p === '.')
 								)
 									continue;
+								if (item.type === 'blob') files.set(item.path, item);
 								if (job.kind === 'tree' && item.type === 'tree' && descend(item))
 									jobs.push({ path: item.path, kind: 'tree' });
 								else if (item.type === 'blob' && select(item))
@@ -129,7 +140,8 @@ export async function scanDocuments(
 	});
 	return {
 		documents: documents.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true })),
-		errors
+		errors,
+		files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path))
 	};
 }
 
@@ -380,6 +392,11 @@ export const bookGroups = [
 	'Decisions',
 	'Development'
 ];
+export function byBookArea(documents: RepositoryDocument[]) {
+	return [...documents].sort(
+		(a, b) => formalArea(a).localeCompare(formalArea(b)) || a.path.localeCompare(b.path)
+	);
+}
 export const namespaceOf = (doc: RepositoryDocument) =>
 	doc.path.match(/^docs\/packages\/([^/]+)\//)?.[1] ?? String(doc.meta.namespace ?? 'global');
 

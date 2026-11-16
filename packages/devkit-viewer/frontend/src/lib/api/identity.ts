@@ -9,10 +9,24 @@ export const documentId = (doc: RepositoryDocument | null | undefined): string =
 		: typeof doc?.meta.reconcile_id === 'string'
 			? doc.meta.reconcile_id
 			: '';
-export const isArtifactPath = (path: string) =>
-	/^docs\/(?:designs|domain|operations)\/[^/]+\/artifacts\//.test(
-		path.replace(/^docs\/packages\/[^/]+\//, 'docs/')
-	);
+/** Core-owned layout projection only; schema validation remains in devkit-docs. */
+export const localDocsPath = (path: string) => path.replace(/^docs\/packages\/[^/]+\//, 'docs/');
+export const isArtifactPath = (path: string) => {
+	const local = localDocsPath(path);
+	const bundle = local.match(/^docs\/designs\/[^/]+\/DESIGN-[^/]+\/(.+)$/);
+	if (bundle) return bundle[1] !== 'design.md';
+	return /^docs\/(?:domain\/(?:[^/]+\/)?|operations\/|designs\/)[^/]+\/artifacts\//.test(local);
+};
+export const formalArea = (doc: RepositoryDocument) =>
+	!isArtifactPath(doc.path)
+		? (localDocsPath(doc.path).match(/^docs\/(?:designs|domain)\/([^/]+)\//)?.[1] ?? '')
+		: '';
+export function supportRoot(doc: RepositoryDocument): string | null {
+	if (!isFormal(doc)) return null;
+	if (/\/designs\/[^/]+\/DESIGN-[^/]+\/design\.md$/.test(doc.path))
+		return doc.path.slice(0, -'design.md'.length);
+	return doc.path.slice(0, -3) + '/artifacts/';
+}
 export const isFormal = (doc: RepositoryDocument | null | undefined) =>
 	Boolean(doc && !isArtifactPath(doc.path) && /^(?:DESIGN|DOMAIN|OPS)-/.test(documentId(doc)));
 

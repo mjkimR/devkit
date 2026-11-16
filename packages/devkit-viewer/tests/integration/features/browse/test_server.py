@@ -448,11 +448,13 @@ def test_http_formal_documents_and_artifacts_preserve_bytes_and_missing_paths(
         registry.write_text(
             registry.read_text() + '\n[[tool.docs.namespaces]]\nname = "registered"\npath = "packages/registered"\n'
         )
-    parent = f"{docs_root}/{directory}/{prefix}-http.md"
+    area_root = f"{docs_root}/{directory}/distribution" if prefix != "OPS" else f"{docs_root}/{directory}"
+    parent = f"{area_root}/{prefix}-http/design.md" if prefix == "DESIGN" else f"{area_root}/{prefix}-http.md"
+    support = f"{area_root}/{prefix}-http/examples" if prefix == "DESIGN" else f"{area_root}/{prefix}-http/artifacts"
     files = {
         parent: f"---\nid: {prefix}-http\n---\n# HTTP\n".encode(),
-        f"{docs_root}/{directory}/{prefix}-http/artifacts/data sheet.csv": b"a,b\n1,2\n",
-        f"{docs_root}/{directory}/{prefix}-http/artifacts/chart.png": bytes([137, 80, 78, 71, 255]),
+        f"{support}/data sheet.csv": b"a,b\n1,2\n",
+        f"{support}/chart.png": bytes([137, 80, 78, 71, 255]),
     }
     for path, data in files.items():
         target = root / path

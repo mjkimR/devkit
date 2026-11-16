@@ -196,9 +196,13 @@ def test_formal_documents_and_parent_artifacts_use_existing_byte_and_guard_contr
         registry.write_text(
             registry.read_text() + '\n[[tool.docs.namespaces]]\nname = "registered"\npath = "packages/registered"\n'
         )
-    parent = f"{docs_root}/{directory}/{prefix}-example.md"
-    artifact = f"{docs_root}/{directory}/{prefix}-example/artifacts/data.csv"
-    image = f"{docs_root}/{directory}/{prefix}-example/artifacts/chart.png"
+    area_root = f"{docs_root}/{directory}/distribution" if prefix != "OPS" else f"{docs_root}/{directory}"
+    parent = f"{area_root}/{prefix}-example/design.md" if prefix == "DESIGN" else f"{area_root}/{prefix}-example.md"
+    support = (
+        f"{area_root}/{prefix}-example/examples" if prefix == "DESIGN" else f"{area_root}/{prefix}-example/artifacts"
+    )
+    artifact = f"{support}/data.csv"
+    image = f"{support}/chart.png"
     values = {
         parent: f"---\nid: {prefix}-example\n---\n# Example\n".encode(),
         artifact: b"a,b\n1,2\n",

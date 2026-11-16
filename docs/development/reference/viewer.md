@@ -126,3 +126,9 @@ The browser displays declared metadata and entrypoints without certifying core g
 
 Handbook citations recognize DESIGN, DOMAIN and OPS sources/aliases. Handbook coverage remains CAP/UC and generated
 membership remains accepted ADRs/completed specs; this support performs no handbook refresh.
+
+
+Designs and Domain are grouped by area. Design anchors are area-scoped `<ID>/design.md` bundles, labelled by
+canonical ID. The shared context lists every other bundle file at any depth as supporting content; Domain/OPS
+list adjacent ID/artifacts support. The source tree inventory is reused without prefetching support blobs.
+Invalid identified support, nested design anchors and orphan files never become canonical nodes or graph identities.

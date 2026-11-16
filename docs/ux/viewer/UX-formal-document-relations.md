@@ -27,6 +27,11 @@ The panel also appears on another indexed document declaring related_designs, re
 
 Existing viewer component/styles own visual treatment; this element adds no separate style system.
 
+Supporting files appear below current references as a secondary list of parent-relative paths. DESIGN lists the
+whole bundle except its anchor; DOMAIN/OPS list their adjacent ID/artifacts subtree. File selection opens the
+existing source-bound reader. Complete empty inventory says no supporting files; loading/error shows incomplete
+inventory and the existing reload action. Invalid identified support stays a file, without a relation identity.
+
 ## 3. States
 
 | State | Representation and next action |
@@ -41,6 +46,7 @@ Existing viewer component/styles own visual treatment; this element adds no sepa
 
 | Trigger | Step | From | To | Target | Capability | Feedback |
 | --- | --- | --- | --- | --- | --- | --- |
+| Open supporting file | `UC-read-formal-document` 5 | populated | loading | `UX-read-supporting-artifact` | `CAP-VIEW-repository-viewer` | Parent-relative path and selected source retained |
 | Follow resolved target | `UC-read-formal-document` 4 | populated | populated | `UX-browse-formal-documents` | `CAP-VIEW-repository-viewer` | Canonical identity with written-reference context |
 | Reload references | `UC-read-formal-document` 4a | incomplete | loading |  | `CAP-VIEW-repository-viewer` | Fresh source/index progress |
 | Inspect unavailable target | `UC-read-formal-document` 4b | unresolved | unresolved |  | `CAP-VIEW-repository-viewer` | Written ID has no arbitrary link |

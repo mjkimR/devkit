@@ -1,10 +1,13 @@
 <script lang="ts">
+	import type { TreeItem } from '../../api/repository';
 	import type { RepositoryDocument } from '../../api/documents';
-	import { documentId, hasFormalContext } from '../../api/identity';
+	import { documentId, hasFormalContext, supportRoot } from '../../api/identity';
 	import { deriveReferences, metadataText, type ReferenceRow } from './references';
 	let {
 		subject,
 		documents = [],
+		files = [],
+		onSupportingOpen = () => {},
 		loading = false,
 		errors = [],
 		onOpen = () => {},
@@ -12,11 +15,22 @@
 	}: {
 		subject: RepositoryDocument;
 		documents?: RepositoryDocument[];
+		files?: TreeItem[];
+		onSupportingOpen?: (path: string) => void;
 		loading?: boolean;
 		errors?: string[];
 		onOpen?: (path: string) => void;
 		onReload?: () => void;
 	} = $props();
+	const root = $derived(supportRoot(subject));
+	const support = $derived(
+		root
+			? files.filter(
+					(file) =>
+						file.type === 'blob' && file.path.startsWith(root!) && file.path !== subject.path
+				)
+			: []
+	);
 	const refs = $derived(deriveReferences(subject, documents));
 </script>
 
@@ -58,6 +72,20 @@
 			</p>{/if}
 		{#if refs.provenance.length}<h4>Provenance (historical origin)</h4>
 			{@render rows(refs.provenance)}{/if}
+		{#if root}<h4>Supporting files</h4>
+			{#if support.length}<ul>
+					{#each support as file}<li>
+							<button onclick={() => onSupportingOpen(file.path)}
+								>{file.path.slice(root.length)}</button
+							>
+						</li>{/each}
+				</ul>
+			{:else}<p>
+					{loading || errors.length
+						? 'Supporting file inventory incomplete.'
+						: 'No supporting files.'}
+				</p>{/if}
+		{/if}
 		<details>
 			<summary>Metadata and declared source entrypoints</summary>
 			<p>

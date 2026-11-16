@@ -339,7 +339,8 @@ it('never indexes a no-ID typed declaration, ID-bearing artifact or handbook fil
 it('reads the five retained formal documents and their real capability ingress through shared book routes', async () => {
 	const capability = 'docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md';
 	const design = 'docs/designs/distribution/DESIGN-distribution-transactions/design.md';
-	const detail = 'docs/designs/distribution/DESIGN-distribution-file-directory-replacement/design.md';
+	const detail =
+		'docs/designs/distribution/DESIGN-distribution-file-directory-replacement/design.md';
 	const bundleDomain = 'docs/domain/distribution/DOMAIN-bundle-selection-and-installation.md';
 	const deliveryDomain = 'docs/domain/delivery/DOMAIN-delivery-relationships.md';
 	const operations = 'docs/operations/OPS-distribution-sync.md';
@@ -417,37 +418,147 @@ it('reads the five retained formal documents and their real capability ingress t
 	await follow(operations, capability, 'CAP-DIST-sync-and-transactions');
 });
 
-
 it('lists current bundle support at every depth without creating identities or rereading its tree', async () => {
- const parent = 'docs/designs/alpha/DESIGN-parent/design.md';
- const support = 'docs/designs/alpha/DESIGN-parent/examples/deep/table.csv';
- const stray = 'docs/designs/alpha/DESIGN-parent/examples/stray.md';
- const source = repository({
-  [parent]: page('DESIGN-parent', '[DESIGN-peer]', 'area: alpha\n'),
-  'docs/designs/beta/DESIGN-peer/design.md': page('DESIGN-peer', '', 'area: beta\n'),
-  [support]: 'a,b\n1,2',
-  [stray]: page('CAP-X-fake'),
-  'docs/designs/alpha/DESIGN-parent/README.md': '# Support readme',
-  'docs/designs/alpha/DESIGN-parent/nested/DESIGN-child/design.md': page('DESIGN-child'),
-  'docs/designs/alpha/DESIGN-orphan/note.md': page('DOMAIN-fake'),
-  'docs/domain/alpha/DOMAIN-real.md': page('DOMAIN-real', '', 'area: alpha\n'),
-  'docs/domain/alpha/DOMAIN-real/artifacts/example.md': page('ADR-fake'),
-  'docs/operations/OPS-real.md': page('OPS-real'),
-  'docs/operations/OPS-real/artifacts/example.csv': 'x,y'
- });
- render(KnowledgeViews, props(source, 'DESIGN-parent'));
- await waitFor(() => expect(document.querySelectorAll('.chapter')).toHaveLength(4));
- const chapter = document.getElementById(documentAnchor(parent))!;
- const panel = within(chapter).getByRole('complementary', {name: 'References for DESIGN-parent'});
- expect(within(panel).getByRole('button', {name: 'examples/stray.md'})).toBeTruthy();
- expect(within(panel).getByRole('button', {name: 'README.md'})).toBeTruthy();
- expect(within(panel).getByRole('button', {name: 'nested/DESIGN-child/design.md'})).toBeTruthy();
- expect(screen.getAllByRole('heading', {name: 'alpha'}).length).toBeGreaterThan(0);
- expect(screen.getAllByRole('heading', {name: 'beta'}).length).toBeGreaterThan(0);
- expect(source.blob).not.toHaveBeenCalledWith(stray, 'main', expect.anything());
- const reads = vi.mocked(source.treeRecursive!).mock.calls.length;
- await fireEvent.click(within(panel).getByRole('button', {name: 'examples/deep/table.csv'}));
- await screen.findByText(/a,b\s+1,2/);
- await fireEvent.click(screen.getByRole('button', {name: 'Back to DESIGN-parent'}));
- expect(vi.mocked(source.treeRecursive!).mock.calls.length).toBe(reads);
+	const parent = 'docs/designs/alpha/DESIGN-parent/design.md';
+	const support = 'docs/designs/alpha/DESIGN-parent/examples/deep/table.csv';
+	const stray = 'docs/designs/alpha/DESIGN-parent/examples/stray.md';
+	const source = repository({
+		[parent]: page('DESIGN-parent', '[DESIGN-peer]', 'area: alpha\n'),
+		'docs/designs/beta/DESIGN-peer/design.md': page('DESIGN-peer', '', 'area: beta\n'),
+		[support]: 'a,b\n1,2',
+		[stray]: page('CAP-X-fake'),
+		'docs/designs/alpha/DESIGN-parent/README.md': '# Support readme',
+		'docs/designs/alpha/DESIGN-parent/nested/DESIGN-child/design.md': page('DESIGN-child'),
+		'docs/designs/alpha/DESIGN-orphan/note.md': page('DOMAIN-fake'),
+		'docs/domain/alpha/DOMAIN-real.md': page('DOMAIN-real', '', 'area: alpha\n'),
+		'docs/domain/alpha/DOMAIN-real/artifacts/example.md': page('ADR-fake'),
+		'docs/operations/OPS-real.md': page('OPS-real'),
+		'docs/operations/OPS-real/artifacts/example.csv': 'x,y'
+	});
+	render(KnowledgeViews, props(source, 'DESIGN-parent'));
+	await waitFor(() => expect(document.querySelectorAll('.chapter')).toHaveLength(4));
+	const chapter = document.getElementById(documentAnchor(parent))!;
+	const panel = within(chapter).getByRole('complementary', {
+		name: 'References for DESIGN-parent'
+	});
+	expect(within(panel).getByRole('button', { name: 'examples/stray.md' })).toBeTruthy();
+	expect(within(panel).getByRole('button', { name: 'README.md' })).toBeTruthy();
+	expect(within(panel).getByRole('button', { name: 'nested/DESIGN-child/design.md' })).toBeTruthy();
+	expect(screen.getAllByRole('heading', { name: 'alpha' }).length).toBeGreaterThan(0);
+	expect(screen.getAllByRole('heading', { name: 'beta' }).length).toBeGreaterThan(0);
+	expect(source.blob).not.toHaveBeenCalledWith(stray, 'main', expect.anything());
+	const reads = vi.mocked(source.treeRecursive!).mock.calls.length;
+	await fireEvent.click(within(panel).getByRole('button', { name: 'examples/deep/table.csv' }));
+	await screen.findByText(/a,b\s+1,2/);
+	await fireEvent.click(screen.getByRole('button', { name: 'Back to DESIGN-parent' }));
+	expect(vi.mocked(source.treeRecursive!).mock.calls.length).toBe(reads);
+});
+
+const currentPath = (prefix: string, dir: string, id: string, root = 'docs', area = 'alpha') =>
+	prefix === 'DESIGN'
+		? `${root}/${dir}/${area}/${id}/design.md`
+		: prefix === 'DOMAIN'
+			? `${root}/${dir}/${area}/${id}.md`
+			: `${root}/${dir}/${id}.md`;
+const currentSupport = (prefix: string, path: string, id: string) =>
+	prefix === 'DESIGN'
+		? path.slice(0, -9)
+		: path.slice(0, path.lastIndexOf('/') + 1) + id + '/artifacts/';
+
+it.each(
+	roles.flatMap(([prefix, dir]) =>
+		['docs', 'docs/packages/registered'].map((root) => [prefix, dir, root])
+	)
+)(
+	'%s current grammar in %s/%s preserves cold Files, support, graph, alias and source budgets',
+	async (prefix, dir, root) => {
+		const id = prefix + '-current',
+			path = currentPath(prefix, dir, id, root);
+		const support = currentSupport(prefix, path, id) + 'examples/deep/data sheet.csv';
+		const source = repository({
+			[path]: page(
+				id,
+				'[CAP-A-owner]',
+				`aliases: [${prefix}-previous]\n${prefix === 'OPS' ? '' : 'area: alpha\n'}related_capabilities: [CAP-A-owner]\n`
+			),
+			[support]: 'name,value\nalpha,42',
+			'docs/capabilities/a/CAP-A-owner.md': page('CAP-A-owner', `[${prefix}-previous]`)
+		});
+		const view = render(SddViewer, {
+			dataSource: source,
+			initialView: 'files',
+			initialPath: path,
+			branch: 'release'
+		});
+		const panel = await screen.findByRole('complementary', { name: `References for ${id}` });
+		await within(panel).findByRole('button', { name: 'examples/deep/data sheet.csv' });
+		await waitFor(() =>
+			expect(within(panel).getAllByRole('button', { name: /CAP-A-owner/ })).toHaveLength(3)
+		);
+		const reads = vi.mocked(source.treeRecursive!).mock.calls.length;
+		await fireEvent.click(
+			within(panel).getByRole('button', { name: 'examples/deep/data sheet.csv' })
+		);
+		await screen.findByText(/name,value\s+alpha,42/);
+		expect(source.blob).toHaveBeenCalledWith(support, 'release', expect.anything());
+		await fireEvent.click(screen.getByRole('button', { name: `Back to ${id}` }));
+		await screen.findByRole('complementary', { name: `References for ${id}` });
+		expect(vi.mocked(source.treeRecursive!).mock.calls.length).toBe(reads);
+		view.unmount();
+		const bookProps = props(source, prefix + '-previous');
+		bookProps.branch = 'release';
+		render(KnowledgeViews, bookProps);
+		await waitFor(() =>
+			expect(bookProps.onLocation).toHaveBeenCalledWith(
+				path,
+				expect.any(String),
+				'book',
+				expect.objectContaining({ id })
+			)
+		);
+		expect(vi.mocked(source.treeRecursive!).mock.calls.length).toBe(reads);
+	}
+);
+
+it.each(['DESIGN', 'DOMAIN'])(
+	'%s area moves keep identity while bundle rename/root moves retain aliases and reject stale paths',
+	async (prefix) => {
+		const dir = prefix === 'DESIGN' ? 'designs' : 'domain';
+		const oldPath = currentPath(prefix, dir, prefix + '-before');
+		const moved = currentPath(prefix, dir, prefix + '-after', 'docs/packages/registered', 'beta');
+		const areaMoved = currentPath(prefix, dir, prefix + '-stable', 'docs', 'beta');
+		const support = currentSupport(prefix, moved, prefix + '-after') + 'table.csv';
+		const source = repository({
+			[moved]: page(
+				prefix + '-after',
+				`[${prefix}-stable]`,
+				`aliases: [${prefix}-before]\narea: beta\n`
+			),
+			[areaMoved]: page(prefix + '-stable', '', 'area: beta\n'),
+			[support]: 'moved,data',
+			'docs/capabilities/a/CAP-A-owner.md': page(
+				'CAP-A-owner',
+				`[${prefix}-before] [${prefix}-stable]`
+			)
+		});
+		const view = render(KnowledgeViews, props(source, prefix + '-before'));
+		await waitFor(() => expect(document.getElementById(documentAnchor(moved))).toBeTruthy());
+		expect(document.getElementById(documentAnchor(areaMoved))).toBeTruthy();
+		expect(screen.getByRole('option', { name: 'registered + Global' })).toBeTruthy();
+		const panel = screen.getByRole('complementary', { name: `References for ${prefix}-after` });
+		await fireEvent.click(within(panel).getByRole('button', { name: 'table.csv' }));
+		await screen.findByText('moved,data');
+		await fireEvent.click(screen.getByRole('button', { name: `Back to ${prefix}-after` }));
+		await view.rerender({ ...props(source, oldPath) });
+		await screen.findByText(`${oldPath} — unavailable (missing)`);
+	}
+);
+
+it('cold Files reads an identified bundle support file without scanning identities', async () => {
+	const path = 'docs/packages/registered/designs/alpha/DESIGN-parent/examples/stray.md';
+	const source = repository({ [path]: page('CAP-X-stray') });
+	render(SddViewer, { dataSource: source, initialView: 'files', initialPath: path });
+	await screen.findByText('Format: text/markdown');
+	expect(source.treeRecursive).not.toHaveBeenCalled();
+	expect(screen.queryByRole('complementary', { name: 'References for CAP-X-stray' })).toBeNull();
 });

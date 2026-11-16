@@ -4,8 +4,8 @@
 	import RawViewer from '../document/RawViewer.svelte';
 	import FormalReferences from '../document/FormalReferences.svelte';
 	import { repositoryImages } from '../../api/artifacts';
-	import type { RepositoryDataSource } from '../../api/repository';
-	import { isFormal } from '../../api/identity';
+	import type { RepositoryDataSource, TreeItem } from '../../api/repository';
+	import { isFormal, formalArea } from '../../api/identity';
 	import SupersessionSummary from '../document/SupersessionSummary.svelte';
 	import { isDecision } from '../document/supersession';
 
@@ -20,6 +20,8 @@
 		sourceLabel = undefined,
 		onOpen,
 		documents = [],
+		files = [],
+		onSupportingOpen = () => {},
 		relationLoading = false,
 		relationErrors = [],
 		onRelationOpen = onOpen,
@@ -36,6 +38,8 @@
 		sourceLabel?: string;
 		onOpen: (path: string) => void;
 		documents?: RepositoryDocument[];
+		files?: TreeItem[];
+		onSupportingOpen?: (path: string) => void;
 		relationLoading?: boolean;
 		relationErrors?: string[];
 		onRelationOpen?: (path: string) => void;
@@ -67,7 +71,11 @@
 <section class="chapter" id={documentAnchor(doc.path)} use:trackHeading>
 	<header>
 		<div>
-			<span class="chapter-group">{bookGroup(doc) ?? fileLabel(doc.path)}</span>
+			<span class="chapter-group"
+				>{bookGroup(doc) ?? fileLabel(doc.path)}{formalArea(doc)
+					? ' · ' + formalArea(doc)
+					: ''}</span
+			>
 			<h2>{doc.title}</h2>
 			<small>{doc.meta.id ? doc.meta.id + ' · ' : ''}{doc.path}</small>
 			{#if isDecision(doc) || isFormal(doc)}<span class="decision-status"
@@ -82,6 +90,8 @@
 	</header>
 	{#if !raw}<FormalReferences
 			subject={doc}
+			{files}
+			{onSupportingOpen}
 			{documents}
 			loading={relationLoading}
 			errors={relationErrors}

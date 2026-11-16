@@ -22,6 +22,8 @@ targets:
     resolution: modified
   - file: docs/development/reference/viewer.md
     resolution: modified
+  - file: docs/materials/2026-11/20261116-design-document-viewer/delivered-interface.md
+    resolution: modified
   - file: docs/materials/2026-11/20261116-design-document-viewer/support-matrix.md
     resolution: modified
   - file: docs/materials/2026-11/20261116-design-document-viewer/development-evidence.md
@@ -69,7 +71,7 @@ and supersession use case/screens are explicitly waived above because their sema
 
 Formal role identity, supporting-artifact ownership and retirement are the delivered core contracts. This unit
 consumes their existing terms and does not redefine the glossary or add an independent migration/recovery engine.
-The immutable core-contract material remains byte-identical to the selected core delivery.
+The immutable core-contract material remains byte-identical to historical Planning provenance; delivered-interface.md names the current core grammar.
 
 ## Entrypoints
 
@@ -80,7 +82,7 @@ static, document and cross-owner candidates are rejected rather than appended me
 
 ## Completion and source feedback
 
-No required acceptance criterion is deferred, and this unit has no explicitly linked open direct-fix feedback.
+No required acceptance criterion is deferred. Task 5 directly addresses the explicitly linked `FB-viewer-adopts-bundle-grammar`; its final disposition follows independent verification.
 All findings in code review rounds 1 and 2 are corrected; fresh round 3 has no findings. The review's independent
 probes and the worker's frontend250, affected294, backend/handbook155, public-host and exact wheel100 evidence
 remain distinguished by their recorded source identities. Independent reconcile round 1 verified all targets; its P2 read-budget wording finding is corrected exactly by qualifying the supersession-only trigger and citing the existing formal-context clause. The whole reflection is rechecked in reconcile-check-02; this wording-only correction changes no implementation or contract meaning.
@@ -100,10 +102,19 @@ Independent integration reflection verification confirmed both additional target
 Viewer runtime and generated static bytes are unchanged from the accepted worker.
 
 
-## Delivered grammar adoption pending
+## Delivered grammar adoption
 
 Main advanced to the published design bundle/domain area grammar after the original Viewer worker completed.
 Task 5 and AC-08 consume that current core interface and directly address `FB-viewer-adopts-bundle-grammar`.
-Previous implementation evidence remains source-identified history; current grammar compatibility and this
-reconciliation remain pending until the continuation is verified. No core grammar or later template work is adopted
+Previous implementation evidence remains source-identified history. Task 5 current grammar implementation and checks are recorded in development-evidence.md; independent HIGH review remains pending. No core grammar or later template work is adopted
 by changing its owner here.
+
+
+Task 5 reflects the current area grouping, canonical bundle labels and source-bound Supporting files list in the
+viewer capability, formal use case, three existing UX screens, register, reference and READMEs. It extends the
+same source/ref scan with file inventory and excludes support before blob identity extraction. Core schema,
+namespace registration, architecture edges, public required callbacks and document role meanings are unchanged.
+DESIGN/DOMAIN/OPS canonical owner documents and migrations are read-only inputs: their statements, source
+entrypoints and action-owner routes do not change, so no role document regeneration or migration is needed.
+Host-owned documentation ownership and ADR Confirmation changes are preserved, without further authored edits.
+The later `PROP-formal-document-templates` remains independent and untouched.
