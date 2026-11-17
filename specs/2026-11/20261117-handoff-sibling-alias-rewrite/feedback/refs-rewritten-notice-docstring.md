@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/base/errors.py
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-17
 ---
 
@@ -27,6 +27,7 @@ Documentation drift in a code docstring.
 - **Workaround (or Interpretation Chosen)**: The message and §4.8 row are authoritative; the docstring was left.
 - **Suggestion**: Widen the docstring to "ID references now name the spec, the ADRs or the current ID of a stale
   reference" in the next change that touches `base/errors.py`.
+- **Disposition**: `SPEC-handoff-rewrite-overlap-scheduling` resolved it as a Host-authorized scope extension: the `ProposalReferencesRewrittenNotice` docstring now reads "ID references now name the spec, the ADRs or the current ID of a stale alias reference"; docstring only, no behavior or code-name change.
 
 ## Evidence
 

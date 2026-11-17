@@ -1,0 +1,30 @@
+kind: worker
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:38:28.944440Z'
+status: completed
+summary: 'Development to the final change report: skill scheduling bullet and CAP-HARN-agent-guidance exclude handoff-only observed overlap from current scheduling overlap; Host-authorized extension widened the ProposalReferencesRewrittenNotice docstring; both source feedback files resolved. Sync output: .devkit/installation.json.'
+findings: []
+assumptions:
+- 'No before/after outcome measurement: the change is scheduling wording with no runtime behavior; acceptance verified by review against AC-01..AC-04'
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main 1790 passed
+  lint: PASS just lint-check; devkit rules check --ci --base main; pyright base/errors.py 0 errors
+  generated: PASS devkit sync; devkit generated check stale=0
+diff_scope:
+  base: 80d1fe0ea37bbca3fb2fa12ea667771611b80d38
+  head: 3a0722453dd911e6c2ea895fa8d70db257f813d5
+scope_extensions:
+- path: packages/devkit-spec/src/devkit_spec/base/errors.py
+  task: 2
+  reason: Host-authorized, FB-refs-rewritten-notice-docstring docstring drift after SPEC-handoff-sibling-alias-rewrite
+  requirements:
+  - AC-04
+- path: specs/2026-11/20261117-handoff-sibling-alias-rewrite/feedback/refs-rewritten-notice-docstring.md
+  task: 2
+  reason: Host-authorized, resolves FB-refs-rewritten-notice-docstring
+  requirements:
+  - AC-04
+activity_effort: low

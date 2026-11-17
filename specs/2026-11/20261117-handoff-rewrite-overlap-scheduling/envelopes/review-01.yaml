@@ -1,0 +1,15 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:35:47.686480Z'
+status: completed
+summary: 'Self-review at low effort: the scheduling bullet excludes from current overlap only paths with observed-only evidence for both units that the handoff commit alone changed (AC-01); declared, candidate or later-commit evidence still serializes by the unchanged rule (AC-02); CAP-HARN-agent-guidance Host scope observation states the same rule and the generated projection is current (AC-03). No code, test or command change; no non-goal implemented.'
+findings: []
+checks:
+  tests: PASS just test-affected --base main (1790 passed)
+  lint: PASS just lint-check; devkit rules check --ci --base main
+  generated: PASS devkit generated check
+diff_scope:
+  base: 80d1fe0ea37bbca3fb2fa12ea667771611b80d38
+  head: 74be5a1a93b207bb5c0bb869b4e46f79680b568b
