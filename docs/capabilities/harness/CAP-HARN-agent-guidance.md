@@ -260,7 +260,9 @@ Task writing, reconciliation and worker acceptance carry no scope publication, r
 Creation retains best-effort automatic linked-worktree registration. Before scheduling or reconstructing parallel
 work, the Host uses `devkit spec scope collect`, which reads creation snapshots, `plan-*`/`dev-*` refs and accessible
 worktrees in one run. Fetch is explicit and separate from observation. The Host reads evidence by horizon: units whose `current`
-evidence overlaps run sequentially, while a pair with only `future` evidence (a Planning unit's declared or candidate
+evidence overlaps run sequentially, except on a path whose evidence is `observed` only for both units and that each
+unit's handoff commit changed but no later commit of that unit touched: such a path is integration-conflict evidence,
+resolved during integration in overlap order and named in no worker payload as a write target. A pair with only `future` evidence (a Planning unit's declared or candidate
 paths) does not serialize Planning runs. Before a handoff the Host treats a unit's `future` evidence as `current`,
 so units whose `future` evidence overlaps are handed off and integrated sequentially. Partial coverage and unknown
 attribution inform both choices, never prove independence, and grant or refuse no write. Other-PC dirty/unpushed work is invisible; PRs improve published-change

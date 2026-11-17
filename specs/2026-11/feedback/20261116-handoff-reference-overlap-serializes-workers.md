@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orc
 origin: agent
 severity: workaround
 recurring: false
-status: promoted
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -58,3 +58,4 @@ Viewer checkpoint: only spec.md, plan.md and tasks.md changed; worktree clean.
 ## Disposition
 
 - **Disposition**: `SPEC-handoff-rewrite-overlap-scheduling`: queued as a draft proposal that settles whether handoff-rewritten paths count as scheduling overlap.
+- **Resolution**: `SPEC-handoff-rewrite-overlap-scheduling` resolved it: the spec-orchestrate scheduling bullet and `CAP-HARN-agent-guidance` (Host scope observation) exclude from `current` overlap a path whose evidence is `observed` only for both units and that only each unit's handoff commit changed; such a path stays integration-conflict evidence. Declared, candidate or later-commit evidence still serializes.

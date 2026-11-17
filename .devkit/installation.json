@@ -1268,7 +1268,7 @@
     },
     ".agents/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "514be24391f53e6f53dc9b5280040964a56b853ad905e9651e00aac03e924078"
+      "sha256": "70f89eb18bbff1cb3260b86a791c275cc0d8fad7f7e47c4b7d900d546c5983eb"
     },
     ".agents/skills/spec-orchestrate/agents/openai.yaml": {
       "mode": 420,
@@ -1604,7 +1604,7 @@
     },
     ".claude/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "0a929a5799fee1f8c19f758e0c24a1821f7d9f4dd18706e3b720aa989abd063b"
+      "sha256": "6406996dd4660c49d531068ddfad3204afe205bff8cccffb149398ec751fb6cd"
     },
     ".claude/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
@@ -2444,7 +2444,7 @@
     },
     ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "514be24391f53e6f53dc9b5280040964a56b853ad905e9651e00aac03e924078"
+      "sha256": "70f89eb18bbff1cb3260b86a791c275cc0d8fad7f7e47c4b7d900d546c5983eb"
     },
     ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
