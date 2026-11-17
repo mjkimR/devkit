@@ -17,6 +17,10 @@ boundaries:
     - docs/designs/
     - docs/domain/
     - docs/operations/
+    - docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
+    - specs/2026-11/20261116-design-bundle-layout/feedback/viewer-adopts-bundle-grammar.md
+    - packages/devkit-viewer/frontend/src/features/knowledge/FormalReading.test.ts
+    - .devkit/installation.json
   excludes:
     - handbook/
     - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md
@@ -55,7 +59,7 @@ templates and writing instructions:
 In the documents, about 130–150 lines (13%) are padding beyond the Maintenance sections: generic authority
 boundaries, repeated "non-normative" and "example executes nothing" disclaimers, lead paragraphs ending in a "This
 entry …" restatement of the summary, prose duplicating a table in the same document, a capability table re-stated in
-`DESIGN-proposal-handoff`, about 20 private helper names that churn, and `DESIGN-distribution-transactions`, which is
+`DESIGN-proposal-handoff`, about 20 private helper names that churn, and DESIGN-distribution-transactions, which is
 almost entirely a wrapper around `DESIGN-distribution-file-directory-replacement`.
 
 Hypothesis: removing the elements that induce padding, then applying the same standard once to the existing
@@ -66,38 +70,125 @@ the domain relationship table, the reference template, ADR drivers and confirmat
 
 ## 2. Technical Spike Questions
 
+Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, Q2 and the shared-step part of Q4.
+
 - **Q1**: What does the narrowed section say? Rename `## Maintenance and next action` to `## Maintenance` (or
   `## Update triggers`) holding only the source change that makes the document stale, naming public entry points or
   codes; keep a "next read" only when frontmatter and the authority boundary lack it, or drop it?
+  - **Answer**: rename it `## Update triggers` in all three kinds and keep only the source changes that make the
+    document stale, named by public entry point, use case, field, code or capability section. Drop "next read":
+    frontmatter `related_*`, the routing or relationship table and the body links already carry it. The operations
+    fallback for evidence that matches no row moves under `## Routing`, below the table, because it is routing.
+    "Update triggers" names the one fact the section holds; "Maintenance" is broad enough to keep attracting body
+    content (the `OPS-distribution-sync` `RECOVERY_BLOCKED` rule, the DOMAIN owner-per-question lines).
 - **Q2**: What does `## Authority boundary` keep? Proposal: only what the evidence or document cannot conclude beyond
   its table (domain, operations) or what the design does not settle (design), with no stock disclaimer.
+  - **Answer**: as proposed. Design keeps the section (it has no owner table): the rules it explains and their owners
+    by full ID. Domain and operations keep owners the table does not name and what the document or evidence cannot
+    conclude; they omit the section when nothing remains. No document states that it transfers no normative
+    statement or owns no recovery: `CAP-DOCS-documentation-ownership` §3.1 and §3.3 already say so for every
+    document of the kind.
 - **Q3**: Merge the two `CAP-DOCS-documentation-ownership` routing tables into one fact-type table and keep the
   equality test on that single table; which rows move?
+  - **Answer**: one `Fact type | Owner` table of 15 rows under one rule, in both the capability and
+    `living-spec-writing`, whose prose copy (lines 25-27) goes. The nine fact-type rows stay, with the first row
+    widened to "Behavior, validity, safety, limit, output order or tie-break a consumer can observe" and the
+    internal-order row to "Local mechanism, internal processing order, algorithm, pseudocode or worked example". Six
+    responsibility rows move in: actor goal, scenario and success contract (use case); human interface element and
+    interaction (UX); system structure, interactions, deployment and architectural constraints (architecture);
+    symptom and evidence routed to an existing action owner and normal-state observation (operations); executable
+    recovery steps and permissions (the existing instruction, playbook, advisory or executable owner); contributor
+    development activity (development guide). The responsibility row "exact command/API/config syntax or error
+    mapping" is covered by the code and syntax rows. The test keeps the equality assertion and pins 15 rows and the
+    new first row.
 - **Q4**: How far do the per-kind writing instructions shrink: path line, lead focus, body sections, closing, and a
   pointer to `living-spec-writing` plus `devkit rules check` for the shared steps?
+  - **Answer**: to those five items. Each keeps one path line (the agent needs it before the first check), the
+    kind's lead focus, its body sections (design: topic headings and the datasheet condition with its field list;
+    domain: the relationship table and the example; operations: the routing table, the no-row fallback and the
+    normal-state observation), its closing per Q1/Q2, and the kind-specific support location. Steps that
+    `RULE-spec-format`, `RULE-id-convention` or `RULE-code-entrypoints` enforce go (frontmatter fields, H1 shape,
+    forbidden fields, entrypoint liveness, `area`). Steps shared by the three move once to
+    `living-spec-writing` "Responsibility and design navigation": settle one reader question, the lead with at most one
+    question sentence, related_* lists without reciprocity, rename/split/retire. The "delete template comments" step
+    moves to `document-writing`, since every template carries comments.
 - **Q5**: Domain worked example: optional or required? Pick one and align template and instruction.
-- **Q6**: Retire `DESIGN-distribution-transactions` by folding its two useful lines into
+  - **Answer**: required, in the overview or in its own section. All four domain documents carry one (three as a
+    section, `DOMAIN-bundle-selection-and-installation` inside the overview), and the example is what separates the
+    confused concepts the lead names. The template drops "Optional" and "Delete the section when unused" and says
+    the example may sit in the overview instead.
+- **Q6**: Retire DESIGN-distribution-transactions by folding its two useful lines into
   `DESIGN-distribution-file-directory-replacement`; which inbound references need repointing (`devkit docs refs`)?
+  - **Answer**: fold its problem sentence (rollback must tell prior file content from directories the change set
+    created) into the successor's lead and its `ARCH-05-4-distribution-components` §3 pointer into the successor's
+    authority boundary, then delete the bundle and declare the old ID in the successor's `aliases`, so historical
+    specs and materials still resolve. `devkit docs refs <old ID> --direction in -n 0` lists
+    11 referrers: the current ones to repoint are `CAP-DIST-sync-and-transactions` (one body line) and the successor
+    (one body line); `devkit rules fix` also rewrites
+    `specs/2026-11/20261116-design-bundle-layout/feedback/viewer-adopts-bundle-grammar.md`; completed specs,
+    reconcile records and materials stay as written. The viewer test
+    `FormalReading.test.ts` reads the real files and follows the capability → design → detail links, so it moves to
+    capability → detail with five chapters instead of six. `ARCH-06-runtime-view` §1 was a "not prerequisite" pointer
+    and is dropped.
 - **Q7**: Private helper names in design documents: keep public entry points, use cases and advisory codes, describe
   private steps in words. Is any private name load-bearing for a reader (e.g. a worked example)?
+  - **Answer**: none is load-bearing. The three designs name about 30 underscore-prefixed helpers (17 in
+    `DESIGN-proposal-handoff`, 7 in `DESIGN-distribution-file-directory-replacement`, 6 in
+    `DESIGN-workflow-stage-evaluation`); the worked examples rest on codes, sentinel lines, paths and commit IDs, and
+    the three private names they mention (`_result`, `_without_own_path`, `_waiting_for`) read as well in words.
+    Keep public functions and use cases that a reader searches for (`apply_changes`, `require_writable`,
+    `recover_locked`, `handoff_proposal`, `HandoffUseCase`, `evaluate_definition`), fields and codes; the viewer test
+    pins `apply_changes`. `## Update triggers` names the same public entry points.
 
 ## 3. Proposed Design & Impact
 
-- Docs bundle: templates (design, domain, operations, capability, usecase, ux) and instructions (design, domain,
-  operations, living-spec, document, capability, usecase, ux, milestone writing) lose the duplicated and inactive
-  elements above; the narrowed Maintenance and Authority boundary sections replace the current ones.
+- Docs bundle: templates (design, domain, operations, capability, usecase, ux, milestone) and instructions (design,
+  domain, operations, living-spec, document, capability, usecase, ux writing) lose the duplicated and inactive
+  elements above; `## Update triggers` and the narrowed `## Authority boundary` replace the current closings.
 - `CAP-DOCS-documentation-ownership`: one routing table, §4 reduced to "the docs bundle supplies templates and writing
   instructions", §3.2 closing prose cut to its rules, §3.3 updated to the new section contracts.
-- The 13 existing design, domain and operations documents follow the new standard; `DESIGN-distribution-transactions`
-  is retired with references repointed.
-- Tests pinning the changed phrases (`test_formal_doc_checkpoints_guidance.py`, template pins) are updated; bundle
-  sources change, so `devkit sync` and the generated check apply.
+- The 13 existing design, domain and operations documents follow the new standard; DESIGN-distribution-transactions
+  is folded into `DESIGN-distribution-file-directory-replacement` and the old ID kept as an alias there.
+- Tests pinning the changed phrases (`test_formal_doc_checkpoints_guidance.py`, the viewer's `FormalReading.test.ts`)
+  are updated; bundle sources change, so `devkit sync` rewrites `.devkit/installation.json`.
 - Out of scope: the ADR template and decision-writing (`PROP-adr-body-metadata-removal`), capability and use case
-  documents themselves, and any rule change.
+  documents themselves (one reference repair in `CAP-DIST-sync-and-transactions` aside), and any rule change.
 
 ## 4. Lifecycle & Retirement Criteria
 
 - Planning settles Q1–Q7 and the spec boundaries; acceptance hands off to Development and integrates locally under
   `dev-integration=auto`.
-- `PROP-adr-body-metadata-removal` touches the same docs bundle; the two units are integrated sequentially.
+- `PROP-adr-body-metadata-removal` touches the same docs bundle; the two units are integrated sequentially, this one
+  first. Their write scopes are disjoint: that unit owns `templates/decision.md`, `decision-writing.md` and the
+  devkit-spec proposals feature.
 - Retire when the guidance and the document cleanup land.
+
+## 5. Planning decisions
+
+- **Bundle edits** (B = `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`):
+  - `templates/{design,domain,operations}.md`: per-kind lead comment without the question rule; `## Update
+    triggers` and the narrowed `## Authority boundary` per Q1/Q2; domain example per Q5; the design datasheet
+    comment points to `design-writing` instead of repeating the field list.
+  - `templates/capability.md`: drop the unused §4 scaffold lines (0 of 59 capabilities use them; keep the heading),
+    the Summary comment that repeats frontmatter `summary` (keep the heading), the file-path comment and the
+    "selected development approach" clause. `templates/usecase.md` and `templates/ux.md`: drop the file-path
+    comment and the `---` separators; keep every string the UX and use case tests pin. `templates/milestone.md`:
+    drop the two "selected development approach defines" sentences.
+  - `instructions/{usecase,ux}-writing.md` and `living-spec-writing.md` line 13: drop the "selected development
+    approach defines" sentences that give no action. Keep `decision-writing.md` line 19 (sibling scope) and
+    `living-spec-writing.md` line 14. The docs bundle's own constitution already states the neutrality, and the
+    distribution test bans only SDD markers.
+  - `instructions/document-writing.md`: drop the `YAML_BINDING_UNAVAILABLE` install bullet; the advisory's `fix`
+    carries it (`devkit_core.base.errors.YamlBindingUnavailableError`). Add the template-comment step.
+- **CAP-DOCS-documentation-ownership**: §3.1 rules 5 and 7 become one rule with the Q3 table; §3.2 keeps rules 1-2
+  and drops the closing paragraph that `architecture-writing` "Responsibility boundary" states; §3.3 rule 2 states
+  the new closing; §3.3's closing "This migration transfers..." sentence goes; §4 keeps the index and Review
+  sentences and drops the template layout.
+- **Existing documents**: apply the audit's per-document list in `materials/` (`document-audit.md`), including moving
+  `OPS-distribution-sync` lines 45-48 into `## Routing` and the DOMAIN owner-per-question lines into the authority
+  boundary. Write the old ID DESIGN-distribution-transactions as plain text in the spec's mapping, so
+  `devkit rules fix` keeps the record.
+- **Effort**: `dev_effort` stays `medium`: the change is text across one bundle, one capability, 13 documents and two
+  tests, with no code path.
+- **Formal documents**: the change edits the design, domain and operations documents themselves; no new formal
+  document is created. DESIGN-distribution-transactions is the only identity removed.
