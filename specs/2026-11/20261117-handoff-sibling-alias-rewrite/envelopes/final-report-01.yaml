@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:27:35.419284Z'
+status: completed
+summary: Handoff rewrites stale alias references (handed-off sibling PROP- IDs and other documents' aliases) in carried spec bundle files and promoted ADRs before the commit; CAP-DLV-proposal-lifecycle and DESIGN-proposal-handoff updated; source feedback resolved
+findings: []
+checks:
+  tests: PASS just test-affected --base main 1790 passed (partial selection); proposals suite 369 passed
+  build: PASS just check spec pyright 0 errors
+  lint: PASS just lint-check exit 0; devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: 53ecdcfbb1ffdee3012eb7bc9406afbf32647596
+  head: 8a8cf709fff1555c7c8e4e8acf633b73fe66c693
