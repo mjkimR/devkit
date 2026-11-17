@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T15:09:01.364714Z'
+status: completed
+review: review-01.yaml
+summary: 'Both P3 findings fixed in 148d44d02: docstring now names the merged, picked or reverted commit (matches guide.md); new staged test concludes a conflicted cherry-pick and shows CHERRY_PICK_HEAD exempts the record and its absence requires coverage. Minor text and test fixes, self-verified: reconcile_contract tests 33 passed.'
+findings:
+- issue: The module docstring says concluding a merge never requires coverage of a record the base branch resolved, while the implementation exempts any record an in-progress MERGE_HEAD/CHERRY_PICK_HEAD/REVERT_HEAD commit resolved (the guide says the other branch).
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/usecases/reconcile_contract.py:26
+  failure_condition: A reader concludes merging a task branch into main still requires coverage of a record the task branch resolved; it does not.
+  suggested_action: Reword to the merged, picked or reverted commit, matching guide.md.
+  resolution: resolved
+  severity: P3
+- issue: AC-04 names CHERRY_PICK_HEAD and REVERT_HEAD as staged-run parents but the rule tests cover only MERGE_HEAD, and no test shows operation heads are ignored in a ci run.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/reconcile_contract/tests/test_rule.py:297
+  failure_condition: A regression dropping CHERRY_PICK_HEAD or REVERT_HEAD from OPERATION_HEADS would pass the suite.
+  suggested_action: Add a staged conflicted cherry-pick test modeled on the merge-head test.
+  resolution: resolved
+  severity: P3
+checks: {}
