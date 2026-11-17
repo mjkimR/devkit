@@ -442,7 +442,9 @@ file selection.
 ## Document asset distribution
 
 The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eleven writing instructions,
-ten document rule assets, eight formal templates and the docs-pointer. Only docs declares the `docs/steering`
+ten document rule assets, eight formal templates, the reference page template and the docs-pointer. The reference
+page template has no frontmatter or ID and gives code tables the columns `Code | Level | Condition | Fix`; it applies
+to new reference pages and new code tables, and existing pages are not migrated. Only docs declares the `docs/steering`
 context directory and registers the `devkit.context_documents` provider that adds a registered namespace's steering
 directory for the working directory. `devkit get-context docs` lists steering summaries and document instructions.
 `docs:docs-skeleton` seeds absent files only when selected; seeded files remain project-owned.

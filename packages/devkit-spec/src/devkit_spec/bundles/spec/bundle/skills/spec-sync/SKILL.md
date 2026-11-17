@@ -18,6 +18,9 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
    - Assess design, domain and operations against the implemented diff: affected IDs/statements, source identity,
      owner, action and evidence, or a bounded unaffected reason. Use the core per-kind instruction and template.
      Do not require unaffected layers or whole-layer traversal.
+   - Index that assessment in the `reconcile.md` frontmatter (step 2): list the affected IDs per role in
+     `related_designs`, `related_domains` or `related_operations`, or give `formal_docs.<role>: "none: <reason>"`
+     with the bounded reason; never both for one role. The body keeps the detailed assessment.
    - Screens: if `spec.md` has a `Screens` section, write its drafts and register rows by
      [screens](references/screens.md).
    - Copy no user stories into `docs/` (they state the request, not the contract); fold the delivered behavior into
@@ -32,8 +35,14 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
    targets:
      - file: docs/capabilities/<area>/CAP-<AREA>-<slug>.md
        resolution: modified   # modified | waived (with a substantive rationale)
+   related_designs: [DESIGN-<slug>]   # affected IDs created, changed or retired by the change
+   formal_docs:
+     domain: "none: <bounded source-based reason>"
+     operations: "none: <bounded source-based reason>"
    ---
    ```
+
+   `RULE-reconcile-contract` refuses the commit that resolves the record while a role has neither IDs nor a reason.
 
    Include every modified or deleted formal document and support file as a `modified` target. Compare removed
    paths and their replacements explicitly in the body; required mismatches cannot be waived. Ordinary support

@@ -20,6 +20,8 @@ with frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`.
 3. **Design**: every user story and `[AC-NN]` scenario gets a handling component; no non-goal is planned. Name the
    components touched, their contracts (types, signatures, schemas; for a CLI or API its flags, codes and payloads),
    failure modes and any migration.
+   Name the persisted formats, identity derivations, orderings and codes the change introduces, each with its owner
+   by the fact-type table in `living-spec-writing`.
    Assess design, domain and operations against the actual change. For each responsibility record affected IDs
    or a prospective canonical destination, changed statements, source identity, one statement owner, maintenance
    action and verification; give a bounded source-based reason when unaffected. Select only useful owner/detail

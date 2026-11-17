@@ -369,10 +369,12 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 
 ### 4.6 Templates
 
-`.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md` and
+`.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone,design,domain,operations}.md` and
 `.devkit/managed/spec/templates/proposal.md`: frontmatter with a required English
 `summary`, the H1 `# [<ID>] <Title>` convention and the section skeleton of each document kind (`devkit spec proposal
 new` and `padr` write the proposal and PADR shapes themselves; `CAP-DLV-proposal-planning`).
+`.devkit/managed/docs/templates/reference.md` shapes a reference page without frontmatter or ID
+(`CAP-DOCS-document-model`).
 
 ### 4.7 Docs Skeleton
 

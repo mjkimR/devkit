@@ -30,6 +30,11 @@ Verify the implementer's Living Spec reflection for a spec unit's Development: e
 
 1. Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/`.
 2. Compare `git diff <base> <head>` for `diff_scope` with the docs changes and `reconcile.md`. Findings: a missing target, a reflected change that contradicts the implementation or the contract, a waiver of a required contract mismatch, a stated no-impact the diff contradicts.
+   - Check reimplementability for what `diff_scope` adds or changes, never for gaps older than it:
+     - P1: a role's recorded coverage in `reconcile.md` (`related_designs`, `related_domains`, `related_operations` IDs or a `formal_docs` reason) that the diff contradicts.
+     - P2: a new persisted format, identity derivation or ordering with no statement in its owner (the fact-type table in `living-spec-writing`).
+     - P2: a new code with no documented trigger condition.
+     - P3: new capability text that restates mechanism instead of an observable contract.
 3. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 
 ## Return

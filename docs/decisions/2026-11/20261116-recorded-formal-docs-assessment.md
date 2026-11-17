@@ -52,16 +52,16 @@ commit newly resolves the record.
 
 - Each of the design, domain and operations roles of a `reconcile.md` is covered by a nonempty `related_designs`,
   `related_domains` or `related_operations` list, or by `formal_docs.<role>: "none: <reason>"` with at least 20
-  non-whitespace characters, never both. → RULE-reconcile-contract guide §2 (planned update)
+  non-whitespace characters, never both. → `CAP-GOV-spec-rules` §3.10 (MUST)
 - A snapshot run reports an uncovered role on a `resolved` record that the diff changes and that no parent of the
   commit has `resolved` (the base, and in a staged run any `MERGE_HEAD`, `CHERRY_PICK_HEAD` or `REVERT_HEAD`); other
-  runs check a present `formal_docs` for form only. → `CAP-GOV-spec-rules` (planned update)
+  runs check a present `formal_docs` for form only. → `CAP-GOV-spec-rules` §3.10 (MUST)
 - `reconcile-reviewer` reports, for what `diff_scope` adds or changes: recorded coverage the diff contradicts (P1);
   a new persisted format, identity derivation or ordering without a statement in its owner (P2); a new code without
   a documented trigger condition (P2); new capability text that restates mechanism (P3).
-  → `CAP-DLV-delivery-workflows` rule 15 (planned update)
+  → `CAP-DLV-delivery-workflows` rule 15 (MUST)
 - The detailed assessment stays in the reconcile body; the frontmatter indexes it. → `CAP-DLV-delivery-workflows`
-  rule 9 (planned update)
+  rule 9 (MUST)
 
 This is compatible with `ADR-formal-document-delivery-integration`: the coverage lives in the existing record and
 existing relation fields, adds no registry, and leaves semantic agreement with the author and the reviewer.

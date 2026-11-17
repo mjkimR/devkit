@@ -18,12 +18,12 @@ plan: PLAN-formal-doc-authoring-checkpoints
   - _Requirements: AC-03, AC-04, AC-05, AC-06_
   - **Verification**: `uv run pytest packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/reconcile_contract/tests` and `uv run devkit rules check specs/` compared with the base
 
-- [ ] **Task 1.3**: Spec bundle sync, reviewer, plan and review wording
+- [x] **Task 1.3**: Spec bundle sync, reviewer, plan and review wording
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-sync/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/reconcile-reviewer.md, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-plan/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review/, packages/devkit-spec/tests/integration/bundles/spec/, .devkit/installation.json (sync output)
   - _Requirements: AC-07_
   - **Verification**: `uv run pytest packages/devkit-spec/tests/integration/bundles/spec` and `uv run devkit rules check --phase hygiene packages/devkit-spec/src/devkit_spec/bundles/spec/bundle`
 
-- [ ] **Task 1.4**: Living Spec capabilities and deferred-work feedback
-  - **_Boundary**: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md, docs/capabilities/documents/CAP-DOCS-document-model.md, docs/capabilities/governance/CAP-GOV-spec-rules.md, docs/capabilities/delivery/CAP-DLV-delivery-workflows.md, specs/2026-11/20261116-formal-doc-authoring-checkpoints/
+- [x] **Task 1.4**: Living Spec capabilities and deferred-work feedback
+  - **_Boundary**: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md, docs/capabilities/documents/CAP-DOCS-document-model.md, docs/capabilities/governance/CAP-GOV-spec-rules.md, docs/capabilities/delivery/CAP-DLV-delivery-workflows.md, specs/2026-11/20261116-formal-doc-authoring-checkpoints/, docs/decisions/2026-11/20261116-recorded-formal-docs-assessment.md (scope extension: replace the ADR's planned-update traces with the CAP-GOV-spec-rules and CAP-DLV-delivery-workflows rules that now restate ADR-recorded-formal-docs-assessment), docs/capabilities/harness/CAP-HARN-agent-guidance.md (scope extension: its template list restates the CAP-DOCS-document-model template inventory that the reference template changes)
   - _Requirements: AC-06, AC-08_
   - **Verification**: `uv run devkit rules check --ci --base a7d96154e`

@@ -43,6 +43,8 @@ named frontend checks), the linters, and `devkit rules check --staged` (staged) 
 Compare the design/domain/operations impact assessment with the actual diff and source identity. Check affected
 statements, sole ownership, detail/artifact destinations and regeneration against their actual source. Require a
 bounded reason for each unaffected responsibility; invalidate affected evidence when its source changes.
+Each persisted format, identity derivation, ordering and code the diff introduces needs a statement in its owner by
+the fact-type table in `living-spec-writing`; a missing one is a finding.
 
 Each requirement, API change or constraint the implementation revealed is a finding; one that changes the agreed
 contract is a problem for the Host.
