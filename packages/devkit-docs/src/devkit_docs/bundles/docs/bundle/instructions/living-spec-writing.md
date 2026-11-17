@@ -58,8 +58,8 @@ For a design, domain or operations document, read `design-writing.md`, `domain-w
    reciprocal links, whole-layer reading or reading order. Keep `aliases` for same-prefix identity, never relations.
 4. Give independently maintained Markdown detail its own formal peer ID; give parent-owned support no ID, link it
    from the parent and name the parent in it.
-5. On a rename or root move, move the document with its support, keep the old ID in `aliases` and repair ordinary
-   links. On an area move, keep the ID and update `area`. On a split or reclassification, give each artifact one
+5. On a rename or root move, move the document with its support and repair ordinary links; on a rename, also keep
+   the old ID in `aliases`. On an area move, keep the ID and update `area`. On a split or reclassification, give each artifact one
    canonical parent and keep a cross-kind predecessor retired with its successor named.
 6. To fold a document into another of the same kind, move the sentences only it holds into the receiving document,
    delete the folded document and add its ID to the receiving document's `aliases`.
