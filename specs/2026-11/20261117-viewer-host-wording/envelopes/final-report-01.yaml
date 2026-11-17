@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:24:06.687437Z'
+status: completed
+summary: 'Docs-only wording pass: UX-view-decision names the page''s own navigation; library-host statements in ADR-viewer-namespace-roadmap-discovery and ADR-viewer-indexed-decision-supersession marked as history citing ADR-internal-repository-viewer, no decision changed; FB-viewer-host-wording-outside-unit resolved. Remaining: ADR summary wording recorded as FB-viewer-adr-summaries-name-library-hosts.'
+findings: []
+checks:
+  tests: PASS just test-affected base=main partial 18 passed
+  build: PASS no build input changed; docs-only diff
+  lint: PASS devkit rules check --ci --base main; git diff --check
+diff_scope:
+  base: 2d247d8242b46455efad71bc7947b3584096ca80
+  head: 4dbe794bd1d6c3c12672838072a7a3a2a7fd7a30

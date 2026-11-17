@@ -20,11 +20,15 @@ roadmap roots, so the viewer omits those milestones and cannot resolve their gra
 saved working-tree files, while library hosts supply ordinary tree/blob methods. The viewer does not run each
 repository's devkit and remains independent of its pinned document-system version (`ADR-repository-viewer`).
 
+History: the library hosts and library readers named in this decision existed when it was made;
+`ADR-internal-repository-viewer` later left the viewer one host, `devkit viewer serve`, with no library host.
+
 ## 2. Decision Drivers
 
 - Cover package milestones, archived prerequisites and direct proposal membership on every viewer reading route.
 - Keep ordinary reads local, read-only and independent of the repository's installed environment.
-- Preserve the existing generic data-source interface and bounded selective document reads.
+- Preserve the existing generic data-source interface and bounded selective document reads. (History: the generic
+  interface served library hosts, which `ADR-internal-repository-viewer` removed.)
 - State the difference between visible files and governance-valid registered namespace documents.
 
 ## 3. Considered Options
@@ -41,6 +45,9 @@ Structural roadmap discovery is selected to keep local and library readers indep
 
 - Both dashboard routes and the roadmap loader discover global roadmap roots and the same roots directly under
   `docs/packages/<name>/`, including only the reserved flat `_archive/`. → `CAP-VIEW-repository-viewer` 4.1 and 5 (MUST).
+  (History: the two dashboard routes were the local server's header listing and the generic tree/blob scan for
+  library hosts; since `ADR-internal-repository-viewer` only the header listing remains, and the same roots apply
+  to it and the roadmap loader.)
 - Discovery does not read namespace registration, and matching unregistered paths are visible without a validity
   claim. Absent or malformed namespace configuration does not affect the candidate set.
   → `CAP-VIEW-repository-viewer` 4.1 and 5 (MUST).

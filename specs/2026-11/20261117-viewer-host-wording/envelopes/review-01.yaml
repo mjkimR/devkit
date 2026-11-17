@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:22:39.279230Z'
+status: completed
+summary: 'Self-review at low effort: AC-01 rg finds no host wording in UX-view-decision; AC-02 history notes added, outcome clause set unchanged; AC-03 Decision Outcome section byte-identical to main; AC-04 rules check clean. No findings.'
+findings: []
+checks:
+  tests: PASS docs-only; no code changed
+  lint: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 2d247d8242b46455efad71bc7947b3584096ca80
+  head: ee67a22a5edb8cdae171ce4e400e1066f1965a5b

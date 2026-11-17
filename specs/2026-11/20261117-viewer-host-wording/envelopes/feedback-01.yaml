@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:23:47.296683Z'
+status: completed
+summary: 'Swept this run: recorded FB-viewer-adr-summaries-name-library-hosts; no duplicates.'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

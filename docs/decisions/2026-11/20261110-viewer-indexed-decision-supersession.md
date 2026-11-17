@@ -17,7 +17,8 @@ blob. `SPEC-partial-adr-supersession-statements` defines the later ADR's stateme
 
 ## 2. Decision Drivers
 
-- Keep local and library hosts on the same repository-source interface.
+- Keep local and library hosts on the same repository-source interface. (History: `ADR-internal-repository-viewer`
+  later removed the library host; the local server is the only host.)
 - Keep a selected decision readable while relation data loads or fails.
 - Show applied ADR relations separately from proposed PADR changes.
 - Preserve statement semantics without running each repository's Python environment.
@@ -27,7 +28,8 @@ blob. `SPEC-partial-adr-supersession-statements` defines the later ADR's stateme
 - Browser derivation from the existing document index: one host-neutral read path; a TypeScript implementation of
   statement and identity semantics needs parity fixtures.
 - A server endpoint reusing devkit-docs: one Python parser, but runtime coupling and an additional source interface
-  for library hosts; rejected for this change.
+  for library hosts; rejected for this change. (History: the library-host cost no longer applies since
+  `ADR-internal-repository-viewer`; the runtime coupling remains.)
 - Inline summary below the decision header: both directions are visible with the body; long lists add vertical
   space. Recommended over a dedicated relations sidebar, which competes with navigation and hides text behind
   selection.
@@ -48,7 +50,8 @@ This adds viewer behavior without replacing an existing ADR decision.
 
 ## 5. Consequences
 
-- Both hosts can read replacement state through existing tree/blob sources.
+- Both hosts can read replacement state through existing tree/blob sources. (History: since
+  `ADR-internal-repository-viewer` the local server is the only host.)
 - Source-aware parsing is implemented in two languages; fixtures against the delivered document query semantics
   carry the maintenance cost.
 - A cold Files decision read can index docs/specs; ordinary files and handbook navigation keep their read budget.
