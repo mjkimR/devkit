@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:50:17.799591Z'
+status: completed
+summary: Docs bundle closings narrowed to Update triggers and a limited Authority boundary, shared formal steps moved to living-spec-writing, one 15-row fact-type table, 12 formal documents trimmed, DESIGN-distribution-transactions folded into its detail by alias, handoff mechanism moved from CAP-DLV-proposal-lifecycle to DESIGN-proposal-handoff; FB-proposal-lifecycle-capability-holds-mechanism-detail resolved
+findings: []
+checks:
+  tests: PASS just test-affected --base main 2691 passed at 6f3e09c165e21b423b3a6c2c705ae6f80431b009; viewer test 244 passed at ae6969258, inputs unchanged since
+  build: PASS just viewer build at ae6969258; devkit generated check and devkit sync --check exit 0 at 6f3e09c165e21b423b3a6c2c705ae6f80431b009
+  lint: PASS just lint-check and devkit rules check --ci --base main at 6f3e09c165e21b423b3a6c2c705ae6f80431b009
+diff_scope:
+  base: 4a8ccebbdc0e6ca3f3804ad98c706fa5af2483c9
+  head: 6f3e09c165e21b423b3a6c2c705ae6f80431b009
