@@ -226,9 +226,7 @@ def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None
     orchestration = (SKILL / "references/orchestration.md").read_text()
     # Selection and availability (AC-04).
     assert_rule(orchestration, "not selected impeccable", "neither start a session nor load or invoke", "work inline")
-    assert_rule(
-        orchestration, "first question round", "appears installed", "asking selects nothing", "already decides"
-    )
+    assert_rule(orchestration, "first question round", "appears installed", "asking selects nothing", "already decides")
     assert_rule(orchestration, "hook", "consumer check evidence")
     assert_rule(
         orchestration,
