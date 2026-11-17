@@ -15,6 +15,11 @@ boundaries:
     - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md
     - packages/devkit-spec/src/devkit_spec/features/proposals/
     - packages/devkit-spec/tests/integration/features/proposals/
+    - packages/devkit-docs/tests/integration/bundles/docs/
+    - docs/decisions/
+    - docs/capabilities/delivery/CAP-DLV-proposal-planning.md
+    - docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
+    - docs/designs/delivery/DESIGN-proposal-handoff/design.md
   excludes:
     - handbook/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -29,8 +34,8 @@ The ADR template (`templates/decision.md`) puts a metadata list under the H1: `-
 `- **Deciders**` and `- **Involved Components/Capabilities**`.
 
 - Status and Date repeat the frontmatter `status` and `created_at`; the superseded form ("Superseded by" plus an ADR ID)
-  repeats `superseded_by`. In the 71 ADRs that carry the block, both values agree with the frontmatter.
-- Deciders appears in 27 of 95 ADRs and Involved Components in 45; nothing reads either.
+  repeats `superseded_by`. In the 71 of 94 ADRs that carry the block, both values agree with the frontmatter.
+- Deciders appears in 27 of 94 ADRs and Involved Components in 45; nothing reads either.
 - No rule enforces the block, but code keeps the copy alive: the proposal scaffold (`scaffold.py`) writes it for PADRs,
   and handoff acceptance (`_accept_status` in `handoff.py`) rewrites the body Status line in step with the frontmatter.
   Tests pin both (`test_proposal_handoff.py`, `test_proposal_scaffold.py`).
@@ -48,22 +53,72 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
 
 - **Q1**: Existing ADRs: remove the block from all 71 in one mechanical pass, or leave them and only stop writing it?
   Leaving them means no code keeps them in step after `_accept_status` loses its body pass.
+  - **Answer**: remove it, in one mechanical pass that Development runs at its own HEAD (after
+    `PROP-formal-doc-padding-trim` integrates, so any ADR promoted in between is covered). Cost: about 230 deleted
+    lines across 71 files in one commit, no decision changed, no rule or reader affected; a wording and metadata repair
+    the `docs/decisions/` ledger allows without a superseding ADR. Leaving them keeps 71 copies nothing updates (a later
+    whole supersession leaves a stale `Accepted`) and two ADR layouts. `PADR-frontmatter-only-decision-status`.
 - **Q2**: Does any reader (viewer, `devkit docs` index, search snippet, handbook generation, supersession tooling) parse
   the body Status line? Confirm nothing does before removing the rewrite.
+  - **Answer**: no. Every reader takes status from the frontmatter and supersession from `supersedes`,
+    `superseded_by` and the partial pointer lines; the only code touching the block is the scaffold and the handoff
+    body pass (`materials/body-status-readers.md`).
 - **Q3**: Where do "Superseded in part by" lines sit once the block is gone (directly under the H1)?
+  - **Answer**: directly under the H1, each a paragraph of its own, as the handoff already writes them
+    (`CAP-DLV-proposal-lifecycle` handoff step 4) and as existing ADRs already place them above the block. The
+    template comment under the H1 stays as the authoring cue.
 - **Q4**: Option scaffolding: `- **<Option>**: <trade-off against drivers>` lines, with the selected option marked;
   drop the `---` separators.
+  - **Answer**: yes. The template's Considered Options becomes one list item per option,
+    `- **<Option>** (selected): <main trade-off against the drivers>.` for the chosen one and
+    `- **<Option>**: <main trade-off against the drivers>.` for the others, under a comment pointing to
+    `decision-writing`; every `---` separator in the body goes. Existing ADRs keep their option layout and separators
+    (out of scope: a per-ADR rewrite, not a mechanical one).
 
 ## 3. Proposed Design & Impact
 
-- Docs bundle: the decision template loses the block, the per-option sub-bullets and the separators;
-  `decision-writing.md` is aligned.
-- Spec package: the PADR scaffold stops writing the block; handoff acceptance updates only the frontmatter status;
-  their tests change accordingly.
-- Depending on Q1, a mechanical edit of existing ADR bodies (wording repair, no decision change, allowed without a
-  superseding ADR).
-- Living Spec: the capability that describes PADR scaffolding and acceptance (`CAP-DLV-proposal-lifecycle` or its
-  owner) if it mentions the body status.
+- Docs bundle: the decision template loses the block, the per-option Overview/Pros/Cons sub-bullets and the `---`
+  separators; Considered Options takes the Q4 lines. `decision-writing.md` gains one statement that status, date and
+  whole supersession live only in the frontmatter, and asks to mark the selected option; its "one or two lines per
+  option" rule stays. The H1 comment about "Superseded in part by" lines stays, as do Decision Drivers, Confirmation
+  and the outcome-trace comments.
+- Spec package: `_padr` in `scaffold.py` stops writing `- **Status**`, `- **Date**` and the `---` after them; the
+  handoff drops `_DRAFT_BODY_STATUS` and the body pass of `_accept_status`, which keeps only the frontmatter rewrite.
+  Tests: `test_proposal_scaffold.py:222` asserts the lines are absent; `test_proposal_handoff.py:115-117` drops the
+  body assertion; the three edge-case tests (fenced example, HTML comment, trailing comment) collapse into one test
+  that a body `- **Status**: Draft` line, wherever it is, is left byte-identical while the frontmatter is accepted.
+- Docs bundle test: a test under `packages/devkit-docs/tests/integration/bundles/docs/` asserts the template has no
+  metadata block, no `---` body separator and no Overview/Pros/Cons scaffolding.
+- Existing ADRs (Q1): one mechanical commit removes, from each ADR under `docs/decisions/`, the contiguous metadata
+  list that follows the H1 and any "Superseded in part by" paragraphs, the `---` separator directly after that list
+  when there is one, and the blank lines they leave; nothing else changes. A `- **Status**:` item elsewhere in a body (the milestone lifecycle item of
+  `ADR-roadmap-and-milestones-ledger`) is not the block and stays.
+- Living Spec: `CAP-DLV-proposal-planning` §4.4 drops "`- **Status**: Draft`, `- **Date**`" from the PADR body
+  description; `CAP-DLV-proposal-lifecycle` handoff step 4 drops the body-line rewrite sentence and states that the
+  body is kept as written; `DESIGN-proposal-handoff` line 156 (observed run) stops citing the body status.
+
+### Design, domain and operations assessment
+
+- Design: `DESIGN-proposal-handoff` is affected. Changed statement: its observed ADR-promotion row claims the promoted
+  ADR has `- **Status**: Accepted`. Source identity: `handoff.py` `_accept_status`. Statement owner:
+  `CAP-DLV-proposal-lifecycle` handoff step 4; the design only illustrates it. Maintenance action: edit that row at
+  Development HEAD, after `PROP-formal-doc-padding-trim` (which owns `docs/designs/` and trims the same document)
+  integrates. Verification: `devkit rules check` on the document and a review that the row matches the new handoff.
+  No other design document cites the block (`rg` in `docs/designs/`).
+- Domain: unaffected. No document under `docs/domain/` names the body block or the ADR status copy (`rg` over
+  `docs/domain/`); ADR status as a domain concept stays in the frontmatter model.
+- Operations: unaffected. No document under `docs/operations/` reads or repairs the block; the handoff recovery
+  routes do not depend on the body status.
+
+### Planning decisions
+
+- Q1-Q4 as answered in §2; the lasting choice is `PADR-frontmatter-only-decision-status`.
+- Promotion keeps no compatibility pass for a PADR that still carries the block: none exists at this HEAD, and one
+  scaffolded before the change and handed off after is repaired like the Q1 pass (PADR Consequences).
+- Q4 is a template and guidance edit inside the existing `decision-writing` rule, not a new decision; it gets no PADR.
+- `docs/designs/delivery/DESIGN-proposal-handoff/design.md` is in both this proposal's and
+  `PROP-formal-doc-padding-trim`'s boundaries; the overlap is sequenced (this unit integrates after it), and this unit
+  edits only the one observed-run row.
 
 ## 4. Lifecycle & Retirement Criteria
 
