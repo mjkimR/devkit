@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:38:18.182834Z'
+status: completed
+summary: spec-orchestrate scheduling bullet and CAP-HARN-agent-guidance Host scope observation exclude from current overlap paths with observed-only evidence that only each unit's handoff commit changed (integration-conflict evidence); ProposalReferencesRewrittenNotice docstring widened to alias rewrites (Host-authorized extension); FB-handoff-reference-overlap-serializes-workers and FB-refs-rewritten-notice-docstring resolved
+findings: []
+checks:
+  tests: PASS just test-affected --base main 1790 passed
+  build: PASS devkit sync and devkit generated check stale=0; pyright base/errors.py 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main
+diff_scope:
+  base: 80d1fe0ea37bbca3fb2fa12ea667771611b80d38
+  head: 275e6330df8116d5cca5831e0bcd42a867465d74
