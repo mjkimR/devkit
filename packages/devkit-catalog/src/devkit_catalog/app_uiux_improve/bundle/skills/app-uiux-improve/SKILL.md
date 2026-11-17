@@ -52,7 +52,8 @@ request. A review-only request ends with findings and no product edits.
    - If the request is review-only, use the framing as a lens and return findings with no product edits.
    - Frame the objects the request touches, not the whole product.
 4. Choose the track from the step 1 answer. Inline is the default: you implement, optionally with local roles; the
-   Impeccable track runs after the user selects it. Read `references/orchestration.md` before delegating to a local role or to Impeccable.
+   Impeccable track runs after the user selects it. Read `references/orchestration.md` before delegating to a local
+   role or to Impeccable.
    Assign designer, unconventional-designer, reference-researcher or critic work on either track where useful, and
    preserve independent first passes until their returns arrive.
    Read `references/impeccable-limits.md` when preparing an Impeccable brief or handling detector, autonomy-probe
