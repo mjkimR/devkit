@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-formal-doc-authoring-checkpoints
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     resolution: modified
@@ -13,6 +13,8 @@ targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
   - file: docs/decisions/2026-11/20261116-recorded-formal-docs-assessment.md
+    resolution: modified
+  - file: docs/usecases/governance/UC-keep-the-living-spec-consistent.md
     resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-delivery-roles.md
     resolution: waived
@@ -52,6 +54,9 @@ compared with `packages/devkit-spec/src/devkit_spec/features/governance/usecases
 (`_formal_docs_problems`, `_coverage`, `_operation_heads`) and the rule guide §1 and §2 at the reviewed head.
 `CAP-DLV-delivery-workflows` rule 9 states the frontmatter index of the body assessment, and rule 15 the reviewer's
 four classes scoped to `diff_scope`, matching `spec-sync` steps 1 and 2 and `reconcile-reviewer` step 2.
+
+`UC-keep-the-living-spec-consistent` gains extension 5d and Scenario 11 for the new commit-gate refusal of a newly
+resolved record with an uncovered role, beside the existing 5b modified-target refusal.
 
 `ADR-recorded-formal-docs-assessment` §4 traces replace "(planned update)" with the restating rules
 (`CAP-GOV-spec-rules` §3.10, `CAP-DLV-delivery-workflows` rules 9 and 15); its decision is unchanged.

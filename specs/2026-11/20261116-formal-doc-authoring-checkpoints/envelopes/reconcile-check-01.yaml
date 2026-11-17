@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T15:12:56.592778Z'
+status: completed
+summary: 'reconcile-reviewer initial check (medium): targets CAP-DOCS-documentation-ownership, CAP-DOCS-document-model, CAP-GOV-spec-rules, CAP-DLV-delivery-workflows, CAP-HARN-agent-guidance and the ADR traces agree with reconcile_contract.py, the rule guide, bundle sources and ADR-recorded-formal-docs-assessment; CAP-DLV-delivery-roles waiver valid; formal_docs none reasons true; FB-code-condition-rule-deferred cited. One P2: UC-keep-the-living-spec-consistent lacks the new commit-gate refusal.'
+findings:
+- issue: 'Missing use-case reflection: the new commit-gate refusal (a newly resolved reconcile.md with a role covered by neither related_* IDs nor a formal_docs reason) has no extension or scenario in UC-keep-the-living-spec-consistent, which models RULE-reconcile-contract refusals as 5b and Scenario 5, and the use case is not a reconcile target.'
+  evidence: docs/usecases/governance/UC-keep-the-living-spec-consistent.md:66
+  failure_condition: A commit stages a newly resolved reconcile.md with an uncovered role; the gate refuses it, but the use case documents only the modified-target refusal.
+  suggested_action: Add an extension and Given/When/Then scenario for the uncovered role, and list the use case as a modified reconcile target and in spec related_usecases.
+  resolution: open
+  severity: P2
+assumptions:
+- 'Route: native isolated reconcile-reviewer subagent.'
+unverified_areas:
+- AC-06 own-record coverage checked statically while reconcile.md is pending; rerun --ci after resolution.
+checks:
+  rules_ci: PASS devkit rules check --ci --base a7d96154e errors=0
+  rules_specs: PASS devkit rules check specs/ 0 RULE-reconcile-contract violations over 261 records
+diff_scope:
+  base: a7d96154eff78483f98911902b1117cd6aaaf2c3
+  head: 87cb6cd02073c87cdd65298b827f2d247f1ec80a
+activity_effort: medium
