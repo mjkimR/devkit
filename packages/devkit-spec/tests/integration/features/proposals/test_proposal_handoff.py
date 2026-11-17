@@ -112,7 +112,7 @@ def test_lifecycle(workspace: Path) -> None:
     assert "id: ADR-use-go-ast-parser\n" in adr
     assert "# [ADR-use-go-ast-parser] " in adr
     assert "\nstatus: accepted\n" in adr
-    assert "\n- **Status**: Accepted\n" in adr
+    assert "- **Status**" not in adr and "- **Date**" not in adr
     assert "proposal: SPEC-fast-engine" in adr
     assert "PADR-" not in adr and "Draft" not in adr
 
@@ -433,46 +433,86 @@ def test_promotes_a_draft_status_with_a_comment(workspace: Path) -> None:
     assert "\nstatus: accepted  # draft | accepted\n" in adr
 
 
-def test_promotes_only_the_frontmatter_and_the_first_prose_status(workspace: Path) -> None:
-    # A fenced example in the body keeps its draft status; only the PADR's own status is accepted.
+LEGACY_BLOCK = "- **Status**: Draft\n- **Date**: 2026-01-01\n\n---\n\n"
+
+
+def _with_legacy_block(padr: Path, block: str = LEGACY_BLOCK, before: str = "") -> str:
+    """Write the body block a pre-upgrade scaffold put below the H1 into ``padr``; return the H1 line."""
+    text = padr.read_text(encoding="utf-8")
+    heading = text.index("\n# [") + 1
+    h1_end = text.index("\n\n", heading) + 2
+    padr.write_text(text[:h1_end] + before + block + text[h1_end:], encoding="utf-8")
+    return text[heading : h1_end - 2]
+
+
+def test_promotion_deletes_the_legacy_scaffold_block(workspace: Path) -> None:
+    # ADR-frontmatter-only-decision-status: a PADR scaffolded before the change reaches the ledger without its block.
+    proposal = _new(workspace, "legacy")
+    CreateProposalDecisionUseCase().execute(workspace, "legacy", "Store format")
+    padr = proposal.parent / "decisions/PADR-store-format.md"
+    _with_legacy_block(padr, LEGACY_BLOCK.replace("Draft", "Proposed"))
+    accept(proposal)
+    handoff_proposal(workspace, "legacy", today=TODAY)
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
+    assert "\nstatus: accepted\n" in adr
+    assert "- **Status**" not in adr and "- **Date**" not in adr
+    assert "# [ADR-store-format] Store format\n\n## 1. Context & Problem Statement\n" in adr
+    assert "\n---\n" not in adr[adr.index("# [ADR-store-format]") :]
+
+
+def test_promotion_keeps_the_list_and_separator_when_other_items_remain(workspace: Path) -> None:
+    proposal = _new(workspace, "kept")
+    CreateProposalDecisionUseCase().execute(workspace, "kept", "Store format")
+    padr = proposal.parent / "decisions/PADR-store-format.md"
+    _with_legacy_block(padr, LEGACY_BLOCK.replace("\n\n---", "\n- **Follow-up**: revisit\n\n---"))
+    accept(proposal)
+    handoff_proposal(workspace, "kept", today=TODAY)
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
+    assert "# [ADR-store-format] Store format\n\n- **Follow-up**: revisit\n\n---\n\n## 1. Context" in adr
+
+
+def test_promotion_leaves_fenced_and_commented_status_lines_unchanged(workspace: Path) -> None:
+    # A fenced example and an HTML comment are never the scaffold block; the PADR's own block is still deleted.
     proposal = _new(workspace, "examples")
     CreateProposalDecisionUseCase().execute(workspace, "examples", "Store format")
     padr = proposal.parent / "decisions/PADR-store-format.md"
+    comment = "<!--\n- **Status**: Draft\n-->\n\n"
+    _with_legacy_block(padr, before=comment)
     example = "```yaml\n---\nstatus: draft\n---\n- **Status**: Draft\n```\n"
     padr.write_text(padr.read_text(encoding="utf-8") + "\n## Example\n\n" + example, encoding="utf-8")
     accept(proposal)
     handoff_proposal(workspace, "examples", today=TODAY)
     adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
-    assert "\nstatus: accepted" in adr and "- **Status**: Accepted\n" in adr
+    assert "\nstatus: accepted" in adr and "- **Date**" not in adr
+    assert "# [ADR-store-format] Store format\n\n" + comment + "## 1. Context" in adr
     assert adr.endswith(example)
+    assert "Accepted" not in adr
 
 
-def test_a_commented_out_status_line_is_not_the_prose_status(workspace: Path) -> None:
-    proposal = _new(workspace, "commented")
-    CreateProposalDecisionUseCase().execute(workspace, "commented", "Store format")
-    padr = proposal.parent / "decisions/PADR-store-format.md"
-    text = padr.read_text(encoding="utf-8")
-    end = text.index("\n---\n", 4) + len("\n---\n")
-    comment = "<!--\n- **Status**: Draft\n-->\n"
-    padr.write_text(text[:end] + comment + text[end:], encoding="utf-8")
-    accept(proposal)
-    handoff_proposal(workspace, "commented", today=TODAY)
-    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
-    assert comment in adr and "\n- **Status**: Accepted\n" in adr
-
-
-def test_a_status_line_with_a_trailing_comment_is_accepted(workspace: Path) -> None:
+def test_a_status_line_with_a_trailing_comment_is_deleted_with_its_block(workspace: Path) -> None:
     proposal = _new(workspace, "noted")
     CreateProposalDecisionUseCase().execute(workspace, "noted", "Store format")
     padr = proposal.parent / "decisions/PADR-store-format.md"
-    padr.write_text(
-        padr.read_text(encoding="utf-8").replace("- **Status**: Draft\n", "- **Status**: Draft <!-- todo -->\n", 1),
-        encoding="utf-8",
-    )
+    _with_legacy_block(padr, LEGACY_BLOCK.replace("Draft\n", "Draft <!-- todo -->\n", 1))
     accept(proposal)
     handoff_proposal(workspace, "noted", today=TODAY)
     adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
-    assert "\n- **Status**: Accepted <!-- todo -->\n" in adr
+    assert "todo" not in adr and "- **Status**" not in adr
+    assert "# [ADR-store-format] Store format\n\n## 1. Context" in adr
+
+
+def test_a_padr_without_the_block_keeps_its_body(workspace: Path) -> None:
+    proposal = _new(workspace, "plain")
+    CreateProposalDecisionUseCase().execute(workspace, "plain", "Store format")
+    padr = proposal.parent / "decisions/PADR-store-format.md"
+    body = "\n## Notes\n\n- **Status**: Draft is a word here, not the block.\n"
+    padr.write_text(padr.read_text(encoding="utf-8") + body, encoding="utf-8")
+    text = padr.read_text(encoding="utf-8")
+    accept(proposal)
+    handoff_proposal(workspace, "plain", today=TODAY)
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
+    heading = text.index("\n# [")
+    assert adr[adr.index("\n# [") :] == text[heading:].replace("PADR-store-format", "ADR-store-format")
 
 
 def test_promotes_a_padr_id_with_uppercase_and_underscore(workspace: Path) -> None:

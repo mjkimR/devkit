@@ -219,7 +219,10 @@ def test_create_padr(workspace: Path) -> None:
         "\n# supersedes: [ADR-<slug>]   # write Supersedes in part `ADR-<slug>`: <the replaced clauses>. in Decision Outcome"
         in text
     )
-    assert "- **Status**: Draft\n" in text
+    # ADR-frontmatter-only-decision-status: the frontmatter alone carries status and date; no body block or separator.
+    assert "- **Status**" not in text and "- **Date**" not in text
+    assert "\n---\n" not in text[text.index("# [PADR-use-go-ast-parser]") :]
+    assert "# [PADR-use-go-ast-parser] Use Go AST Parser\n\n## 1. Context & Problem Statement\n" in text
     assert text.endswith("## 5. Consequences\n\n## 6. Confirmation\n")
     # padr created decisions/ itself: the scaffold leaves no empty directory behind.
     assert sorted(path.name for path in (workspace / "docs/proposals/PROP-fast-engine").iterdir()) == [

@@ -12,7 +12,7 @@ plan: PLAN-adr-body-metadata-removal
   - **_Boundary**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md, packages/devkit-docs/tests/integration/bundles/docs/, .devkit/installation.json (sync output)
   - _Requirements: AC-01, AC-02_
   - **Verification**: `uv run pytest packages/devkit-docs/tests/integration/bundles/docs packages/devkit-spec/tests/integration/bundles/spec`
-- [ ] **Task 1.2**: Stop the PADR scaffold writing the block and replace the handoff body rewrite with the legacy-block deletion
+- [x] **Task 1.2**: Stop the PADR scaffold writing the block and replace the handoff body rewrite with the legacy-block deletion
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/proposals/, packages/devkit-spec/tests/integration/features/proposals/
   - _Requirements: AC-03, AC-04_
   - **Verification**: `uv run pytest packages/devkit-spec/tests/integration/features/proposals`
