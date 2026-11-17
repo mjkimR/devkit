@@ -27,7 +27,7 @@ plan: PLAN-adr-body-metadata-removal
   - **_Boundary**: docs/capabilities/delivery/CAP-DLV-proposal-planning.md, docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md, docs/designs/delivery/DESIGN-proposal-handoff/design.md
   - _Requirements: AC-06_
   - **Verification**: the `rg` command of AC-06; `uv run devkit rules check docs/capabilities/delivery docs/designs/delivery`
-- [ ] **Task 2.3**: Run the full verification set
+- [x] **Task 2.3**: Run the full verification set
   - **_Boundary**: .devkit/installation.json (sync output)
   - _Requirements: AC-07_
   - **Verification**: `just lint-check`; `uv run devkit generated check`; `uv run devkit rules check --ci --base main`; `just test-affected --base main`
