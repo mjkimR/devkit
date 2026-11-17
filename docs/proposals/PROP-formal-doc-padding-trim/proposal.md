@@ -2,7 +2,7 @@
 id: PROP-formal-doc-padding-trim
 title: Trim padding from formal document guidance and documents
 summary: Remove guidance and template elements that duplicate rules, frontmatter or other owners, narrow the Maintenance section to update triggers, and apply the same standard to the existing design, domain and operations documents.
-status: reviewing                       # draft | reviewing | accepted | rejected
+status: accepted                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-17
 target_area: documents/
 priority: medium                      # critical | high | medium | low
