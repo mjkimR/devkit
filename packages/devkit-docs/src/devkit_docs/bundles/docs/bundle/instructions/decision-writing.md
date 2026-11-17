@@ -26,11 +26,14 @@ Record a choice that meets none of them in the work record the selected developm
 
 ## Sections
 
+- **Frontmatter**: state status, date and whole supersession only in `status`, `created_at` and `superseded_by`.
+  Write no Status, Date, Deciders or Involved Components line in the body; cite an involved document by ID where the
+  body discusses it.
 - **Context & Problem Statement**: the forces that require a decision: constraints and the current failure or cost.
   Leave out how the problem was discovered.
 - **Decision Drivers**: one line per criterion the options are judged by.
-- **Considered Options**: one or two lines per option with its main trade-off against the drivers. Include keeping
-  the current state when it was viable.
+- **Considered Options**: one or two lines per option with its main trade-off against the drivers; mark the selected
+  option `(selected)`. Include keeping the current state when it was viable.
 - **Decision Outcome**: the chosen option first, then the reason tied to named drivers, in the clause format of
   Decision Outcome Clauses.
 - **Consequences**: positive, negative or risks, and follow-ups; a follow-up names what triggers it.

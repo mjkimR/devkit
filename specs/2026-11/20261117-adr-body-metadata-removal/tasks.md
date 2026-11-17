@@ -8,7 +8,7 @@ plan: PLAN-adr-body-metadata-removal
 
 ## Phase 1: Template, scaffold and handoff
 
-- [ ] **Task 1.1**: Trim the decision template and state the frontmatter-only status in decision-writing, with a template test
+- [x] **Task 1.1**: Trim the decision template and state the frontmatter-only status in decision-writing, with a template test
   - **_Boundary**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md, packages/devkit-docs/tests/integration/bundles/docs/, .devkit/installation.json (sync output)
   - _Requirements: AC-01, AC-02_
   - **Verification**: `uv run pytest packages/devkit-docs/tests/integration/bundles/docs packages/devkit-spec/tests/integration/bundles/spec`

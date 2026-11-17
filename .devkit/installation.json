@@ -2060,7 +2060,7 @@
     },
     ".devkit/managed/docs/instructions/decision-writing.md": {
       "mode": 420,
-      "sha256": "c1faec31b242c7facc899a55f348e9605e765512e1c576c525195bbaae6266df"
+      "sha256": "e58ace2a9162db9a896107113bfa14812bbe21621c4f574ad43e8eefc5ede994"
     },
     ".devkit/managed/docs/instructions/design-writing.md": {
       "mode": 420,
@@ -2216,7 +2216,7 @@
     },
     ".devkit/managed/docs/templates/decision.md": {
       "mode": 420,
-      "sha256": "55af65c63d80476cfcbeabb97e6a4591decbc7e2e5a31204a46a496d023181c9"
+      "sha256": "8eef63c9d959ab09712fbe4fce2b7c8079fb8b86b04ce449414577f181ba1cce"
     },
     ".devkit/managed/docs/templates/design.md": {
       "mode": 420,
