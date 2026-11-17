@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:29:36.606133Z'
+status: completed
+summary: 'Self-checked reconcile at low effort: CAP-DLV-workflow-envelopes clause 3 matches the implementation; other contracts unaffected; source feedback resolved'
+findings: []
+checks:
+  reconcile: PASS reconcile.md targets and unaffected reasons compared with git diff main
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 7a56e325baf3f65db7f91787481286210e016d74
+  head: 880de5745fcaeedd173a249e24282f788a58ec31
