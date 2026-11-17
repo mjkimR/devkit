@@ -141,3 +141,54 @@ def test_new_proposal_refuses_a_slug_declared_as_an_alias(workspace: Path, write
     with pytest.raises(ProposalExistsError, match="already declared as an alias"):
         CreateProposalUseCase().execute(workspace, "old", today=TODAY)
     assert not (workspace / "docs/proposals/PROP-old").exists()
+
+
+def _handed_off_sibling(write: Write) -> None:
+    """A sibling proposal already handed off: SPEC-sibling exists and no document declares PROP-sibling."""
+    write("specs/2026-10/20261001-sibling/spec.md", "---\nid: SPEC-sibling\nstatus: planned\n---\n# [SPEC-sibling] S\n")
+
+
+def _cite(proposal: Path, text: str) -> None:
+    proposal.write_text(proposal.read_text(encoding="utf-8") + f"\n## Notes\n\n{text}\n", encoding="utf-8")
+
+
+def test_handoff_rewrites_carried_references_to_a_handed_off_sibling(workspace: Path, write: Write) -> None:
+    _handed_off_sibling(write)
+    _cite(_proposal(workspace, "later"), "Builds on `PROP-sibling`, see also [PROP-sibling].")
+    _padr(workspace, "later", "Pick", "", "\nAs `PROP-sibling` decided.\n")
+    result = handoff_proposal(workspace, "later", today=TODAY)
+    spec = (spec_dir(workspace, "later") / "spec.md").read_text(encoding="utf-8")
+    adr = (workspace / result.decisions[0].path).read_text(encoding="utf-8")
+    assert "Builds on `SPEC-sibling`, see also `SPEC-sibling`." in spec
+    assert "As `SPEC-sibling` decided." in adr and "PROP-sibling" not in spec + adr
+    moved = [(r.path, r.old, r.new) for r in result.rewritten if r.kind == "id" and r.old == "PROP-sibling"]
+    assert sorted(moved) == sorted(
+        [(f"{spec_dir(workspace, 'later').relative_to(workspace).as_posix()}/spec.md", "PROP-sibling", "SPEC-sibling")]
+        * 2
+        + [(result.decisions[0].path, "PROP-sibling", "SPEC-sibling")]
+    )
+    assert check(RULE, workspace) == []
+
+
+def test_handoff_rewrites_carried_aliases_of_other_documents(workspace: Path, write: Write) -> None:
+    write("docs/decisions/2026-01/20260101-new.md", "---\nid: ADR-new\nstatus: accepted\naliases: [ADR-old]\n---\n")
+    _cite(_proposal(workspace, "uses"), "Follows `ADR-old`.")
+    result = handoff_proposal(workspace, "uses", today=TODAY)
+    spec = (spec_dir(workspace, "uses") / "spec.md").read_text(encoding="utf-8")
+    assert "Follows `ADR-new`." in spec
+    assert any(r.kind == "id" and (r.old, r.new) == ("ADR-old", "ADR-new") for r in result.rewritten)
+    assert check(RULE, workspace) == []
+
+
+def test_handoff_leaves_outside_files_and_non_alias_references(workspace: Path, write: Write) -> None:
+    _handed_off_sibling(write)
+    outside_text = "---\nid: ADR-outside\nstatus: accepted\n---\n# [ADR-outside] O\n\nSee `PROP-sibling`.\n"
+    outside = write("docs/decisions/2026-01/20260101-outside.md", outside_text)
+    write("docs/proposals/PROP-draft/proposal.md", "---\nid: PROP-draft\nstatus: draft\n---\n# [PROP-draft] D\n")
+    _cite(_proposal(workspace, "keeps", "PROP-keeps-old"), "Beside `PROP-draft`; once `SPEC-keeps-old`.")
+    result = handoff_proposal(workspace, "keeps", today=TODAY)
+    spec = (spec_dir(workspace, "keeps") / "spec.md").read_text(encoding="utf-8")
+    assert "Beside `PROP-draft`; once `SPEC-keeps-old`." in spec
+    assert outside.read_text(encoding="utf-8") == outside_text
+    assert not any(r.path == "docs/decisions/2026-01/20260101-outside.md" for r in result.rewritten)
+    assert {v.file for v in check(RULE, workspace)} == {"docs/decisions/2026-01/20260101-outside.md"}
