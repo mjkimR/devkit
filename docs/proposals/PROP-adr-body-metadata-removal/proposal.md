@@ -2,7 +2,7 @@
 id: PROP-adr-body-metadata-removal
 title: Remove the ADR body metadata block and trim the ADR template
 summary: Drop the Status/Date/Deciders/Involved block from the ADR template, the proposal scaffold and the handoff acceptance rewrite, since the frontmatter already owns status, date and supersession, and shorten the option and separator scaffolding to what decision-writing asks for.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-17
 target_area: documents/
 priority: medium                      # critical | high | medium | low
