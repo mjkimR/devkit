@@ -1,0 +1,14 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-17T00:27:54.054004Z'
+status: completed
+summary: 'Planning at low effort (user override of the medium hint; questions only, no scout or challenger). Q1: excluding paths only a unit''s completed handoff commit changed is safe; worker edits stay visible as declared evidence or later commits, and integration stays serial. Q2: a provenance-keyed wording rule in the spec-orchestrate skill plus its CAP-HARN-agent-guidance mirror; no collection code, path-class rule or scope collect output change. Covers the sibling-alias handoff rewrites too. Resized: boundaries drop features/scope and tests, dev_effort lowered to low. No questions; ready for plan-accept.'
+findings: []
+checks:
+  rules: PASS proposal.md
+diff_scope:
+  base: ''
+  head: 897f4bd64276f1b6f10ef7ec45efe8100c909329
+activity_effort: low
