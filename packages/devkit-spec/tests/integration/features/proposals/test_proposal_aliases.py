@@ -192,3 +192,19 @@ def test_handoff_leaves_outside_files_and_non_alias_references(workspace: Path, 
     assert outside.read_text(encoding="utf-8") == outside_text
     assert not any(r.path == "docs/decisions/2026-01/20260101-outside.md" for r in result.rewritten)
     assert {v.file for v in check(RULE, workspace)} == {"docs/decisions/2026-01/20260101-outside.md"}
+
+
+def test_handoff_rewrites_an_aliased_dependency_and_moved_feedback(workspace: Path, write: Write) -> None:
+    write(
+        "specs/2026-10/20261001-sibling/spec.md",
+        "---\nid: SPEC-sibling\nstatus: planned\naliases: [SPEC-sibling-old]\n---\n# [SPEC-sibling] S\n",
+    )
+    proposal = workspace / CreateProposalUseCase().execute(workspace, "after", today=TODAY).path
+    accept(proposal, "\ndepends_on: [SPEC-sibling-old]")
+    feedback = "---\nid: FB-seen\ntitle: Seen\nstatus: open\ncreated_at: 2026-10-01\n---\n# [FB-seen] Seen\n\n`SPEC-sibling-old`\n"
+    write(f"{proposal.parent.relative_to(workspace).as_posix()}/feedback/seen.md", feedback)
+    handoff_proposal(workspace, "after", today=TODAY)
+    target = spec_dir(workspace, "after")
+    assert _meta(target / "spec.md")["depends_on"] == ["SPEC-sibling"]
+    assert (target / "feedback/seen.md").read_text(encoding="utf-8").endswith("`SPEC-sibling`\n")
+    assert check(RULE, workspace) == []

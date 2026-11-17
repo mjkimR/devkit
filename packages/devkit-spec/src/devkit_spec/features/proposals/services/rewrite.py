@@ -285,7 +285,9 @@ def rewrite_aliases(root: Path, files: Iterable[str], index: DocumentIndex, repo
             text = _read(file)
             document = parse_document(display, text)
         except (OSError, UnicodeDecodeError, FrontmatterError):
-            report.unresolved.append(Unresolved(display, 0, ID, "", UNREADABLE))
+            unreadable = Unresolved(display, 0, ID, "", UNREADABLE)
+            if unreadable not in report.unresolved:  # rewrite_ids already reported the file
+                report.unresolved.append(unreadable)
             continue
         if document is None:
             continue
