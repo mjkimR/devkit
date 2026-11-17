@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-formal-doc-padding-trim
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
     resolution: modified
