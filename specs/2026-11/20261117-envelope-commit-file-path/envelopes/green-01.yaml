@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:28:47.131193Z'
+status: completed
+summary: A workspace-relative --file inside the Unit commits as its Unit-relative record; wrong paths stay refused with a fix naming envelopes/<kind>-<NN>.yaml
+findings: []
+checks:
+  resolved: PASS the same 9 regression cases in test_envelope_commit.py now pass (72 passed with test_envelope_commit_policy.py)
+  preserved: PASS test_nonliteral_paths_refuse, test_exact_commit_idempotence_and_evidence, test_cli_json_text_and_errors; just test-affected --base main 2557 passed; just lint-check, pyright, rules check --ci clean
+diff_scope:
+  base: 7a56e325baf3f65db7f91787481286210e016d74
+  head: 1cef373f3101bdfe104aa6aa4e60657b7d640ed4
