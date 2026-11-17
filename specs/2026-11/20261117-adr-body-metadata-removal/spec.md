@@ -2,7 +2,7 @@
 id: SPEC-adr-body-metadata-removal
 title: Remove the ADR body metadata block and trim the ADR template
 summary: Drop the Status/Date/Deciders/Involved block from the ADR template, the proposal scaffold and the handoff acceptance rewrite, since the frontmatter already owns status, date and supersession, and shorten the option and separator scaffolding to what decision-writing asks for.
-status: in-progress
+status: completed
 created: 2026-11-17
 related_capabilities: [CAP-DLV-proposal-planning, CAP-DLV-proposal-lifecycle]
 related_usecases: []

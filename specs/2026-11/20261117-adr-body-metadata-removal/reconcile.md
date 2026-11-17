@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-adr-body-metadata-removal
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
     resolution: modified
