@@ -137,12 +137,12 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
 ### Planning decisions
 
 - Q1-Q4 as answered in §2; the lasting choice is `PADR-frontmatter-only-decision-status`.
-- Promotion keeps a deletion-only compatibility pass for the legacy scaffold block (challenger-01 finding 3,
-  recommended; open for `plan-accept`). The alternative is to drop all body handling and accept that a pre-upgrade
-  PADR reaches the ledger with a stale `- **Status**: Draft`.
+- Promotion keeps a deletion-only compatibility pass for the legacy scaffold block (challenger-01 finding 3; decided
+  by the user at `plan-accept`). Dropping all body handling was rejected: a pre-upgrade PADR would reach the ledger
+  with a stale `- **Status**: Draft`.
 - The Q1 pass keeps reference edges by moving ADR-only IDs from Involved Components into one Context sentence
-  (challenger-01 finding 2, recommended; open for `plan-accept`). The alternative is to accept losing those edges in
-  `devkit docs refs` and the viewer reference panel.
+  (challenger-01 finding 2; decided by the user at `plan-accept`). Losing those edges in `devkit docs refs` and the
+  viewer reference panel was rejected.
 - Q4 is a template and guidance edit inside the existing `decision-writing` rule, not a new decision; it gets no PADR.
 - `docs/designs/delivery/DESIGN-proposal-handoff/design.md` is in both this proposal's and
   `PROP-formal-doc-padding-trim`'s boundaries; the overlap is sequenced (this unit integrates after it), and this unit
