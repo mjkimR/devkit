@@ -15,13 +15,13 @@ entrypoints:
 A Unit's stage depends on several record sources at once: stage and gate policy, exit checks, decision records,
 envelopes, holds and returns that void earlier evidence. Each capability states its own rule, but none shows the order
 in which `devkit workflow next` combines them on one Unit, so a reader cannot predict which source decides a reported
-`[STAGE]`. This non-normative walk-through follows `evaluate_definition` in
+`[STAGE]`. This walk-through follows `evaluate_definition` in
 [evaluate.py](../../../../packages/devkit/src/devkit_agt/features/workflow/usecases/evaluate.py) over one real Unit.
 
 ## Evaluation order
 
-`evaluate_definition` reads the anchor, then builds an `_Evaluator` that prepares every record source before any
-stage is visited:
+`evaluate_definition` reads the anchor, then builds an evaluator that prepares every record source before any stage
+is visited:
 
 1. **Segment.** Decision records count only when written in the bound workflow with a sequence above the current
    segment's start (`Decisions.segment` in
@@ -30,11 +30,11 @@ stage is visited:
 2. **Accepted returns.** Each accepted `return:<stage>` record becomes a pair of sequence number and target stage
    index (`Decisions.accepted_returns`).
 3. **Hold.** Unresolved problems, unanswered questions and malformed worker envelopes are read over every envelope of
-   the Unit, whatever their segment; `_held_from` turns them into the first stage index whose gate is held
+   the Unit, whatever their segment, and turned into the first stage index whose gate is held
    (`CAP-DLV-workflow-envelopes` §4).
 4. **Current envelopes.** `current_envelopes` keeps the envelopes scoped to this workflow and segment, then drops
-   those a later accepted return re-opened (`_after_returns`; `CAP-DLV-human-interaction` §5 Returns).
-5. **Gate policy check.** `_check_gate_policies` refuses a configured approval policy the definition does not accept
+   those a later accepted return re-opened (`CAP-DLV-human-interaction` §5 Returns).
+5. **Gate policy check.** The evaluator refuses a configured approval policy the definition does not accept
    before any stage is evaluated (`CAP-DLV-workflow-orchestration` §3).
 
 The stage loop then visits stages in definition order. For each stage it applies, in this order:
@@ -44,18 +44,18 @@ The stage loop then visits stages in definition order. For each stage it applies
    Stage Policy).
 3. Gate policy `approvals.<gate>=off` skips a gated stage (`CAP-DLV-workflow-orchestration` §3).
 4. Every exit check is evaluated; disk checks read the current envelopes, a human check reads a decision record
-   whose approval no later return voided (`_Evaluator.eval_ref`, `_Evaluator.effective`). Entry checks are not
+   whose approval no later return voided. Entry checks are not
    evaluated (`CAP-DLV-workflow-definitions` Stage Fields).
-5. The gate status comes from policy `auto`, `--given` or an accepted decision record (`_Evaluator.gate`;
-   `CAP-DLV-human-interaction` §5 Approve gate).
+5. The gate status comes from policy `auto`, `--given` or an accepted decision record (`CAP-DLV-human-interaction`
+   §5 Approve gate).
 6. A hold reaching this stage's index overrides the gate to unsatisfied with `held=yes`; when the exit checks hold,
    the unmet `envelope-hold` check takes the gate's place (`CAP-DLV-workflow-envelopes` §4).
 7. An unsatisfied gate becomes the unmet `gate:<gate>` check only when no exit check is unmet
    (`CAP-DLV-human-interaction` §5 Approve gate).
 8. With nothing unmet and the gate satisfied, the stage is done and its gate source is kept for `[GATE_PASSED]`.
    Otherwise an `optional` stage is passed over (`CAP-DLV-workflow-definitions` Stage Fields), and any other
-   stage becomes current: the loop records its unmet checks, skill, delegation, gate, `_waiting_for` result,
-   requests and stale approvals, then stops.
+   stage becomes current: the loop records its unmet checks, skill, delegation, gate, waiting reason, requests and
+   stale approvals, then stops.
 
 After the loop, the handoff is evaluated only when no stage is current, and unanswered questions add their requests
 and replace the waiting reason (`CAP-DLV-workflow-orchestration` §3 The `handoff` Gate, `CAP-DLV-workflow-envelopes`
@@ -89,7 +89,7 @@ Running `uv run devkit workflow next --unit specs/2026-11/20261116-formal-docume
    before that end is void: `review-01`, `reverify-01`, `review-02`, `reconcile-check-01`, `reconcile-check-02`,
    `feedback-01` and `final-report-01`. Only the round-two envelopes count. Had the return been written to the second
    (`2026-11-16T06:15:49Z`), its span would cover that whole second, and an envelope stamped `06:15:49.700000Z` would
-   also be void, because the order is unknown (`CAP-DLV-human-interaction` §5 Returns). The approval record targets
+   also be void (`CAP-DLV-human-interaction` §5 Returns). The approval record targets
    `direction-handoff`, which is no stage of this definition, so the return does not void it; no stage reads it either.
 4. **Gate policy check.** `dev-integration` accepts `ask` and `auto` in the definition's `gates` mapping; the
    configured `auto` passes.
@@ -103,7 +103,7 @@ Running `uv run devkit workflow next --unit specs/2026-11/20261116-formal-docume
 7. **Stage `integrate`.** `frontmatter(reconcile.md status resolved)` and `anchor-status-completed` hold.
    `lint-ci-clean` is a `runner` check passed neither by `--given` nor by a record, so it stays unmet with
    `evaluated=no`. The stage has no gate and is not `optional`, so it becomes current. Its only unmet check is a
-   runner check, so `_waiting_for` reports `[WAITING: runner lint-ci-clean]`. No accepted approval names a later
+   runner check, so the waiting reason is `[WAITING: runner lint-ci-clean]`. No accepted approval names a later
    stage, so no `[STALE_APPROVAL]` appears. The loop stops; `merge` is not evaluated.
 8. **After the loop.** A current stage exists, so no handoff is evaluated, and no question adds requests.
 
@@ -132,9 +132,8 @@ were recorded at `final-change-report` instead, `integration-approval` would rep
 The loop stops at the first stage that is neither done, skipped nor passed over (`break` in `evaluate_definition`).
 No check, gate, request or waiting reason of a later stage is computed, so `[STAGE]`, `[UNMET]`, `[NEXT_SKILL]` and
 `[REQUEST]` all describe that one stage. This is the diagnosed stage of `CAP-DLV-workflow-orchestration` §1 item 2.
-Gates follow the same order inside a stage: a gate is asked only once its stage's own exit checks hold
-(`CAP-DLV-human-interaction` §5 Approve gate). Evaluating a later stage would therefore ask approvals for work that
-the current stage has not produced yet.
+Gates follow the same order inside a stage (`CAP-DLV-human-interaction` §5 Approve gate), so evaluating a later stage
+would ask approvals for work that the current stage has not produced yet.
 
 The one fact `next` reads about later stages is `approvals_after`: accepted approvals of a later stage that no
 return voided. They appear as `[STALE_APPROVAL]` lines and keep counting until a `return` record voids them; `next`
@@ -142,19 +141,17 @@ records no return (`CAP-DLV-human-interaction` §5 Returns).
 
 ## Authority boundary
 
-This design explains source behavior and settles no rule. `CAP-DLV-workflow-orchestration` owns the delivery model,
-stage and gate policies and the handoff gate. `CAP-DLV-workflow-definitions` owns stage fields and checks.
-`CAP-DLV-workflow-envelopes` owns envelope scoping, authoring timestamps and the hold (§4).
-`CAP-DLV-human-interaction` §5 owns how answers, returns, return voiding and timestamp precision apply.
-`CAP-DLV-cli-and-output` owns the sentinel lines, their order and exit codes. The
+`CAP-DLV-workflow-orchestration` owns the delivery model, stage and gate policies and the handoff gate.
+`CAP-DLV-workflow-definitions` owns stage fields and checks. `CAP-DLV-workflow-envelopes` owns envelope scoping,
+authoring timestamps and the hold (§4). `CAP-DLV-human-interaction` §5 owns how answers, returns, return voiding and
+timestamp precision apply. `CAP-DLV-cli-and-output` owns the sentinel lines, their order and exit codes. The
 [workflow reference](../../../development/reference/workflow.md) owns command syntax, configuration and the module
 map.
 
-## Maintenance and next action
+## Update triggers
 
-Review this design when `evaluate_definition`, `_Evaluator`, `_held_from`, `_waiting_for`, `current_envelopes` or
-`record_instant` change their order or inputs, or when the sample Unit's records change. Rerun the example command
-and compare its output with the block above.
-
-Next read `CAP-DLV-human-interaction` §5 for the rules each step applies, or `CAP-DLV-cli-and-output` §3 for every
-line `next` can print.
+- `evaluate_definition`, `current_envelopes`, `record_instant` or `Decisions` change the order or inputs of the
+  evaluation, the hold or the waiting reason.
+- The sample Unit's records change. Recheck the example with
+  `uv run devkit workflow next --unit specs/2026-11/20261116-formal-document-kinds` and compare its output with the
+  block above.

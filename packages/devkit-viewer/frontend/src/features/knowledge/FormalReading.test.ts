@@ -337,15 +337,14 @@ it('never indexes a no-ID typed declaration, ID-bearing artifact or handbook fil
 	expect(source.treeRecursive).not.toHaveBeenCalled();
 });
 
-it('reads the five retained formal documents and their real capability ingress through shared book routes', async () => {
+it('reads the four retained formal documents and their real capability ingress through shared book routes', async () => {
 	const capability = 'docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md';
-	const design = 'docs/designs/distribution/DESIGN-distribution-transactions/design.md';
 	const detail =
 		'docs/designs/distribution/DESIGN-distribution-file-directory-replacement/design.md';
 	const bundleDomain = 'docs/domain/distribution/DOMAIN-bundle-selection-and-installation.md';
 	const deliveryDomain = 'docs/domain/delivery/DOMAIN-delivery-relationships.md';
 	const operations = 'docs/operations/OPS-distribution-sync.md';
-	const paths = [capability, design, detail, bundleDomain, deliveryDomain, operations];
+	const paths = [capability, detail, bundleDomain, deliveryDomain, operations];
 	const files = Object.fromEntries(
 		paths.map((path) => [
 			path,
@@ -354,14 +353,13 @@ it('reads the five retained formal documents and their real capability ingress t
 	);
 	const documents = paths.map((path) => parseBlob(path, files[path], 'utf-8'));
 	expect(documents.slice(1).map((doc) => [doc.meta.id, bookGroup(doc)])).toEqual([
-		['DESIGN-distribution-transactions', 'Designs'],
 		['DESIGN-distribution-file-directory-replacement', 'Designs'],
 		['DOMAIN-bundle-selection-and-installation', 'Domain'],
 		['DOMAIN-delivery-relationships', 'Domain'],
 		['OPS-distribution-sync', 'Operations']
 	]);
 	render(KnowledgeViews, props(repository(files), 'CAP-DIST-sync-and-transactions'));
-	await waitFor(() => expect(document.querySelectorAll('.chapter')).toHaveLength(6));
+	await waitFor(() => expect(document.querySelectorAll('.chapter')).toHaveLength(5));
 	await waitFor(() => expect(scrolledTo()).toBe(documentAnchor(capability)));
 	const chapter = (path: string) => document.getElementById(documentAnchor(path))!;
 	const follow = async (origin: string, destination: string) => {
@@ -372,8 +370,7 @@ it('reads the five retained formal documents and their real capability ingress t
 		await fireEvent.click(link!);
 		await waitFor(() => expect(scrolledTo()).toBe(documentAnchor(destination)));
 	};
-	await follow(capability, design);
-	await follow(design, detail);
+	await follow(capability, detail);
 	expect(chapter(detail).textContent).toContain('apply_changes');
 	await follow(detail, capability);
 	await follow(capability, bundleDomain);

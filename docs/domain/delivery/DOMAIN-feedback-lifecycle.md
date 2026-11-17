@@ -16,8 +16,7 @@ the file as traceability, and each is written by a different actor at a differen
 `promoted` with `resolved` because both follow a decision to act on the observation, but only one claims that a fix
 was verified. They confuse `dismissed` with `resolved` because both end the work without follow-up, and they read
 `forwarded` as a draft upstream report when it means a report that was actually submitted. The statuses and their
-rules are spread over the document model, the delivery and harness capabilities and the spec bundle's skills; this
-entry relates them.
+rules are spread over the document model, the delivery and harness capabilities and the spec bundle's skills.
 
 ## Relationship overview
 
@@ -51,12 +50,11 @@ Four actors write feedback status, each at a fixed moment:
    `feedback/`, Development into the spec's and work without a Unit into the month-level backlog.
 2. **Backlog triage** (`feedback-hygiene`, in a session the user invoked or confirmed) sets `promoted`, `dismissed`
    or `forwarded` with the user's decision, and appends one `- **Disposition**:` line naming each destination ID,
-   path or report location and a one-line summary or reason. Promotion here is the moment the proposal or other
-   follow-up work receives the item; the destination records the source FB ID in its `Source feedback` section, or
-   a session in its agreed scope (`feedback-hygiene` Step 2; `CAP-DLV-proposal-planning` §3.1).
-3. **A fixing task at completion** sets `resolved` on an explicitly linked open source it fully addressed and
-   verified, at `living-spec-draft` with the outcome recorded in `reconcile.md` for a spec, or at `report-session`
-   for a session, and appends a Disposition with the SPEC ID or changed paths, outcome and evidence. It sets its own
+   path or report location and a one-line summary or reason. A promotion's destination records the source FB ID in
+   its `Source feedback` section, or a session in its agreed scope (`feedback-hygiene` Step 2;
+   `CAP-DLV-proposal-planning` §3.1).
+3. **A fixing task at completion** sets `resolved` at `living-spec-draft` with the outcome recorded in
+   `reconcile.md` for a spec, or at `report-session` for a session, and appends a Disposition with the SPEC ID or changed paths, outcome and evidence. It sets its own
    new resolution back to `open` when later changes invalidate the evidence; it never revisits pre-existing
    terminal feedback (`CAP-DLV-delivery-workflows` Source feedback at completion; spec bundle
    `skills/spec/references/source-feedback.md`).
@@ -89,7 +87,7 @@ at completion).
 
 ## Worked example: one observation, four outcomes
 
-This is a nonexecuted example. During a Development run, an agent notices that a skill's lookup command misses
+During a Development run, an agent notices that a skill's lookup command misses
 terminal feedback and records it in the spec's `feedback/lookup-skips-history.md` with `status: open`.
 
 - **Promoted.** In a later hygiene session the user agrees to fix it in a new proposal. The file becomes
@@ -108,19 +106,11 @@ terminal feedback and records it in the spec's `feedback/lookup-skips-history.md
 
 ## Authority boundary
 
-This entry relates statuses; it sets no status, adds no transition and defines no term. `CAP-DOCS-document-model`
-(Feedback lifecycle) owns the status set, terminality and the closing semantics. `CAP-HARN-agent-guidance` (Feedback
-capture policy and §4.5) owns capture, scope, the recording lookup and the hygiene and consolidation playbook
-contracts. `CAP-DLV-delivery-workflows` (Source feedback at completion) owns completion dispositions and
-consolidation. `CAP-DLV-proposal-planning` §3.1 owns Planning feedback, its handoff routing and retirement.
-`ADR-feedback-lifecycle-ledger` records the decision behind all of them. The spec bundle's `spec-feedback` skill,
-`feedback-hygiene` playbook and `skills/spec/references/source-feedback.md` hold the procedures; the glossary holds
-the definitions.
+`CAP-HARN-agent-guidance` §4.5 owns the hygiene and consolidation playbook contracts.
 
-## Maintenance and next action
+## Update triggers
 
-Update this entry when a status is added or removed, when an actor gains or loses the right to change a status, or
-when the recording lookup changes its action for a status. To record an observation, read the `spec-feedback`
-skill; to triage open items, the `feedback-hygiene` playbook; to close a source your task fixed,
-`skills/spec/references/source-feedback.md`. For how feedback moves at handoff, read `CAP-DLV-proposal-planning` §3.1
-or `DESIGN-proposal-handoff`.
+- A status is added or removed (`CAP-DOCS-document-model` Feedback lifecycle).
+- An actor gains or loses the right to change a status (`CAP-HARN-agent-guidance` Feedback capture policy,
+  `CAP-DLV-delivery-workflows` Source feedback at completion).
+- The recording lookup changes its action for a status (`spec-feedback` step 2).

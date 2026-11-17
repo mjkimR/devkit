@@ -14,8 +14,7 @@ related_operations:
 Some devkit MCP tools run while others refuse, or the host shows no devkit tools at all. Three surfaces each see
 part of the cause. The tool-call result comes from the serving process, sync and setup notices come from the
 registration plan, and the `mcp status` runtime field describes the runtime installed now. A serving process can
-refuse calls while `mcp status` reports `runtime` `available`, so one surface alone misroutes the case. This entry
-routes symptoms that only a comparison of these surfaces separates.
+refuse calls while `mcp status` reports `runtime` `available`, so one surface alone misroutes the case.
 
 ## Routing
 
@@ -42,6 +41,8 @@ an error. `uv run devkit mcp status --format json` reports `package`, `runtime` 
 `MCP_REGISTRATION_INTERRUPTED` names the registration journal `.devkit/transient/mcp/journal.json`, not the sync
 journal that `OPS-distribution-sync` routes. General `devkit status` carries no MCP registration diagnosis by design
 (`CAP-MCP-runtime-registration` Registration contract, general status boundary), so read `mcp status` instead.
+For evidence that matches no row, take the reported code to its row under
+[MCP services](../development/reference/host.md#mcp-services) and its actual advisory.
 
 ## Normal-state observation
 
@@ -53,21 +54,13 @@ Registration facts do not prove connectivity (`CAP-HOST-lifecycle-observation` Â
 
 ## Authority boundary
 
-This entry classifies evidence and owns no recovery. `CAP-MCP-runtime-registration` owns the runtime refusals,
-registration profiles, registration reconciliation and the `mcp status` facts. `ADR-mcp-runtime-and-shared-artifacts`
-owns the rationale for the optional runtime, guarded registration and the general status boundary.
-`CAP-DIST-sync-and-transactions` owns locked sync and readiness, and `OPS-distribution-sync` routes sync journal
-symptoms. The code rows under [MCP services](../development/reference/host.md#mcp-services) map each code to its
-recovery, and the actual advisory retains its fix. The agent host application owns connection, effective
-selection, trust and permissions.
+`ADR-mcp-runtime-and-shared-artifacts` owns the rationale for the optional runtime, guarded registration and the
+general status boundary. The evidence cannot establish which runtime a host process launched, whether a serving
+process has reloaded, or whether the host connected to or enabled the registered server.
 
-The evidence cannot establish which runtime a host process launched, whether a serving process has reloaded, or
-whether the host connected to or enabled the registered server.
+## Update triggers
 
-## Maintenance and next action
-
-Review the routing when the Runtime or Registration contract of `CAP-MCP-runtime-registration` changes, when the
-`mcp status` fields `package`, `runtime`, `project` or `collisions` change, or when the call order in
-[server.py](../../packages/devkit-mcp/src/devkit_mcp/features/runtime/mcp/server.py) changes which refusals reach
-read-only tools. For evidence that matches no row, take the reported code to its row under
-[MCP services](../development/reference/host.md#mcp-services) and its actual advisory.
+- The Runtime or Registration contract of `CAP-MCP-runtime-registration` changes.
+- The `mcp status` fields `package`, `runtime`, `project` or `collisions` change.
+- The call order in [server.py](../../packages/devkit-mcp/src/devkit_mcp/features/runtime/mcp/server.py) changes
+  which refusals reach read-only tools.

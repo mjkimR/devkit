@@ -10,8 +10,7 @@ related_capabilities: [CAP-DLV-adaptive-assignments, CAP-WT-task-worktrees]
 
 On resume, a `devkit adaptive assignment list` row can carry `attention` values such as `head-moved` or
 `no-changes`. A value names an observed repository fact, not its cause: `list` makes no agent liveness claim and
-exits `0` whatever it lists (`CAP-DLV-adaptive-assignments` §3 rule 10, §4 `list`). This entry pairs each value with
-the evidence that separates its cases and with the owner whose rule or judgment applies.
+exits `0` whatever it lists (`CAP-DLV-adaptive-assignments` §3 rule 10, §4 `list`).
 
 ## Routing
 
@@ -26,7 +25,9 @@ the evidence that separates its cases and with the owner whose rule or judgment 
 For every row, the choice among recording a return from retained state, dispatching again or closing as abandoned
 stays with the adaptive-dev resume guidance,
 [current-context.md](../../packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/current-context.md).
-A failing `verify` code carries its own advisory, which owns its FIX.
+A failing `verify` code carries its own advisory, which owns its FIX. For a value or combination that matches no
+row, read `show <id>` and the capability's `list` contract, and take the case to the Host under the adaptive-dev
+resume guidance.
 
 ## Normal-state observation
 
@@ -38,20 +39,12 @@ reads `attention=-` in text, with `"observed": null` in JSON, so read the `statu
 
 ## Authority boundary
 
-This entry routes evidence and owns no recovery, permission or readiness decision. `CAP-DLV-adaptive-assignments`
-owns the attention values, the `list`, `show`, `return`, `verify` and `close` contracts and the stated observation
-limits. `CAP-WT-task-worktrees` owns worktree status and the authorization for removing or pruning a worktree.
-`ADR-adaptive-assignment-commands` records the Host judgments the commands leave open: whether a result meets its
-goal, whether an open assignment's agent still runs, and acceptance of a result whose verification failed. The
-adaptive-dev resume guidance owns the action taken on an assignment.
-
 An attention value cannot establish whether an assignee is still running, why a worktree moved, or whether a result
 meets its goal.
 
-## Maintenance and next action
+## Update triggers
 
-Review the routing when `observe` in
-[verification.py](../../packages/devkit-adaptive/src/devkit_adaptive/features/assignment/services/verification.py)
-adds, removes or renames an attention value or changes its condition, or when `CAP-DLV-adaptive-assignments` §4
-changes the `list` contract. For a value or combination that matches no row, read `show <id>` and the capability's
-`list` contract, and take the case to the Host under the adaptive-dev resume guidance.
+- `observe` in
+  [verification.py](../../packages/devkit-adaptive/src/devkit_adaptive/features/assignment/services/verification.py)
+  adds, removes or renames an attention value or changes its condition.
+- `CAP-DLV-adaptive-assignments` §4 changes the `list` contract.

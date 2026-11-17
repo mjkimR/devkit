@@ -40,7 +40,8 @@ Composed acceptance and handoff also perform guarded Git lifecycle effects under
 ### 4.1 Handoff Steps
 
 For how milestone membership, Unit prerequisites and provenance differ across proposal/spec handoff, read
-`DOMAIN-delivery-relationships`. The contracts below retain handoff authority.
+`DOMAIN-delivery-relationships`. The contracts below retain handoff authority; `DESIGN-proposal-handoff` explains the
+order in which the source applies them.
 
 Before its first write, handoff MUST validate the projected live unit dependency graph: replace the source
 PROP anchor with the new SPEC, carry outgoing edges and rewrite live incoming depends_on targets, written with the
@@ -100,8 +101,7 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    before writing (`SPEC_PROPOSAL_TARGET_EXISTS`).
 
    **Merging into an existing materials directory** (`ADR-proposal-handoff`): when the
-   dated directory already exists, the handoff merges into it per leaf, planned in one preflight pass over the
-   `materials/` leaves and the carried files:
+   dated directory already exists, the handoff merges into it per leaf:
 
    - The directory and every existing directory on the way to a planned path MUST be a real directory by `lstat`; a
      symbolic link or a file there is a conflict.
@@ -127,7 +127,7 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
 8. **Gates**: the proposal's `plan-accept` record carried to the spec (`CAP-DLV-proposal-planning` rule 12).
 
 A failure in steps 1 to 5 rolls back: what was moved goes back, what was written is removed (a directory created
-inside the moved `materials/` is followed back and removed when empty), and the proposal is kept. Every pre-existing
+inside the moved `materials/` is removed when empty), and the proposal is kept. Every pre-existing
 path of a merged materials directory stays byte-identical, since none of them was recorded as written or moved. A directory that
 still holds something the roll-back could not move back is kept, never removed; `SPEC_PROPOSAL_HANDOFF_FAILED` then
 lists what could not be undone in its details.
@@ -164,9 +164,8 @@ Every Markdown file under `docs/` and `specs/` is scanned, except the proposal i
 symbolic links and the files of completed spec bundles (`spec.md` with `status: completed`), which record the
 proposal as it was; their `feedback/` is scanned, since feedback stays current.
 
-- **Relative Markdown links** (inline links and images outside code, devkit's `extract_links`) that resolve into the
-  proposal are pointed at the new locations by devkit's `relocate_links`, which replaces each changed file
-  atomically: `proposal.md` (or the single file) to `spec.md`, `target-docs.md` to its
+- **Relative Markdown links** (inline links and images outside code) that resolve into the proposal are pointed at
+  the new locations, and each changed file is replaced atomically: `proposal.md` (or the single file) to `spec.md`, `target-docs.md` to its
   copy, each PADR to its ADR, anything under a moved `materials/` to the same path under the moved directory
   (whether or not the file exists; a link into a `materials/` that was not moved is `unmapped`), each carried file to
   its new path, and the bundle directory to the spec bundle. URLs, root-relative and fragment-only links are left
@@ -191,7 +190,7 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   (`` `ADR-x` ``), or else its new repository-relative path. Directory-only spans, including `` `materials/` ``
   and paths resolving to relocated directories without a trailing slash, remain unchanged so generic prose keeps
   its meaning. Frontmatter, fenced code and spans naming nothing relocated do not change.
-- **Dropped workflow record citations**: before ordinary relocation, relative Markdown links in scanned documents
+- **Dropped workflow record citations**: relative Markdown links in scanned documents
   and bundle-relative code spans in carried prose that name an exact dropped record become explicit historical
   Git citations. The full handoff HEAD commit and repository-relative path identify the record, only when its
   bytes at HEAD equal the file about to be deleted. A Markdown link becomes its label followed by the historical

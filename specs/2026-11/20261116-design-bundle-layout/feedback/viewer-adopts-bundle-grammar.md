@@ -76,7 +76,7 @@ created_at: 2026-11-16
   grammar of `ADR-formal-role-document-identities`.
 - **Versions**: `SPEC-design-bundle-layout` Development branch, 2026-11-16; viewer core pin source commit `504e2e1`.
 - **Conditions**: `SPEC-design-document-viewer` is in Development with no viewer code written for formal kinds;
-  `SPEC-design-bundle-layout` lands the grammar change and migrates `DESIGN-distribution-transactions`,
+  `SPEC-design-bundle-layout` lands the grammar change and migrates
   `DESIGN-distribution-file-directory-replacement`, `DOMAIN-bundle-selection-and-installation` and
   `DOMAIN-delivery-relationships` under unchanged IDs.
 - **Workarounds Attempted**: not attempted; `SPEC-design-bundle-layout` excludes viewer changes.

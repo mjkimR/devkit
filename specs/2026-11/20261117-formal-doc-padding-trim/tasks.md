@@ -19,11 +19,11 @@ plan: PLAN-formal-doc-padding-trim
 
 ## Phase 2: Living Spec documents
 
-- [ ] **Task 2.1**: Apply the audit to the formal documents and fold DESIGN-distribution-transactions into its detail, with the reference repairs and the viewer test
+- [x] **Task 2.1**: Apply the audit to the formal documents and fold DESIGN-distribution-transactions into its detail, with the reference repairs and the viewer test
   - **_Boundary**: docs/designs/, docs/domain/, docs/operations/, docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md, specs/2026-11/20261116-design-bundle-layout/feedback/viewer-adopts-bundle-grammar.md, packages/devkit-viewer/frontend/src/features/knowledge/FormalReading.test.ts
   - _Requirements: AC-06, AC-07_
   - **Verification**: the `rg` commands of AC-06; `uv run devkit docs resolve DESIGN-distribution-transactions`; `uv run devkit rules check docs/designs docs/domain docs/operations`; the viewer frontend check
-- [ ] **Task 2.2**: Move the handoff mechanism clauses from CAP-DLV-proposal-lifecycle into DESIGN-proposal-handoff and resolve the source feedback
+- [x] **Task 2.2**: Move the handoff mechanism clauses from CAP-DLV-proposal-lifecycle into DESIGN-proposal-handoff and resolve the source feedback
   - **_Boundary**: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md, docs/designs/delivery/DESIGN-proposal-handoff/design.md, specs/2026-11/20261116-formal-docs-feedback-handoff/feedback/proposal-lifecycle-capability-holds-mechanism-detail.md
   - _Requirements: AC-08_
   - **Verification**: the `rg` command of AC-08 exits `1`
