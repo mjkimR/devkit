@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:19:27.745864Z'
+status: completed
+summary: Handoff rewrites stale alias references in carried and promoted documents; existing rewrites preserved
+findings: []
+checks:
+  resolved: 'PASS test_proposal_aliases.py: sibling and other-document alias tests pass and RULE-document-reference reports 0 violations after handoff'
+  preserved: PASS proposals integration suite 368 passed; just test-affected --base main 1789 passed; outside-file and non-alias test passes
+diff_scope:
+  base: a8289513d9e59aab49e35e11900e26be3da493df
+  head: 0dce8c7d71cd62d51926751ec51657b9617c2d51
