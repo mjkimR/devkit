@@ -61,6 +61,12 @@ weakening the guarantee for declared or worker-made writes.
 - **Then** it states the same rule, and `uv run devkit rules check --ci --base main` and `uv run devkit generated check`
   report no violation
 
+### [AC-04] The refs-rewritten notice docstring covers alias rewrites
+- **Given** the `ProposalReferencesRewrittenNotice` class in `packages/devkit-spec/src/devkit_spec/base/errors.py`
+- **When** its docstring is read
+- **Then** it names spec, ADR and stale-alias rewrites, and its code `SPEC_PROPOSAL_REFS_REWRITTEN`, level and fix
+  are unchanged (Host-authorized scope extension)
+
 ## 5. Assumptions
 
 - The Host has each unit's handoff `commit` from the handoff return and each evidence entry's `source` from
@@ -71,3 +77,4 @@ weakening the guarantee for declared or worker-made writes.
 ## 6. Source feedback
 
 - `FB-handoff-reference-overlap-serializes-workers` (full scope).
+- `FB-refs-rewritten-notice-docstring` (full scope, Host-authorized extension).

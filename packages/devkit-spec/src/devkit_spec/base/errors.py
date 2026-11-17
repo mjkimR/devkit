@@ -297,7 +297,7 @@ class ApprovalKeyIgnoredWarning(SpecError):
 
 
 class ProposalReferencesRewrittenNotice(SpecError):
-    """ID references to the proposal or its PADRs now name the spec or the ADRs (``NOTICE``)."""
+    """ID references now name the spec, the ADRs or the current ID of a stale alias reference (``NOTICE``)."""
 
     code = "SPEC_PROPOSAL_REFS_REWRITTEN"
     level = Level.NOTICE
