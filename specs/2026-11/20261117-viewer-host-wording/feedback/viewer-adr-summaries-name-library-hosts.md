@@ -8,7 +8,7 @@ target: docs/decisions/2026-11/20261104-viewer-namespace-roadmap-discovery.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-17
 ---
 
@@ -32,3 +32,13 @@ created_at: 2026-11-17
 docs/decisions/2026-11/20261104-viewer-namespace-roadmap-discovery.md:4 summary "... across local and library sources ..."
 docs/decisions/2026-11/20261110-viewer-indexed-decision-supersession.md:4 summary "... one read-only viewer across hosts ..."
 ```
+
+## Disposition
+
+Resolved by `SPEC-viewer-adr-summary-wording`. The user decided that a decision-time summary is reworded after a
+later ADR removes the hosts it names. The `summary` of `ADR-viewer-namespace-roadmap-discovery` now reads "For viewer
+roadmap discovery, we ..." and the `summary` of `ADR-viewer-indexed-decision-supersession` now names the quality "to
+keep the viewer read-only without running each repository's Python environment"; each Y-statement keeps its
+decision and downside, and `git diff main -- docs/decisions/` changes only the two summary lines. The `rg` checks
+for library or host wording in both summaries exit 1, `devkit rules check --ci --base main` exits 0 and
+`just test-affected --base main` passed 18 tests.
