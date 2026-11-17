@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T04:20:27.336252Z'
+status: completed
+summary: CAP rule 15, UC step 1/3c, ADR-impeccable-upfront-ask and the partial-supersession pointer match the bundle text and AC-01..AC-05; formal design/domain/operations unaffected.
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 967d914477e5cb87033b7639a6838d3b45687277
+  head: 6c7c50dd60316086c8a5ae262a57c350b649458e
+activity_effort: low
