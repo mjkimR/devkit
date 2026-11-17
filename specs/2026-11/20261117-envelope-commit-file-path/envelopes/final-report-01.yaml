@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:30:01.757078Z'
+status: completed
+summary: envelope commit accepts a workspace-relative --file inside the Unit as its Unit-relative record; malformed --file targets the Unit and its fix names envelopes/<kind>-<NN>.yaml; CAP-DLV-workflow-envelopes updated; FB-envelope-commit-file-path-doubled resolved
+findings: []
+checks:
+  tests: PASS just test-affected --base main 2557 passed; test_envelope_commit.py and policy tests 72 passed
+  build: PASS pyright on changed files 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main
+diff_scope:
+  base: 7a56e325baf3f65db7f91787481286210e016d74
+  head: 8a1bcd5ded99de8d648c055ab31eea43178c3ba9

@@ -8,7 +8,7 @@ target: devkit workflow envelope commit
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-17
 ---
 
@@ -28,3 +28,4 @@ created_at: 2026-11-17
 - **Suggestion**: Accept a workspace-relative path that already starts with the unit directory, or make the `[FIX]`
   line name the unit-relative form the `[ENVELOPE: ...]` line prints
   (`packages/devkit/src/devkit_agt/features/workflow/usecases/commit_envelope.py`).
+- **Disposition**: `SPEC-envelope-commit-file-path` resolved it: `CommitEnvelopeUseCase` accepts a `--file` that starts with the Unit directory as its Unit-relative record, and a malformed `--file` targets the Unit with a `[FIX]` naming `--file envelopes/<kind>-<NN>.yaml`. Verified by the regression tests in `packages/devkit/tests/integration/features/workflow/test_envelope_commit.py` and `just test-affected --base main` (2557 passed).

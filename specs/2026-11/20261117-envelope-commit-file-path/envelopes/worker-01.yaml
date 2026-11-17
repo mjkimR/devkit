@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:30:10.179088Z'
+status: completed
+summary: 'Development to the final change report: CommitEnvelopeUseCase normalizes a --file that starts with the Unit directory to the Unit-relative record; a malformed --file targets the Unit with a FIX naming envelopes/<kind>-<NN>.yaml; Red/Green regression tests; CAP-DLV-workflow-envelopes clause 3 updated; FB-envelope-commit-file-path-doubled resolved (Task 2 boundary, payload-authorized). No bundle source changed, no sync output. Integration not run.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main 2557 passed
+  lint: PASS just lint-check; pyright changed files; devkit rules check --ci --base main
+diff_scope:
+  base: ''
+  head: 6c28d5b9a8cf8929af3ae417439f8f4af595efe8
+activity_effort: low
