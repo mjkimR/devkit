@@ -515,3 +515,34 @@ def test_fixes_suggesting_a_reverify_pass_summary(repo: Path, tmp_path: Path) ->
     assert result.exit_code == 2 and "(ENVELOPE_FLAG_INVALID)" in result.stderr
     fix = next(line for line in result.stderr.splitlines() if line.startswith("[FIX]"))
     assert f"envelope reverify --unit {UNIT} --from latest --summary" in fix
+
+
+@pytest.mark.parametrize("unit", [UNIT, f"./{UNIT}", f"{UNIT}/"])
+def test_workspace_relative_file_inside_the_unit_commits(repo: Path, unit: str) -> None:
+    """AC-01: a --file that already starts with the Unit directory names the same Unit-relative record."""
+    result = CommitEnvelopeUseCase().execute(Workspace(repo, lint=None), unit, f"{UNIT}/{FILE}")
+    assert result["file"] == FILE
+    assert result["outcome"] == "committed"
+    assert git(repo, "show", "--name-only", "--format=", "HEAD") == f"{UNIT}/{FILE}"
+    cli = run_cli("envelope", "commit", "--workspace-root", str(repo), "--unit", UNIT, "--file", f"{UNIT}/{FILE}")
+    assert cli.exit_code == 0, cli.output
+    assert f"file={FILE} outcome=already_committed" in cli.stdout
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        f".devkit/transient/work/other/{FILE}",
+        f"{UNIT}/./{FILE}",
+        f"{UNIT}//{FILE}",
+        f"{UNIT}/envelopes/review-1.yaml",
+        f"{UNIT}/{UNIT}/{FILE}",
+        "../review-01.yaml",
+    ],
+)
+def test_file_outside_the_unit_names_the_unit_relative_form(repo: Path, file: str) -> None:
+    """AC-02: a path that is not an immediate envelope of the Unit is refused; the fix names a working form."""
+    error = refusal(repo, "ENVELOPE_COMMIT_INVALID", file)
+    assert error.target_files == (UNIT,)
+    assert f"envelope commit --unit {UNIT} --file envelopes/<kind>-<NN>.yaml" in (error.fix or "")
+    assert file not in (error.fix or "")
