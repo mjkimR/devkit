@@ -5,6 +5,8 @@ summary: "Assigns one normative owner per responsibility and per fact type, keep
 area: documents
 status: active
 usecases: []
+entrypoints:
+  - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md
 ---
 
 # [CAP-DOCS-documentation-ownership] Documentation ownership and linked entries
