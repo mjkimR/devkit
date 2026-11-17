@@ -2,7 +2,7 @@
 id: PROP-handoff-rewrite-overlap-scheduling
 title: Handoff rewrites as integration evidence in scope scheduling
 summary: Lets scope collection tell paths a completed handoff commit rewrote apart from prospective worker writes, so handoff reference rewrites alone no longer serialize otherwise separate Development workers.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-16
 target_area: collaboration/
 priority: low                         # critical | high | medium | low
