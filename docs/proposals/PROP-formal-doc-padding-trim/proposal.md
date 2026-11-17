@@ -21,6 +21,8 @@ boundaries:
     - specs/2026-11/20261116-design-bundle-layout/feedback/viewer-adopts-bundle-grammar.md
     - packages/devkit-viewer/frontend/src/features/knowledge/FormalReading.test.ts
     - .devkit/installation.json
+    - docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
+    - specs/2026-11/20261116-formal-docs-feedback-handoff/feedback/proposal-lifecycle-capability-holds-mechanism-detail.md
   excludes:
     - handbook/
     - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md
@@ -67,6 +69,13 @@ documents, makes formal documents shorter to write and read without losing any f
 
 Checked and kept: use case sections (parsed by rules), operations "Normal-state observation", the problem-first lead,
 the domain relationship table, the reference template, ADR drivers and confirmation.
+
+## Source feedback
+
+- `FB-proposal-lifecycle-capability-holds-mechanism-detail` (direct fix, user-authorized scope extension): review
+  `CAP-DLV-proposal-lifecycle` §4.1 step 5 and §4.3 against `CAP-DOCS-documentation-ownership` §3.1, move pure
+  mechanism explanation into `DESIGN-proposal-handoff` and keep every observable guarantee in the capability (Q8).
+  The source resolves at this unit's completion when the move lands and verification passes.
 
 ## 2. Technical Spike Questions
 
@@ -140,6 +149,35 @@ Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, 
     `recover_locked`, `handoff_proposal`, `HandoffUseCase`, `evaluate_definition`), fields and codes; the viewer test
     pins `apply_changes`. `## Update triggers` names the same public entry points.
 
+- **Q8** (scope extension): Which sentences of `CAP-DLV-proposal-lifecycle` §4.1 step 5 and §4.3 are pure mechanism
+  that moves to `DESIGN-proposal-handoff`, and how does that settle the reverse duplication in
+  `DESIGN-proposal-handoff` lines 74-82?
+  - **Answer**: one direction for both: the capability states outcomes (what is refused before writing, what rolls
+    back, codes and output lines, which references change and which do not), and the design states order, passes and
+    helpers and cites the capability section for every outcome instead of restating it. Applied to the text:
+    - Moves to the design (the capability keeps the outcome sentence): "planned in one preflight pass over the
+      `materials/` leaves and the carried files" (§4.1 step 5; the capability keeps "refused before its first
+      write"); "is followed back" in the rollback paragraph (the capability keeps "a directory created inside the
+      moved `materials/` is removed when empty"); the library names `extract_links` and `relocate_links` in §4.3
+      (the capability keeps "each changed file is replaced atomically"); "before ordinary relocation" in the
+      dropped-record bullet (the design states the pass order).
+    - Stays in the capability as guarantees: the merge containment, duplicate and conflict bullets with their
+      `lstat` criteria, conflict kinds, `[TARGET]`/`[DETAIL]` lines and fix; the absent-in-preflight write rule and
+      the concurrency window; the code-span path rewriting, including directory-only spans staying unchanged; the
+      dropped-record citation condition (bytes at HEAD equal the deleted file) and `unmapped` reporting. Evidence:
+      `ADR-proposal-handoff` §4 restates the merge rules as decided clauses and its §6 Confirmation says
+      "`CAP-DLV-proposal-lifecycle` states the merge rules, the residual window and the result fields; review checks
+      it against the tests"; `docs/decisions/2026-11/20261110-partial-supersession-statements.md` traces into §4.1
+      step 4, which this unit does not touch.
+    - No test or rule cites a moved phrase: no `.py` or `.ts` file under `packages/` reads
+      `CAP-DLV-proposal-lifecycle`, and the moved phrases appear only in the capability itself
+      (`rg "preflight pass|followed back|before ordinary relocation|relocate_links|extract_links"` over `docs/` and
+      the bundle sources). Development reruns that check per moved sentence.
+    - `DESIGN-proposal-handoff` lines 74-82 shrink to the order of the body carry and a citation of
+      `CAP-DLV-proposal-lifecycle` §4.2 for the classification table.
+    - The feedback's expected gain is smaller than it assumed: most of §4.1 step 5 and §4.3 is observable contract
+      that an ADR confirms, so the capability shortens by a few clauses, not by the merge bullets.
+
 ## 3. Proposed Design & Impact
 
 - Docs bundle: templates (design, domain, operations, capability, usecase, ux, milestone) and instructions (design,
@@ -151,8 +189,11 @@ Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, 
   is folded into `DESIGN-distribution-file-directory-replacement` and the old ID kept as an alias there.
 - Tests pinning the changed phrases (`test_formal_doc_checkpoints_guidance.py`, the viewer's `FormalReading.test.ts`)
   are updated; bundle sources change, so `devkit sync` rewrites `.devkit/installation.json`.
-- Out of scope: the ADR template and decision-writing (`PROP-adr-body-metadata-removal`), capability and use case
-  documents themselves (one reference repair in `CAP-DIST-sync-and-transactions` aside), and any rule change.
+- `CAP-DLV-proposal-lifecycle` §4.1 step 5 and §4.3 lose the mechanism clauses Q8 lists, which
+  `DESIGN-proposal-handoff` takes over; `FB-proposal-lifecycle-capability-holds-mechanism-detail` resolves.
+- Out of scope: the ADR template and decision-writing (`PROP-adr-body-metadata-removal`), §4.1 step 4 of
+  `CAP-DLV-proposal-lifecycle` (its PADR body-metadata rewrite belongs to that sibling), other capability and use case
+  documents (one reference repair in `CAP-DIST-sync-and-transactions` aside), and any rule change.
 
 ## 4. Lifecycle & Retirement Criteria
 
