@@ -8,7 +8,7 @@ target: packages/devkit-viewer/frontend/src/features/roadmap/RoadmapView.svelte
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -36,3 +36,12 @@ RoadmapView.svelte: let branches: BranchDocuments[] = []; const opens = (_ref: s
 api/repository.ts normalizeTree: item.type === 'dir' ? 'tree' : item.type === 'file' ? 'blob' : item.type
 .gitignore: dist / dist-pack entries for the removed svelte-package and npm pack outputs
 ```
+
+## Resolution
+
+- **Disposition**: `SPEC-viewer-roadmap-plumbing` resolved it: `buildRoadmap` takes only the checkout's documents
+  (`BranchDocuments`, `isActivityBranch` and the member `branch` field removed), `RoadmapView` lost `branches` and
+  `opens`, `MilestoneItem` lost its per-branch open props and branch badge, `normalizeTree` keeps the server's
+  `tree`/`blob` types, and `.gitignore` dropped the `frontend/dist`/`dist-pack` entries. Verified by
+  `just viewer install && just viewer lint && just viewer check && just viewer test && just viewer build` (244 passed)
+  and `just test-affected --base main` (194 passed).

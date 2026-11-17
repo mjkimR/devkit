@@ -179,7 +179,7 @@ describe('namespace milestone discovery', () => {
 			'specs/month/unit/spec.md': header('SPEC-unit', 'in-progress', 'milestone: MS-web\n')
 		});
 		const result = await loadRoadmapDocuments(source, 'main', signal());
-		const graph = buildRoadmap(result.documents, [], { history: false });
+		const graph = buildRoadmap(result.documents, { history: false });
 		expect(
 			graph
 				.filter((m) => m.ready)

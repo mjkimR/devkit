@@ -1,0 +1,15 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:24:03.672386Z'
+status: completed
+summary: 'Author self-review at low effort: AC-01 rg finds no plumbing symbol and buildRoadmap takes documents and options; AC-02 RoadmapView test asserts View raw, member open and no branch badge; AC-03 repository.test.ts pins type passthrough and order; AC-04 gitignore has no frontend dist entry. Members keep first-in-order per slug as the old equal-weight rule did. No non-goal implemented.'
+findings: []
+checks:
+  tests: PASS just viewer test 244/244; just test-affected --base main 194 passed
+  frontend: PASS just viewer install, lint, check, test, build
+  lint: PASS just lint; devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: 2d247d8242b46455efad71bc7947b3584096ca80
+  head: 0d90d24a2d561e77493da007a5f95b7102b66bf0

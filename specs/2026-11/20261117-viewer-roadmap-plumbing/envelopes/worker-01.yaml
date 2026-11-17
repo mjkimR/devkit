@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:25:46.882649Z'
+status: completed
+summary: 'Development of SPEC-viewer-roadmap-plumbing to the final change report: roadmap other-branch plumbing, normalizeTree dir/file mapping and stale frontend dist/dist-pack ignores removed with tests; static page rebuilt; no Living Spec change needed; FB-viewer-roadmap-branch-plumbing resolved. Not integrated.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just viewer test 244/244; just test-affected --base main 194 passed
+  build: PASS just viewer build; devkit generated check stale=0
+  lint: PASS just lint; just viewer lint; just viewer check; devkit rules check --ci --base main
+diff_scope:
+  base: ''
+  head: ebd6ddb7f2991585642fa730fc82d1ac098a91d4
+activity_effort: low

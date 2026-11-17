@@ -53,6 +53,8 @@ describe('RoadmapView', () => {
 		await screen.findByText('Stale copy');
 		expect(repository.planningProposals).not.toHaveBeenCalled();
 		expect(screen.getByText('In planning')).toBeTruthy();
+		expect(screen.getAllByRole('button', { name: 'View raw' })).toHaveLength(1);
+		expect(screen.queryByText(/🌿/)).toBeNull();
 		await fireEvent.click(screen.getByRole('button', { name: 'In planning' }));
 		expect(onOpen).toHaveBeenCalledWith('docs/proposals/PROP-x/proposal.md');
 	});

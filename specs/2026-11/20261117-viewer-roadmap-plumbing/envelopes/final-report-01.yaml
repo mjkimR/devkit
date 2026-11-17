@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:25:38.538240Z'
+status: completed
+summary: 'Viewer roadmap other-branch plumbing removed: buildRoadmap(documents, options), no BranchDocuments, isActivityBranch, Member.branch, branches, opens, canOpenBase/canOpenMember or branch badge; normalizeTree keeps tree/blob; .gitignore drops frontend dist/dist-pack. AC-01..AC-04 hold, roadmap behavior unchanged. Outcome: plumbing symbol matches 13 to 0, frontend src net -41 lines, frontend tests 244 passed before and after.'
+findings: []
+assumptions:
+- Baseline measured on this worktree's head before the source edits (change disabled, equal to base 2d247d824 for frontend sources)
+- MilestoneItem per-branch props and badge belong to the same plumbing; open actions always render as with the always-true helper
+checks:
+  tests: PASS just viewer test 244/244; just test-affected --base main (partial) 194 passed
+  build: PASS just viewer build; devkit generated check stale=0
+  lint: PASS just lint; just lint-check; just viewer lint; just viewer check; devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: 2d81980cbabe239ad601e4b98736a4e714093ddd
+  head: 9f1a9e8028d91323afe1d5434d0b06dba37d17a2
