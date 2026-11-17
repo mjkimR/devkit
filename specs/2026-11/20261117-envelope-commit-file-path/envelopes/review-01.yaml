@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:29:03.299832Z'
+status: completed
+summary: 'Self-review at low effort: AC-01 to AC-03 covered by the regression and preserved tests in test_envelope_commit.py; no non-goal, stray file or boundary change; capability clause updated'
+findings: []
+checks:
+  tests: PASS just test-affected --base main 2557 passed
+  lint: PASS just lint-check, pyright on changed files, devkit rules check --ci --base main
+diff_scope:
+  base: 7a56e325baf3f65db7f91787481286210e016d74
+  head: ba9b3b56228622eee769ed895b459da3968c32d7
