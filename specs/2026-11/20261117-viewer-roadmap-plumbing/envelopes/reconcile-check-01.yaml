@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:24:57.515321Z'
+status: completed
+summary: 'Self-verified at low effort: no Living Spec target; CAP-VIEW-repository-viewer section 5 already limits the roadmap to the registered working tree, the server emits only tree and blob items, and no document names the removed symbols or gitignore entries. FB-viewer-roadmap-branch-plumbing resolved with disposition.'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base main
+  docs_search: PASS rg for removed symbols and dist entries finds no Living Spec hit
+diff_scope:
+  base: 2d81980cbabe239ad601e4b98736a4e714093ddd
+  head: 7cd05b8a57b8db8cdece1e3113c0945279565a01
