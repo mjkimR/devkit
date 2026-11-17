@@ -2,7 +2,7 @@
 id: SPEC-viewer-adr-summary-wording
 title: Reword viewer ADR summaries that name library hosts
 summary: Reword the frontmatter summaries of two viewer ADRs that still name library sources and hosts, without changing either decision.
-status: in-progress
+status: completed
 created: 2026-11-17
 related_capabilities: []
 related_usecases: []
