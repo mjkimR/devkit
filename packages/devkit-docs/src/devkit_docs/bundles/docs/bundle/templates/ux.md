@@ -13,16 +13,14 @@ capabilities:             # the capabilities whose state or operations this elem
 
 # [UX-<slug>] Element Title
 
-<!-- File path is docs/ux/<area>/UX-<slug>.md and id matches file name. No sequence numbers. Write it with the
-ux-writing instruction; visual style lives in the project's steering style files, cited, never restated here. -->
+<!-- Write it with the ux-writing instruction; visual style lives in the project's steering style files, cited,
+never restated here. -->
 
 ## 1. Purpose
 
 - **Primary task**: <!-- one verb phrase: the task a person completes here -->
 - **Facts to commit**: <!-- what the person must see to commit to the task -->
 - **Secondary items**: <!-- where each secondary item goes: below, behind a control, another element (`UX-<slug>`) -->
-
----
 
 ## 2. Content
 <!-- Prose region rules (relative: primary, secondary, beside, below), then a content tree. Each node names the
@@ -34,16 +32,12 @@ this element shows is named here by its UX ID. -->
   - <!-- Object (representation) -->
     - <!-- Child node; shown when <condition> -->
 
----
-
 ## 3. States
 <!-- Lower-case state names: populated plus each of empty, loading and error that applies, and any other state.
 Each state offers a next action or says why none exists. -->
 
 - **populated**: <!-- ... -->
 - **empty**: <!-- ... -->
-
----
 
 ## 4. Interactions
 <!-- One row per trigger that serves a step or is a global control; continuous input is described in Content and
@@ -55,8 +49,6 @@ sees. -->
 | Trigger | Step | From | To | Target | Capability | Feedback |
 | --- | --- | --- | --- | --- | --- | --- |
 | <!-- Press Sign in --> | `UC-<slug>` 2 | populated | loading | `UX-<slug>` | `CAP-<AREA>-<slug>` | <!-- ... --> |
-
----
 
 ## 5. Evidence
 <!-- Optional: the path or link of the project's own wireframe, mock-up or screenshot; the reviewer reads it when

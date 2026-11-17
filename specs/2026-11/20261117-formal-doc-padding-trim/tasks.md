@@ -8,11 +8,11 @@ plan: PLAN-formal-doc-padding-trim
 
 ## Phase 1: Docs bundle
 
-- [ ] **Task 1.1**: Narrow the formal templates and writing instructions, move shared steps to living-spec-writing and document-writing, and drop inactive elements from the other templates and instructions
+- [x] **Task 1.1**: Narrow the formal templates and writing instructions, move shared steps to living-spec-writing and document-writing, and drop inactive elements from the other templates and instructions
   - **_Boundary**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/design.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/domain.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/operations.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/capability.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/usecase.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/ux.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/milestone.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/design-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/domain-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/operations-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/document-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/usecase-writing.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/ux-writing.md, .devkit/installation.json (sync output)
   - _Requirements: AC-01, AC-02, AC-04_
   - **Verification**: `uv run pytest packages/devkit-spec/tests/integration/bundles/spec packages/devkit-docs/tests/integration/bundles/docs`; the `rg` commands of AC-01, AC-02 and AC-04
-- [ ] **Task 1.2**: Merge the two routing tables into one fact-type table in the capability and living-spec-writing, and update the capability's section contracts and the table test
+- [x] **Task 1.2**: Merge the two routing tables into one fact-type table in the capability and living-spec-writing, and update the capability's section contracts and the table test
   - **_Boundary**: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md, packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md, packages/devkit-spec/tests/integration/bundles/spec/test_formal_doc_checkpoints_guidance.py
   - _Requirements: AC-03, AC-05_
   - **Verification**: `uv run pytest packages/devkit-spec/tests/integration/bundles/spec/test_formal_doc_checkpoints_guidance.py`

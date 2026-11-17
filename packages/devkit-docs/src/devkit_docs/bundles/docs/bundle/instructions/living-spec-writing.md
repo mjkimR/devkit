@@ -1,6 +1,6 @@
 ---
 name: living-spec-writing
-description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, decision placement, retention boundaries, use case and capability traceability, summaries, ID references, steering documents, terminology and the glossary.
+description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, decision placement, fact-type ownership, the steps formal design, domain and operations documents share, traceability, summaries, ID references, steering documents, terminology and the glossary.
 ---
 
 # Living Spec Writing
@@ -10,7 +10,6 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 - When behavior or a decision changes, rewrite the affected statements in `docs/` in place, citing the source ID
   (ADR, MAT, SPEC) where the reason matters. Add no dated headings, correction notes ("changed from X to Y") or
   history sections.
-- The selected development approach defines decision revision and retention. Document formats alone do not require immutable decision history.
 - Keep temporary checklists and task lists in the selected approach's work records, not `docs/`.
 
 ## Decision Placement
@@ -22,40 +21,50 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 
 ## Responsibility and design navigation
 
-- Assign each normative statement one owner by responsibility: contracts to capabilities, actor goals to use cases,
-  interactions to UX, system structure/constraints to architecture, conceptual meaning to domain models, local
-  mechanisms to design, rationale to decisions, evidence to materials and syntax to references.
-- Route each fact by its type to the owner in this table; a fact with two parts splits between the owners named:
+- Assign each normative statement one owner. Route each fact by its type to the owner in this table; a fact with two
+  parts splits between the owners named:
 
   | Fact type | Owner |
   | --- | --- |
-  | Behavior, limit, output order or tie-break a consumer can observe | Capability |
+  | Behavior, validity, safety, limit, output order or tie-break a consumer can observe | Capability |
   | That a code is raised, and when, as a guarantee | Capability rule; trigger condition, level and fix in a reference code table |
-  | Command, flag, configuration key or payload field syntax | Reference; the capability lists the interface |
+  | Command, flag, API, configuration key or payload field syntax | Reference; the capability lists the interface |
   | Data that a later run, another process or another tool reads back: location pattern, encoding, fields, example | Design datasheet; a format consumers author or parse is also a capability interface |
   | How an ID, key, hash, token or name is derived | Design; what the identity means belongs to the domain model |
-  | Internal processing order, algorithm or pseudocode | Design, or the source alone |
-  | Concept meaning, identity and lifecycle | Domain model; glossary for terms |
-  | Rationale and rejected options | ADR |
-  | Measurement or experiment | Materials |
+  | Local mechanism, internal processing order, algorithm, pseudocode or worked example | Design, or the source alone |
+  | Concept meaning, identity, relationships and lifecycle | Domain model; glossary for terms |
+  | Enduring choice, rationale and rejected options | ADR |
+  | Measurement, experiment or assumption | Materials |
+  | Actor goal, scenario and success contract | Use case |
+  | Human interface element and interaction | UX |
+  | System structure, interactions, deployment and architectural constraints | Architecture |
+  | Symptom and evidence routed to an existing action owner, and normal-state observation | Operations |
+  | Executable recovery steps and permissions | The existing instruction, playbook, advisory or executable owner |
+  | Contributor development activity | Development guide |
 
 - Keep domain meaning, implementation design and operational composition distinct without a fixed authoring order.
-- For operational questions, route symptom/evidence to the existing action owner and normal-state observation;
-  keep recovery steps and permissions with that owner.
 - If transferring a normative statement, replace its previous normative restatement in the same change and name
   the receiving owner; otherwise use a concise non-normative summary citing the owner.
-- Give design, domain and operations entries first-class IDs: a `designs/<area>/DESIGN-<slug>/design.md` bundle,
-  `DOMAIN-<slug>.md` in `domain/<area>/`, and `OPS-<slug>.md` in `operations/` under the global or registered package
-  docs root; a design or domain document declares its area directory as `area`.
-- Read `design-writing.md`, `domain-writing.md` or `operations-writing.md` before editing its role; use the matching
-  template in `../templates/`. Keep these roles equally formal without a fixed authoring sequence.
-- Give independently maintained Markdown details/examples/datasheets their own formal peer IDs; keep parent-owned
-  support inside the design bundle, or under `<PARENT-ID>/artifacts/` beside a domain or operations document, with
-  no fake IDs for CSV or images.
-- Use full IDs for current document navigation and optional typed related_* lists only where useful; require no
-  reciprocal registry, all-pairs links, whole-layer reading or fixed hop count.
-- Review owner uniqueness, source agreement and ordinary artifact/source link destinations; choose content by
-  responsibility, never by length or numerical detail.
+- Choose content by responsibility, never by length or numerical detail.
+
+For a design, domain or operations document, read `design-writing.md`, `domain-writing.md` or
+`operations-writing.md` and start from the matching template in `../templates/`; all three share these steps:
+
+1. Before writing, settle the one reader question the document answers; if the content answers none, drop it, and
+   if it answers several, split it into documents that each answer one.
+2. Open with an unheaded lead paragraph under the H1, with at most one sentence phrased as a question and no
+   question section or label.
+3. Link related documents by full ID in the body or in typed `related_*` lists, only where useful; require no
+   reciprocal links, whole-layer reading or reading order. Keep `aliases` for same-prefix identity, never relations.
+4. Give independently maintained Markdown detail its own formal peer ID; give parent-owned support no ID, link it
+   from the parent and name the parent in it.
+5. On a rename or root move, move the document with its support, keep the old ID in `aliases` and repair ordinary
+   links. On an area move, keep the ID and update `area`. On a split or reclassification, give each artifact one
+   canonical parent and keep a cross-kind predecessor retired with its successor named.
+6. To fold a document into another of the same kind, move the sentences only it holds into the receiving document,
+   delete the folded document and add its ID to the receiving document's `aliases`.
+7. Run `devkit rules check` and fix what it reports; review owner uniqueness, source agreement and link
+   destinations yourself, since no check proves them.
 
 ## Completed Specs and Traceability
 

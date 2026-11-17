@@ -12,8 +12,7 @@ depends_on: []
 ## Goal
 
 Cite the goal in ARCH-01-introduction-and-goals. Use a word-led slug, for example MS-release-1-0.
-State the broad outcome and its purpose. The selected development approach defines work membership, sequencing
-and how scope becomes an agreed implementation contract.
+State the broad outcome and its purpose.
 
 ## Exit condition
 
@@ -27,8 +26,6 @@ State observable phase-level outcomes and capability boundaries. Keep implementa
 
 Decomposition: pending
 Direct proposal work: pending
-
-The selected development approach defines completion authority and how these assertions are maintained.
 
 A milestone lives under one roadmap root: `docs/roadmap/` or `docs/packages/<name>/roadmap/` of a
 registered namespace. Keep planned/active milestones at `<root>/MS-<slug>.md` and done/dropped at

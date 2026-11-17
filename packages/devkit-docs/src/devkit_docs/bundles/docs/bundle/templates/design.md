@@ -15,7 +15,7 @@ area: <area>   # the area directory of designs/<area>/DESIGN-<slug>/design.md
 
 # [DESIGN-<slug>] <Title>
 
-<!-- Lead paragraph: the problem the mechanism solves, beyond the summary. At most one sentence is a question. -->
+<!-- Lead paragraph: the problem the mechanism solves, beyond the summary. -->
 
 ## <Mechanism topic>
 
@@ -24,16 +24,15 @@ the mechanism needs. -->
 
 ## <Example or datasheet topic>
 
-<!-- Worked example or datasheet. Add a datasheet when the mechanism writes data that a later run, another process
-or another tool reads back: location pattern, encoding, fields or layout, identity derivation, ordering and one
-example. Independent detail gets its own peer DESIGN bundle; parent-owned support sits in this bundle beside
-design.md, linked from here. -->
+<!-- Worked example, or a datasheet when a later run, another process or another tool reads back the data the
+mechanism writes (fields in design-writing). Parent-owned support sits in this bundle beside design.md, linked from
+here. -->
 
 ## Authority boundary
 
-<!-- What this design does not settle and the owner that does, by full ID; the design transfers no normative
-statement. -->
+<!-- The rules this design explains and their owners by full ID, also those the body cites inline. -->
 
-## Maintenance and next action
+## Update triggers
 
-<!-- The source change that requires updating this design, and the next useful reader action. -->
+<!-- The source changes that make this design stale, by public entry point, use case, field, code or capability
+section, and the command that rechecks the worked example. -->

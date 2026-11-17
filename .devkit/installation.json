@@ -2064,31 +2064,31 @@
     },
     ".devkit/managed/docs/instructions/design-writing.md": {
       "mode": 420,
-      "sha256": "d036ec8ec3ab78a305374e7101d8c59239c7f46609a3d7e18e72e40aeeb0f902"
+      "sha256": "4ceb2cebaaf2ba56f8f75756b82d3e4c015ddffbdfbdf17bd514e69aa2a12ec7"
     },
     ".devkit/managed/docs/instructions/document-writing.md": {
       "mode": 420,
-      "sha256": "10f1c0d630e7a484fcf3ed5ef302663fb29258727129a46f87678e48bff7b393"
+      "sha256": "07bbc71a4434485d4e6c8d53a994124a34e0c1692527a33ec869650bb3f412be"
     },
     ".devkit/managed/docs/instructions/domain-writing.md": {
       "mode": 420,
-      "sha256": "66b1ccf922c1955f50a92f99ec6b774748eab62080aafa034053e9712a7af589"
+      "sha256": "6c413e70f78b4846db9e4836183ff85a1fc52d07f11fac789d0e5fd11d0402f3"
     },
     ".devkit/managed/docs/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "ec68b2194dc7835fededa33fa77e217fb53132df580c28b5b4af8f03d4f315f9"
+      "sha256": "2e627e4041f23014478c2fdbc8aabf0222ede4f531f92de25e016a8af4a512be"
     },
     ".devkit/managed/docs/instructions/operations-writing.md": {
       "mode": 420,
-      "sha256": "8b483c66672ae868d49bcf1c4965b46347f32c820ba2e73d05676e413c7f1ac1"
+      "sha256": "26d4d551d8b5edf3ede925aa538674cf41bcea02f290bba7fe090039d794c305"
     },
     ".devkit/managed/docs/instructions/usecase-writing.md": {
       "mode": 420,
-      "sha256": "433b8dd1ca53477ebfe8361f6084956c9be9a419ce3738eb25d92fa347b19849"
+      "sha256": "fe419a55eaab9e0a8e0955e7ea7b2c6948c62723e29305a2b79b43ac569620d3"
     },
     ".devkit/managed/docs/instructions/ux-writing.md": {
       "mode": 420,
-      "sha256": "136f3accfd9bd8b07ed284a32bbc48993c52d72a2cfd3970901973abef66112f"
+      "sha256": "0366fa533030d746754bc20754e2c902bb6a3a59053900bee7398b0fa528079b"
     },
     ".devkit/managed/docs/rules/code_entrypoints/guide.md": {
       "mode": 420,
@@ -2212,7 +2212,7 @@
     },
     ".devkit/managed/docs/templates/capability.md": {
       "mode": 420,
-      "sha256": "db5f6577f5a1df81e6f1ed6d3d66b5c2057ece63965730145aa78dcc4c30c2da"
+      "sha256": "d74a11f88e0265a72489df0a966de18808fddadf9dceb66df61d9e71d167dad7"
     },
     ".devkit/managed/docs/templates/decision.md": {
       "mode": 420,
@@ -2220,19 +2220,19 @@
     },
     ".devkit/managed/docs/templates/design.md": {
       "mode": 420,
-      "sha256": "7ca5e57a9cf48bd62f384428bbc9fa87bf479c6f6254af6cc5d086b0b100851d"
+      "sha256": "937046a7666cac8d6dad96db521cc8c83d8624ce57e925b3d97fae2c9ba07f40"
     },
     ".devkit/managed/docs/templates/domain.md": {
       "mode": 420,
-      "sha256": "7cf558492394117da2a9ff6ab31781903d29873f14f44f0ae81dcca6d1fab1ae"
+      "sha256": "55b29ec31c9a41dfb211b85bd0f41ae38b27859533e2fa2092d235f428334833"
     },
     ".devkit/managed/docs/templates/milestone.md": {
       "mode": 420,
-      "sha256": "d6f7172760e39a14a3cdf515b83280f4a879e0bc7bffbb2122ea69d8ade45757"
+      "sha256": "c081140ec290f61c00ca5e73acaa4ff94c6d89384309c90a9affb498c286a940"
     },
     ".devkit/managed/docs/templates/operations.md": {
       "mode": 420,
-      "sha256": "a63cf14f6555f701513768a1a24921e852df14c9aece5e67e4998cfa9a82f888"
+      "sha256": "c5227cad11399dcf8476451399424b9e72d3dae3a6c6e39a0827e095497ba197"
     },
     ".devkit/managed/docs/templates/reference.md": {
       "mode": 420,
@@ -2240,11 +2240,11 @@
     },
     ".devkit/managed/docs/templates/usecase.md": {
       "mode": 420,
-      "sha256": "661f9b0215cbdbeafd8fa9ddf34da9202b3626ec25ffe79f430648da76795ebe"
+      "sha256": "c9aac62977140abb271c3608d1933746ea8f1bacc50e8a75ae29f9b77ad21e89"
     },
     ".devkit/managed/docs/templates/ux.md": {
       "mode": 420,
-      "sha256": "510a33fcf50e6523a8dd98cbeccc7e34457b84d0bdea341bee2844a4e463d41a"
+      "sha256": "0bdf56af39e2e2086a55227dd1adde373245de68336dd7c5e18aaac30ea3756b"
     },
     ".devkit/managed/harness/AGENTS.md": {
       "mode": 420,

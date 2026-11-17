@@ -14,8 +14,7 @@ area: <area>   # the area directory of domain/<area>/DOMAIN-<slug>.md
 
 # [DOMAIN-<slug>] <Title>
 
-<!-- Lead paragraph: the concepts readers confuse and why, beyond the summary. At most one sentence is a
-question. -->
+<!-- Lead paragraph: the concepts readers confuse and why, beyond the summary. -->
 
 ## Relationship overview
 
@@ -29,13 +28,14 @@ ID. Keep term definitions in the glossary. -->
 
 ## <Worked example topic>
 
-<!-- Optional: a nonexecuted example that separates the confused concepts. Delete the section when unused. -->
+<!-- An example that separates the confused concepts. It may sit in the overview instead; then delete this
+section. -->
 
 ## Authority boundary
 
-<!-- What this entry does not settle (validity, lifecycle permission, transformation) and the owner that does, by
-full ID. -->
+<!-- Owners that neither the table nor the body names, and what this document cannot conclude. Delete the section
+when nothing remains. -->
 
-## Maintenance and next action
+## Update triggers
 
-<!-- The conceptual change that requires updating this entry, and the owner to read next for each question. -->
+<!-- The source changes that make this document stale, by capability section, field, code or use case. -->

@@ -102,4 +102,3 @@ status display fits it by these criteria, not by an exception to the rules.
 - Draft screens before code in the UX template's shape, with the use case step citations and register rows they need.
 - In a draft, an ID the change creates (a new UX, UC or CAP ID) is plain text; existing IDs stay code spans.
 - Keep retained screens in `docs/ux/`, their citations in the use cases and their object rows in the register.
-- The selected development approach defines review timing and how drafts become current documents.

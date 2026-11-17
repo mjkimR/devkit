@@ -10,10 +10,7 @@ usecases:
 
 # [CAP-<AREA>-<slug>] Capability Title
 
-<!-- File path is docs/capabilities/<area>/CAP-<AREA>-<slug>.md and id matches file name. <AREA> is uppercase abbreviation of area; no sequence numbers. -->
-
 ## 1. Summary
-<!-- Summarize core purpose and value of this capability in 2-3 sentences -->
 
 ## 2. Scope & Boundary
 - **In-Scope**: Explicit scope and responsibilities handled by this capability.
@@ -21,13 +18,8 @@ usecases:
 
 ## 3. Business Rules & Policies
 <!-- One EARS sentence per rule with an RFC 2119 keyword (capability-writing): [WHEN <event> | WHILE <state> | IF <condition> THEN | WHERE <feature>,] <system> MUST <response>. End a checked rule with its RULE-<slug> or test path. Observable contract only; route mechanism, private formats and syntax by living-spec-writing. -->
-1. **[Rule 1 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). The selected development approach defines authorization for exceptions. -->
+1. **[Rule 1 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). -->
 2. **[Rule 2 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). -->
 3. **[Rule 3 Name]**: <!-- Rule specification and RFC 2119 keyword (SHOULD NOT). -->
 
 ## 4. Interfaces & Data Contracts
-- **Primary API Endpoints / Events**:
-  - `POST /api/v1/...`
-  - `event.topic.name` (Pub/Sub event)
-- **Core Data Schema / Entity References**:
-  - Relevant tables or entities

@@ -2,7 +2,7 @@
 id: SPEC-formal-doc-padding-trim
 title: Trim padding from formal document guidance and documents
 summary: Remove guidance and template elements that duplicate rules, frontmatter or other owners, narrow the Maintenance section to update triggers, and apply the same standard to the existing design, domain and operations documents.
-status: planned
+status: in-progress
 created: 2026-11-17
 related_capabilities: [CAP-DOCS-documentation-ownership, CAP-DLV-proposal-lifecycle, CAP-DIST-sync-and-transactions]
 related_usecases: []
@@ -105,7 +105,8 @@ the domain relationship table, the reference template, ADR drivers and confirmat
 ### [AC-04] Shared templates and instructions lose inactive elements
 - **Given** the docs bundle sources
 - **When** `rg -n "selected development approach defines|File path is|YAML_BINDING_UNAVAILABLE" packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions` runs
-- **Then** it reports only `decision-writing.md`; `templates/usecase.md` and `templates/ux.md` hold no body `---`
+- **Then** it reports only `templates/decision.md` and `instructions/decision-writing.md`, which Non-Goal 1 leaves
+  to the sibling proposal; `templates/usecase.md` and `templates/ux.md` hold no body `---`
   separator; `templates/capability.md` keeps the `## 1. Summary` and `## 4. Interfaces & Data Contracts` headings
   without the Summary comment or the §4 scaffold; the docs and spec bundle guidance tests pass.
 

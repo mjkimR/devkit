@@ -25,12 +25,21 @@ def _fact_rows(markdown: str) -> list[str]:
     return rows
 
 
-def test_the_routing_table_has_nine_fact_types_and_matches_the_capability() -> None:
-    rows = _fact_rows(raw("instructions/living-spec-writing.md"))
-    assert len(rows) == 9
-    assert rows[0].startswith("| Behavior, limit, output order or tie-break a consumer can observe | Capability |")
+def test_one_routing_table_of_fifteen_fact_types_matches_the_capability() -> None:
+    """SPEC-formal-doc-padding-trim AC-03: the fact-type and responsibility tables are one table of 15 rows."""
+    guide = raw("instructions/living-spec-writing.md")
+    capability = CAPABILITY.read_text()
+    rows = _fact_rows(guide)
+    assert len(rows) == 15
+    assert rows[0].startswith(
+        "| Behavior, validity, safety, limit, output order or tie-break a consumer can observe | Capability |"
+    )
     assert any(row.startswith("| How an ID, key, hash, token or name is derived | Design;") for row in rows)
-    assert _fact_rows(CAPABILITY.read_text()) == rows  # the canonical copy in this repository's Living Spec
+    assert any(row.startswith("| Actor goal, scenario and success contract | Use case |") for row in rows)
+    assert _fact_rows(capability) == rows  # the canonical copy in this repository's Living Spec
+    for document in (guide, capability):
+        assert document.count("| Fact type | Owner |") == 1
+        assert "| Responsibility / reader question |" not in document
 
 
 def test_capability_design_and_reference_guidance() -> None:
