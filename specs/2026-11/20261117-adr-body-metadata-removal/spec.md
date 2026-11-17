@@ -1,34 +1,23 @@
 ---
-id: PROP-adr-body-metadata-removal
+id: SPEC-adr-body-metadata-removal
 title: Remove the ADR body metadata block and trim the ADR template
 summary: Drop the Status/Date/Deciders/Involved block from the ADR template, the proposal scaffold and the handoff acceptance rewrite, since the frontmatter already owns status, date and supersession, and shorten the option and separator scaffolding to what decision-writing asks for.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-17
-target_area: documents/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md
-    - packages/devkit-spec/src/devkit_spec/features/proposals/
-    - packages/devkit-spec/tests/integration/features/proposals/
-    - packages/devkit-docs/tests/integration/bundles/docs/
-    - docs/decisions/
-    - docs/capabilities/delivery/CAP-DLV-proposal-planning.md
-    - docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
-    - docs/designs/delivery/DESIGN-proposal-handoff/design.md
-  excludes:
-    - handbook/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-17
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-adr-body-metadata-removal] Remove the ADR body metadata block and trim the ADR template
+# [SPEC-adr-body-metadata-removal] Remove the ADR body metadata block and trim the ADR template
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-adr-body-metadata-removal on 2026-11-17.
+- **Preserved Materials**: `docs/materials/2026-11/20261117-adr-body-metadata-removal`
+
+### 1. Background & Hypothesis
 
 The ADR template (`templates/decision.md`) puts a metadata list under the H1: `- **Status**`, `- **Date**`,
 `- **Deciders**` and `- **Involved Components/Capabilities**`.
@@ -50,15 +39,34 @@ synchronization path in code and a field authors fill by rote.
 Kept: the "Superseded in part by" body lines (they name replaced clauses, which the frontmatter cannot), Decision
 Drivers, Confirmation and the outcome-trace comments (test-enforced).
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Remove the ADR body metadata block and trim the ADR template so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Existing ADRs: remove the block from all 71 in one mechanical pass, or leave them and only stop writing it?
   Leaving them means no code keeps them in step after `_accept_status` loses its body pass.
   - **Answer**: remove it, in one mechanical pass that Development runs at its own HEAD (after
-    `PROP-formal-doc-padding-trim` integrates, so any ADR promoted in between is covered). Cost: about 230 deleted
+    `SPEC-formal-doc-padding-trim` integrates, so any ADR promoted in between is covered). Cost: about 230 deleted
     lines across 71 files in one commit, no decision changed, no rule or reader affected; a wording and metadata repair
     the `docs/decisions/` ledger allows without a superseding ADR. Leaving them keeps 71 copies nothing updates (a later
-    whole supersession leaves a stale `Accepted`) and two ADR layouts. `PADR-frontmatter-only-decision-status`.
+    whole supersession leaves a stale `Accepted`) and two ADR layouts. `ADR-frontmatter-only-decision-status`.
 - **Q2**: Does any reader (viewer, `devkit docs` index, search snippet, handbook generation, supersession tooling) parse
   the body Status line? Confirm nothing does before removing the rewrite.
   - **Answer**: no reader parses the Status, Date or Deciders lines. Every reader takes status from the frontmatter
@@ -66,7 +74,7 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
     block is the scaffold and the handoff body pass. One indirect reader exists: backticked IDs anywhere in the body,
     Involved Components lines included, are body references (`devkit docs refs`, the viewer reference panel). In about
     20 ADRs the Involved Components line is the only mention of some IDs; the Q1 pass keeps those edges
-    (`materials/body-status-readers.md`).
+    (`docs/materials/2026-11/20261117-adr-body-metadata-removal/body-status-readers.md`).
 - **Q3**: Where do "Superseded in part by" lines sit once the block is gone (directly under the H1)?
   - **Answer**: directly under the H1, each a paragraph of its own, as the handoff already writes them
     (`CAP-DLV-proposal-lifecycle` handoff step 4) and as existing ADRs already place them above the block. The
@@ -79,7 +87,7 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
     `decision-writing`; every `---` separator in the body goes. Existing ADRs keep their option layout and separators
     (out of scope: a per-ADR rewrite, not a mechanical one).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Docs bundle: the decision template loses the block, the per-option Overview/Pros/Cons sub-bullets and the `---`
   separators; Considered Options takes the Q4 lines. `decision-writing.md` gains one statement that status, date and
@@ -121,12 +129,12 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
   step 4 replaces the body-line rewrite sentence with: promotion MUST change only the frontmatter status in place and
   MUST delete the legacy scaffold block as above; `DESIGN-proposal-handoff` line 156 (observed run) stops citing the body status.
 
-### Design, domain and operations assessment
+#### Design, domain and operations assessment
 
 - Design: `DESIGN-proposal-handoff` is affected. Changed statement: its observed ADR-promotion row claims the promoted
   ADR has `- **Status**: Accepted`. Source identity: `handoff.py` `_accept_status`. Statement owner:
   `CAP-DLV-proposal-lifecycle` handoff step 4; the design only illustrates it. Maintenance action: edit that row at
-  Development HEAD, after `PROP-formal-doc-padding-trim` (which owns `docs/designs/` and trims the same document)
+  Development HEAD, after `SPEC-formal-doc-padding-trim` (which owns `docs/designs/` and trims the same document)
   integrates. Verification: `devkit rules check` on the document and a review that the row matches the new handoff.
   No other design document cites the block (`rg` in `docs/designs/`).
 - Domain: unaffected. No document under `docs/domain/` names the body block or the ADR status copy (`rg` over
@@ -134,9 +142,9 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
 - Operations: unaffected. No document under `docs/operations/` reads or repairs the block; the handoff recovery
   routes do not depend on the body status.
 
-### Planning decisions
+#### Planning decisions
 
-- Q1-Q4 as answered in §2; the lasting choice is `PADR-frontmatter-only-decision-status`.
+- Q1-Q4 as answered in §2; the lasting choice is `ADR-frontmatter-only-decision-status`.
 - Promotion keeps a deletion-only compatibility pass for the legacy scaffold block (challenger-01 finding 3; decided
   by the user at `plan-accept`). Dropping all body handling was rejected: a pre-upgrade PADR would reach the ledger
   with a stale `- **Status**: Draft`.
@@ -145,11 +153,12 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
   viewer reference panel was rejected.
 - Q4 is a template and guidance edit inside the existing `decision-writing` rule, not a new decision; it gets no PADR.
 - `docs/designs/delivery/DESIGN-proposal-handoff/design.md` is in both this proposal's and
-  `PROP-formal-doc-padding-trim`'s boundaries; the overlap is sequenced (this unit integrates after it), and this unit
+  `SPEC-formal-doc-padding-trim`'s boundaries; the overlap is sequenced (this unit integrates after it), and this unit
   edits only the one observed-run row.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Planning settles Q1–Q4; acceptance hands off to Development and integrates locally under `dev-integration=auto`.
 - Integrated after `SPEC-formal-doc-padding-trim`, which touches the same docs bundle.
 - Retire when the template, scaffold and handoff changes land.
+

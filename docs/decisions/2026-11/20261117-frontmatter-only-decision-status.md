@@ -1,13 +1,13 @@
 ---
-id: PADR-frontmatter-only-decision-status
+id: ADR-frontmatter-only-decision-status
 title: Frontmatter-only decision status and date
 summary: "For ADR and PADR status, date and whole supersession, we keep them only in the frontmatter and drop the body metadata block from the template, scaffold, handoff and existing ADRs, to remove a synchronization path and rote fields, accepting a one-time edit of 71 ADR bodies."
-proposal: PROP-adr-body-metadata-removal
-status: draft
+proposal: SPEC-adr-body-metadata-removal
+status: accepted
 created_at: 2026-11-17
 ---
 
-# [PADR-frontmatter-only-decision-status] Frontmatter-only decision status and date
+# [ADR-frontmatter-only-decision-status] Frontmatter-only decision status and date
 
 ## 1. Context & Problem Statement
 
@@ -21,7 +21,7 @@ At this proposal's base, 71 of the 94 ADRs carry the block and every Status and 
 frontmatter; 27 carry Deciders and 45 Involved Components. No rule, viewer module, `devkit docs` command, handbook
 script or supersession reader parses any of these lines; every status reader uses the frontmatter. Backticked IDs in
 Involved Components lines do count as body references, and in about 20 ADRs that line is their only mention
-(`materials/body-status-readers.md`). Once an ADR is accepted, nothing updates its body copy when it is later
+(`docs/materials/2026-11/20261117-adr-body-metadata-removal/body-status-readers.md`). Once an ADR is accepted, nothing updates its body copy when it is later
 superseded, so the copy can only drift.
 
 ## 2. Decision Drivers
