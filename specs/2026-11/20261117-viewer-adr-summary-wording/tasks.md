@@ -8,11 +8,11 @@ plan: PLAN-viewer-adr-summary-wording
 
 ## Phase 1: Implementation
 
-- [ ] **Task 1.1**: Reword the namespace roadmap ADR summary
+- [x] **Task 1.1**: Reword the namespace roadmap ADR summary
   - **_Boundary**: `docs/decisions/2026-11/20261104-viewer-namespace-roadmap-discovery.md`
   - _Requirements: AC-01, AC-03, AC-04_
   - **Verification**: `rg -n -i "^summary:.*(library|host)" docs/decisions/2026-11/20261104-viewer-namespace-roadmap-discovery.md` exits 1
-- [ ] **Task 1.2**: Reword the indexed supersession ADR summary
+- [x] **Task 1.2**: Reword the indexed supersession ADR summary
   - **_Boundary**: `docs/decisions/2026-11/20261110-viewer-indexed-decision-supersession.md`
   - _Requirements: AC-02, AC-03, AC-04_
   - **Verification**: `rg -n -i "^summary:.*(library|hosts)" docs/decisions/2026-11/20261110-viewer-indexed-decision-supersession.md` exits 1

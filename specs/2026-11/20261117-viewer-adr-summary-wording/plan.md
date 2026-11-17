@@ -19,8 +19,8 @@ spec: SPEC-viewer-adr-summary-wording
 - `ADR-viewer-namespace-roadmap-discovery`: drop the context qualifier "across local and library sources"; the
   concern becomes "viewer roadmap discovery". Decision, quality and downside are unchanged.
 - `ADR-viewer-indexed-decision-supersession`: replace the quality "to retain one read-only viewer across hosts"
-  with the host-neutral quality its drivers and selected option state: one read-only browser read path that runs
-  no repository Python environment. Concern, decision and downside are unchanged.
+  with "to keep the viewer read-only without running each repository's Python environment", the host-neutral
+  quality its drivers and selected option state. Concern, decision and downside are unchanged.
 - Both summaries stay within the 300 characters of `RULE-document-summary`.
 
 ## 3. Verification & Test Plan
