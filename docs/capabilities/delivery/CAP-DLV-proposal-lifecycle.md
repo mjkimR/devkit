@@ -74,7 +74,8 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    `status: accepted`. Promotion MUST change the status only in the frontmatter and MUST write no body status line;
    it MUST delete the block an earlier scaffold wrote: in the first list after the H1, the first visible
    `- **Status**: Draft` (or `Proposed`) line, a `- **Date**:` line directly after it and, when the list is left
-   empty, a `---` that is its next non-blank line. Fenced, indented and commented lines stay. The
+   empty, a `---` that is its next non-blank line, with the blank lines around them collapsed to one. Fenced, indented
+   and commented lines stay. The
    rest of the frontmatter, `summary` included, is kept, except that each item of the PADR's `aliases` has `PADR-`
    replaced by `ADR-`, so the own-prefix rule holds after the rename. Only the IDs of the PADRs this handoff promotes
    change, and never inside a file name (`PADR-<slug>.md` in a link is left to step 6). Other files under
