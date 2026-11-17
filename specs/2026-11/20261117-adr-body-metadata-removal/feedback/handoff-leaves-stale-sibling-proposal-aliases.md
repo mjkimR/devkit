@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-17
 ---
 
@@ -55,3 +55,12 @@ staged <worktree>/specs/2026-11/20261117-adr-body-metadata-removal/spec.md: 3 al
 proposal ID PROP-formal-doc-padding-trim (now SPEC-formal-doc-padding-trim)
 fix: devkit rules fix <spec.md>, then a manual commit of the staged handoff (dd9850334)
 ```
+
+## Resolution
+
+- **Disposition**: `SPEC-handoff-sibling-alias-rewrite` resolved it: after its existing rewrite passes, the handoff
+  runs `rewrite_aliases` on the carried spec bundle files and the promoted ADRs, rewriting a handed-off sibling's
+  `PROP-<slug>` to its `SPEC-<slug>` and another document's alias to its ID with the resolution
+  `RULE-document-reference` fixes, reported as `[REWRITTEN ... kind=id]`, so the composed commit passes the gate.
+  `CAP-DLV-proposal-lifecycle` §4.1 and §4.3 state the guarantee. Verified by the regression tests in
+  `test_proposal_aliases.py` and `just test-affected --base main` (1789 passed).
