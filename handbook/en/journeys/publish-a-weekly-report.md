@@ -10,7 +10,7 @@ title: Publish a weekly report
 # Publish a weekly report
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -34,6 +34,7 @@ title: Publish a weekly report
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -74,8 +75,8 @@ Generating the report is a separate step (`UC-inspect-weekly-repository-progress
 playbook of the opt-in `maintenance` catalog bundle; see the [delivery area](../areas/delivery.md) and, for playbooks
 in general, [Concepts](../concepts.md).
 
-Source: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md),
-contract [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
+Source: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-publish-a-weekly-report.md),
+contract [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
 
 ## Before you start
 

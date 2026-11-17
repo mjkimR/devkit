@@ -2,7 +2,7 @@
 sources:
   CAP-COLL-work-scope-registry: a2dea3a64550dfad9c3225650fbf433174d56773
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
-  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
+  CAP-TRACE-code-entrypoints: 5df9001f75de5efa05627e963763935bb184a6f0
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-run-parallel-work-safely: 0d974e0c636645b44666c8442980b3c83f3bdf72
 title: Run parallel work safely
@@ -11,7 +11,7 @@ title: Run parallel work safely
 # Run parallel work safely
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ title: Run parallel work safely
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -75,15 +76,15 @@ scope is still unknown, so you decide what runs in parallel and in which order i
 Task worktrees and activity branches are explained in [Concepts](../concepts.md); the registry itself in the
 [collaboration area](../areas/collaboration.md).
 
-Source: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/collaboration/UC-run-parallel-work-safely.md),
-contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md).
+Source: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/collaboration/UC-run-parallel-work-safely.md),
+contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md).
 
 ## Before you start
 
 - The repository is a Git repository with `devkit-spec` installed.
 - Each task declares its scope in its bundle: `target-docs.md` or `reconcile.md` targets, the `_Boundary` entries of
   `tasks.md`, and the `entrypoints` of the documents it targets. Entrypoints turn a document into code paths
-  ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)).
+  ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)).
   A `_Boundary` entry under `specs/` is skipped, except the exact path of another spec bundle's feedback file
   (`specs/**/feedback/<name>.md`): it is collected as code, so two tasks that resolve the same feedback file overlap
   on it.
@@ -97,11 +98,11 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
    uv run devkit spec policy     # look at [GIT_POLICY: worktree=...]
    ```
 
-   See [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md).
+   See [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-project-policy.md).
 2. **Inspect existing activity sources.** Run `uv run devkit spec scope collect` to compare declarations and observed changes from tasks with a `plan-*` or `dev-*` source. Queued drafts have no source and are excluded. Read unresolved inputs alongside overlaps.
 3. **Start the tasks** you decided to run in parallel, each on its activity branch in its own task worktree
    (`uv run devkit worktree start dev-<slug>`;
-   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
+   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
    When `devkit spec new` or `devkit spec proposal handoff` creates the unit in a linked worktree, it records an
    initial scope snapshot in the registry on its own. That registration is best effort: if it fails, creation still
    succeeds and nobody has to repair it.

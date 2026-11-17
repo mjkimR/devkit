@@ -1,33 +1,33 @@
 ---
 sources:
   CAP-DLV-adaptive-assignments: ab0842accf482f5e3a29279e38a0c3ee5742468c
-  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
-  CAP-DLV-cli-and-output: ba4e0c78e640e191d0dde25f9250f7be07897238
+  CAP-DLV-adaptive-development: 93224b4daa9b78a1b2a090d745e9693571d809e6
+  CAP-DLV-cli-and-output: 5fccee2a3b816b1f21cf1923241fb19137e5d17e
   CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
   CAP-DLV-delivery-roles: 453267daa70bf834a0b01d11f4c05f2c79a2d98e
-  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
+  CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
   CAP-DLV-design-exploration: 2955370f17cfb55a293ea67eb545e7c5df5f4ffb
   CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
   CAP-DLV-human-interaction: 7926c28e1951896774e56bd201fbd5e3a474a673
   CAP-DLV-maintenance-history: b1e327e613097e1cc9b843934824a35b5f174e6c
   CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
-  CAP-DLV-proposal-lifecycle: a1e42c3299fd86d2a978a15015a3e5fa92363f8e
-  CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
-  CAP-DLV-release-handbook: 9d4b4799c61ab2d689d741f3df61323b9cd6689a
+  CAP-DLV-proposal-lifecycle: b4fce2ec295c02949825afa69f04ca2087a9cddf
+  CAP-DLV-proposal-planning: b5546ecd6e0a9bf125be3f537b29f214f64d949a
+  CAP-DLV-release-handbook: 9d3f56b83c6d01ef6873aee93ac0357fd0c5a005
   CAP-DLV-review-refactor: 80b523a1ee09e2cff326ff4114c3c83c5461a666
-  CAP-DLV-sdd-baseline-adoption: acd7cadb9c726ae861f26364cd831d3d1afa1c4c
+  CAP-DLV-sdd-baseline-adoption: 6cce1e21f936f5add3cdb32cbb07906fc5c1fb6b
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
   CAP-DLV-test-management: 016f55406ad61d18873316b926cae25ce9e3150a
   CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
   CAP-DLV-weekly-report: ad32dcc4519c5757150443dcb6079f919578d2a4
   CAP-DLV-workflow-definitions: 05a3ee4acd583eac3d3828c9259c4f2aabe554cd
-  CAP-DLV-workflow-envelopes: e65db42fb9d524cefed5d9d492025ef46a73443e
+  CAP-DLV-workflow-envelopes: d4ff93fd7f267da9942bcc5f54d3fefcea45ef99
   CAP-DLV-workflow-orchestration: 5ad464a0ca56f3ad3beb141cf126ca309b9dffca
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   UC-drive-development-to-integration: 2893591134de64be66238b4102062f02e0e370c8
   UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
-  UC-plan-and-hand-off-a-proposal: d8fdc0f510ff75159907de246ba4fc72b7b3e551
+  UC-plan-and-hand-off-a-proposal: 363e00cab9ed6f87adac9e1ce1ecba125dbe5ea2
   UC-publish-a-weekly-report: 9e5de0abff784fa43c00851d8b03cf8b59d60129
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
   UC-review-and-refactor-accumulated-slop: acbb724a9d06093b139e8d8c22682ae7d7f408b2
@@ -38,7 +38,7 @@ title: Delivery
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -63,6 +63,7 @@ title: Delivery
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -173,6 +174,8 @@ waived with a reason; required contract mismatches cannot be waived.
 When evaluating how a suite is organized, [Assess a selected test suite](../journeys/assess-test-management.md) consults
 on the selected suite before decided changes enter the native workflow.
 
+Planning and reconciliation assess the affected design, domain and operations responsibilities against the source. Record the owner, maintenance and verification for affected documents, or a bounded reason a role is unaffected. Review compares that assessment with the actual change; changed source invalidates earlier evidence.
+
 ## Decisions and records
 
 | Boundary | Decision |
@@ -266,31 +269,31 @@ It is never a reconciliation target; `docs/` prevails when the two disagree.
 
 ## Sources
 
-- [CAP-DLV-cli-and-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-cli-and-output.md)
-- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)
-- [CAP-DLV-drift-reconciliation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md)
-- [CAP-DLV-human-interaction](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-human-interaction.md)
-- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
-- [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md)
-- [CAP-DLV-performance-pass](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-performance-pass.md)
-- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md)
-- [CAP-DLV-proposal-planning](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)
-- [CAP-DLV-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-release-handbook.md)
-- [CAP-DLV-review-refactor](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-review-refactor.md)
-- [CAP-DLV-spec-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)
-- [CAP-DLV-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md)
-- [CAP-DLV-workflow-definitions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-definitions.md)
-- [CAP-DLV-workflow-envelopes](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)
-- [CAP-DLV-workflow-orchestration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)
-- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/integration/CAP-INT-mcp-services.md)
-- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md)
-- [UC-handle-delivery-problems-and-exceptions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md)
-- [UC-plan-and-hand-off-a-proposal](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md)
-- [UC-publish-a-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md)
-- [UC-reconcile-living-spec-drift](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-reconcile-living-spec-drift.md)
-- [UC-review-and-refactor-accumulated-slop](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md)
-- [UC-route-development-intent](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-route-development-intent.md)
-- [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-deep-research.md)
-- [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md)
-- [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md)
-- [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-maintenance-history.md)
+- [CAP-DLV-cli-and-output](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-cli-and-output.md)
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)
+- [CAP-DLV-drift-reconciliation](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md)
+- [CAP-DLV-human-interaction](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-human-interaction.md)
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
+- [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md)
+- [CAP-DLV-performance-pass](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-performance-pass.md)
+- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-project-policy.md)
+- [CAP-DLV-proposal-planning](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)
+- [CAP-DLV-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-release-handbook.md)
+- [CAP-DLV-review-refactor](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-review-refactor.md)
+- [CAP-DLV-spec-bundles](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)
+- [CAP-DLV-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-weekly-report.md)
+- [CAP-DLV-workflow-definitions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-definitions.md)
+- [CAP-DLV-workflow-envelopes](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)
+- [CAP-DLV-workflow-orchestration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/integration/CAP-INT-mcp-services.md)
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-drive-development-to-integration.md)
+- [UC-handle-delivery-problems-and-exceptions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md)
+- [UC-plan-and-hand-off-a-proposal](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md)
+- [UC-publish-a-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-publish-a-weekly-report.md)
+- [UC-reconcile-living-spec-drift](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-reconcile-living-spec-drift.md)
+- [UC-review-and-refactor-accumulated-slop](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md)
+- [UC-route-development-intent](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-route-development-intent.md)
+- [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-deep-research.md)
+- [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-design-exploration.md)
+- [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md)
+- [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-maintenance-history.md)

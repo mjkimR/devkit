@@ -33,13 +33,13 @@ sources:
   UC-review-and-refactor-accumulated-slop: null
   UC-route-development-intent: null
 title: 전달
-translated_from: en/areas/delivery.md@5c059b36142e000d
+translated_from: en/areas/delivery.md@cbdb565c99de72a6
 ---
 
 # 전달
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -64,6 +64,7 @@ translated_from: en/areas/delivery.md@5c059b36142e000d
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -171,6 +172,8 @@ high는 독립 검증이 필요합니다. 최종 조정 검사는 전체 반영�
 테스트 스위트 구성을 평가할 때는 [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)에 따라
 선택한 스위트를 점검하고, 확정된 변경만 기본 워크플로로 보냅니다.
 
+Planning과 reconciliation에서는 변경된 소스를 기준으로 design, domain, operations 책임에 미치는 영향을 평가합니다. 해당 문서의 소유자, 유지보수 및 검증을 기록하거나 해당 역할에 영향이 없는 구체적인 이유를 남깁니다. 리뷰는 평가와 실제 변경을 대조하며, 소스가 바뀌면 이전 검증 근거는 무효가 됩니다.
+
 ## 결정과 기록
 
 | 경계 | 결정 |
@@ -263,31 +266,31 @@ review-refactor와 성능 작업은 이전·이후 동작을 비교하고 계약
 
 ## 출처
 
-- [CAP-DLV-cli-and-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-cli-and-output.md) (영어 원문)
-- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)
-- [CAP-DLV-drift-reconciliation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md) (영어 원문)
-- [CAP-DLV-human-interaction](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-human-interaction.md) (영어 원문)
-- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)
-- [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문)
-- [CAP-DLV-performance-pass](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-performance-pass.md) (영어 원문)
-- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)
-- [CAP-DLV-proposal-planning](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md) (영어 원문)
-- [CAP-DLV-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-release-handbook.md) (영어 원문)
-- [CAP-DLV-review-refactor](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-review-refactor.md) (영어 원문)
-- [CAP-DLV-spec-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)
-- [CAP-DLV-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)
-- [CAP-DLV-workflow-definitions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-definitions.md) (영어 원문)
-- [CAP-DLV-workflow-envelopes](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)
-- [CAP-DLV-workflow-orchestration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md) (영어 원문)
-- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/integration/CAP-INT-mcp-services.md) (영어 원문)
-- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md) (영어 원문)
-- [UC-handle-delivery-problems-and-exceptions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)
-- [UC-plan-and-hand-off-a-proposal](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md) (영어 원문)
-- [UC-publish-a-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)
-- [UC-reconcile-living-spec-drift](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-reconcile-living-spec-drift.md) (영어 원문)
-- [UC-review-and-refactor-accumulated-slop](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md) (영어 원문)
-- [UC-route-development-intent](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-route-development-intent.md) (영어 원문)
-- [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-deep-research.md) (영어 원문)
-- [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md) (영어 원문)
-- [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md) (영어 원문)
-- [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-maintenance-history.md) (영어 원문)
+- [CAP-DLV-cli-and-output](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-cli-and-output.md) (영어 원문)
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)
+- [CAP-DLV-drift-reconciliation](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md) (영어 원문)
+- [CAP-DLV-human-interaction](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-human-interaction.md) (영어 원문)
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)
+- [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문)
+- [CAP-DLV-performance-pass](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-performance-pass.md) (영어 원문)
+- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)
+- [CAP-DLV-proposal-planning](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-proposal-planning.md) (영어 원문)
+- [CAP-DLV-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-release-handbook.md) (영어 원문)
+- [CAP-DLV-review-refactor](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-review-refactor.md) (영어 원문)
+- [CAP-DLV-spec-bundles](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)
+- [CAP-DLV-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)
+- [CAP-DLV-workflow-definitions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-definitions.md) (영어 원문)
+- [CAP-DLV-workflow-envelopes](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)
+- [CAP-DLV-workflow-orchestration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md) (영어 원문)
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/integration/CAP-INT-mcp-services.md) (영어 원문)
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-drive-development-to-integration.md) (영어 원문)
+- [UC-handle-delivery-problems-and-exceptions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)
+- [UC-plan-and-hand-off-a-proposal](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md) (영어 원문)
+- [UC-publish-a-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)
+- [UC-reconcile-living-spec-drift](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-reconcile-living-spec-drift.md) (영어 원문)
+- [UC-review-and-refactor-accumulated-slop](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md) (영어 원문)
+- [UC-route-development-intent](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-route-development-intent.md) (영어 원문)
+- [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-deep-research.md) (영어 원문)
+- [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-design-exploration.md) (영어 원문)
+- [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md) (영어 원문)
+- [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-maintenance-history.md) (영어 원문)

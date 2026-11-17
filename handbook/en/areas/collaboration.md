@@ -1,11 +1,11 @@
 ---
 sources:
-  ADR-worktrees-and-scope: 15b1f634c021a28952c5257a3e6e5795b8b0259d
+  ADR-worktrees-and-scope: a12e34e409de865e0a9656f222859d6fbd598e3c
   CAP-COLL-shared-artifacts: 092d06230b033004a559d4fa72907fac6d0e0f5d
   CAP-COLL-work-scope-registry: a2dea3a64550dfad9c3225650fbf433174d56773
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
   CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
-  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
+  CAP-TRACE-code-entrypoints: 5df9001f75de5efa05627e963763935bb184a6f0
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-run-parallel-work-safely: 0d974e0c636645b44666c8442980b3c83f3bdf72
 title: Collaboration
@@ -14,7 +14,7 @@ title: Collaboration
 # Collaboration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -39,6 +39,7 @@ title: Collaboration
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -196,12 +197,12 @@ this release.
 
 ## Sources
 
-- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md):
+- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md):
   scope inputs, comparison, registry, commands, output and codes.
-- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
+- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
   artifact identity, retention, storage and adapter extensions.
-- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
+- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
   the parallel-work scenario.
-- [ADR-worktrees-and-scope](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-worktrees-and-scope.md):
+- [ADR-worktrees-and-scope](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261102-worktrees-and-scope.md):
   why the Host observes and workers publish nothing.
 - Related: [Worktree](worktree.md) (`CAP-WT-task-worktrees`), [MCP](mcp.md).

@@ -7,13 +7,13 @@ sources:
   CAP-TRACE-code-entrypoints: null
   UC-keep-the-living-spec-consistent: null
 title: Living Spec 일관성 유지하기
-translated_from: en/journeys/keep-the-living-spec-consistent.md@f9d2ca0a266aaf0b
+translated_from: en/journeys/keep-the-living-spec-consistent.md@28f902fb0720f624
 ---
 
 # Living Spec 일관성 유지하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -37,6 +37,7 @@ translated_from: en/journeys/keep-the-living-spec-consistent.md@f9d2ca0a266aaf0b
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -79,7 +80,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)에서 다룹니다. 본 문서에서 사용되는 핵심 개념(Living Spec,
 거버넌스 규칙, 커밋 게이트(commit gate) 등)은 [개념](../concepts.md)을 참고하십시오.
 
-출처: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-keep-the-living-spec-consistent.md) (영어 원문).
+출처: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-keep-the-living-spec-consistent.md) (영어 원문).
 
 ## 시작하기 전에
 
@@ -125,10 +126,12 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 
 특정 규칙의 상세 검사 항목과 수동 수정 가이드를 확인하려면 `uv run devkit rules explain <RULE-id>`를 실행하십시오.
 
+필요한 design, domain, operations 문서와 지원 파일을 실제 소스와 대조합니다. 영향받는 소유 문서와 검증을 기록하거나 역할에 영향이 없는 구체적인 이유를 남깁니다.
+
 ## 주요 스펙 규칙과 검사 항목
 
 15가지 규칙(`docs`가 제공하는 문서 규칙 10개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
 정리되어 있습니다. 가장 자주 접하게 되는 규칙은 다음과 같습니다.
 
 | 규칙 | 감지되는 위반 상황 | 자동 수정 지원 |
@@ -147,7 +150,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 유닛에만 적용됩니다. 적용할 유닛이 없으면 검사 성공이 아니라 누락 증거로 `SDD_LIFECYCLE_INACTIVE`를 보고합니다.
 
 문서가 ID를 부여받는 체계와 참조가 해석되는 원리는 문서 모델인
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
 정의되어 있습니다([문서](../areas/documents.md) 영역 참고).
 
 ## 문제 해결
@@ -162,7 +165,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
   있던 코드를 삭제하거나 다른 위치로 이동했기 때문입니다. `RULE-code-entrypoints`는 유효하지 않은 경로를 선언하고 있는 모든 문서를 즉시
   감지합니다. 해당 코드를 복원하거나, 문서의 엔트리포인트 선언을 이동된 새 코드 경로로 갱신하거나, 불필요한 선언을 제거한 뒤 다시 커밋하십시오.
   코드 경로 추적성 계약에 대한 자세한 내용은
-  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)에
+  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)에
   정의되어 있습니다([추적성](../areas/traceability.md) 영역 참고).
 - **`reconcile.md` 관련 오류로 커밋이 거부되는 경우:** 이번 커밋에서 실제로 수정하지 않은 문서를 `modified` 대상으로 지정한 채 reconcile
   기록을 `resolved` 상태로 표시했기 때문입니다. Living Spec 문서의 실제 수정 내용을 해당 reconcile 기록과 반드시 함께 스테이징하여 커밋하십시오.
@@ -170,7 +173,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
   자동 수정이 가능한 경우 `fix:` 힌트가 함께 제공됩니다. 만약 `RULES_RUN_FAILED`가 발생했다면 규칙 검사 엔진 자체가 정상 실행되지 못했음을
   의미합니다 (예: 새로운 작업 워크트리 환경에 관리 파일인 규칙 파일들이 아직 배포되지 않은 상태이며, 이 경우 `devkit sync`를 먼저 실행해야 합니다).
   커밋 게이트 메커니즘은
-  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문)
+  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문)
   ([커밋 게이트](../areas/gate.md) 영역 참고)에 정의되어 있습니다.
 
 ## 기대 효과 및 완료 상태

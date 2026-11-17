@@ -4,13 +4,13 @@ sources:
   CAP-ADV-agent-advisory-protocol: null
   CAP-CMP-bounded-execution: null
 title: 컴팩트 명령 출력
-translated_from: en/areas/compact.md@273e11250f73b0ce
+translated_from: en/areas/compact.md@5312592464b0a372
 ---
 
 # 컴팩트 명령 출력
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ translated_from: en/areas/compact.md@273e11250f73b0ce
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -150,11 +151,11 @@ devkit run --format json -- npm run lint
 
 ## 출처
 
-- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/compact/CAP-CMP-bounded-execution.md) (영어 원문):
+- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/compact/CAP-CMP-bounded-execution.md) (영어 원문):
   명령 실행 제어, 로그 관리 정책, 제한된 발췌 뷰 및 예산 계산 로직, 출력 형식과 라이브러리 API.
-- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/compact.md) (영어 원문):
+- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/compact.md) (영어 원문):
   명령어 사용법, 에러 코드 목록 및 모듈 맵.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-1-agent-output.md) (영어 원문):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-08-1-agent-output.md) (영어 원문):
   `devkit run`이 모든 하위 명령어와 공유하는 출력 계약 규격.
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
   실행기가 인식하고 보존하는 어드바이저리 문법 구조.

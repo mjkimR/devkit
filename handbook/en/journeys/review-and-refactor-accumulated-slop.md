@@ -2,7 +2,7 @@
 sources:
   CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
   CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
-  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
+  CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
   CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
   CAP-DLV-maintenance-history: b1e327e613097e1cc9b843934824a35b5f174e6c
   CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
@@ -14,7 +14,7 @@ title: Review and refactor accumulated slop
 # Review and refactor accumulated slop
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -39,6 +39,7 @@ title: Review and refactor accumulated slop
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -82,16 +83,16 @@ the agent records it as a deferred finding for [Reconcile Living Spec drift](rec
 [Speed up selected slow operations](speed-up-selected-slow-operations.md) reuses this playbook's application and
 evidence procedure as reference text. See [Concepts](../concepts.md) for playbooks and workflows.
 
-Source: [`UC-review-and-refactor-accumulated-slop`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md),
-contract [`CAP-DLV-review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-review-refactor.md),
-playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor/SKILL.md).
+Source: [`UC-review-and-refactor-accumulated-slop`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md),
+contract [`CAP-DLV-review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-review-refactor.md),
+playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.7/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor/SKILL.md).
 
 ## Before you start
 
 - The opt-in `maintenance` catalog bundle is selected and synchronized: `uv run devkit add maintenance` (all four
   playbooks), `maintenance:upkeep` (with drift reconciliation), `maintenance:refactoring` (this playbook alone) or
   `maintenance:performance` (with `performance-pass`)
-  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
+  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
 - Good moments are before a release, after a stretch of feature growth, or whenever a part of the repository feels
   heavier than it should.
 - Decide which surfaces (`code`, `guidance`, `cli`) and which roots of each you want reviewed. You will be asked.
@@ -102,7 +103,7 @@ playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.6/packag
 1. **Invoke the playbook.** Run `/devkit-playbook` and pick `review-refactor`, fetch it with
    `uv run devkit playbook get maintenance/review-refactor`, or confirm it when `/spec` offers it. It loads on demand
    and never runs because it is installed or because your wording sounds similar
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
 2. **Intake.** The agent records a run ID, the repository, `HEAD`, dirty paths, earlier reports and where the report
    goes. You name the surfaces and roots, and the run is split into one batch per surface.
 3. **Review one batch.** The agent inventories the roots and asks each surface's review questions: duplicated
@@ -121,7 +122,7 @@ playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.6/packag
 6. **Edit in parallel.** The agreed behavior-preserving changes become one work item on its own branch. Across several
    modules it follows `sdd-overall-refactor` in direct mode, with no Unit or workers; inside one feature or module it
    follows that feature workflow at its own depth
-   ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md),
+   ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md),
    [delivery area](../areas/delivery.md)). Where the host supports subagents, changes with disjoint write scopes are
    edited at the same time, each in its own isolated checkout created at the branch's current commit and prepared
    like a fresh checkout (dependency installation, managed-asset sync). Subagents edit only their scope and leave

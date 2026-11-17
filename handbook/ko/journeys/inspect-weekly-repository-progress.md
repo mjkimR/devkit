@@ -4,13 +4,13 @@ sources:
   UC-inspect-weekly-repository-progress: null
   UC-publish-a-weekly-report: null
 title: 주간 저장소 진행 상황 점검하기
-translated_from: en/journeys/inspect-weekly-repository-progress.md@ed2be2e71610c9bb
+translated_from: en/journeys/inspect-weekly-repository-progress.md@2592fbb8496b9eeb
 ---
 
 # 주간 저장소 진행 상황 점검하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -34,6 +34,7 @@ translated_from: en/journeys/inspect-weekly-repository-progress.md@ed2be2e71610c
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -74,8 +75,8 @@ translated_from: en/journeys/inspect-weekly-repository-progress.md@ed2be2e71610c
 작업은 별도의 권한과 승인이 필요한 독립된 단계로 분리되어 있습니다.
 
 유스케이스는
-[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-inspect-weekly-repository-progress.md) (영어 원문)이며,
-[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)를
+[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-inspect-weekly-repository-progress.md) (영어 원문)이며,
+[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)를
 바탕으로 합니다. 플레이북의 기본 개념은 [개념](../concepts.md)에서 설명합니다.
 
 ## 시작하기 전에
@@ -148,6 +149,6 @@ uv run devkit playbook get maintenance/weekly-report
 ## 다음 단계
 
 검증된 보고서를 사용자가 선택한 외부 대상에 공식 게시하는 절차는
-[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)이며,
+[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)이며,
 [주간 보고서 게시하기](publish-a-weekly-report.md)에서 다룹니다. 관련 영역: [전달](../areas/delivery.md) 및
 [거버넌스 규칙](../areas/governance.md).

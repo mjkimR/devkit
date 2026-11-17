@@ -9,7 +9,7 @@ title: Inspect weekly repository progress
 # Inspect weekly repository progress
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -33,6 +33,7 @@ title: Inspect weekly repository progress
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -71,9 +72,9 @@ already in the repository. It reads only: it fetches nothing, switches no branch
 creates no follow-up work. Publishing the finished report is a separate step with its own authority.
 
 The use case is
-[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-inspect-weekly-repository-progress.md),
+[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-inspect-weekly-repository-progress.md),
 built on
-[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
+[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
 Playbooks are explained in [Concepts](../concepts.md).
 
 ## Before you start
@@ -143,6 +144,6 @@ both outcomes, the limitations and the next steps.
 ## Next
 
 Publishing the verified report to a destination you choose is
-[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md),
+[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-publish-a-weekly-report.md),
 covered in [Publish a weekly report](publish-a-weekly-report.md). Areas: [Delivery](../areas/delivery.md) and
 [Governance](../areas/governance.md).

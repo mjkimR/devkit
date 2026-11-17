@@ -3,13 +3,13 @@ sources:
   CAP-DLV-test-management: null
   UC-assess-test-management: null
 title: 선택한 테스트 스위트 평가하기
-translated_from: en/journeys/assess-test-management.md@37e80d8c601014fe
+translated_from: en/journeys/assess-test-management.md@1cd28e6f232999d8
 ---
 
 # 선택한 테스트 스위트 평가하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 `maintenance/test-management` 플레이북을 명시적으로 실행해 선택한 테스트 스위트(test suite)의 구성을 평가합니다. 먼저 `maintenance:testing` 또는 `maintenance:all`을 선택하고 동기화합니다.
@@ -24,5 +24,5 @@ translated_from: en/journeys/assess-test-management.md@37e80d8c601014fe
 
 ## 출처
 
-- [UC-assess-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-assess-test-management.md) (영어 원문)
-- [CAP-DLV-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-test-management.md) (영어 원문)
+- [UC-assess-test-management](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-assess-test-management.md) (영어 원문)
+- [CAP-DLV-test-management](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-test-management.md) (영어 원문)

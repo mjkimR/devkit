@@ -11,13 +11,13 @@ sources:
   UC-reconcile-living-spec-drift: null
   UC-route-development-intent: null
 title: 배포
-translated_from: en/areas/distribution.md@0241f60d80b219aa
+translated_from: en/areas/distribution.md@dc27301bf1b74f43
 ---
 
 # 배포
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -42,6 +42,7 @@ translated_from: en/areas/distribution.md@0241f60d80b219aa
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -116,7 +117,7 @@ uv run devkit remove starter       # 선택 해제(변경되지 않은 배포 �
 
 내장 번들(`devkit`, `advisory`, `git-commits`, `harness`, `authoring`)과 `devkit-catalog`의 선택형 번들(`response-style`,
 `maintenance`)은
-[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)에
+[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)에
 콘텐츠 패키지 간의 계층형 의존성 규칙과 함께 정리되어 있습니다. 방법론 계층도 같은 방식으로 자동 선택 번들을 추가합니다.
 `devkit-docs`는 `docs`를, `devkit-spec`은 `spec`을 제공합니다([하네스](harness.md)).
 
@@ -137,7 +138,7 @@ devkit은 설치 기록(receipt)에 등록된 파일만 안전하게 관리합�
 관리해야 하는 파일을 사용자가 임의로 수정한 경우에도 `SYNC_CONFLICT` 오류가 발생하며, 배포 대상에서 제외된 이전 파일은 디스크에 고아
 파일(orphan)로 보존됩니다(`ORPHAN_LEFT`). devkit은 `CLAUDE.md`를 직접 생성하거나 덮어쓰지 않으므로, 필요한 경우 사용자가 직접
 `AGENTS.md`를 참조하도록 설정하십시오. 자세한 내용은
-[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md) (영어 원문)에
+[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md) (영어 원문)에
 있습니다.
 
 ## 클론, 워크트리, CI 환경의 정합성 유지하기
@@ -174,7 +175,7 @@ sync는 무시 규칙이 없는 미추적 네이티브 프로젝션에 `PROJECTI
 동기화를 중단하지 않고 Git 진단 불가를 보고합니다.
 
 전체 트랜잭션 단계, 알림 목록 및 sync 후 확장 훅은
-[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)을
+[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)을
 참고하십시오.
 
 ## 포크 없이 업스트림 자산 수정하기
@@ -190,6 +191,8 @@ uv run devkit override accept starter:development   # 최신 업스트림 내용
 uv run devkit override remove starter:development   # 오버라이드를 제거하고 업스트림 원본으로 복귀
 ```
 
+업스트림 자산이 더 이상 존재하지 않으면 digest가 없으며 `override diff`와 `override accept`는 `SELECTION_INVALID`를 반환합니다.
+
 오버라이드된 자산의 원본(업스트림) 내용이 변경되면, 동기화 시 실행할 `override diff`와 `override accept` 명령과 함께
 `OVERRIDE_DRIFT`가 보고됩니다. 기본 설정인 `override_drift = "warn"`에서는 경고만 출력하고 계속 진행합니다. 거버넌스 규칙과 같이
 중요한 자산을 오버라이드한 경우에는 `"block"`으로 설정하면, 사용자가 결정할 때까지 아무것도 쓰지 않고 동기화를 멈춥니다.
@@ -201,7 +204,7 @@ uv run devkit override remove starter:development   # 오버라이드를 제거�
 ## 컨텍스트 로드와 플레이북 탐색
 
 초기 로딩 파일의 크기는 작게 유지하고 세부 지침은 단계별로 로드합니다
-([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
+([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
 
 - 루트 `AGENTS.md` 블록에는 오리엔테이션 안내만 담깁니다: 설치된 번들 목록, 컨텍스트 로딩 규칙, 진입 스킬, 핵심 지침 포인터.
 - `uv run devkit get-context <bundle>`은 번들의 헌장(constitution)과 지침 헤더를 반환하며, 번들이 컨텍스트 문서 디렉터리를
@@ -229,7 +232,7 @@ uv run devkit override remove starter:development   # 오버라이드를 제거�
 `.codex/agents/`, `.agents/agents/`에 배치됩니다. `invocation = "user"`로 선언된 스킬은 각 에이전트 플랫폼 고유의 "명시적 사용자 호출 전용"
 설정이 자동 적용됩니다. 서브에이전트는 에이전트별 전용 네이티브 파일로 배포되거나, 호스트 중립적인 단일 역할 계약(role contract)으로부터
 에이전트별 형식으로 렌더링되어 배포됩니다. 지원 매트릭스와 역할 계약 규격은
-[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-agent-projections.md) (영어 원문)을
+[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-agent-projections.md) (영어 원문)을
 참고하십시오.
 
 기본적으로 역할 계약은 호스트가 부여하는 모델과 추론 강도로 실행됩니다. 직접 정하려면 서브에이전트 모델 수준(subagent model
@@ -267,7 +270,7 @@ level = "standard"
 번들 매니페스트는 자산을 `(kind, id, source)` 형식으로 선언하고, 프리셋과 선택적 템플릿 변수를 정의합니다. 소스 디렉터리를 정식 설치하기
 전에 `uv run devkit bundle validate <source>`와 `uv run devkit bundle plan <source> --agent <name>` 명령어로 유효성을 사전에
 검증하십시오.
-[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-manifest-spec.md) (영어 원문)의
+[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-manifest-spec.md) (영어 원문)의
 핵심 사항은 다음과 같습니다.
 
 - 매니페스트 스키마는 엄격하게 검증됩니다. 정의되지 않은 알 수 없는 키는 오류로 처리되며, 슬러그(slug), 버전, 소스 파일 경로의 유효성을 엄밀히 검사합니다.
@@ -287,7 +290,7 @@ level = "standard"
 실행하고, 소스 코드 변경과 함께 갱신된 설치 기록을 반드시 한 커밋으로 묶어 커밋하십시오. 설치 기록이 최신 상태가 아니면 Git 스냅샷 게이트
 검사에서 실패하므로, 규칙 변경은 항상 설치 기록과 함께 동기화되어야 합니다. 패키지 디렉터리 레이아웃, `pyproject.toml` 설정 예시 및 오버라이드와
 저장소 내 번들 간의 선택 기준은
-[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md) (영어 원문)에
+[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md) (영어 원문)에
 기술되어 있습니다. 비공개 원본 접근 없이 지원되는 콘텐츠 제공자 전체를 로컬 패키지에 보존하려면
 [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)에서 `devkit bundle snapshot`과
 `devkit bundle refresh` 사용법을 확인하십시오(소비자 수정은 프로젝트 오버라이드로 관리합니다).

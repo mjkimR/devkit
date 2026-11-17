@@ -3,13 +3,13 @@ sources:
   ARCH-08-1-agent-output: null
   CAP-ADV-agent-advisory-protocol: null
 title: 어드바이저리
-translated_from: en/areas/advisory.md@dec7b8dbf7b5eb15
+translated_from: en/areas/advisory.md@27f0229386c3d8ff
 ---
 
 # 어드바이저리
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -34,6 +34,7 @@ translated_from: en/areas/advisory.md@dec7b8dbf7b5eb15
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -155,9 +156,9 @@ translated_from: en/areas/advisory.md@dec7b8dbf7b5eb15
 
 ## 출처
 
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
   심각도 레벨, 블록 형식, 필드 구성, 모드 도출 규칙, 표준 지시문 텍스트 및 작성자 점검표.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-1-agent-output.md) (영어 원문):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-08-1-agent-output.md) (영어 원문):
   명령어의 stdout, stderr 및 종료 코드 체계 내에서 어드바이저리가 차지하는 역할과 구조.
-- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/advisory.md) (영어 원문):
+- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/advisory.md) (영어 원문):
   `devkit.advisory` Python API 레퍼런스.

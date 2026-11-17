@@ -1,18 +1,18 @@
 ---
 sources:
-  CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
-  CAP-DOCS-namespaces: f6a06f2fb6a7564ed6ede84c6375c1e401dedb91
+  CAP-DOCS-document-model: da6e3a2dfc451c26f2eff04e1f24a74baba63bab
+  CAP-DOCS-namespaces: 9197ba416c25a4fdf2538da15d52ba81b534e6f0
   CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
-  CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
-  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
-  UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
+  CAP-GOV-spec-rules: 231d1553ea205aee30516b0cf69e320560d2d9a9
+  CAP-TRACE-code-entrypoints: 5df9001f75de5efa05627e963763935bb184a6f0
+  UC-keep-the-living-spec-consistent: 3a6a41d611a4ad3d32ed0c3ba96efa1babf02128
 title: Keep the Living Spec consistent
 ---
 
 # Keep the Living Spec consistent
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ title: Keep the Living Spec consistent
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -77,7 +78,7 @@ Whether the documents say the *right* thing is a different question; that is
 [Reconcile Living Spec drift](reconcile-living-spec-drift.md). For the vocabulary used here (Living Spec, rules,
 commit gate), see [Concepts](../concepts.md).
 
-Source: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-keep-the-living-spec-consistent.md).
+Source: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-keep-the-living-spec-consistent.md).
 
 ## Before you start
 
@@ -124,11 +125,13 @@ Source: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/
 
 To learn what a rule checks and how to repair it by hand, run `uv run devkit rules explain <RULE-id>`.
 
+Compare warranted design, domain and operations documents and supporting files with the actual source. Record affected owners and verification, or a bounded reason a role is unaffected.
+
 ## What the rules look for
 
 The fifteen rules, ten document rules shipped by `docs` and five lifecycle rules shipped by `spec`, are
 catalogued in
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md).
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md).
 The ones you meet most often:
 
 | Rule | You see it when | Fix |
@@ -148,7 +151,7 @@ apply only to Units explicitly bound to an SDD workflow. Where none applies, a r
 omission evidence rather than a successful check.
 
 How documents get their IDs and how references resolve is the document model,
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md)
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-model.md)
 (see the [documents area](../areas/documents.md)).
 
 ## When it goes wrong
@@ -162,14 +165,14 @@ How documents get their IDs and how references resolve is the document model,
 - **The commit is refused for a capability you did not touch.** You deleted or moved code that a capability declares
   in `entrypoints`, and `RULE-code-entrypoints` reports every document that declares a deleted path. Restore the code,
   point the declaration at the moved code, or remove it, then commit again. The path contract is
-  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)
+  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)
   (see the [traceability area](../areas/traceability.md)).
 - **The commit is refused on a `reconcile.md`.** You marked it `resolved` with a `modified` target that this commit
   does not change. Stage the Living Spec edit together with the record.
 - **The gate refuses with `GATE_RULES_FAILED`.** Each `[DETAIL]` line names the rule, file and line, with a `fix:` hint
   when the rule has one. A `RULES_RUN_FAILED` instead means the run could not judge the commit at all (for example
   managed rule files are missing in a fresh worktree: run `devkit sync`). Gate behavior is
-  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/gate/CAP-GATE-commit-gates.md)
+  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/gate/CAP-GATE-commit-gates.md)
   (see the [gate area](../areas/gate.md)).
 
 ## What you end up with

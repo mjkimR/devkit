@@ -5,13 +5,13 @@ sources:
   CAP-DLV-maintenance-history: null
   UC-reconcile-living-spec-drift: null
 title: Living Spec 드리프트 조정하기
-translated_from: en/journeys/reconcile-living-spec-drift.md@7b0f0b713b762c8c
+translated_from: en/journeys/reconcile-living-spec-drift.md@15629a5f744e1474
 ---
 
 # Living Spec 드리프트 조정하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ translated_from: en/journeys/reconcile-living-spec-drift.md@7b0f0b713b762c8c
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
@@ -71,8 +72,8 @@ translated_from: en/journeys/reconcile-living-spec-drift.md@7b0f0b713b762c8c
 
 구조적 일관성 검사는 별도 여정인 [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)에서 다룹니다. 기능 단위 전달 과정 중 발생하는 규격 동기화는 `spec-sync`가 담당하지만, 이 플레이북은 여러 기능 개발 사이에 점진적으로 누적된 괴리를 포착합니다. Living Spec과 플레이북의 기본 개념은 [개념](../concepts.md)을 참고하십시오.
 
-출처: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-reconcile-living-spec-drift.md) (영어 원문),
-계약 [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md) (영어 원문).
+출처: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-reconcile-living-spec-drift.md) (영어 원문),
+계약 [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md) (영어 원문).
 
 ## 시작하기 전에
 
@@ -81,7 +82,7 @@ translated_from: en/journeys/reconcile-living-spec-drift.md@7b0f0b713b762c8c
 
 ## 단계별 진행
 
-1. **플레이북 호출.** `/devkit-playbook`을 실행하여 `drift-reconciliation`을 선택하거나, "Living Spec을 코드와 맞춰 줘"와 같은 요청 시 `spec` 스킬이 제안하는 한 줄 확인에 동의합니다. 플레이북은 일반적인 대화 문구만으로는 자동 실행되지 않으며, 사용자의 명시적인 확인을 거쳐야만 호출됩니다([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문), [배포 영역](../areas/distribution.md)).
+1. **플레이북 호출.** `/devkit-playbook`을 실행하여 `drift-reconciliation`을 선택하거나, "Living Spec을 코드와 맞춰 줘"와 같은 요청 시 `spec` 스킬이 제안하는 한 줄 확인에 동의합니다. 플레이북은 일반적인 대화 문구만으로는 자동 실행되지 않으며, 사용자의 명시적인 확인을 거쳐야만 호출됩니다([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문), [배포 영역](../areas/distribution.md)).
 2. **작업 접수.** 에이전트가 저장소 상태, `HEAD` 커밋 및 수정된(dirty) 경로, 선택한 계약 또는 영역, 탐색이 허용된 루트 경로, 기존 보고서 이력, 보고서 저장 위치를 기록합니다. 이후 지정된 범위(배치) 내의 검토 후보 목록을 도출합니다.
 3. **대조 비교.** 각 계약에 문서화된 명령, 옵션, 인터페이스, 용어, 동작, 경로를 해당 리비전의 코드, 테스트, 가이드와 비교 대조합니다. 확인된 불일치 사항은 각각 하나의 발견 사항(finding)으로 정리되며, 양측의 인용 구문, 기대 동작과 관찰된 동작, 확인 증거, `deterministic` 또는 `semantic-assessment` 분류, 제안 처리 방안이 함께 기록됩니다.
 4. **일괄 결정 라운드.** 에이전트가 도출된 모든 발견 사항을 한 번에 정리하여 보여 줍니다. 각 항목에 대해 문서/가이드 갱신, 코드 수정, 보류(defer), 면제(waive) 중 처리 방식을 선택합니다. 결정 사항과 그 사유는 발견 사항별로 기록됩니다.

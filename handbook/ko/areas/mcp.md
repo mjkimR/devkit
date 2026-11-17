@@ -6,13 +6,13 @@ sources:
   CAP-MCP-runtime-registration: null
   UC-drive-development-to-integration: null
 title: MCP
-translated_from: en/areas/mcp.md@ad2799e914f6a28a
+translated_from: en/areas/mcp.md@1cec09ab24195b95
 ---
 
 # MCP
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -37,6 +37,7 @@ translated_from: en/areas/mcp.md@ad2799e914f6a28a
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -101,7 +102,7 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 `devkit status`는 MCP 등록을 전혀 검사하지 않습니다. locked sync가 등록 쓰기 작업을 보류하면
 `uv run devkit sync --registrations-only`를 해결 방법으로 하는 `MCP_REGISTRATION_PENDING`을 보고합니다. 실제 등록 계획은
 `devkit mcp status`, `mcp setup`, 그리고 두 가지 sync 모드에서 진단합니다. 호스트별 상세 설정 절차는
-[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.6/guides/install/mcp.md) (영어 원문) 가이드를 참고하십시오.
+[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.7/guides/install/mcp.md) (영어 원문) 가이드를 참고하십시오.
 
 ## 등록 작업의 파일 변경 원칙
 
@@ -167,9 +168,9 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 
 ## 출처
 
-- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문):
+- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문):
   런타임 계약, 등록, Host 워크플로와 공유 아티팩트 서비스.
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문)
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문)
   (프로젝트 MCP 등록 경계)과
-  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/host.md#mcp-services) (영어 원문).
+  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/host.md#mcp-services) (영어 원문).
 - 관련 문서: [호스트](host.md), [협업](collaboration.md), [통합](integration.md).

@@ -6,13 +6,13 @@ sources:
   CAP-HARN-agent-guidance: null
   UC-advance-an-idea: null
 title: 아이디어 발전시키기
-translated_from: en/journeys/advance-an-idea.md@62f9a30e9a0791c2
+translated_from: en/journeys/advance-an-idea.md@566b8800af19a1d2
 ---
 
 # 아이디어 발전시키기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ translated_from: en/journeys/advance-an-idea.md@62f9a30e9a0791c2
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -70,9 +71,9 @@ translated_from: en/journeys/advance-an-idea.md@62f9a30e9a0791c2
 
 모든 아이디어가 확정된 계약에서 시작하지는 않습니다. 제품이 무엇이어야 하는지 아직 알아가는 중이라면, 스펙 주도 개발(SDD)은 작업이 활용할 수 있는 것보다 많은 기록을 요구합니다. 적응형 개발(adaptive development)은 더 가벼운 대안입니다. 에이전트가 다음으로 유용한 제품 작업(질문, 범위가 정해진 실험, 대표 흐름 구현, 사용 점검) 하나를 진행하고, 실제로 실행한 것을 검증하며, 다음 세션이 이어받을 수 있도록 현재 사실을 짧은 파일에 남깁니다. 변경마다 유닛, 승인, 엔벨로프를 만들지 않으며, 작은 앱은 계속 적응형 개발 상태로 유지해도 됩니다.
 
-출처: [`UC-advance-an-idea`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-advance-an-idea.md) (영어 원문),
-계약 [`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문),
-진입 스킬 [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md) (영어 원문).
+출처: [`UC-advance-an-idea`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-advance-an-idea.md) (영어 원문),
+계약 [`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문),
+진입 스킬 [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.7/packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md) (영어 원문).
 SDD의 제안 숙성과는 별개이며, 그쪽은 [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)입니다.
 
 ## 시작하기 전에
@@ -86,7 +87,7 @@ SDD의 제안 숙성과는 별개이며, 그쪽은 [제안 계획 후 넘기기]
   ```
 
   기본값은 `sdd`입니다. 번들 선택은 개발 방식을 바꾸지 않으며, 이 설정만이 바꿉니다
-  ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)).
+  ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)).
 - 저장소의 일반 실행 환경(빌드, 테스트, 실행 명령)을 사용할 수 있어야 합니다.
 
 ## 단계별 진행

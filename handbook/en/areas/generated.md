@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
   CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
   CAP-GEN-tracked-artifacts: ff8539b14d3af5890ba656e23b0e43c1d0d05fc8
 title: Generated Files
@@ -9,7 +9,7 @@ title: Generated Files
 # Generated Files
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own receipt
@@ -17,7 +17,7 @@ Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own
 each regenerated one conflict even when their inputs merge cleanly, and a textual merge is rarely what the generator
 would write. `devkit generated` (from `devkit-agt`) settles such conflicts by regenerating instead of merging, and
 checks that committed copies are up to date. The contract is
-[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md).
+[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md).
 
 Nothing runs automatically. You, or your agent, run `resolve` when a merge, rebase or cherry-pick stops, and CI runs
 `check`. Where this fits in the life of a branch is described in [Concepts](../concepts.md).

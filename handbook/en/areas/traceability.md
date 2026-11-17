@@ -1,9 +1,9 @@
 ---
 sources:
   CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
-  CAP-DOCS-document-lookup: 63142a86681c0d154520316976a583a5d44f68bf
-  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
-  UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
+  CAP-DOCS-document-lookup: d03d09297497506274e7e0e69adf4ac9958b3b2e
+  CAP-TRACE-code-entrypoints: 5df9001f75de5efa05627e963763935bb184a6f0
+  UC-keep-the-living-spec-consistent: 3a6a41d611a4ad3d32ed0c3ba96efa1babf02128
   UC-run-parallel-work-safely: 0d974e0c636645b44666c8442980b3c83f3bdf72
 title: Traceability
 ---
@@ -11,15 +11,15 @@ title: Traceability
 # Traceability
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
-Traceability links Living Spec documents to code. A capability or use case can declare `entrypoints`: the files
+Traceability links Living Spec documents to code. A capability, use case or canonical DESIGN document can declare `entrypoints`: the files
 and directories where its implementation starts. That one field lets you go from a document to its code, from a
 code path back to its documents, and lets the commit gate notice when code disappears under a document. devkit-docs
 owns the path contract, the rule and the reverse query; devkit-spec adds the derivation from spec bundles. The
 contract is
-[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md).
+[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md).
 
 An entrypoint is where reading starts, not a complete list of the implementation and not proof that the code does
 what the document says. Coverage and correctness stay with tests and review. The Living Spec and its documents are
@@ -33,8 +33,7 @@ entrypoints:
   - src/example/cli/
 ```
 
-- Only Markdown files under `docs/capabilities/` and `docs/usecases/` (and the same directories of a namespace root
-  `docs/packages/<name>/`) carry the field.
+- Capabilities, use cases and canonical `design.md` anchors under `designs/<area>/DESIGN-<slug>/` can carry the field, including in namespace roots. DOMAIN and OPS documents and support files cannot.
 - Paths are literal and workspace-relative with `/`, also for namespace documents; never package-relative. Files and
   directories are both fine.
 - No absolute paths, `..`, backslashes, drive colons or glob characters. Comparison is by whole segment and

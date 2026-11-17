@@ -6,13 +6,13 @@ sources:
   UC-adopt-in-an-existing-repository: null
   UC-adopt-sdd-from-adaptive-development: null
 title: 기존 저장소에 devkit 도입하기
-translated_from: en/journeys/adopt-in-an-existing-repository.md@abe32f468ef7849e
+translated_from: en/journeys/adopt-in-an-existing-repository.md@8d42325549d0da97
 ---
 
 # 기존 저장소에 devkit 도입하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ translated_from: en/journeys/adopt-in-an-existing-repository.md@abe32f468ef7849e
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -74,12 +75,12 @@ translated_from: en/journeys/adopt-in-an-existing-repository.md@abe32f468ef7849e
 향후 관련 작업을 진행할 때 점진적으로 이관하도록 남겨 둡니다.
 
 이 페이지의 바탕이 되는 유스케이스는
-[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/harness/UC-adopt-in-an-existing-repository.md) (영어 원문)입니다.
+[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/harness/UC-adopt-in-an-existing-repository.md) (영어 원문)입니다.
 번들, 동기화(sync), Living Spec 같은 핵심 개념은 [개념](../concepts.md)을 참고하십시오.
 
 이 경로는 레거시 규칙 위반을 격리해 두고 점진적으로 이관하는 방법입니다. 적응형 개발 방식으로 아이디어를 발전시켜 왔고 그렇게 유지해 온 제품에서
 스펙 주도 전달을 도입하려 한다면, 적응형 개발 베이스라인을 요청하십시오. 이 경우
-[`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md) (영어 원문)을
+[`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md) (영어 원문)을
 따르며, SDD를 활성화하기 전에 제품을 검증하고 레거시 문서는 이동하지 않습니다.
 
 ## 시작하기 전에
@@ -97,10 +98,10 @@ uv run devkit sync
 devkit-spec을 설치하면 devkit-docs도 함께 설치됩니다. 두 패키지 모두 자체 실행 파일을 따로 제공하지 않습니다. 엔트리 포인트를 통해
 `spec`·`docs` 번들과 `devkit spec`·`devkit docs` 명령어 그룹을 등록하므로, 모든 작업은 프로젝트 환경에 설치된 단일 `devkit`
 실행 파일 하나로 실행됩니다
-([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문)).
+([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문)).
 
 이어서 `devkit sync`를 실행하면 다음 세 가지 작업이 진행됩니다
-([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)):
+([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)):
 
 - 두 번들의 `core` 프리셋을 `.devkit/managed/spec/`와 `.devkit/managed/docs/` 디렉터리로 복사합니다. `docs`에는 공유 문서
   지침, 템플릿, 문서 규칙이, `spec`에는 전달 수명 주기가 담겨 있습니다.
@@ -128,7 +129,7 @@ uv run devkit rules check
 이제 문서 규칙과 스펙 거버넌스 규칙이 `docs/` 및 `specs/` 디렉터리에 이미 존재하는 Markdown 문서들을 검사합니다. 기존 저장소(brownfield)에서는
 대개 위반 사항이 보고됩니다. 예를 들어 ADR-0001과 같은 번호 기반 ID, 필수 프론트매터 누락, Living Spec 레이아웃 표준과 맞지 않는 경로
 등이 감지됩니다. 검사 결과는 위반 규칙, 대상 파일, 해결 조치 사항을 담은 `[VIOLATION: ...]` 형태로 출력됩니다. 15가지 규칙(`docs`가 제공하는 문서 규칙 10개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
 있으며, `uv run devkit rules explain <RULE-id>`로 개별 규칙의 가이드를 확인할 수 있습니다.
 
 ## 4. 에이전트를 통한 레거시 문서 격리
@@ -139,7 +140,7 @@ uv run devkit rules check
 에이전트는 플레이북 절차에 따라 다음을 수행합니다.
 
 1. 기존 레거시 Markdown 목록을 취합하고, 파일이 많거나 여러 성격이 혼재된 경우 사용자와 함께 검토합니다.
-2. 레거시 파일들을 `docs/materials/_legacy/<원래 경로>` 위치로 이동합니다. 자료(`materials/`) 디렉터리는 자유 형식
+2. 정식 문서와 지원 파일은 유지하고, 선택한 레거시 파일을 `docs/materials/_legacy/<원래 경로>` 위치로 이동합니다. 자료(`materials/`) 디렉터리는 자유 형식
    디렉터리이므로 문서 규칙과 스펙 거버넌스 규칙 검사 대상에서 제외됩니다.
 3. 저장소 내 다른 파일에서 이동된 경로를 참조하던 링크를 일괄 갱신합니다.
 4. 본격적인 내용 이관에 앞서 파일 이동만을 별도의 단일 커밋으로 제안하므로, 파일 이동 내역과 향후 내용 수정을 명확히 분리하여 검토할 수 있습니다.

@@ -1,15 +1,15 @@
 ---
 sources:
-  CAP-DLV-sdd-baseline-adoption: acd7cadb9c726ae861f26364cd831d3d1afa1c4c
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
-  UC-adopt-sdd-from-adaptive-development: 1eb8461c21c7c3e6fa131c4efb88d7f7e07095f6
+  CAP-DLV-sdd-baseline-adoption: 6cce1e21f936f5add3cdb32cbb07906fc5c1fb6b
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  UC-adopt-sdd-from-adaptive-development: 2c82a267d679732b7239bc790b0ef9aef0e65c5f
 title: Adopt SDD from adaptive development
 ---
 
 # Adopt SDD from adaptive development
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -33,6 +33,7 @@ title: Adopt SDD from adaptive development
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -71,9 +72,9 @@ your agent checks the retained product against its implementation, current docum
 fixes the documents, and switches the approach only after you approve the exact effects. No retrospective proposals,
 spec Units or decisions are invented for past experiments.
 
-Source: [`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md),
-contract [`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md),
-playbook [`sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md).
+Source: [`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md),
+contract [`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md),
+playbook [`sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.7/packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md).
 For a repository that never used adaptive development, see [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md).
 
 ## Before you start
@@ -96,7 +97,7 @@ For a repository that never used adaptive development, see [Adopt devkit in an e
    the retained items and the exclusions.
 3. **Compare.** For each retained item it links the implementation, the current document (or where one is missing)
    and the evidence, and marks it `verified`, `gap` or `excluded`. Excluded items never count as verified. It writes
-   or corrects only the capabilities, use cases, architecture, decision documents and run instructions that coverage
+   or corrects only the capabilities, use cases, architecture, decisions, warranted formal role documents and run instructions that coverage
    needs, stating current choices and known reasons without inventing past alternatives.
 4. **Run the checks.** It runs the applicable project commands and exercises representative user flows, recording
    each command, source identity, environment and outcome. A passing document-format check proves only what it

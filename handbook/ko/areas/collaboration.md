@@ -9,13 +9,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 협업
-translated_from: en/areas/collaboration.md@d638e0313e79c825
+translated_from: en/areas/collaboration.md@5f16b8776e3aab0f
 ---
 
 # 협업
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -40,6 +40,7 @@ translated_from: en/areas/collaboration.md@d638e0313e79c825
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -192,12 +193,12 @@ devkit shared list --kind proposal-review --slug example --format json
 
 ## 출처
 
-- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문):
+- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문):
   작업 범위 입력 요소, 비교 알고리즘, 레지스트리 아키텍처, CLI 명령어, 출력 규격 및 어드바이저리 코드.
-- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md) (영어 원문):
+- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md) (영어 원문):
   아티팩트 식별 체계, 보존 주기 정책, 로컬 저장소 구조 및 어댑터 확장 규격.
-- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/collaboration/UC-run-parallel-work-safely.md) (영어 원문):
+- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/collaboration/UC-run-parallel-work-safely.md) (영어 원문):
   안전한 병렬 작업 시나리오.
-- [ADR-worktrees-and-scope](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-worktrees-and-scope.md) (영어 원문):
+- [ADR-worktrees-and-scope](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261102-worktrees-and-scope.md) (영어 원문):
   Host가 관찰하고 워커는 아무것도 게시하지 않는 이유.
 - 관련 문서: [워크트리](worktree.md)(`CAP-WT-task-worktrees`), [MCP](mcp.md).

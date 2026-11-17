@@ -7,17 +7,18 @@ sources:
   CAP-DOCS-document-lookup: null
   CAP-DOCS-document-model: null
   CAP-DOCS-document-search: null
+  CAP-DOCS-documentation-ownership: null
   CAP-DOCS-namespaces: null
   UC-find-the-right-documents: null
   UC-keep-the-living-spec-consistent: null
 title: 문서
-translated_from: en/areas/documents.md@93b93d406f5b659c
+translated_from: en/areas/documents.md@28eed2d9f3f219ac
 ---
 
 # 문서
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -42,6 +43,7 @@ translated_from: en/areas/documents.md@93b93d406f5b659c
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -83,7 +85,7 @@ translated_from: en/areas/documents.md@93b93d406f5b659c
 ## 문서의 판별 기준
 
 다음 조건을 모두 만족해야 문서로 취급됩니다
-([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)).
+([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)).
 
 - `docs/` 또는 `specs/` 디렉터리 아래의 `*.md` 파일이어야 하며, `README.md`, 템플릿, 심볼릭 링크가 아니고 숨김(dot) 디렉터리 아래에
   있지 않아야 합니다.
@@ -95,12 +97,12 @@ translated_from: en/areas/documents.md@93b93d406f5b659c
 ID 접두사는 문서의 종류를 나타냅니다. `CAP`은 기능(capability), `UC`는 유스케이스(use case), `UX`는 UX 문서(UX document,
 `docs/ux/<area>/` 아래의 화면·모달·패널), `ARCH`는 아키텍처(architecture), `ADR`은
 결정(decision), `PROP`은 제안(proposal), `PADR`은 제안 결정(proposal decision), `SPEC`/`PLAN`/`TASKS`/`REC`는 스펙 번들 파일,
-`FB`는 피드백(feedback), `MAT`는 자료(material), `MS`는 마일스톤(milestone)입니다. ID는 저장소 전체에서 고유해야 합니다.
+`FB`는 피드백(feedback), `MAT`는 자료(material), `MS`는 마일스톤(milestone), `DESIGN`은 design, `DOMAIN`은 domain, `OPS`는 operations 문서입니다. ID는 저장소 전체에서 고유해야 합니다.
 색인은 ID가 선언된 위치와 상관없이 모두 수집하며, 각 파일이 종류에 맞는 올바른 디렉터리에 있는지는 문서 규칙에서 검사합니다.
 계획 중이거나 진행 중인 마일스톤은 `docs/roadmap/`에, 완료되었거나 중단된 마일스톤은 같은 파일 이름과 ID로 평면 구조의
 `docs/roadmap/_archive/`에 둡니다.
 
-기능, 유스케이스, UX 문서, 결정, 아키텍처 문서, 마일스톤, 제안, 스펙에는 한두 문장의 영문 `summary`를 작성해야 합니다. 검색의
+기능, 유스케이스, UX 문서, 결정, 아키텍처 문서, 마일스톤, 제안, 스펙, design, domain, operations 문서에는 한두 문장의 영문 `summary`를 작성해야 합니다. 검색의
 핵심 단서로 쓰이므로, 제목과 본문은 어떤 언어로 작성해도 무방합니다.
 
 ### 스티어링 문서
@@ -142,7 +144,7 @@ ID 접두사는 문서의 종류를 나타냅니다. `CAP`은 기능(capability)
 `DOCS_ID_DUPLICATE`와 함께 종료 코드 `2`로 끝납니다. `refs`와 `list`는 결과를 페이지 단위로 나누어 출력하므로, 안내되는
 `[NEXT_CMD: ...]` 명령을 실행하여 다음 페이지를 조회할 수 있습니다. 모든 명령은 `--format json`을 지원합니다. 세부 옵션,
 출력 필드, JSON 키는
-[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-lookup.md) (영어 원문)에서
+[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-lookup.md) (영어 원문)에서
 확인할 수 있습니다.
 
 ### 이력 문서는 기본적으로 숨겨집니다
@@ -173,7 +175,7 @@ uv run devkit docs search "cache policy" --kind decision --kind capability --his
 검색 시 전역 동의어를 먼저 확장한 뒤 선택된 네임스페이스의 동의어를 확장하며, 선택되지 않은 네임스페이스는 영향을 주지 않습니다.
 search 엑스트라 패키지가 설치되지 않은 경우 어휘 기반으로만 순위가 매겨지며, `uv add 'devkit-docs[search]'`(`devkit-spec[search]`에 포함됨)를 설치하면
 하이브리드 검색 순위를 활용할 수 있습니다. 자세한 내용은
-[CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md) (영어 원문)를
+[CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-search.md) (영어 원문)를
 참고하십시오. 순위 산정 엔진 자체의 동작 원리는 [검색](search.md)에서 설명합니다.
 
 ## 네임스페이스를 활용한 모노레포 지원
@@ -191,7 +193,7 @@ path = "services/api"
 `DOCS_CONFIG_INVALID`로 실패시킵니다.
 
 네임스페이스는 문서를 *탐색(browse)*하는 범위를 좁혀줄 뿐, 존재하는 문서 자체를 제한하지는 않습니다
-([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-namespaces.md) (영어 원문)).
+([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-namespaces.md) (영어 원문)).
 
 - `list`와 `search`는 기본적으로 현재 작업 디렉터리의 네임스페이스 문서와 전역 문서를 함께 보여줍니다. `--namespace <NAME>`으로
   특정 네임스페이스를 지정하거나, `--namespace global`로 전역 문서만 조회하거나, `--all-namespaces`로 모든 네임스페이스의 문서를
@@ -204,6 +206,12 @@ path = "services/api"
   `steering/ux-objects.md`를 둘 수 있으며, 마일스톤은 `docs/packages/<name>/roadmap/`, 완료(`done`)·중단(`dropped`) 기록은 그
   `_archive/`에 둡니다. 에이전트는 전역 목록과 해당 로컬 목록을 함께 읽으며 로컬 용어는 해당 네임스페이스에만 적용됩니다.
   기존 패키지 수준의 용어집은 수동으로 이동하거나 병합해야 합니다.
+
+## 문서의 소유 범위
+
+각 사실에는 권위 있는 소유 문서가 하나 있습니다. Capability는 관찰 가능한 동작을, design은 내부 메커니즘과 저장 데이터를, domain 문서는 개념과 관계를, operations는 관찰된 증상에 맞는 기존 조치의 소유자를 설명합니다. Reference는 정확한 구문을 담고 use case는 행위자의 목표와 결과를 설명합니다.
+
+정식 design 번들, domain 문서, operations 문서는 각각 `DESIGN`, `DOMAIN`, `OPS` ID를 가집니다. 지원 파일은 상위 문서에 속하며 독립적으로 관리하는 세부 문서는 별도 ID를 가집니다. 모든 문서가 서로 연결되어 있다고 기대하기보다 질문에 필요한 링크를 따라가세요. [CAP-DOCS-documentation-ownership](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-documentation-ownership.md) (영어 원문)을 참고하세요.
 
 ## 이 영역의 핵심 기능
 

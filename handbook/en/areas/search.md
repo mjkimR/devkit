@@ -1,23 +1,23 @@
 ---
 sources:
   CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
-  CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
-  CAP-SRCH-document-search: 83f6f8ad76a2f12f0c4e5f0a4c719bfb7134dff9
-  UC-find-the-right-documents: 63fc40bfa2e3a24b2410dec381a6abec5837ba3d
+  CAP-DOCS-document-search: b2d1bdf40f5c4ce933b8b0b070a26ad357a72bce
+  CAP-SRCH-document-search: f6e7370ffaedb35d6d830cb33ad35b9b91018f5b
+  UC-find-the-right-documents: fb840d645e49806ada5f869028baa650a6dda438
 title: Search
 ---
 
 # Search
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 The search area is the ranking engine behind `devkit playbook search` and `devkit docs search`. It knows documents
 only as an ID, some metadata text and an optional body, and it ranks them against a query lexically, by meaning or
 both. Which documents are candidates, and pinning an exact match first, is left to the command that calls it. The
 contract is
-[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/search/CAP-SRCH-document-search.md).
+[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/search/CAP-SRCH-document-search.md).
 
 ## Where you meet it
 
@@ -73,7 +73,7 @@ A model is a data-only Python package registering its module under the `devkit.e
 `model.json`, `tokenizer.json` and `model.safetensors` beside it. Installing another package with another name makes
 it selectable from the library. The default package lives in `models/devkit-embed` with a committed, reproducible
 wheel built by `just model-build`, so workspace commands and tests run offline. A broken model package fails with
-`SEARCH_MODEL_INVALID` in every mode.
+`SEARCH_MODEL_INVALID` when a mode loads the model (`auto`, `dense` or `hybrid`); `lexical` does not load it.
 
 ## Namespace synonyms
 

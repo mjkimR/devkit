@@ -1,16 +1,16 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
-  CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
+  CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
+  CAP-DLV-proposal-planning: b5546ecd6e0a9bf125be3f537b29f214f64d949a
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
-  UC-plan-and-hand-off-a-proposal: d8fdc0f510ff75159907de246ba4fc72b7b3e551
+  UC-plan-and-hand-off-a-proposal: 363e00cab9ed6f87adac9e1ce1ecba125dbe5ea2
 title: Plan and hand off a proposal
 ---
 
 # Plan and hand off a proposal
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -34,6 +34,7 @@ title: Plan and hand off a proposal
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -72,7 +73,7 @@ the open questions, and you accept a direction on that evidence. Then the propos
 carries everything forward, so Development starts from a consistent Living Spec.
 
 The use case is
-[`UC-plan-and-hand-off-a-proposal`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md).
+[`UC-plan-and-hand-off-a-proposal`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md).
 Proposals, PADRs, Planning and Development, and gates are explained in [Concepts](../concepts.md).
 
 Proposals belong to spec-driven development (SDD). While the repository's development approach is adaptive development,
@@ -88,7 +89,7 @@ uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Rep
 ```
 
 It states the explicitly requested draft scope and proposed Planning effort at intake
-([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)).
+([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)).
 A `--milestone` may name a planned, active, done or dropped milestone; a done or dropped one only adds the
 `SPEC_PROPOSAL_MILESTONE_INACTIVE` notice so you can review the membership.
 
@@ -99,7 +100,7 @@ the work would produce two or more specs, or mixes deliverables of different kin
 the size to get past it. On your decision it splits the draft (`devkit spec proposal new <child> --decomposed-from
 PROP-<parent>`, keeping the parent's milestone) or promotes it to a milestone holding the children, optionally asking the
 read-only `decomposer` role for a proposed split
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)).
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)).
 
 ## 2. Plan
 
@@ -147,7 +148,7 @@ uv run devkit spec proposal handoff fast-engine --effort medium
 
 The command creates or validates `dev-<slug>` and its worktree, runs setup and sync, and hands off there. The
 handoff creates the spec bundle bound to `sdd-spec-<task_kind>`
-([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)),
+([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)),
 promotes the PADRs to accepted ADRs, moves materials and open feedback, carries the `plan-accept`
 records by name, rewrites references that pointed into the proposal, and removes it. Output lines name what moved:
 `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]`, `[CARRIED_GATE: ...]`, `[REWRITTEN: ...]`, then
@@ -161,6 +162,8 @@ A post-commit dirty or changed-history result needs in-place inspection and reco
 A `SPEC_PROPOSAL_REFS_REWRITTEN` notice asks the agent to reread the rewritten sentences. It repairs any unresolved link
 in a follow-up commit on `dev-<slug>`—preserving the handoff transaction SHA—and follows the spec workflow's next
 stage, as in [Drive development to integration](drive-development-to-integration.md).
+
+Planning records affected design, domain and operations responsibilities, their source and verification, or why each role is unaffected.
 
 ## Shortcuts and other endings
 

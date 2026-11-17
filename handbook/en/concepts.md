@@ -1,6 +1,6 @@
 ---
 sources:
-  ADR-delivery-classification: 76377cf36ed7fadeaac4acf8d7bbfc2cb6a1c445
+  ADR-delivery-classification: 98d934b81c4fbffb4d20ad5163305fe175e4a078
   ARCH-08-1-agent-output: 4921a21fa00c4cd4413b7a01236cc833944a458a
   ARCH-08-2-resource-taxonomy: 91ce1102bad86b280abec6ebd8da514dda2363cc
   ARCH-08-cross-cutting: 3bf334671a435d6d6956b2a8be623aafadd34924
@@ -9,23 +9,23 @@ sources:
   CAP-DIST-agent-projections: 55e51a4d47e28808486ffa1c12c4fa3fe563f7b5
   CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
   CAP-DIST-manifest-spec: c36062832b0a088f0cdfba7bea04c6eceb3ae0d4
-  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DIST-workspace-ownership: 7801db0b2bf793890a591d71ed1e46ec39ba6739
-  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
+  CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
+  CAP-DIST-workspace-ownership: f176254d1c8de2cbc4e8b898bf4a02a5d80f001d
+  CAP-DLV-adaptive-development: 93224b4daa9b78a1b2a090d745e9693571d809e6
   CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
-  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
+  CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
   CAP-DLV-design-exploration: 2955370f17cfb55a293ea67eb545e7c5df5f4ffb
   CAP-DLV-human-interaction: 7926c28e1951896774e56bd201fbd5e3a474a673
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
-  CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
+  CAP-DLV-proposal-planning: b5546ecd6e0a9bf125be3f537b29f214f64d949a
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
   CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
-  CAP-DLV-workflow-envelopes: e65db42fb9d524cefed5d9d492025ef46a73443e
+  CAP-DLV-workflow-envelopes: d4ff93fd7f267da9942bcc5f54d3fefcea45ef99
   CAP-DLV-workflow-orchestration: 5ad464a0ca56f3ad3beb141cf126ca309b9dffca
-  CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
+  CAP-DOCS-document-model: da6e3a2dfc451c26f2eff04e1f24a74baba63bab
   CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
   CAP-GOV-rules-engine: 0be08e47c6be2cb1892d91c7bd7c15dbf3bec98d
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
 title: Concepts
@@ -34,7 +34,7 @@ title: Concepts
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -58,6 +58,7 @@ title: Concepts
 - [Plan and hand off a proposal](journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](journeys/publish-a-weekly-report.md)
 - [Read decision supersession](journeys/read-decision-supersession.md)
+- [Read a formal document](journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -100,7 +101,7 @@ A **bundle** is a named set of agent assets declared in a `bundle.toml`: instruc
 skills, subagent roles, commit gates, host hooks and guidance fragments. A bundle ships inside a Python wheel (a
 content package) or lives in your own repository. A **preset** is a named selection of a bundle's assets, such as
 `core` or `default`
-([`CAP-DIST-manifest-spec`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-manifest-spec.md)).
+([`CAP-DIST-manifest-spec`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-manifest-spec.md)).
 
 Installing a wheel only makes its bundles available. Your project chooses what is deployed in
 `.devkit/config.toml`: some bundles select themselves once their package is installed (`devkit`, `advisory`,
@@ -108,7 +109,7 @@ Installing a wheel only makes its bundles available. Your project chooses what i
 `devkit add <bundle>` and drop with `devkit remove <bundle>`. `devkit list` shows what is installed and selected.
 
 The assets fall into three layers
-([`ARCH-08-2-resource-taxonomy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-2-resource-taxonomy.md)):
+([`ARCH-08-2-resource-taxonomy`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-08-2-resource-taxonomy.md)):
 natural-language guidance (the `AGENTS.md` block, instructions, playbooks, workflows), mechanized execution
 (rules, skills, subagents, commit gates, host hooks), and the packaging layer of bundles, presets and project
 configuration.
@@ -116,25 +117,25 @@ configuration.
 ## Sync, the receipt and what you may edit
 
 `devkit sync` deploys the selected bundles in one transaction: it either writes everything or rolls back
-([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
+([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
 It produces three kinds of output:
 
 - **Managed files** under `.devkit/managed/<bundle>/`: pristine copies you never edit by hand.
 - **Projections**: native copies of skills and subagent roles in each agent's own directories, such as
   `.agents/skills/`, `.claude/skills/` and `.codex/skills/`
-  ([`CAP-DIST-agent-projections`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-agent-projections.md)).
+  ([`CAP-DIST-agent-projections`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-agent-projections.md)).
 - **The receipt**, `.devkit/installation.json`: the committed record of every deployed file, its checksum and its
   bundle. `devkit sync --check` and `devkit status` compare the workspace against it.
 
 To adapt an upstream asset, you do not edit the managed copy or the projection; you create a **project override**
 with `devkit override`, which lives under `.devkit/overrides/` and is tracked against the upstream version it was
 based on, so upstream changes show up as drift
-([`CAP-DIST-workspace-ownership`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md)).
+([`CAP-DIST-workspace-ownership`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md)).
 
 ## Guidance on demand
 
 Text in startup files costs tokens on every turn, so devkit loads guidance in stages
-([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)):
+([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)):
 
 - The managed block in the root `AGENTS.md` holds only orientation.
 - `devkit get-context <bundle>` returns a bundle's constitution, the headers of its instructions, each with the
@@ -149,13 +150,13 @@ Text in startup files costs tokens on every turn, so devkit loads guidance in st
 - **Skills** are the entry points an agent host invokes, such as `/spec`, `/spec-next` and `/adaptive-dev`;
   **subagents** are role contracts (a code reviewer, a reconcile reviewer, a worker) projected for each host. Most
   roles inherit the session's model; a project can pick a model level per role in the `[subagents]` table
-  ([`CAP-DIST-agent-projections`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-agent-projections.md)).
+  ([`CAP-DIST-agent-projections`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-agent-projections.md)).
 
 ## The Living Spec
 
 The **Living Spec** is the durable description of the system under `docs/`. It is the source of truth: code,
 guidance and this handbook follow it. Each document has an ID in its frontmatter
-([`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md)):
+([`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-model.md)):
 
 | Kind | ID | Describes |
 | --- | --- | --- |
@@ -172,6 +173,8 @@ and when it completes, its effect is written back into `docs/` (**reconcile**). 
 the document model; `devkit docs resolve`, `devkit docs refs`, `devkit docs list` and `devkit docs search` find
 documents by ID, reference, kind or meaning.
 
+Design, domain and operations documents are indexed Living Spec kinds. They explain implementation, concepts and operational routing respectively; see [Documents](areas/documents.md).
+
 ## Development approach: SDD or adaptive development
 
 A project works in one of two **development approaches**, a shared choice in `.devkit/config.toml`:
@@ -184,7 +187,7 @@ approach = "adaptive-dev"   # absent means "sdd"
 `uv run devkit config show` reports the effective approach and its source; `uv run devkit spec policy` repeats it
 on its first line. Installing packages, selecting bundles or invoking a skill never switches it, and a checkout-local
 configuration cannot override it
-([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
+([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
 
 - **SDD** is everything the rest of this page describes: classification, Units, workflows, gates, envelopes and
   reconcile.
@@ -193,7 +196,7 @@ configuration cannot override it
   assumptions, how to run and check the product, what was actually observed, and the next action. It creates no
   spec bundles, envelopes or approvals per change; SDD lifecycle commands such as `devkit spec new` refuse with
   `SPEC_LIFECYCLE_INACTIVE` while adaptive development is active
-  ([`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)).
+  ([`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)).
 
 Document checks and your project's own checks apply in both approaches, and SDD records that already exist keep
 their checks. Moving from adaptive-dev to SDD is a deliberate step through the `sdd-baseline` playbook, described in
@@ -202,8 +205,8 @@ their checks. Moving from adaptive-dev to SDD is a deliberate step through the `
 ## Classifying work
 
 Under SDD, every development request is classified on three axes before work starts
-([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md),
-[`ADR-delivery-classification`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-delivery-classification.md)):
+([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md),
+[`ADR-delivery-classification`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261102-delivery-classification.md)):
 
 - **`task-kind`**: `feature`, `bugfix` or `overall-refactor`.
 - **`planning-depth`**: what has to be settled before implementation, not how big the change is.
@@ -224,16 +227,16 @@ agent to delegate to workers in their own worktrees.
 ## Units, specs and proposals
 
 A **Unit** is a directory a workflow drives, recognized by its anchor file
-([`CAP-DLV-workflow-orchestration`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)).
+([`CAP-DLV-workflow-orchestration`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)).
 There are two kinds:
 
 - A **spec bundle**, `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`, anchored by `spec.md`, with `plan.md` and `tasks.md`
   beside it. `devkit spec new` creates one and binds it to its workflow
-  ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)).
+  ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)).
 - A **proposal bundle** under `docs/proposals/PROP-<slug>/`, anchored by `proposal.md`, bound to `sdd-proposal`.
   It collects materials and preliminary decisions (PADRs). Once accepted, `devkit spec proposal handoff` turns it
   into a spec bundle, carrying its body, decisions and materials along
-  ([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)).
+  ([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)).
 
 A `session` task has no Unit: no spec, envelope or reconcile record, only the commits.
 
@@ -241,13 +244,13 @@ A `session` task has no Unit: no spec, envelope or reconcile record, only the co
 
 A **workflow** is a delivery procedure declared as data: a Markdown file whose frontmatter lists ordered **stages**,
 each with entry and exit checks
-([`CAP-DLV-workflow-orchestration`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)).
+([`CAP-DLV-workflow-orchestration`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)).
 The agent does not work out the stage itself. It runs `devkit workflow next --unit <dir>`, which evaluates the
 checks against the Unit's files and prints the first unmet stage, what is missing and which skill to follow.
 `devkit workflow show <id>` prints a whole definition. Because the Unit stores only its workflow ID, a changed
 definition applies to work already under way.
 
-A **gate** is a stage that waits for a decision; SDD has three approval boundaries ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
+A **gate** is a stage that waits for a decision; SDD has three approval boundaries ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
 
 - `plan-accept`: you accept a proposal's direction.
 - `proposal-handoff`: you authorize Development to start; this boundary is read by the proposal lifecycle command.
@@ -258,15 +261,15 @@ Your explicit task instruction authorizes its stated scope, so no intent approva
 Each gate is `ask` (wait for a person) or `auto` (delegated by project policy); a delegation is reported as policy,
 never as your consent. A separate `exception` stage handles work that cannot continue as agreed. You see
 the effective settings with `devkit spec policy`
-([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md)),
+([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-project-policy.md)),
 and decisions are recorded with `devkit workflow answer`
-([`CAP-DLV-human-interaction`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-human-interaction.md)).
+([`CAP-DLV-human-interaction`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-human-interaction.md)).
 
 ## Envelopes
 
 An **envelope** is a small YAML file in `<unit>/envelopes/<kind>-<NN>.yaml` that records what a stage or a
 delegated role produced: a review's findings, a reconcile check, a final change report, a worker's run
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
+([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
 Envelopes are never overwritten: each new one takes the next number, and workflow checks read the latest.
 
 A `worker` envelope can carry **questions** for you, gathered into one round, or a **problem** that stopped the run.
@@ -277,27 +280,27 @@ was fixed. A question is answered and a problem is resolved; neither is assumed.
 ## Rules and commit gates
 
 A **governance rule** is a deterministic invariant checked by parsing, not by asking an agent to remember it
-([`CAP-GOV-rules-engine`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rules-engine.md)).
+([`CAP-GOV-rules-engine`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-rules-engine.md)).
 `devkit rules check` reports violations with stable rule IDs; `devkit rules fix` applies safe repairs in one pass
 followed by one recheck. The engine knows nothing about specs or use cases: those rules arrive in bundles, such as
 the spec rules of `devkit-spec`. You can check the working tree, the staged tree (`--staged`) or a comparison with a
 base commit (`--ci --base <ref>`).
 
 A **commit gate** runs policy at Git's commit hooks
-([`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/gate/CAP-GATE-commit-gates.md)).
+([`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/gate/CAP-GATE-commit-gates.md)).
 `devkit gate install` installs the wrappers; the gates themselves, such as `rules-check` and `verify-commands`,
 come from bundles. Before the commit exists a gate can refuse it; after the commit it only warns.
 
 ## Advisories and the output contract
 
 devkit's first reader is an agent, so every command answers the same way
-([`ARCH-08-cross-cutting`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-cross-cutting.md),
-[`ARCH-08-1-agent-output`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-1-agent-output.md)):
+([`ARCH-08-cross-cutting`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-08-cross-cutting.md),
+[`ARCH-08-1-agent-output`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-08-1-agent-output.md)):
 
 - **stdout is the result**: one-line `[KIND: ...]` sentinels, or one JSON object under `--format json`.
 - **stderr carries advisories**: `[ERROR]`, `[WARN]` and `[NOTICE]` blocks, each with a stable `UPPER_SNAKE` code
   and an `[ACTION]` line naming the next step
-  ([`CAP-ADV-agent-advisory-protocol`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md)).
+  ([`CAP-ADV-agent-advisory-protocol`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md)).
 - **Exit codes**: `0` success, `1` a negative result (violations, drift, a refused commit), `2` the command could not
   run. Warnings and notices do not change the exit code unless you pass `--strict`.
 
@@ -309,12 +312,12 @@ output: the full log goes to disk and a bounded summary to stdout.
 An **activity branch** is named `plan-<slug>` or `dev-<slug>`. A **task worktree** is a separate checkout of that
 branch at a fixed path next to your repository, `<parent>/<repo>-wt-<branch>`, so several tasks can run at once
 without touching each other's files
-([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
+([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
 `devkit worktree start <branch>` creates one, `devkit worktree status` lists them, and `devkit worktree finish`,
 run from the base checkout, cleans up an already-merged branch and its worktree. Integration uses `devkit integration`. Project policy decides whether worktrees are used only when needed or always.
 
 When tasks run in parallel, `devkit spec scope` compares the documents and code paths they declare, using observations of declarations and Git changes across worktrees. An overlap informs scheduling and integration order; it never blocks a write
-([`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md)).
+([`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md)).
 
 ## The Host and integration
 

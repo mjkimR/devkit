@@ -1,14 +1,14 @@
 ---
 sources:
-  ADR-decision-ledger: ad6ecb56b5655121cc19c4ec218962ad0b4fe21d
-  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
+  ADR-decision-ledger: 6e278cc4b19388752cf753422edc3d0f159882d6
+  CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
+  CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-advance-an-idea: ccd7fa7758787dfc9e96321082bc99904eaadb2f
-  UC-plan-and-hand-off-a-proposal: d8fdc0f510ff75159907de246ba4fc72b7b3e551
+  UC-plan-and-hand-off-a-proposal: 363e00cab9ed6f87adac9e1ce1ecba125dbe5ea2
   UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
 title: Route a development request
 ---
@@ -16,7 +16,7 @@ title: Route a development request
 # Route a development request
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -41,6 +41,7 @@ title: Route a development request
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -81,7 +82,7 @@ assumed.
 Workflows, stages, gates and the three classification axes are explained in [Concepts](../concepts.md) and the
 [delivery area](../areas/delivery.md).
 
-Source: [`UC-route-development-intent`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-route-development-intent.md).
+Source: [`UC-route-development-intent`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-route-development-intent.md).
 
 ## Before you start
 
@@ -105,11 +106,11 @@ The common path: a `spec`-depth `feature` in `direct` mode.
 
    The output starts with `[DEVELOPMENT_APPROACH: approach=sdd source=default]` and includes lines such as
    `[GIT_POLICY: worktree=auto ...]`, `[ROUTING_POLICY: depth_escalation=auto]` and one `[GATE_POLICY: ...]` per gate
-   ([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md)).
+   ([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-project-policy.md)).
 3. **Classification.** It classifies the request by `task-kind` (`feature` or `bugfix`), then `planning-depth`
    (`session`, `spec` or `proposal`, by what must be settled before implementation, not by size), then the mode and
    `activity-effort`, and states this to you
-   ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
+   ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
 4. **Branch.** It starts `dev-<slug>`, in the current checkout (`devkit worktree start dev-<slug> --no-worktree`) or in
    its own task worktree, as the Git policy allows.
 5. **Spec bundle.** It creates the bundle:
@@ -120,10 +121,10 @@ The common path: a `spec`-depth `feature` in `direct` mode.
 
    This writes `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` with skeleton `spec.md`, `plan.md` and `tasks.md`, bound to
    `sdd-spec-feature`, and ends with `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`
-   ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)).
+   ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)).
 6. **Scope.** It states the scope authorized by your explicit instruction; no intent approval record is created.
 7. **Next stage.** It runs `devkit workflow next --unit <dir>` and follows the stage, its unmet checks and the skill it
-   names ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)).
+   names ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)).
 
 ## Other routes
 
@@ -160,7 +161,7 @@ integration retain their independent approval policies.
   slug.
 - **A worktree is required.** Under `worktree=required`, or under `auto` when the checkout holds unrelated changes or
   another task, the agent starts `dev-<slug>` in its own worktree
-  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
+  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
 - **A session turns out to need a contract change.** The agent raises the depth to `spec` (on its own under
   `depth_escalation=auto`, after your confirmation under `ask`), adds a spec Unit on `dev-<slug>` in the same place and
   keeps the work done so far. A depth is never lowered by itself.

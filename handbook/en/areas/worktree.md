@@ -15,7 +15,7 @@ title: Worktree
 # Worktree
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -40,6 +40,7 @@ title: Worktree
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -190,8 +191,8 @@ that misbehaves fails closed for checks and guards, and only warns after a finis
 
 ## Sources
 
-- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md):
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md):
   paths, start variants, finish steps, status, configuration and stale branches.
-- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/worktree.md):
+- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/worktree.md):
   commands and error codes.
 - Related: [Integration](integration.md), [Collaboration](collaboration.md).

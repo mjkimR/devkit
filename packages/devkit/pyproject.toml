@@ -1,6 +1,6 @@
 [project]
 name = "devkit-agt"
-version = "0.1.6"
+version = "0.1.7"
 description = "Developer harness for devkit: repository rules, delivery workflows, commit gates, task worktrees and bounded command output"
 readme = "README.md"
 requires-python = ">=3.12"

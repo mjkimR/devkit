@@ -11,7 +11,7 @@ title: Speed up selected slow operations
 # Speed up selected slow operations
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ title: Speed up selected slow operations
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -72,9 +73,9 @@ next try. The `performance-pass` playbook makes the work measurable: you pick th
 unprofiled and interleaved, uses a profiler only to find where the time goes, and applies only the speedups you agree
 to, each committed with its before and after numbers and evidence that behavior did not change.
 
-Source: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-speed-up-selected-slow-operations.md),
-contract [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-performance-pass.md),
-playbook [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md).
+Source: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-speed-up-selected-slow-operations.md),
+contract [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-performance-pass.md),
+playbook [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.7/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md).
 Maintenance cost is a different job: [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md),
 whose application procedure this playbook reuses.
 
@@ -82,7 +83,7 @@ whose application procedure this playbook reuses.
 
 - The opt-in `maintenance` catalog bundle is selected with `all` (`uv run devkit add maintenance`) or
   `maintenance:performance`. Both also deploy `review-refactor`, which this playbook needs
-  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
+  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
 - Know which operations matter: the exact command, its working directory and environment, and the metric (wall time,
   subprocess count or peak memory). A goal is optional.
 - Keep the machine quiet while it measures. No timing script ships with the playbook; the agent uses an installed
@@ -93,7 +94,7 @@ whose application procedure this playbook reuses.
 1. **Invoke.** Run `/devkit-playbook` and pick `performance-pass`, fetch it with
    `uv run devkit playbook get maintenance/performance-pass`, or confirm it when `/spec` offers it. It loads on demand
    and never runs because it is installed
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
 2. **Intake.** The agent records the run ID, repository, `HEAD`, dirty paths, earlier reports, the report destination
    and the environment (machine, operating system, runtime versions, current load). You name each target. The run is
    in `survey` mode (find and rank, apply nothing) or `targeted` mode (measure and apply what you approve).

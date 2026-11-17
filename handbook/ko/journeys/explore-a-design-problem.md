@@ -3,13 +3,13 @@ sources:
   CAP-DLV-design-exploration: null
   UC-explore-a-design-problem: null
 title: 설계 문제 탐색하기
-translated_from: en/journeys/explore-a-design-problem.md@b698e4ac98960c94
+translated_from: en/journeys/explore-a-design-problem.md@d14ab6a17377641c
 ---
 
 # 설계 문제 탐색하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -33,6 +33,7 @@ translated_from: en/journeys/explore-a-design-problem.md@b698e4ac98960c94
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -90,5 +91,5 @@ translated_from: en/journeys/explore-a-design-problem.md@b698e4ac98960c94
 
 ## 출처
 
-- [UC-explore-a-design-problem](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-explore-a-design-problem.md) (영어 원문)
-- [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md) (영어 원문)
+- [UC-explore-a-design-problem](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-explore-a-design-problem.md) (영어 원문)
+- [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-design-exploration.md) (영어 원문)

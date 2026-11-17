@@ -10,7 +10,7 @@ title: Reconcile Living Spec drift
 # Reconcile Living Spec drift
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ title: Reconcile Living Spec drift
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
@@ -75,8 +76,8 @@ Structural consistency is the separate journey [Keep the Living Spec consistent]
 Per-feature reconciliation during delivery is `spec-sync`; this playbook catches what accumulates between features.
 See [Concepts](../concepts.md) for the Living Spec and playbooks.
 
-Source: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-reconcile-living-spec-drift.md),
-contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md).
+Source: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-reconcile-living-spec-drift.md),
+contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md).
 
 ## Before you start
 
@@ -90,7 +91,7 @@ contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/
 1. **Invoke the playbook.** Run `/devkit-playbook` and pick `drift-reconciliation`, or confirm it when the `spec`
    skill offers it in one line for a request such as "reconcile the Living Spec with the code". Playbooks never run
    on ordinary wording alone; your confirmation is the explicit invocation
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md),
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md),
    [distribution area](../areas/distribution.md)).
 2. **Intake.** The agent records the repository, `HEAD` and dirty paths, the selected contracts or area, the
    permitted roots, any prior reports and where the report goes. It then lists the candidates of one bounded batch.

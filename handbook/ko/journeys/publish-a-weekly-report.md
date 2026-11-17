@@ -5,13 +5,13 @@ sources:
   UC-inspect-weekly-repository-progress: null
   UC-publish-a-weekly-report: null
 title: 주간 보고서 게시하기
-translated_from: en/journeys/publish-a-weekly-report.md@e5fb333ca9fe11d5
+translated_from: en/journeys/publish-a-weekly-report.md@1107687297332c44
 ---
 
 # 주간 보고서 게시하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ translated_from: en/journeys/publish-a-weekly-report.md@e5fb333ca9fe11d5
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -71,8 +72,8 @@ translated_from: en/journeys/publish-a-weekly-report.md@e5fb333ca9fe11d5
 
 보고서 생성은 별도의 단계(`UC-inspect-weekly-repository-progress`)에서 진행됩니다. 두 작업 모두 선택형 `maintenance` 카탈로그 번들의 `weekly-report` 플레이북에 포함되어 있습니다. 자세한 내용은 [전달 영역](../areas/delivery.md)을 참고하고, 플레이북 전반에 관한 내용은 [개념](../concepts.md)을 참고하십시오.
 
-출처: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문),
-계약 [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문).
+출처: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문),
+계약 [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문).
 
 ## 시작하기 전에
 

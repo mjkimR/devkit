@@ -2,8 +2,8 @@
 sources:
   CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
   CAP-DIST-in-repo-bundles: 7d71d79b481fbdf7cbc1c86d61fea924dfc924d6
-  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DIST-workspace-ownership: 7801db0b2bf793890a591d71ed1e46ec39ba6739
+  CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
+  CAP-DIST-workspace-ownership: f176254d1c8de2cbc4e8b898bf4a02a5d80f001d
   UC-snapshot-bundle-sources: c54e121b9394e47799bc2e32ed7d2dca452ecabc
 title: Adopt and refresh bundle sources locally
 ---
@@ -11,7 +11,7 @@ title: Adopt and refresh bundle sources locally
 # Adopt and refresh bundle sources locally
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 A bundle source snapshot preserves a complete supported content provider in a distinct local package. It keeps original bundle versions, resource bytes, modes and license files with path-free provenance. Runtime/command providers and unsupported dynamic closure are refused before writes.
@@ -30,8 +30,8 @@ Commit sources, provenance and deliberate bootstrap changes. Keep consumer adapt
 
 ## Sources
 
-- [UC-snapshot-bundle-sources](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/distribution/UC-snapshot-bundle-sources.md)
-- [CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md)
-- [CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md)
-- [CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md)
-- [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)
+- [UC-snapshot-bundle-sources](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/distribution/UC-snapshot-bundle-sources.md)
+- [CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md)
+- [CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md)
+- [CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md)
+- [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)

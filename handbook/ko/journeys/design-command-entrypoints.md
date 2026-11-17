@@ -3,13 +3,13 @@ sources:
   CAP-HARN-command-design: null
   UC-design-command-entrypoints: null
 title: 필요한 명령 진입점 설계하기
-translated_from: en/journeys/design-command-entrypoints.md@d50722202f721222
+translated_from: en/journeys/design-command-entrypoints.md@6d2d941f3d915f8f
 ---
 
 # 필요한 명령 진입점 설계하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -33,6 +33,7 @@ translated_from: en/journeys/design-command-entrypoints.md@d50722202f721222
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -84,5 +85,5 @@ Python CLI 구현은 [에이전트 우선 CLI 도구 키트](../areas/cli.md)를
 
 ## 출처
 
-- [UC-design-command-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/harness/UC-design-command-entrypoints.md) (영어 원문)
-- [CAP-HARN-command-design](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-design.md) (영어 원문)
+- [UC-design-command-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/harness/UC-design-command-entrypoints.md) (영어 원문)
+- [CAP-HARN-command-design](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-command-design.md) (영어 원문)

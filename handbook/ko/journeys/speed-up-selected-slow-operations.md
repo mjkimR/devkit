@@ -6,13 +6,13 @@ sources:
   CAP-DLV-performance-pass: null
   UC-speed-up-selected-slow-operations: null
 title: 선택한 느린 작업 빠르게 하기
-translated_from: en/journeys/speed-up-selected-slow-operations.md@ff6bf911faff5142
+translated_from: en/journeys/speed-up-selected-slow-operations.md@20fde209f3839626
 ---
 
 # 선택한 느린 작업 빠르게 하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -37,6 +37,7 @@ translated_from: en/journeys/speed-up-selected-slow-operations.md@ff6bf911faff51
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -70,22 +71,22 @@ translated_from: en/journeys/speed-up-selected-slow-operations.md@ff6bf911faff51
 
 명령이 느리게 느껴질 때 원인을 짐작하고 한 번만 시간을 재면, 다음 시도에서 사라지는 절감 효과를 보고하기 쉽습니다. `performance-pass` 플레이북은 이 작업을 측정 가능하게 만듭니다. 사용자가 작업을 고르면, 에이전트가 프로파일러 없이 교차(interleaved) 반복으로 측정하고, 프로파일러는 시간이 어디에 쓰이는지 찾는 데만 쓰며, 사용자가 동의한 속도 개선만 적용합니다. 각 개선은 전후 수치와 동작이 바뀌지 않았다는 증거와 함께 커밋됩니다.
 
-출처: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-speed-up-selected-slow-operations.md) (영어 원문),
-계약 [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-performance-pass.md) (영어 원문),
-플레이북 [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md) (영어 원문).
+출처: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/governance/UC-speed-up-selected-slow-operations.md) (영어 원문),
+계약 [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-performance-pass.md) (영어 원문),
+플레이북 [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.7/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md) (영어 원문).
 유지보수 비용은 별개의 일입니다: [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)이며, 이 플레이북은 그 적용 절차를 재사용합니다.
 
 ## 시작하기 전에
 
 - 선택형 `maintenance` 카탈로그 번들을 `all`(`uv run devkit add maintenance`) 또는 `maintenance:performance`로 선택합니다. 둘 다 이 플레이북이 필요로 하는 `review-refactor`도 배포합니다
-  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)).
+  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)).
 - 중요한 작업을 정해 둡니다: 정확한 명령, 작업 디렉터리와 환경, 지표(실행 시간, 서브프로세스 수, 최대 메모리). 목표는 선택 사항입니다.
 - 측정 중에는 장비에 다른 부하를 주지 않습니다. 플레이북에는 타이밍 스크립트가 없으며, 에이전트는 `hyperfine` 같은 설치된 도구를 쓰거나 짧은 루프를 작성합니다.
 
 ## 단계별 진행
 
 1. **호출.** `/devkit-playbook`을 실행해 `performance-pass`를 고르거나, `uv run devkit playbook get maintenance/performance-pass`로 가져오거나, `/spec`이 제안할 때 확인합니다. 필요할 때 로드되며, 설치되어 있다는 이유로 실행되지 않습니다
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
 2. **작업 접수(Intake).** 에이전트가 실행 ID, 저장소, `HEAD`, 수정 경로, 이전 보고서, 보고서 위치, 환경(장비, 운영체제, 런타임 버전, 현재 부하)을 기록합니다. 사용자가 각 대상을 지정합니다. 실행은 `survey` 모드(찾아서 순위만 매기고 적용하지 않음) 또는 `targeted` 모드(측정하고 승인된 것을 적용)입니다.
 3. **기준선.** 각 대상을 정확한 인자로 실제 프로세스로 측정합니다: 워밍업 실행 한 번은 버리고, 최소 다섯 번의 교차 반복, 종료 코드와 출력 다이제스트 확인, 중앙값·최솟값·범위 보고, warm/cold 상태 표시, 측정 전후 부하 기록.
 4. **비용 귀속.** 프로파일러는 비용 위치를 찾을 뿐 절감을 보고하지 않습니다. 각 핫스폿의 비중은 프로파일러 없이 확인하고, 서브프로세스는 따로 세고 측정하며, 복합 대상은 구성 요소를 측정해 합이 전체와 맞는지 확인합니다.

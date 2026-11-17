@@ -4,13 +4,13 @@ sources:
   CAP-INT-mcp-services: null
   CAP-MCP-runtime-registration: null
 title: 호스트
-translated_from: en/areas/host.md@944930a6146fe0c1
+translated_from: en/areas/host.md@6a21228fc3c94642
 ---
 
 # 호스트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ translated_from: en/areas/host.md@944930a6146fe0c1
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -184,6 +185,8 @@ devkit host status --format json
 다른 devkit 명령과 달리 `devkit host hook`은 결과 센티널 없이 호스트 고유의 네이티브 응답 포맷을 stdout으로 직접 출력합니다.
 반면 `devkit host status`는 표준 에이전트 출력 규약을 준수합니다.
 
+내장 `observe` 핸들러만 관찰 기록을 씁니다. 다른 핸들러의 `last_received: null`은 dispatch가 실행되지 않았다는 뜻이 아닙니다. 실패는 훅의 stderr에 표시됩니다.
+
 ## 비즈니스 승인과의 분리
 
 작업 통합과 같은 비즈니스 승인은 호스트 훅의 대상이 아니며 호스트 프롬프트로 처리되지도 않습니다. `ask` 정책 환경에서 Host는
@@ -193,8 +196,8 @@ devkit host status --format json
 
 ## 출처
 
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문):
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문):
   훅 에셋 규약, 공유 설정 소유권, 디스패치 메커니즘, 관찰자 및 상태 진단.
-- [Host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/host.md) (영어 원문): MCP 서비스를 포함한
+- [Host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/host.md) (영어 원문): MCP 서비스를 포함한
   명령어 및 오류 코드 레퍼런스.
 - 관련 문서: [MCP](mcp.md)(`CAP-MCP-runtime-registration`), [통합](integration.md).

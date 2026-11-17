@@ -3,9 +3,9 @@ sources:
   CAP-GOV-evaluation-lifecycle: 01aacea928c70408c22fa701e04032304941ed4c
   CAP-GOV-rule-authoring: 8bf2218706b9b54fd66709ab279ef1d6c4ba117b
   CAP-GOV-rules-engine: 0be08e47c6be2cb1892d91c7bd7c15dbf3bec98d
-  CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
-  UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
-  UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
+  CAP-GOV-spec-rules: 231d1553ea205aee30516b0cf69e320560d2d9a9
+  UC-adopt-in-an-existing-repository: f0d47aad88a9a4f8942bd3614e8d6c341e0490d5
+  UC-keep-the-living-spec-consistent: 3a6a41d611a4ad3d32ed0c3ba96efa1babf02128
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
 title: Governance rules
 ---
@@ -13,7 +13,7 @@ title: Governance rules
 # Governance rules
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -38,6 +38,7 @@ title: Governance rules
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -165,7 +166,7 @@ spec-driven lifecycle. All are errors except `RULE-spec-progress`, `RULE-proposa
 | `RULE-id-convention` | `docs` | paths, IDs, `area` and H1 tokens agree (done and dropped milestones under `docs/roadmap/_archive/`); no date or number IDs | aligns `id`, `area`, H1 |
 | `RULE-spec-format` | `docs` | required frontmatter on capabilities, use cases, UX documents, proposals, milestones | fills missing fields |
 | `RULE-traceability-link` | `docs` | use case and capability links exist on both sides | appends the reverse ID |
-| `RULE-code-entrypoints` | `docs` | capability and use case entrypoints exist | by hand |
+| `RULE-code-entrypoints` | `docs` | capability, use case and canonical DESIGN entrypoints exist | by hand |
 | `RULE-document-summary` | `docs` | searchable documents carry a short English `summary` | by hand |
 | `RULE-steering-documents` | `docs` | `docs/steering/` stays flat and small, each file with a `title` and short English `summary` | by hand |
 | `RULE-ux-links` | `docs` | a UX document and the use case steps that cite it agree | by hand |
@@ -174,7 +175,7 @@ spec-driven lifecycle. All are errors except `RULE-spec-progress`, `RULE-proposa
 | `RULE-task-coverage` | `spec` | every acceptance criterion has a task and every task reference exists | by hand |
 | `RULE-spec-lifecycle` | `spec` | spec status, task checklist and reconcile status agree | sets `completed` |
 | `RULE-spec-progress` | `spec` | a spec with checked tasks is `in-progress` | sets `in-progress` |
-| `RULE-reconcile-contract` | `spec` | `reconcile.md` is well formed and its modified targets changed | by hand |
+| `RULE-reconcile-contract` | `spec` | `reconcile.md` is well formed, modified targets changed and newly resolved records cover formal document roles | by hand |
 | `RULE-proposal-boundaries` | `spec` | a proposal's owned paths exist | by hand |
 
 Steering checks apply per root or registered namespace directory, including optional glossaries and UX object registers,
@@ -233,13 +234,13 @@ derived state, so a missing or corrupt memo only costs time, never changes findi
 
 ## Sources
 
-- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rules-engine.md):
+- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-rules-engine.md):
   the engine, rule sources and per-file facts.
-- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
   targets, scoping, phases, policy and snapshot gates.
-- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rule-authoring.md):
+- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-rule-authoring.md):
   the rule protocol, workspace cache API and rule tests.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md):
   the document and lifecycle rules in full.
-- [Rules reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/rules.md): commands,
+- [Rules reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/rules.md): commands,
   output, exit codes and the built-in rule catalog.

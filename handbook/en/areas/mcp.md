@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-COLL-shared-artifacts: 092d06230b033004a559d4fa72907fac6d0e0f5d
-  CAP-HOST-lifecycle-observation: de72e2a4c9770805ff2ab8f4351ebbf107fafa9e
+  CAP-HOST-lifecycle-observation: f5d70d9feea3573affe64c3310164ef2061caf2c
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
   UC-drive-development-to-integration: 2893591134de64be66238b4102062f02e0e370c8
@@ -11,7 +11,7 @@ title: MCP
 # MCP
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ title: MCP
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -100,7 +101,7 @@ because setup reconciles the whole project, owned entries of every other host ar
 `devkit status` does not inspect MCP registration at all. When locked sync holds back a registration write it would
 have made, it reports `MCP_REGISTRATION_PENDING` with `uv run devkit sync --registrations-only` as the fix; `devkit mcp
 status`, `mcp setup` and the two sync modes are where real registration plans are diagnosed. The step-by-step host setup is the guide
-[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.6/guides/install/mcp.md).
+[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.7/guides/install/mcp.md).
 
 ## What registration will and will not touch
 
@@ -168,9 +169,9 @@ accepted.
 
 ## Sources
 
-- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md):
+- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/mcp/CAP-MCP-runtime-registration.md):
   runtime contract, registration, Host workflow and shared artifact services.
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/host/CAP-HOST-lifecycle-observation.md)
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/host/CAP-HOST-lifecycle-observation.md)
   (project MCP registration boundary) and the
-  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/host.md#mcp-services).
+  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/host.md#mcp-services).
 - Related: [Host](host.md), [Collaboration](collaboration.md), [Integration](integration.md).

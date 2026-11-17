@@ -6,13 +6,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-handle-delivery-problems-and-exceptions: null
 title: 전달 문제와 예외 처리하기
-translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@18726220169378d3
+translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@56b75910457d6d2b
 ---
 
 # 전달 문제와 예외 처리하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@18726220
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -75,13 +76,13 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@18726220
 코드가 기본 브랜치에 통합되지 않도록 방지하는지, 그리고 작업을 어떻게 안전하게 복구하거나 정상 종료하는지 살펴봅니다.
 
 유스케이스는
-[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)입니다.
+[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)입니다.
 엔벨로프(envelope), 유닛(Unit), `exception` 단계 등의 개념은 [개념](../concepts.md)에서 설명합니다.
 
 ## 1. 문제(Problem) 여부 판단
 
 작업 실행자(워커 또는 에이전트 자신)는 마주한 장애물을 기 합의된 명세와 대조하여 분류합니다
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)):
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)):
 
 | 장애물 유형 | 실행자의 조치 |
 | --- | --- |
@@ -100,7 +101,7 @@ uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <ef
 ```
 
 미완료된 작업 상태와 작성한 엔벨로프를 함께 작업 브랜치에 커밋하고, 기본 브랜치로 통합하지 않은 채 해당 실행 턴을 안전하게 종료합니다
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)).
+([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)).
 
 ## 3. 유닛의 보류(Hold) 상태 전환
 
@@ -150,8 +151,8 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
 
   명령어 실행 결과로 `merged=no discarded=yes`가 확인됩니다. 작업 트리에 커밋되지 않은 변경 사항이 남아 있는 경우 워크트리를
   임의로 삭제하지 않습니다 (`WORKTREE_DIRTY`)
-  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문),
-  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
+  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문),
+  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
 - **엔벨로프 기록 자체를 작성할 수 없는 환경적 장애:** 호스트 환경 권한 등으로 인해 엔벨로프 작성이나 비상 커밋이 거부되는 경우,
   워커는 원인, 시도한 명령어 내역, 실제 마지막 커밋, 변경된 경로, 누락된 기록 항목을 정직하게 담아 `failed` 상태로 반환하며
   결과를 꾸며내지 않습니다. 에이전트는 이 반환을 보류 상태로 취급하고 자체적으로 복구 절차를 직접 수행합니다.

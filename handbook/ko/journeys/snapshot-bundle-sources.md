@@ -6,13 +6,13 @@ sources:
   CAP-DIST-workspace-ownership: null
   UC-snapshot-bundle-sources: null
 title: 번들 소스를 로컬로 도입하고 갱신하기
-translated_from: en/journeys/snapshot-bundle-sources.md@ecca4d7d9a74c1ff
+translated_from: en/journeys/snapshot-bundle-sources.md@93c55e1bca9cb650
 ---
 
 # 번들 소스를 로컬로 도입하고 갱신하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 번들 소스 스냅샷(Bundle source snapshot)은 지원되는 콘텐츠 제공자 전체를 별도 로컬 패키지로 보존합니다. 원래 번들 버전·자원 바이트·실행 모드·라이선스를 경로 없는 출처 정보와 함께 유지합니다. 런타임·명령 제공자나 지원하지 않는 동적 의존 범위는 쓰기 전에 거부합니다.
@@ -31,8 +31,8 @@ uv run devkit bundle refresh tools/local-content --source SOURCE --expect CURREN
 
 ## 출처
 
-- [UC-snapshot-bundle-sources](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/distribution/UC-snapshot-bundle-sources.md) (영어 원문)
-- [CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md) (영어 원문)
-- [CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)
-- [CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md) (영어 원문)
-- [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)
+- [UC-snapshot-bundle-sources](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/distribution/UC-snapshot-bundle-sources.md) (영어 원문)
+- [CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md) (영어 원문)
+- [CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)
+- [CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md) (영어 원문)
+- [CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)

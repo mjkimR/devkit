@@ -2040,7 +2040,7 @@
     },
     ".devkit/managed/docs/bundle.toml": {
       "mode": 420,
-      "sha256": "05f3e0b8439c7624d02451726490f737ebc78efa706eeab300f77a58d9329ae3"
+      "sha256": "493e1636da96825950c9c307bac3ec9e45f6a2e8912289368d1a28221da339d5"
     },
     ".devkit/managed/docs/guidance/docs-pointer.md": {
       "mode": 420,
@@ -2284,7 +2284,7 @@
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "dd4a1004b0d76c9f8050aec34a7b70a2617edc312d0230a6599108f19a92b237"
+      "sha256": "4aba91ae624951ba33ce38bad0b10920730e529f232afbe91282349bf6f2957a"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
@@ -2679,7 +2679,7 @@
       "bundle": "authoring",
       "bundle_version": "0.1.6",
       "package": "devkit-agt",
-      "package_version": "0.1.6"
+      "package_version": "0.1.7"
     },
     {
       "bundle": "deep-research",
@@ -2701,15 +2701,15 @@
     },
     {
       "bundle": "docs",
-      "bundle_version": "0.1.6",
+      "bundle_version": "0.1.7",
       "package": "devkit-docs",
-      "package_version": "0.1.6"
+      "package_version": "0.1.7"
     },
     {
       "bundle": "harness",
       "bundle_version": "0.1.6",
       "package": "devkit-agt",
-      "package_version": "0.1.6"
+      "package_version": "0.1.7"
     },
     {
       "bundle": "response-style",
@@ -2719,9 +2719,9 @@
     },
     {
       "bundle": "spec",
-      "bundle_version": "0.1.6",
+      "bundle_version": "0.1.7",
       "package": "devkit-spec",
-      "package_version": "0.1.6"
+      "package_version": "0.1.7"
     }
   ],
   "schema": 1,

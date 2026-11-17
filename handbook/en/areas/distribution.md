@@ -1,13 +1,13 @@
 ---
 sources:
-  ADR-package-ownership-and-release-version: 5167ed25a252806c3536afe4edc770d19ad2ff8d
+  ADR-package-ownership-and-release-version: 1c3a45d595b068a7c7277c6124ef77802390bbf3
   CAP-DIST-agent-projections: 55e51a4d47e28808486ffa1c12c4fa3fe563f7b5
   CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
   CAP-DIST-context-and-playbooks: 1125fdd792cfd9b8142113b407be4c9af9a552cc
   CAP-DIST-in-repo-bundles: 7d71d79b481fbdf7cbc1c86d61fea924dfc924d6
   CAP-DIST-manifest-spec: c36062832b0a088f0cdfba7bea04c6eceb3ae0d4
-  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DIST-workspace-ownership: 7801db0b2bf793890a591d71ed1e46ec39ba6739
+  CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
+  CAP-DIST-workspace-ownership: f176254d1c8de2cbc4e8b898bf4a02a5d80f001d
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
   UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
 title: Distribution
@@ -16,7 +16,7 @@ title: Distribution
 # Distribution
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -41,6 +41,7 @@ title: Distribution
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -116,7 +117,7 @@ Things worth knowing when you choose:
 
 The built-in bundles (`devkit`, `advisory`, `git-commits`, `harness`, `authoring`) and the opt-in
 `response-style` and `maintenance` bundles of `devkit-catalog` are listed in
-[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md),
+[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md),
 together with the dependency rules for layering one content package on another. Methodology layers add their own
 auto-selected bundles the same way: `devkit-docs` ships `docs` and `devkit-spec` ships `spec`
 ([Harness](harness.md)).
@@ -137,7 +138,7 @@ devkit only touches files the receipt records. A planned write onto an unrecorde
 before any byte is written (`SYNC_CONFLICT`), unless the file is already identical. A file you edited that devkit
 still wants to deploy is also a `SYNC_CONFLICT`; one it no longer wants is left on disk as an orphan
 (`ORPHAN_LEFT`). `CLAUDE.md` is never written: point it at `AGENTS.md` yourself. Details are in
-[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md).
+[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md).
 
 ## Keep clones, worktrees and CI in step
 
@@ -173,7 +174,9 @@ projections (`PROJECTION_TRACKED`), giving exact repair advice without editing r
 `PROJECTION_GIT_CHECK_FAILED` reports unavailable Git diagnostics without aborting an otherwise successful sync.
 
 The full transaction steps, the notice list and post-sync extensions are in
-[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md).
+[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md).
+
+An override whose upstream asset no longer exists has no upstream digest: `override diff` and `override accept` return `SELECTION_INVALID`.
 
 ## Change an upstream asset without forking it
 
@@ -198,7 +201,7 @@ To change a distributed rule's settings, use `[rules]` in `config.toml` instead 
 ## Load context and find playbooks
 
 Startup files stay small; guidance is loaded in stages
-([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)):
+([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)):
 
 - The root `AGENTS.md` block holds orientation only: installed bundles, the context rule, entry skills and short
   guidance pointers.
@@ -227,7 +230,7 @@ narrows the list, `uv run devkit sync --agent <name>` sets it and `--no-agents` 
 `.agents/agents/`. A skill declared `invocation = "user"` gets each agent's native "explicit invocation only"
 setting. A subagent ships either native files per agent or one host-neutral role contract rendered per agent. The
 matrix and the role-contract format are in
-[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-agent-projections.md).
+[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-agent-projections.md).
 
 By default a role contract runs on whatever model and effort the host would give it. To choose, set a subagent
 model level: `inherit`, `minimal`, `lean`, `compact`, `standard`, `deep` or `maximal`, each mapped to a native model and
@@ -264,7 +267,7 @@ bytes of skills, instructions, subagents and playbooks at ignored destinations; 
 A bundle manifest declares assets by `(kind, id, source)`, presets, and optional template variables. Run
 `uv run devkit bundle validate <source>` and `uv run devkit bundle plan <source> --agent <name>` on a source
 directory before it is installed. Key points from
-[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-manifest-spec.md):
+[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-manifest-spec.md):
 
 - The schema is strict: unknown keys are errors, and slugs, versions and source paths are validated.
 - `default_preset` is what `devkit add <bundle>` selects; `auto_select` deploys the bundle as soon as its package is
@@ -283,7 +286,7 @@ and add it to the dev dependency group next to your devkit requirement; there is
 Edit its sources, run `uv run devkit sync`, and commit the source change together with the updated receipt. A stale
 receipt fails Git snapshot gates, so rule edits always travel with their receipt. The layout, the `pyproject.toml`
 and the decision table for overrides versus in-repository bundles are in
-[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md).
+[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md).
 To preserve a complete supported content provider locally without private-origin access, see
 [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md) for `devkit bundle snapshot` and
 `devkit bundle refresh` (keeping consumer adaptations in project overrides).

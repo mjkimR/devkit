@@ -5,13 +5,13 @@ sources:
   CAP-DLV-spec-bundles: null
   UC-plan-and-hand-off-a-proposal: null
 title: 제안 계획 후 넘기기
-translated_from: en/journeys/plan-and-hand-off-a-proposal.md@991b927645279271
+translated_from: en/journeys/plan-and-hand-off-a-proposal.md@18e298c51cc3188c
 ---
 
 # 제안 계획 후 넘기기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ translated_from: en/journeys/plan-and-hand-off-a-proposal.md@991b927645279271
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -74,7 +75,7 @@ translated_from: en/journeys/plan-and-hand-off-a-proposal.md@991b927645279271
 정식 이관(handoff)되며, 본격적인 개발(Development) 단계는 일관성 있는 Living Spec을 토대로 시작됩니다.
 
 유스케이스는
-[`UC-plan-and-hand-off-a-proposal`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md) (영어 원문)입니다.
+[`UC-plan-and-hand-off-a-proposal`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md) (영어 원문)입니다.
 제안, PADR, Planning과 Development, 게이트(gate) 등의 개념은 [개념](../concepts.md)에서 설명합니다.
 
 제안은 스펙 주도 개발(SDD)에 속하는 절차입니다. 저장소의 개발 방식(development approach)이 적응형 개발(adaptive development)이면
@@ -90,7 +91,7 @@ uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Rep
 ```
 
 접수 시 명시적으로 요청된 초안 범위와 제안하는 Planning 작업 강도(effort)를 알립니다
-([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md) (영어 원문)).
+([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-proposal-planning.md) (영어 원문)).
 `--milestone`에는 계획·진행 중인 마일스톤뿐 아니라 완료되거나 중단된 마일스톤도 지정할 수 있습니다. 완료·중단된
 마일스톤이면 소속을 다시 검토하라는 `SPEC_PROPOSAL_MILESTONE_INACTIVE` 알림만 추가됩니다.
 
@@ -101,7 +102,7 @@ uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Rep
 고치지 않습니다. 사용자의 결정에 따라 초안을 분할하거나(`devkit spec proposal new <child> --decomposed-from
 PROP-<parent>`, 부모의 마일스톤 유지) 하위 초안을 담는 마일스톤으로 승격하며, 필요하면 읽기 전용 `decomposer` 역할에
 분할안을 요청합니다
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)).
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)).
 
 ## 2. 기획 및 설계 (Planning)
 
@@ -148,7 +149,7 @@ uv run devkit spec proposal handoff fast-engine --effort medium
 
 이 명령은 `dev-<slug>` 브랜치와 워크트리를 생성하거나 검증하고, 설정과 동기화를 실행한 뒤 그곳으로 핸드오프합니다.
 핸드오프는 `sdd-spec-<task_kind>`에 연결된 스펙 번들을 만들고
-([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)),
+([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)),
 PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 옮기고, `plan-accept` 기록을 이름 그대로
 승계하고, 제안을 가리키던 참조를 다시 쓴 뒤 제안을 제거합니다. 출력 라인이 옮겨진 내용을 알려 줍니다:
 `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]`, `[CARRIED_GATE: ...]`, `[REWRITTEN: ...]`, 그리고
@@ -162,6 +163,8 @@ PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 �
 `SPEC_PROPOSAL_REFS_REWRITTEN` 알림은 에이전트에게 다시 쓰인 문장을 다시 읽도록 지시합니다. 에이전트는 해결되지 않은
 링크를 핸드오프 트랜잭션 SHA를 유지하는 후속 커밋으로 `dev-<slug>`에서 고치고, [개발부터 통합까지 진행하기](drive-development-to-integration.md)처럼 스펙 워크플로의 다음
 단계를 따릅니다.
+
+Planning에서는 영향받는 design, domain, operations 책임과 소스 및 검증을 기록하거나 각 역할에 영향이 없는 이유를 남깁니다.
 
 ## 다양한 분기 시나리오
 

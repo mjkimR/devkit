@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
+  CAP-DLV-adaptive-development: 93224b4daa9b78a1b2a090d745e9693571d809e6
   UC-import-third-party-agent-assets: 294da6e8edc297e0bea189eb67636fdb205207e0
 title: Import selected third-party agent assets
 ---
@@ -8,7 +8,7 @@ title: Import selected third-party agent assets
 # Import selected third-party agent assets
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Select `adaptive-dev:core` or `adaptive-dev:import`, sync, then explicitly invoke `/adaptive-import <repository-url-or-local-path>`.
@@ -23,5 +23,5 @@ Missing companion tools remain prerequisites, with no automatic setup. An unavai
 
 ## Sources
 
-- [UC-import-third-party-agent-assets](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-import-third-party-agent-assets.md)
-- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
+- [UC-import-third-party-agent-assets](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-import-third-party-agent-assets.md)
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)

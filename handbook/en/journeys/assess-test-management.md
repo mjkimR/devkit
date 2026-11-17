@@ -8,7 +8,7 @@ title: Assess a selected test suite
 # Assess a selected test suite
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Use the explicitly invoked `maintenance/test-management` playbook to decide whether a selected suite needs a different arrangement. Select `maintenance:testing` or `maintenance:all` and sync first.
@@ -23,5 +23,5 @@ Invocation authorizes assessment. It does not authorize configuration edits. A l
 
 ## Sources
 
-- [UC-assess-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-assess-test-management.md)
-- [CAP-DLV-test-management](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-test-management.md)
+- [UC-assess-test-management](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-assess-test-management.md)
+- [CAP-DLV-test-management](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-test-management.md)

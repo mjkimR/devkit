@@ -8,7 +8,7 @@ title: Design necessary command entry points
 # Design necessary command entry points
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -32,6 +32,7 @@ title: Design necessary command entry points
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -83,5 +84,5 @@ For Python CLI implementation, see [Agent-first CLI toolkit](../areas/cli.md).
 
 ## Sources
 
-- [UC-design-command-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/harness/UC-design-command-entrypoints.md)
-- [CAP-HARN-command-design](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-design.md)
+- [UC-design-command-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/harness/UC-design-command-entrypoints.md)
+- [CAP-HARN-command-design](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-command-design.md)

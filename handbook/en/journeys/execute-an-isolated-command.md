@@ -8,7 +8,7 @@ title: Execute an isolated command
 # Execute an isolated command
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Use `devkit exec` when a native command can run at a fixed local commit while you continue independent work. Provide disposable data, isolated services and ephemeral ports; the checkout is not an OS sandbox.
@@ -27,5 +27,5 @@ Apply passing evidence only to the recorded commit and scope. `devkit run` remai
 
 ## Sources
 
-- [UC-execute-an-isolated-command](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/harness/UC-execute-an-isolated-command.md)
-- [CAP-HARN-isolated-execution](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-isolated-execution.md)
+- [UC-execute-an-isolated-command](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/harness/UC-execute-an-isolated-command.md)
+- [CAP-HARN-isolated-execution](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-isolated-execution.md)

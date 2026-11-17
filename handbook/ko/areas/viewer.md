@@ -1,18 +1,19 @@
 ---
 sources:
+  ADR-internal-repository-viewer: null
   ADR-release-handbook: null
   ADR-repository-viewer: null
   CAP-COLL-shared-artifacts: null
   CAP-GEN-tracked-artifacts: null
   CAP-VIEW-repository-viewer: null
 title: 뷰어
-translated_from: en/areas/viewer.md@dfc36c163bc66b84
+translated_from: en/areas/viewer.md@54b0d5a047076cd3
 ---
 
 # 뷰어
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -37,6 +38,7 @@ translated_from: en/areas/viewer.md@dfc36c163bc66b84
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -96,7 +98,7 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 - **Dashboard**: 마일스톤, 제안서, 피드백을 보여 줍니다. 각 섹션은 독립적으로 로드되며 Load more 버튼으로 페이징됩니다.
 - **Read**: `handbook/manifest.json`이 있으면 저장소의 릴리스 핸드북을 선택한 언어(브라우저에 기억됨)로 보여 주고,
   태그와 함께 체크아웃의 `VERSION`이 핸드북보다 앞서면 안내를 표시합니다. 핸드북이 없으면 짧은 안내만 보여 줍니다.
-  **Living Spec book** 버튼을 누를 때만 `docs/`의 book을 계산하며, book은 Overview, Architecture, Capabilities, Use Cases, UX,
+  **Living Spec book** 버튼을 누를 때만 `docs/`의 book을 계산하며, book은 Overview, Architecture, Domain, Capabilities, Use Cases, UX, Designs, Operations,
   Steering, Decisions, Development 장(chapter)으로 분류되고 문서 간 링크를 ID 기반으로 연결합니다(`ADR-release-handbook`).
 - **Proposals** 및 **Specs**: `docs/proposals/PROP-*/proposal.md` 파일과 `specs/` 하위의 스펙 번들 목록을 파일 구성, 필터링 옵션,
   작업 진행 상황과 함께 제공합니다.
@@ -130,11 +132,9 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
 
 1. `plan-<slug>` 브랜치를 체크아웃한 다른 워크트리 (디스크에 저장된 최신 파일)
 2. 로컬의 `plan-<slug>` 브랜치
-3. 마지막으로 fetch한 시점의 원격 추적 브랜치 `<remote>/plan-<slug>`
 
 현재 작업 중인 `HEAD`에 이미 병합된 브랜치는 건너뛰며, 현재 위치한 브랜치에 대해서는 오버레이를 적용하지 않습니다. 오버레이된 카드에는
-출처를 나타내는 배지가 부착됩니다. 뷰어는 백그라운드에서 fetch하거나 GitHub API를 호출하지 않으므로, 동료의 원격 Planning 브랜치
-내용을 확인하려면 먼저 git fetch를 실행하십시오. 오버레이 처리에 실패하면 베이스 체크아웃의 카드가 간단한 안내 문구와 함께 유지됩니다.
+출처를 나타내는 배지가 부착됩니다. 뷰어는 원격 추적 브랜치를 읽거나 fetch 또는 GitHub API 호출을 수행하지 않습니다. 오버레이 처리에 실패하면 베이스 체크아웃의 카드가 간단한 안내 문구와 함께 유지됩니다.
 이러한 오버레이는 제안서에만 적용되며, 스펙, 마일스톤, 피드백, Living Spec, File browser 탭은 항상 등록된 작업 트리의 파일을 직접 읽습니다.
 
 ## 공유 제안서 리뷰 열람
@@ -156,19 +156,19 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
 
 ## 뷰어 수정 및 빌드
 
-`packages/devkit-viewer/frontend/` 디렉터리의 프런트엔드는 하나의 Svelte 소스로부터 다음 두 가지 결과물을 빌드합니다.
+`packages/devkit-viewer/frontend/` 디렉터리의 프런트엔드는 내부 뷰어 페이지를 빌드합니다.
 
 - 웹 페이지: `src/devkit_viewer/static/` 경로로 빌드되며, 추적 대상 생성 아티팩트인 `viewer-assets`로 커밋됩니다
   (`CAP-GEN-tracked-artifacts`). 따라서 일반적인 devkit 사용 및 설치 시에는 Node.js가 필요하지 않으며, 뷰어 프런트엔드 코드를
   수정할 때만 Node.js가 필요합니다. 코드를 수정한 후에는 `just viewer lint`, `just viewer check`, `just viewer test`,
   `just viewer build`를 차례로 실행하고, `devkit generated check viewer-assets` 명령으로 커밋된 빌드 산출물의 정합성을 확인합니다.
-- 컴포넌트 라이브러리 `devkit-viewer`: autohub가 벤더링하여 사용하는 tarball 아카이브 형태로 패키징됩니다. 호스트 애플리케이션은 자체
-  `RepositoryDataSource`를 구현하여 연동하고 인증 처리를 자체적으로 담당합니다. 공개 패키지 레지스트리에 별도로 배포되지는 않습니다.
+
+뷰어는 `devkit viewer serve`로 실행하는 내부 도구이며 공개하거나 벤더링하는 컴포넌트 라이브러리가 없습니다.
 
 ## 출처
 
-- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md) (영어 원문):
-  서비스, 엔드포인트, Planning 출처, 페이지 동작, 로드맵, 라이브러리와 리뷰 페이지.
-- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/viewer.md) (영어 원문).
-- [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md) (영어 원문),
-  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md) (영어 원문).
+- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md) (영어 원문):
+  서비스, 엔드포인트, Planning 출처, 페이지 동작, 로드맵과 리뷰 페이지.
+- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/viewer.md) (영어 원문).
+- [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261102-repository-viewer.md) (영어 원문),
+  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261102-release-handbook.md) (영어 원문).

@@ -1,10 +1,10 @@
 [project]
 name = "devkit-adaptive"
-version = "0.1.6"
+version = "0.1.7"
 description = "Opt-in adaptive development agent guidance"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["devkit-core==0.1.6", "click>=8.1.7", "devkit-docs==0.1.6"]
+dependencies = ["devkit-core==0.1.6", "click>=8.1.7", "devkit-docs==0.1.7"]
 
 [project.entry-points."devkit.bundles"]
 adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"

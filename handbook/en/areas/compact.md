@@ -9,7 +9,7 @@ title: Compact command output
 # Compact command output
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -34,6 +34,7 @@ title: Compact command output
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -144,11 +145,11 @@ the advisory detail lines both of those reuse.
 
 ## Sources
 
-- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/compact/CAP-CMP-bounded-execution.md):
+- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/compact/CAP-CMP-bounded-execution.md):
   execution, logs, the bounded view and its budgets, output and the library.
-- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/compact.md): usage,
+- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/compact.md): usage,
   error codes and module map.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-08-1-agent-output.md):
   the output contract `devkit run` shares with every command.
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
   the advisory grammar the runner recognizes.

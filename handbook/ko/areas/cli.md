@@ -5,13 +5,13 @@ sources:
   CAP-ADV-agent-advisory-protocol: null
   CAP-CLI-agent-cli-toolkit: null
 title: 에이전트 우선 CLI 도구 키트
-translated_from: en/areas/cli.md@153477c549b54a7b
+translated_from: en/areas/cli.md@16e17629619fe739
 ---
 
 # 에이전트 우선 CLI 도구 키트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -36,6 +36,7 @@ translated_from: en/areas/cli.md@153477c549b54a7b
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -153,11 +154,11 @@ def scan(output_format: str) -> None:
 
 ## 출처
 
-- [CAP-CLI-agent-cli-toolkit](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md) (영어 원문):
+- [CAP-CLI-agent-cli-toolkit](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md) (영어 원문):
   경계(`Boundary`), 헬퍼 유틸리티, 테스트 도구 및 `cli-tool` 거버넌스 규칙 규격.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-1-agent-output.md) (영어 원문):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-08-1-agent-output.md) (영어 원문):
   툴킷이 구현하는 에이전트 우선 출력 계약.
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
   툴킷이 렌더링하는 어드바이저리 프로토콜 규격.
-- [ARCH-05-3-command-plugins](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-05-3-command-plugins.md) (영어 원문):
+- [ARCH-05-3-command-plugins](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-05-3-command-plugins.md) (영어 원문):
   `devkit`이 하위 명령 플러그인을 동적으로 마운트하는 방식.

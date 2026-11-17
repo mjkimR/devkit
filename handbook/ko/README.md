@@ -14,13 +14,13 @@ sources:
   CAP-DLV-uiux-improvement: null
   CAP-HARN-command-design: null
 title: devkit 핸드북
-translated_from: en/README.md@eb1d6a73e67f1211
+translated_from: en/README.md@ae330dc91ee141d7
 ---
 
 # devkit 핸드북
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 주도적으로 개발 작업을 수행하는 저장소를 위한 개발자 도구 모음입니다.
@@ -31,7 +31,7 @@ devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 주도적�
 ## devkit이 제공하는 것
 
 devkit은 단일 CLI 명령인 `devkit`으로 제공되며, 릴리스 인벤토리가 실제 버전을 선택하는 Python 휠 패키지로 배포됩니다
-([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-05-1-containers.md) (영어 원문)):
+([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-05-1-containers.md) (영어 원문)):
 
 - **배포**(`devkit-dist`): 에이전트 자산을 번들 단위로 패키징하고, 프로젝트에서 선택한 번들을 `devkit sync`로 배포합니다. 스킬과 서브에이전트를 각 에이전트의 네이티브 디렉터리에 프로젝션하며, 필요한 시점에 지침 컨텍스트를 로드합니다. 공유 에이전트 자산만 필요한 저장소라면 이 패키지만 단독으로 설치하면 됩니다.
 - **하네스**(`devkit-agt`): 저장소 거버넌스 규칙(`devkit rules`), 데이터 기반 전달 워크플로(`devkit workflow`), 커밋 게이트(`devkit gate`), 작업 워크트리(`devkit worktree`), 추적 관리되는 기계 생성 파일, 사람의 승인을 거치는 통합(`devkit integration`), 출력이 제한된 컴팩트 명령 실행(`devkit run`)을 제공합니다.
@@ -41,13 +41,13 @@ devkit은 단일 CLI 명령인 `devkit`으로 제공되며, 릴리스 인벤토�
 - **선택 구성 요소**: `devkit-mcp`(선택적 MCP 런타임), `devkit-viewer`(로컬 읽기 전용 저장소 뷰어), `devkit-catalog`(`maintenance`, `response-style` 같은 옵트인 번들 카탈로그), 그리고 고밀도(dense) 및 하이브리드 문서 검색을 위한 `search` extra를 지원합니다.
 
 이러한 구성 요소들이 추구하는 설계 목표인 결정적 결과, 트랜잭션 방식의 동기화, 엄격한 계층 분리, POSIX 전용 동작 원칙은
-[`ARCH-01-introduction-and-goals`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-01-introduction-and-goals.md) (영어 원문)에
+[`ARCH-01-introduction-and-goals`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-01-introduction-and-goals.md) (영어 원문)에
 정리되어 있습니다.
 
 ## 전체 모델
 
 devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합니다
-([`ARCH-03-context`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-03-context.md) (영어 원문)):
+([`ARCH-03-context`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/architecture/ARCH-03-context.md) (영어 원문)):
 
 - **사용자**는 `.devkit/config.toml`에서 프로젝트 정책을 구성하고, 에이전트의 제안을 검토 및 확정하며, 최종 통합 승인처럼 devkit이 사람의 몫으로 남겨둔 중요 결정을 내립니다.
 - **에이전트**는 `devkit` 명령을 실행하고, stdout의 한 줄짜리 `[KIND: ...]` 결과 센티널과 stderr의 어드바이저리를 읽으며, 프로젝트의 개발 방식이 정한 지침에 따라 작업을 진행합니다. SDD에서는 워크플로 엔진이 안내하는 단계를 따릅니다.
@@ -58,13 +58,13 @@ devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합�
 모든 프로젝트는 **개발 방식**(development approach)을 하나 공유하며, `sdd`(기본값)와 `adaptive-dev` 중에서 고릅니다. 이 선택은
 `.devkit/config.toml`의 `[development] approach`에 기록됩니다. `uv run devkit config show`는 실제 적용되는 값과 그 출처를 보여 줍니다.
 패키지를 설치하거나 번들을 선택해도 방식은 바뀌지 않으며, 사용자가 동의한 명시적인 수정만이 이를 바꿉니다
-([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)).
+([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)).
 
 - **SDD**(스펙 주도 개발)는 완전한 전달 절차입니다. 먼저 `devkit sync`가 에이전트 지침을 배포하면, 에이전트는 `devkit get-context <bundle>`로 필요한 지침을 읽습니다. 개발 요청은 분류되어 하나의 워크플로에 연결되고, 에이전트는 `devkit workflow next` 안내에 맞춰 단계별로 작업하며 리뷰와 질문을 엔벨로프에 기록합니다. 거버넌스 규칙과 커밋 게이트가 저장소의 일관성을 유지하고, 완료된 작업은 사용자가 승인하면 `devkit integration`을 통해 기준 브랜치에 통합됩니다.
 - **적응형 개발**(adaptive development)은 아직 제품의 모습을 찾아가는 아이디어를 위한 방식입니다. 옵트인 `adaptive-dev` 번들의 `/adaptive-dev` 진입점이 다음으로 유용한 제품 작업(질문, 범위가 정해진 실험, 구현, 사용 확인)을 진행하고, 이어서 작업하는 데 필요한 현재 사실만 `.devkit/adaptive-dev.md`에 남깁니다. 변경마다 스펙 번들, 엔벨로프, 승인을 만들지 않으며, 문서 검사와 프로젝트 자체 검사는 그대로 적용됩니다
-  ([`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)).
+  ([`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)).
   작은 앱이라면 계속 적응형 개발에 머물러도 됩니다. 이후 변경을 SDD로 진행하고 싶다면 `sdd-baseline` 플레이북이 유지할 제품을 검증하고, 사용자의 결정이 있을 때만 방식을 전환합니다
-  ([`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문)).
+  ([`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문)).
 
 각 구성 요소와 상호작용 방식은 [개념](concepts.md)에서 자세히 다룹니다.
 
@@ -73,7 +73,7 @@ devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합�
 1. 핸드북 전반에서 사용되는 핵심 개념과 어휘를 파악하려면 [개념](concepts.md)을 먼저 살펴보십시오.
 2. devkit을 설치합니다. 에이전트에게 설치 가이드를 제공해 계획을 세우게 하거나, 릴리스 휠을 직접 설치한 뒤 `uv run devkit sync`를 실행하십시오
    (어떤 휠이 어떤 번들을 포함하는지는
-   [`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)에
+   [`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)에
    자세히 설명되어 있습니다).
 3. 출발점을 고르십시오.
    - 이미 코드와 문서가 있는 저장소: [기존 저장소에 devkit 도입하기](journeys/adopt-in-an-existing-repository.md)
@@ -107,6 +107,7 @@ devkit은 세 주체(사용자, 에이전트, 저장소) 사이에서 동작합�
 Living Spec 건강하게 유지하기:
 - [Living Spec 일관성 유지하기](journeys/keep-the-living-spec-consistent.md)
 - [Living Spec 드리프트 조정하기](journeys/reconcile-living-spec-drift.md)
+- [정식 문서 읽기](journeys/read-formal-document.md)
 - [결정 대체 관계 읽기](journeys/read-decision-supersession.md)
 - [선택한 테스트 스위트 평가하기](journeys/assess-test-management.md)
 - [누적된 군더더기 검토와 리팩터링](journeys/review-and-refactor-accumulated-slop.md)
@@ -137,7 +138,7 @@ Living Spec 건강하게 유지하기:
 | [integration](areas/integration.md) | 커밋된 작업의 준비와 통합 |
 | [mcp](areas/mcp.md) | 선택형 MCP 런타임 |
 | [search](areas/search.md) | 어휘, 밀집, 하이브리드 순위 매기기 |
-| [traceability](areas/traceability.md) | 역량과 유스케이스의 코드 진입점 |
+| [traceability](areas/traceability.md) | 역량, 유스케이스와 design 문서의 코드 진입점 |
 | [viewer](areas/viewer.md) | 로컬 읽기 전용 저장소 뷰어 |
 | [worktree](areas/worktree.md) | 활동 브랜치와 작업 워크트리 |
 

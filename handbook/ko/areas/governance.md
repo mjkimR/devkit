@@ -8,13 +8,13 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-resolve-stale-activity-branches: null
 title: 거버넌스 규칙
-translated_from: en/areas/governance.md@fb160748c2934cc6
+translated_from: en/areas/governance.md@29b4f36a3bb0f69a
 ---
 
 # 거버넌스 규칙
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -39,6 +39,7 @@ translated_from: en/areas/governance.md@fb160748c2934cc6
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -172,7 +173,7 @@ max_bytes = 98304
 | `RULE-id-convention` | `docs` | 파일 경로, 문서 ID, `area` 속성 및 H1 제목 토큰이 상호 일치해야 하며(완료·중단된 마일스톤은 `docs/roadmap/_archive/` 아래), 날짜나 숫자 기반 임의 ID를 허용하지 않음 | `id`, `area`, H1 일치 정렬 |
 | `RULE-spec-format` | `docs` | 기능, 유스케이스, UX 문서, 제안, 마일스톤 문서의 필수 프런트매터 필드 누락 방지 | 누락된 기본 필드 자동 채움 |
 | `RULE-traceability-link` | `docs` | 유스케이스와 기능 간의 양방향 추적성 링크가 상호 누락 없이 존재해야 함 | 누락된 역방향 ID 자동 추가 |
-| `RULE-code-entrypoints` | `docs` | 기능 및 유스케이스에 선언된 코드 엔트리포인트가 실제 코드에 존재해야 함 | 수동 조치 |
+| `RULE-code-entrypoints` | `docs` | 기능, 유스케이스 및 정식 DESIGN의 코드 진입점이 실제 코드에 존재해야 함 | 수동 조치 |
 | `RULE-document-summary` | `docs` | 검색 대상 문서에 간결한 영문 `summary`가 작성되어 있어야 함 | 수동 조치 |
 | `RULE-steering-documents` | `docs` | `docs/steering/`이 평평하고 작게 유지되며, 각 파일에 `title`과 짧은 영문 `summary`가 있어야 함 | 수동 조치 |
 | `RULE-ux-links` | `docs` | UX 문서와 그 문서를 인용하는 유스케이스 단계가 서로 일치해야 함 | 수동 조치 |
@@ -181,7 +182,7 @@ max_bytes = 98304
 | `RULE-task-coverage` | `spec` | 모든 수락 기준에 대응하는 구현 작업이 존재해야 하며, 작업에 명시된 참조가 유효해야 함 | 수동 조치 |
 | `RULE-spec-lifecycle` | `spec` | 스펙 상태, 작업 체크리스트 완료 여부, 리콘사일(reconcile) 상태가 상호 일치해야 함 | `completed` 상태 자동 설정 |
 | `RULE-spec-progress` | `spec` | 완료 체크된 작업이 하나라도 있는 스펙은 반드시 `in-progress` 상태여야 함 | `in-progress` 상태 자동 설정 |
-| `RULE-reconcile-contract` | `spec` | `reconcile.md`의 형식이 올바르고, 수정 대상 문서들이 실제로 변경되어야 함 | 수동 조치 |
+| `RULE-reconcile-contract` | `spec` | `reconcile.md` 형식과 수정 대상 변경을 확인하고 새로 resolved된 기록의 정식 문서 역할 범위를 검사 | 수동 조치 |
 | `RULE-proposal-boundaries` | `spec` | 제안 문서에 명시된 소유 대상 경로들이 실제로 존재해야 함 | 수동 조치 |
 
 스티어링 검사는 루트 및 등록된 네임스페이스 디렉터리별로 선택형 용어집과 UX 객체 목록에도 적용되며, 참조 복구는 스티어링 본문,
@@ -241,13 +242,13 @@ rules/doc_heading/
 
 ## 출처
 
-- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rules-engine.md) (영어 원문):
+- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-rules-engine.md) (영어 원문):
   규칙 엔진 아키텍처, 규칙 소스 및 파일별 팩트.
-- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md) (영어 원문):
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md) (영어 원문):
   검사 대상 선정, 스코핑, 규칙 페이즈, 정책 계층 및 스냅샷 게이트.
-- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rule-authoring.md) (영어 원문):
+- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-rule-authoring.md) (영어 원문):
   규칙 프로토콜 규약, 워크스페이스 캐시 API, 규칙 단위 테스트 작성법.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문):
   문서 규칙과 생명주기 규칙 상세 명세.
-- [규칙 레퍼런스](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/rules.md) (영어 원문): 명령어, 출력 형식, 종료
+- [규칙 레퍼런스](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/development/reference/rules.md) (영어 원문): 명령어, 출력 형식, 종료
   코드, 내장 규칙 카탈로그.

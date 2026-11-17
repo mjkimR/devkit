@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
   UC-research-an-idea-and-shape-a-roadmap: 3744a97ed5ecfa404e7127489576ca54dc43223c
 title: Research an idea and shape a roadmap
 ---
@@ -9,7 +9,7 @@ title: Research an idea and shape a roadmap
 # Research an idea and shape a roadmap
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -34,6 +34,7 @@ title: Research an idea and shape a roadmap
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
@@ -102,6 +103,6 @@ When useful, the coordinator can prepare a bounded safe request for a user-opera
 
 ## Sources
 
-- [UC-research-an-idea-and-shape-a-roadmap](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md)
-- [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-deep-research.md)
-- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md)
+- [UC-research-an-idea-and-shape-a-roadmap](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md)
+- [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-deep-research.md)
+- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md)

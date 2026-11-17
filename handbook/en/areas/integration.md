@@ -1,9 +1,9 @@
 ---
 sources:
-  ADR-delivery-approval-and-lifecycle-authority: 4461afd0b9ad6fb44b8f9c3789e0dcef4b1b60f6
-  ADR-local-and-pull-request-integration: 7eb3930816c804462db081f96e68512fe5522f32
+  ADR-delivery-approval-and-lifecycle-authority: 5115605ea15bf0c9d95cfd361b5e1f4545f56ae8
+  ADR-local-and-pull-request-integration: 517de72d391cb969463618b099675c53676662e9
   ADR-post-merge-verification: f997807c5b8be2e091a355fc3417d196d99c6aa8
-  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
+  CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
   CAP-GOV-evaluation-lifecycle: 01aacea928c70408c22fa701e04032304941ed4c
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
@@ -15,7 +15,7 @@ title: Integration
 # Integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -40,6 +40,7 @@ title: Integration
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -144,12 +145,12 @@ already includes cleanup. See [Worktree](worktree.md) and [Drive development to 
 
 ## Sources
 
-- [ADR-delivery-approval-and-lifecycle-authority](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-delivery-approval-and-lifecycle-authority.md)
-- [ADR-local-and-pull-request-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-local-and-pull-request-integration.md)
-- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md)
-- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md)
-- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/integration/CAP-INT-mcp-services.md)
-- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
-- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md)
-- [ADR-post-merge-verification](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261104-post-merge-verification.md)
-- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)
+- [ADR-delivery-approval-and-lifecycle-authority](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261102-delivery-approval-and-lifecycle-authority.md)
+- [ADR-local-and-pull-request-integration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261102-local-and-pull-request-integration.md)
+- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-project-policy.md)
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md)
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/integration/CAP-INT-mcp-services.md)
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-drive-development-to-integration.md)
+- [ADR-post-merge-verification](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/decisions/2026-11/20261104-post-merge-verification.md)
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)

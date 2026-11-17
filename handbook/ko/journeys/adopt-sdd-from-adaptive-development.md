@@ -4,13 +4,13 @@ sources:
   CAP-HARN-agent-guidance: null
   UC-adopt-sdd-from-adaptive-development: null
 title: 적응형 개발에서 SDD 도입하기
-translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54d5bd
+translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@27a5113bf56a0595
 ---
 
 # 적응형 개발에서 SDD 도입하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -34,6 +34,7 @@ translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -68,9 +69,9 @@ translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54
 
 적응형 개발로 발전시킨 제품은 쓸모가 있는 한 계속 적응형 개발 상태로 둘 수 있습니다. 남겨 둘 부분을 앞으로 스펙 주도 개발(SDD)로 바꾸기로 했다면, `sdd-baseline` 플레이북이 이를 사실에 기반하여 진행합니다. 에이전트는 유지할 제품을 구현, 현재 문서, 실제로 실행된 검사와 대조하고, 문서를 고친 뒤, 사용자가 정확한 효과를 승인한 후에만 개발 방식을 전환합니다. 지난 실험에 대한 소급 제안, 스펙 유닛, 결정은 만들어 내지 않습니다.
 
-출처: [`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md) (영어 원문),
-계약 [`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문),
-플레이북 [`sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md) (영어 원문).
+출처: [`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md) (영어 원문),
+계약 [`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문),
+플레이북 [`sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.7/packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md) (영어 원문).
 적응형 개발을 쓴 적이 없는 저장소라면 [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)를 참고하십시오.
 
 ## 시작하기 전에
@@ -84,7 +85,7 @@ translated_from: en/journeys/adopt-sdd-from-adaptive-development.md@94d0e32d9c54
 
 1. **전환 없이 시작.** 에이전트가 절차를 로드합니다(`uv run devkit playbook get spec/sdd-baseline` 또는 `/devkit-playbook`). 준비하는 동안 개발 방식은 계속 `adaptive-dev`입니다. `devkit-spec`이나 그 자산이 없으면 설치와 `uv run devkit add spec`의 효과를 제시합니다. 설치는 도입을 준비할 뿐, 활성화하거나 무언가를 입증하지 않습니다.
 2. **범위 확정.** 저장소, 정확한 `HEAD`, 관련 수정 경로, `uv run devkit config show`에서 확인한 적용 중인 개발 방식을 기록하고, `.devkit/adaptive-dev.md`와 현재 문서를 입력으로 읽은 뒤, 유지할 항목과 제외할 항목을 사용자와 합의합니다.
-3. **대조.** 유지할 항목마다 구현, 현재 문서(또는 없는 문서가 들어갈 곳), 증거를 연결하고 `verified`, `gap`, `excluded`로 표시합니다. 제외된 항목은 검증된 것으로 세지 않습니다. 범위가 필요로 하는 기능 명세, 유스케이스, 아키텍처, 결정 문서, 실행 지침만 쓰거나 고치며, 과거 대안을 지어내지 않고 현재의 선택과 알려진 이유만 적습니다.
+3. **대조.** 유지할 항목마다 구현, 현재 문서(또는 없는 문서가 들어갈 곳), 증거를 연결하고 `verified`, `gap`, `excluded`로 표시합니다. 제외된 항목은 검증된 것으로 세지 않습니다. 범위가 필요로 하는 기능 명세, 유스케이스, 아키텍처, 결정 문서, 필요한 design·domain·operations 문서와 실행 지침만 쓰거나 고치며, 과거 대안을 지어내지 않고 현재의 선택과 알려진 이유만 적습니다.
 4. **검사 실행.** 해당 프로젝트 명령을 실행하고 대표 사용자 흐름을 직접 실행하며, 명령, 소스 식별 정보, 환경, 결과를 기록합니다. 문서 형식 검사의 통과는 그것이 검사한 조건만 입증할 뿐, 제품이 준비되었다는 뜻이 아닙니다.
 5. **준비 상태 제시.** 공백이 남지 않으면 보고서, 유지 범위, 검사 결과, 정확한 활성화 효과를 제시합니다: `.devkit/config.toml`의 `[development] approach = "sdd"`, 통합 제공자 선택은 필요 없습니다. 다른 설정은 사용자가 변경을 승인하지 않는 한 유지됩니다.
 6. **사용자 결정.** 사용자가 같은 소스와 범위에 대해 바로 그 효과를 승인하거나, 에이전트가 정확히 그 효과에 대해 이미 받은 명시적 결정을 재사용합니다.

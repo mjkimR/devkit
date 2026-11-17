@@ -17,13 +17,13 @@ sources:
   UC-resolve-stale-activity-branches: null
   UC-route-development-intent: null
 title: 하네스
-translated_from: en/areas/harness.md@9bc63affb8a02216
+translated_from: en/areas/harness.md@2cc7289893756c9b
 ---
 
 # 하네스
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -48,6 +48,7 @@ translated_from: en/areas/harness.md@9bc63affb8a02216
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
+- [정식 문서 읽기](../journeys/read-formal-document.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -161,7 +162,7 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발�
 
 ## 규칙 준수 문서 작성법
 
-새 문서는 `.devkit/managed/docs/templates/<kind>.md`(capability, use case, UX document, decision, milestone) 템플릿을
+새 문서는 `.devkit/managed/docs/templates/<kind>.md`(capability, use case, UX document, decision, milestone, design, domain, operations) 템플릿을
 기반으로 시작하며, 제안 템플릿만 `.devkit/managed/spec/templates/` 아래에 있습니다. 문서를 작성하기 전에 에이전트는 해당 문서
 종류에 맞는 `docs` 작성 지침을 먼저 숙지합니다.
 
@@ -230,14 +231,14 @@ devkit 자체 버전을 출력).
 
 ## 출처
 
-- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문):
+- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문):
   번들의 프리셋, 헌장, 스킬, 역할 계약, 플레이북, 템플릿 및 정책 규약.
-- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문):
+- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문):
   `devkit spec`과 `devkit docs` 마운트 방식 및 하위 명령어 공통 규약.
-- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문):
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문):
   스킬이 실행하는 워크플로 및 역할 계약 정의.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문):
   번들이 배포하는 거버넌스 규칙 명세.
-- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)
-  및 [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문):
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)
+  및 [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문):
   적응형 개발 방식과 SDD로의 전환.

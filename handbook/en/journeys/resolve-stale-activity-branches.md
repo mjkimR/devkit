@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-GOV-evaluation-lifecycle: 01aacea928c70408c22fa701e04032304941ed4c
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
 title: Resolve stale activity branches
@@ -10,7 +10,7 @@ title: Resolve stale activity branches
 # Resolve stale activity branches
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ title: Resolve stale activity branches
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -73,8 +74,8 @@ nothing on its own.
 
 For activity branches and task worktrees, see [Concepts](../concepts.md) and the [worktree area](../areas/worktree.md).
 
-Source: [`UC-resolve-stale-activity-branches`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-resolve-stale-activity-branches.md),
-contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
+Source: [`UC-resolve-stale-activity-branches`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-resolve-stale-activity-branches.md),
+contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
 (section "Stale Branches").
 
 ## Before you start
@@ -94,7 +95,7 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/
    ```
 
    The `feedback-hygiene` playbook runs it too. Hygiene extensions belong to the `hygiene` phase
-   ([`CAP-GOV-evaluation-lifecycle`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md),
+   ([`CAP-GOV-evaluation-lifecycle`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md),
    [governance area](../areas/governance.md)).
 2. **Read the result.** Each `plan-*` or `dev-*` branch, local or remote-tracking, whose last activity (the later of its
    last commit and its pull request's last update) is older than `stale_after` gets a line, most idle first:
@@ -141,7 +142,7 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/
 - **The branch carries an accepted proposal still in the base.** Discarding it is a close: you decide supersede or
   abandon, the agent commits the close (for an abandon, the rejection ADR and the deletion of the accepted proposal) to the base as Backlog
   work, and only then discards the branch
-  ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
+  ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
 - **The branch exists only on a remote.** The `[FIX]` names `git -C <base> push origin --delete dev-<slug>` and no
   local discard; once the remote copy is gone nothing is left.
 - **`WORKTREE_DIRTY`.** The worktree has uncommitted or untracked changes. devkit checks this before any change and

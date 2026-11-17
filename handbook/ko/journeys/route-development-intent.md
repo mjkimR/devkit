@@ -11,13 +11,13 @@ sources:
   UC-plan-and-hand-off-a-proposal: null
   UC-route-development-intent: null
 title: 개발 요청 라우팅하기
-translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
+translated_from: en/journeys/route-development-intent.md@59e8624037b57273
 ---
 
 # 개발 요청 라우팅하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -42,6 +42,7 @@ translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [결정 대체 관계 읽기](read-decision-supersession.md)
+- [정식 문서 읽기](read-formal-document.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -77,7 +78,7 @@ translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
 
 워크플로, 단계, 게이트 및 세 가지 분류 축은 [개념](../concepts.md)과 [전달 영역](../areas/delivery.md)에서 설명합니다.
 
-출처: [`UC-route-development-intent`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-route-development-intent.md) (영어 원문).
+출처: [`UC-route-development-intent`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-route-development-intent.md) (영어 원문).
 
 ## 시작하기 전에
 
@@ -95,9 +96,9 @@ translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
    ```
 
    출력은 `[DEVELOPMENT_APPROACH: approach=sdd source=default]`로 시작하며, `[GIT_POLICY: worktree=auto ...]`, `[ROUTING_POLICY: depth_escalation=auto]`, 게이트별 `[GATE_POLICY: ...]` 같은 줄을 포함합니다
-   ([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)).
+   ([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)).
 3. **작업 분류.** 요청을 `task-kind`(`feature` 또는 `bugfix`), `planning-depth`(`session`, `spec`, `proposal`: 크기가 아니라 구현 전에 정해야 할 것 기준), 모드와 `activity-effort` 순으로 분류하고 사용자에게 알립니다
-   ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
+   ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
 4. **브랜치 생성.** Git 정책이 허용하는 대로 현재 체크아웃(`devkit worktree start dev-<slug> --no-worktree`) 또는 별도 작업 워크트리에서 `dev-<slug>`를 시작합니다.
 5. **스펙 번들 생성.** 번들을 만듭니다.
 
@@ -106,10 +107,10 @@ translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
    ```
 
    이 명령은 뼈대 `spec.md`, `plan.md`, `tasks.md`를 담은 `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`를 만들어 `sdd-spec-feature`에 연결하고, `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`로 끝납니다
-   ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)).
+   ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)).
 6. **범위 확인.** 명시적 지시가 승인한 범위를 알리며 의도 승인 기록을 만들지 않습니다.
 7. **다음 단계 진행.** `devkit workflow next --unit <dir>`를 실행하고 안내되는 단계, 미충족 검사, 지정된 스킬을 따릅니다
-   ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)).
+   ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)).
 
 ## 다른 경로
 
@@ -136,7 +137,7 @@ translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
 - **`SPEC_WRONG_BRANCH`:** 체크아웃이 `dev-<slug>`에 있지 않아 아무것도 쓰이지 않았습니다. 그 브랜치를 시작하거나 이어서 `devkit spec new`를 다시 실행해야 합니다.
 - **`SPEC_EXISTS`:** 다른 문서, 제안, 번들이 이미 그 slug를 쓰고 있습니다(`[TARGET]`에 표시). 다른 slug를 골라야 합니다.
 - **워크트리가 필요한 경우:** `worktree=required`이거나, `auto`에서 체크아웃에 무관한 변경이나 다른 작업이 있으면 에이전트가 별도 워크트리에서 `dev-<slug>`를 시작합니다
-  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
+  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
 - **세션 작업에 계약 변경이 필요해진 경우:** 에이전트가 깊이를 `spec`으로 올리고(`depth_escalation=auto`면 스스로, `ask`면 사용자 확인 후), 같은 위치의 `dev-<slug>`에 스펙 유닛을 추가하며 지금까지의 작업을 유지합니다. 깊이가 저절로 낮아지는 일은 없습니다.
 
 ## 최종 결과

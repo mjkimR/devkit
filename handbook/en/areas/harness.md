@@ -1,17 +1,17 @@
 ---
 sources:
   ARCH-08-1-agent-output: 4921a21fa00c4cd4413b7a01236cc833944a458a
-  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
-  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
-  CAP-DLV-delivery-workflows: 747eec234d403705ebf34d9a03424bd87afb9ce4
-  CAP-DLV-sdd-baseline-adoption: acd7cadb9c726ae861f26364cd831d3d1afa1c4c
-  CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
+  CAP-DLV-adaptive-development: 93224b4daa9b78a1b2a090d745e9693571d809e6
+  CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
+  CAP-DLV-sdd-baseline-adoption: 6cce1e21f936f5add3cdb32cbb07906fc5c1fb6b
+  CAP-GOV-spec-rules: 231d1553ea205aee30516b0cf69e320560d2d9a9
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
   CAP-HARN-command-design: 55dfa957b84301d7a9897676145bec7e2486e71f
   CAP-HARN-command-mount: 9963e0253b7b23f53d30d2185998241d83cecd95
   CAP-HARN-isolated-execution: 7b36ba1e9522527ede0d5a91189ee2ec1efcf6ff
-  UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
-  UC-adopt-sdd-from-adaptive-development: 1eb8461c21c7c3e6fa131c4efb88d7f7e07095f6
+  UC-adopt-in-an-existing-repository: f0d47aad88a9a4f8942bd3614e8d6c341e0490d5
+  UC-adopt-sdd-from-adaptive-development: 2c82a267d679732b7239bc790b0ef9aef0e65c5f
   UC-advance-an-idea: ccd7fa7758787dfc9e96321082bc99904eaadb2f
   UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
@@ -22,7 +22,7 @@ title: Harness
 # Harness
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -47,6 +47,7 @@ title: Harness
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -163,7 +164,7 @@ setting, not the harness's ([Distribution](distribution.md)).
 ## Write documents the way the rules expect
 
 New documents start from `.devkit/managed/docs/templates/<kind>.md` (capability, use case, UX document, decision,
-milestone); the proposal template stays under `.devkit/managed/spec/templates/`. Before writing, the agent reads the
+milestone, design, domain, operations); the proposal template stays under `.devkit/managed/spec/templates/`. Before writing, the agent reads the
 `docs` instruction for that kind:
 
 | Instruction | Read before |
@@ -171,7 +172,7 @@ milestone); the proposal template stays under `.devkit/managed/spec/templates/`.
 | `document-writing` | any document: the sentence-level baseline |
 | `living-spec-writing` | editing `docs/` or `specs/`: current-state writing, IDs, summaries, glossary |
 | `contract-authoring` | specs, acceptance criteria, policies, rules, workflows |
-| `capability-writing`, `usecase-writing`, `ux-writing`, `architecture-writing`, `decision-writing` | each document kind |
+| `capability-writing`, `usecase-writing`, `ux-writing`, `architecture-writing`, `decision-writing`, `design-writing`, `domain-writing`, `operations-writing` | each document kind |
 
 The bundles' rules check what these instructions describe; see the document and lifecycle rules in
 [Governance rules](governance.md). For necessary `justfile`, CLI and MCP entry points, the opt-in `command-design`
@@ -229,14 +230,14 @@ commit in a detached checkout while retaining evidence outside it, use `devkit e
 
 ## Sources
 
-- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md):
+- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md):
   the bundle's presets, constitution, skills, role contracts, playbooks, templates and policies.
-- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-mount.md):
+- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-command-mount.md):
   how `devkit spec` and `devkit docs` mount and the conventions their subcommands share.
-- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md):
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md):
   the workflows and role contracts the skills drive.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md):
   the rules the bundles deploy.
-- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
-  and [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md):
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
+  and [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md):
   the adaptive development approach and the move to SDD.

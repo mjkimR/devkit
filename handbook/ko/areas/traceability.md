@@ -6,21 +6,21 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-run-parallel-work-safely: null
 title: 추적성
-translated_from: en/areas/traceability.md@128112a2d10ae31b
+translated_from: en/areas/traceability.md@5dc6fc645e078d30
 ---
 
 # 추적성
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
-추적성(traceability)은 Living Spec 문서와 코드를 연결합니다. capability나 use case 문서는 해당 기능의 구현이
+추적성(traceability)은 Living Spec 문서와 코드를 연결합니다. capability, use case 또는 정식 DESIGN 문서는 해당 기능의 구현이
 시작되는 파일 및 디렉터리 경로인 `entrypoints`를 선언할 수 있습니다. 이 필드를 통해 문서에서 실제 구현 코드로, 반대로
 코드 경로에서 관련 문서로 쉽게 추적할 수 있으며, 문서에 연결된 코드가 삭제되었을 때 커밋 게이트(commit gate)가 이를 즉시
 감지할 수 있습니다. 경로 계약, 규칙, 역방향 조회는 devkit-docs가 맡고, devkit-spec은 스펙 번들에서 선언을 도출하는 기능을
 더합니다. 상세 사양 계약은
-[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)을 참고하십시오.
+[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)을 참고하십시오.
 
 진입점(entrypoint)은 코드 탐색을 시작하는 출발점일 뿐이며, 전체 구현 파일 목록이나 문서의 명세대로 코드가 동작함을 보증하는 증거는
 아닙니다. 테스트 범위와 코드의 정확성은 테스트와 코드 리뷰를 통해 검증해야 합니다. Living Spec과 문서 체계에 대한 기본 개념은
@@ -34,8 +34,7 @@ entrypoints:
   - src/example/cli/
 ```
 
-- 이 필드는 `docs/capabilities/` 및 `docs/usecases/`(그리고 패키지 네임스페이스 루트인 `docs/packages/<name>/` 하위의
-  동일한 디렉터리) 아래의 Markdown 파일에만 지정합니다.
+- capability, use case 및 `designs/<area>/DESIGN-<slug>/design.md` 정식 design 문서에 지정할 수 있습니다. 네임스페이스도 같습니다. DOMAIN, OPS와 지원 파일에는 지정하지 않습니다.
 - 경로는 `/`를 사용하는 작업 공간(workspace) 상대 경로로 명시해야 하며, 네임스페이스 문서에서도 마찬가지입니다. 패키지 상대
   경로는 허용되지 않습니다. 파일과 디렉터리 경로 모두 선언할 수 있습니다.
 - 절대 경로, `..`, 역슬래시(`\`), 드라이브 콜론, 와일드카드(glob) 문자는 사용할 수 없습니다. 경로는 전체 세그먼트 단위로

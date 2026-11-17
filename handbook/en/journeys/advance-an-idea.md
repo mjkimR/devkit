@@ -1,9 +1,9 @@
 ---
 sources:
-  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
   CAP-DLV-adaptive-assignments: ab0842accf482f5e3a29279e38a0c3ee5742468c
-  CAP-DLV-adaptive-development: 3461a3435f94eea4228dd966c2dc8e8b3aa80362
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  CAP-DLV-adaptive-development: 93224b4daa9b78a1b2a090d745e9693571d809e6
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
   UC-advance-an-idea: ccd7fa7758787dfc9e96321082bc99904eaadb2f
 title: Advance an idea
 ---
@@ -11,7 +11,7 @@ title: Advance an idea
 # Advance an idea
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ title: Advance an idea
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -74,9 +75,9 @@ check), verifies what it actually ran, and keeps a short file of current facts s
 where this one stopped. There are no per-change Units, approvals or envelopes, and a small app can stay in
 adaptive development for good.
 
-Source: [`UC-advance-an-idea`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-advance-an-idea.md),
-contract [`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md),
-entry skill [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md).
+Source: [`UC-advance-an-idea`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-advance-an-idea.md),
+contract [`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/delivery/CAP-DLV-adaptive-development.md),
+entry skill [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.7/packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md).
 This is unrelated to proposal Planning in SDD, which is
 [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md).
 
@@ -93,7 +94,7 @@ This is unrelated to proposal Planning in SDD, which is
   ```
 
   The default is `sdd`. Selecting the bundle never changes the approach; only this setting does
-  ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
+  ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
 - The repository's ordinary environment (build, test and run commands) is available.
 
 ## Step by step

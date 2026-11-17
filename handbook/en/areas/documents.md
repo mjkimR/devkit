@@ -1,22 +1,23 @@
 ---
 sources:
-  ADR-document-id-aliases: 06fc53833ac1df5d309b15bb5d70ade6cf3b06fd
-  ADR-document-system: 84cebabcd88f5f67ddfac4b1729cd3480441e5e9
-  ADR-steering-documents: f443006996b66cd3b36876f95f9002456517b489
-  ADR-terminal-statuses-are-historical: 5883cd244a53a90dc71cc9dc9c6520ef7cc97093
-  CAP-DOCS-document-lookup: 63142a86681c0d154520316976a583a5d44f68bf
-  CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
-  CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
-  CAP-DOCS-namespaces: f6a06f2fb6a7564ed6ede84c6375c1e401dedb91
-  UC-find-the-right-documents: 63fc40bfa2e3a24b2410dec381a6abec5837ba3d
-  UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
+  ADR-document-id-aliases: 0cadf6053268c5a1bc2e53ca9fc9ede1e69580f5
+  ADR-document-system: ede707151ae50475e109ced4766c89ac743d16fd
+  ADR-steering-documents: 86e1186f0a40d356fa8b97476bfbd960b6d9ec10
+  ADR-terminal-statuses-are-historical: 17bfce8e507b5582828512cfadc3876de66359d3
+  CAP-DOCS-document-lookup: d03d09297497506274e7e0e69adf4ac9958b3b2e
+  CAP-DOCS-document-model: da6e3a2dfc451c26f2eff04e1f24a74baba63bab
+  CAP-DOCS-document-search: b2d1bdf40f5c4ce933b8b0b070a26ad357a72bce
+  CAP-DOCS-documentation-ownership: c066cb765664f31e154075b390d2d9f63077feee
+  CAP-DOCS-namespaces: 9197ba416c25a4fdf2538da15d52ba81b534e6f0
+  UC-find-the-right-documents: fb840d645e49806ada5f869028baa650a6dda438
+  UC-keep-the-living-spec-consistent: 3a6a41d611a4ad3d32ed0c3ba96efa1babf02128
 title: Documents
 ---
 
 # Documents
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -41,6 +42,7 @@ title: Documents
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Read decision supersession](../journeys/read-decision-supersession.md)
+- [Read a formal document](../journeys/read-formal-document.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -84,7 +86,7 @@ for a change is the journey [Find the right documents](../journeys/find-the-righ
 ## What counts as a document
 
 A file is a document when all of these hold
-([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md)):
+([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-model.md)):
 
 - it is a `*.md` file under `docs/` or `specs/`, not a `README.md`, a template, a symlink or under a dot directory;
 - its frontmatter declares a well-formed ID in `id` (or `reconcile_id` for a reconcile record).
@@ -94,13 +96,13 @@ out with a `DOCS_DOCUMENT_INVALID` warning, and every other document stays usabl
 
 The ID prefix names the kind: `CAP` capability, `UC` use case, `UX` UX document (a screen, modal or panel under
 `docs/ux/<area>/`), `ARCH` architecture, `ADR` decision, `PROP` proposal, `PADR` proposal decision,
-`SPEC`/`PLAN`/`TASKS`/`REC` spec bundle files, `FB` feedback, `MAT` material and `MS` milestone. IDs are unique
+`SPEC`/`PLAN`/`TASKS`/`REC` spec bundle files, `FB` feedback, `MAT` material, `MS` milestone, `DESIGN` design, `DOMAIN` domain and `OPS` operations. IDs are unique
 across the whole repository. The index accepts an ID wherever it is declared; the document rules check that each
 file lives where its kind belongs. Planned and active milestones live in `docs/roadmap/`, done and dropped ones in
 its flat `docs/roadmap/_archive/` with the same file name and ID.
 
 Write a one- or two-sentence English `summary` on capabilities, use cases, UX documents, decisions, architecture
-documents, milestones, proposals and specs. It is the main signal of search, so titles and bodies can be in any
+documents, milestones, proposals, specs, designs, domains and operations. It is the main signal of search, so titles and bodies can be in any
 language.
 
 ### Steering documents
@@ -142,7 +144,7 @@ documents claim collides and is reported on both.
 `resolve` prints one `[DOCUMENT: ...]` line per ID and exits `2` with `DOCS_ID_UNRESOLVED` or `DOCS_ID_DUPLICATE`
 for the ones it cannot settle. `refs` and `list` page their output: follow the `[NEXT_CMD: ...]` line for the next
 page. Every command accepts `--format json`. Options, line fields and JSON keys are in
-[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-lookup.md).
+[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-lookup.md).
 
 ### History is hidden by default
 
@@ -172,7 +174,7 @@ project-owned `docs/steering/glossary.yaml` expands query terms with synonyms, u
 search expands global synonyms followed by the selected namespace synonyms, while unselected namespaces have no effect.
 Without the search extra the ranking is lexical; install it with `uv add 'devkit-docs[search]'` (included in
 `devkit-spec[search]`) for hybrid ranking. Details
-are in [CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md);
+are in [CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-document-search.md);
 the ranking engine itself is described in [Search](search.md).
 
 ## Work in a monorepo with namespaces
@@ -190,7 +192,7 @@ The `[tool.docs]` table holds only `namespaces`; a malformed table fails every c
 run, with `DOCS_CONFIG_INVALID`.
 
 A namespace narrows what you *browse*, never what exists
-([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-namespaces.md)):
+([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-namespaces.md)):
 
 - `list` and `search` show the current directory's namespace plus the global documents by default;
   `--namespace NAME` picks one, `--namespace global` only global documents, `--all-namespaces` everything.
@@ -203,6 +205,12 @@ A namespace narrows what you *browse*, never what exists
   `docs/packages/<name>/roadmap/` with done and dropped records in `_archive/`. The agent reads applicable local
   registers alongside the global ones, with local terms scoped to that namespace; a legacy package-level glossary
   needs a manual move or merge.
+
+## Where documentation belongs
+
+Each fact has one authoritative owner. Capabilities describe observable behavior; design explains local mechanisms and persisted data; domain documents explain concepts and relationships; operations routes observed symptoms to existing action owners. References contain exact syntax, while use cases describe actor goals and outcomes.
+
+Formal design bundles, domain documents and operations documents have their own identities. Supporting files belong to a parent; independently maintained detail has its own identity. Follow selected links to the context needed for a question rather than expecting every document to link to every other one. See [CAP-DOCS-documentation-ownership](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/documents/CAP-DOCS-documentation-ownership.md).
 
 ## Capabilities in this area
 

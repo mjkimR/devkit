@@ -1,14 +1,14 @@
 {
-  "tag": "v0.1.6",
-  "source_commit": "93e3808721b4d06982019916655abce6069f5afa",
+  "tag": "v0.1.7",
+  "source_commit": "a8289513d9e59aab49e35e11900e26be3da493df",
   "repository": "mjkimR/devkit",
   "langs": [
     "en",
     "ko"
   ],
-  "generated": "2026-11-13",
+  "generated": "2026-11-17",
   "previous": {
-    "tag": "v0.1.5",
-    "source_commit": "18b834c35c0ceca2394ac1750c3b15f209ce7690"
+    "tag": "v0.1.6",
+    "source_commit": "93e3808721b4d06982019916655abce6069f5afa"
   }
 }

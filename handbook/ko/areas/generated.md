@@ -4,13 +4,13 @@ sources:
   CAP-GATE-commit-gates: null
   CAP-GEN-tracked-artifacts: null
 title: 생성 파일
-translated_from: en/areas/generated.md@d409ad2f0eda7209
+translated_from: en/areas/generated.md@aa89c21f14f026ad
 ---
 
 # 생성 파일
 
 <!-- handbook:provenance -->
-> 소스 커밋 `93e3808721b4` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-13에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 `uv.lock`, devkit 자체의 설치 기록(`.devkit/installation.json`), 자동 생성된 클라이언트 코드, 렌더링된 스냅샷처럼 특정
@@ -18,7 +18,7 @@ translated_from: en/areas/generated.md@d409ad2f0eda7209
 브랜치에서 각각 파일을 재생성한 경우 원본 입력 파일들이 충돌 없이 병합되더라도 생성 파일에서 충돌이 발생하기 쉽습니다. 게다가 단순
 텍스트 병합 결과는 생성기가 실제로 출력했을 내용과 일치하지 않는 경우가 대부분입니다. `devkit generated`(`devkit-agt` 제공)는
 이러한 충돌을 텍스트 병합 대신 '명령어 재생성' 방식으로 깔끔하게 해결하며, 커밋된 파일이 최신 상태인지도 검사합니다. 관련 규약은
-[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md) (영어 원문)을
+[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md) (영어 원문)을
 참고하십시오.
 
 이 작업은 자동으로 실행되지 않습니다. merge, rebase, cherry-pick 도중 충돌이 발생해 중단되면 사용자 또는 에이전트가 `resolve`

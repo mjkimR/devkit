@@ -435,7 +435,7 @@ wheels = [
 
 [[package]]
 name = "devkit-adaptive"
-version = "0.1.6"
+version = "0.1.7"
 source = { editable = "packages/devkit-adaptive" }
 dependencies = [
     { name = "click" },
@@ -465,7 +465,7 @@ source = { editable = "packages/devkit-advisory" }
 
 [[package]]
 name = "devkit-agt"
-version = "0.1.6"
+version = "0.1.7"
 source = { editable = "packages/devkit" }
 dependencies = [
     { name = "click" },
@@ -621,7 +621,7 @@ dist-test = [
 
 [[package]]
 name = "devkit-docs"
-version = "0.1.6"
+version = "0.1.7"
 source = { editable = "packages/devkit-docs" }
 dependencies = [
     { name = "click" },
@@ -690,7 +690,7 @@ requires-dist = [
 
 [[package]]
 name = "devkit-spec"
-version = "0.1.6"
+version = "0.1.7"
 source = { editable = "packages/devkit-spec" }
 dependencies = [
     { name = "click" },
@@ -747,7 +747,7 @@ dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
 
 [[package]]
 name = "devkit-viewer"
-version = "0.1.6"
+version = "0.1.7"
 source = { editable = "packages/devkit-viewer" }
 dependencies = [
     { name = "click" },

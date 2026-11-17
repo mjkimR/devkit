@@ -1,17 +1,17 @@
 ---
 sources:
-  CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
-  CAP-HARN-agent-guidance: dff559b3349a28515857465630025e54b334b414
+  CAP-GOV-spec-rules: 231d1553ea205aee30516b0cf69e320560d2d9a9
+  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
   CAP-HARN-command-mount: 9963e0253b7b23f53d30d2185998241d83cecd95
-  UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
-  UC-adopt-sdd-from-adaptive-development: 1eb8461c21c7c3e6fa131c4efb88d7f7e07095f6
+  UC-adopt-in-an-existing-repository: f0d47aad88a9a4f8942bd3614e8d6c341e0490d5
+  UC-adopt-sdd-from-adaptive-development: 2c82a267d679732b7239bc790b0ef9aef0e65c5f
 title: Adopt devkit in an existing repository
 ---
 
 # Adopt devkit in an existing repository
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `93e3808721b4`, generated 2026-11-13. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -35,6 +35,7 @@ title: Adopt devkit in an existing repository
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Read decision supersession](read-decision-supersession.md)
+- [Read a formal document](read-formal-document.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -72,12 +73,12 @@ work to follow spec-driven delivery from today, without first rewriting every le
 from installation to a passing `devkit rules check`, then leaves the legacy content to migrate as work touches it.
 
 The use case behind this page is
-[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/harness/UC-adopt-in-an-existing-repository.md).
+[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/harness/UC-adopt-in-an-existing-repository.md).
 For the terms bundle, sync and Living Spec, see [Concepts](../concepts.md).
 
 This path contains legacy rule debt and lets it migrate gradually. If you have been developing an idea adaptively and want to
 adopt spec-driven delivery from that retained product instead, ask for the adaptive development baseline: it follows
-[`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md),
+[`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md),
 which verifies the product before activating SDD and moves no legacy documents.
 
 ## Before you start
@@ -95,10 +96,10 @@ uv run devkit sync
 devkit-spec brings devkit-docs with it. Neither has an executable of its own: they register the `spec` and `docs`
 bundles and the `devkit spec` and `devkit docs` command groups through entry points, so everything runs through the
 one `devkit` executable of your project environment
-([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-mount.md)).
+([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-command-mount.md)).
 
 `devkit sync` then does three things
-([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md)):
+([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/harness/CAP-HARN-agent-guidance.md)):
 
 - copies the `core` presets of both bundles to `.devkit/managed/spec/` and `.devkit/managed/docs/`: `docs` holds the
   shared document guidance, templates and document rules, `spec` the delivery lifecycle;
@@ -127,7 +128,7 @@ The document and spec rules now read the Markdown already under `docs/` and `spe
 they usually report violations: number-based IDs such as ADR-0001, missing frontmatter, paths that do not match the Living Spec
 layout. Each finding is a `[VIOLATION: ...]` line naming the rule, the file and a remediation. The catalog of the
 fifteen rules (ten document rules shipped by `docs`, five lifecycle rules shipped by `spec`) is in
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md);
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.7/docs/capabilities/governance/CAP-GOV-spec-rules.md);
 `uv run devkit rules explain <RULE-id>` prints one rule's guide.
 
 ## 4. Let the agent contain the legacy documents
@@ -138,7 +139,7 @@ ask it to adopt devkit here. Your request or confirmation is what authorizes the
 The agent follows the playbook:
 
 1. It lists the legacy Markdown and reviews a long or mixed set with you.
-2. It moves the legacy files under `docs/materials/_legacy/<original path>`. Material directories are free-form, and
+2. It retains canonical formal documents and their supporting artifacts, then moves selected legacy files under `docs/materials/_legacy/<original path>`. Material directories are free-form, and
    no document or spec rule checks them.
 3. It updates references to the moved paths elsewhere in the repository.
 4. It proposes the containment as one commit, before any migration, so you review moves and content edits apart.
