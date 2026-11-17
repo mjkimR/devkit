@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:37:54.598881Z'
+status: completed
+summary: 'Self-checked reconcile at low effort: CAP-HARN-agent-guidance Host scope observation matches the skill scheduling bullet; CAP-COLL-work-scope-registry and CAP-DLV-proposal-lifecycle unaffected; both source feedback files resolved'
+findings: []
+checks:
+  reconcile: PASS reconcile.md targets and unaffected reasons compared with git diff main
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 80d1fe0ea37bbca3fb2fa12ea667771611b80d38
+  head: e3bf1504cf6a260246be3f10b3d5edf1ede81fc7
