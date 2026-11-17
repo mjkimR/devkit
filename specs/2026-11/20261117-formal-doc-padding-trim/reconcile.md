@@ -50,8 +50,9 @@ and body do not name and for what the evidence cannot conclude; the no-row fallb
 the ADR. §3.3 rule 4 adds the same-kind fold (delete the folded document, keep its ID as an alias of the receiving
 one), which `living-spec-writing` shared step 6 carries. §3.1 rules 5 and 7 are one Fact-type routing rule with the
 15-row table Q3 settled, identical to the `living-spec-writing` table (pinned by
-`test_formal_doc_checkpoints_guidance.py`); the old rule 8 is rule 7 and cites rule 5. No document cited §3.1 rules
-by number (`rg` over `docs/`, `packages/`), so the renumbering breaks no reference. §3.2 lost its closing paragraph,
+`test_formal_doc_checkpoints_guidance.py`); the old rule 8 is rule 7 and cites rule 5. No current document cites §3.1
+rules by number (`rg` over `docs/`, `packages/`); one materials file of an earlier spec cites the old rule 5 as
+history and stays as written. §3.2 lost its closing paragraph,
 which `architecture-writing` "Responsibility boundary" states; §3.3 lost "This migration transfers..."; §4 names the
 templates and writing instructions without restating their layout. §3.1 rule 6 and the §3.3 closing lines on
 operations authority stay, since the narrowed boundaries rely on them.
@@ -97,8 +98,10 @@ fields, all still in the capability. No `.py` or `.ts` file reads the capability
 ## Entrypoints
 
 `devkit spec entrypoints derive` proposes every bundle template, instruction and test for each changed capability and
-design; all are rejected. The capabilities and designs changed only in wording, the bundle files are not where their
-reading starts, and the designs keep their existing entrypoints. DOMAIN and OPS are ineligible.
+design; all are rejected. `CAP-DOCS-documentation-ownership` changed its routing rule and closing contract, but its
+declared entrypoint `living-spec-writing.md` is still where reading starts, and the per-kind templates and
+instructions are not doorways. The other capabilities and the designs changed in wording only and keep their
+entrypoints. DOMAIN and OPS are ineligible.
 
 ## Source feedback
 

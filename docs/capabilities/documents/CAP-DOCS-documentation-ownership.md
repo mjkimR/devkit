@@ -82,13 +82,16 @@ examples and numerical datasheets as the question needs. Document length and num
    split or drop a document that has none. The document SHOULD open with the problem it answers (the problem the
    mechanism solves, the concepts readers confuse or the observed symptom) with no question section or label
    (`ADR-problem-first-formal-document-openings`). A design SHOULD close with `## Authority boundary`, naming the
-   rules it explains and their owners by full ID, and `## Update triggers`. A domain or operations document SHOULD
-   close with `## Update triggers`, preceded by `## Authority boundary` only for owners its table and body do not
-   name and what the document or its evidence cannot conclude. `## Update triggers` names the source changes that
-   make the document stale, by public entry point, use case, field, code or capability section, and a command that
-   rechecks a worked example when there is one; an operations fallback for evidence that matches no row belongs
-   under `## Routing` (`ADR-formal-document-closings`). An independent detail, worked example or datasheet has its
-   own question/update seam and formal peer ID.
+   rules it explains and their owners by full ID, also when the body cites them inline, and `## Update triggers`. A
+   domain or operations document SHOULD close with `## Update triggers`, preceded by `## Authority boundary` only for
+   owners its table and body do not name and what the document or its evidence cannot conclude. A boundary SHOULD
+   NOT state that the document transfers no normative statement or owns no recovery, since §3.1 rule 6 and the
+   closing paragraph of this section already say so. `## Update triggers` names the source changes that make the
+   document stale, by public entry point, use case, field, code or capability section, and a command that rechecks a
+   worked example when there is one. A route to another document belongs in the body or `related_*`, not in a
+   closing; an operations fallback for evidence that matches no row belongs under `## Routing`
+   (`ADR-formal-document-closings`). An independent detail, worked example or datasheet has its own question/update
+   seam and formal peer ID.
 3. **Supporting artifacts**: A design's parent-owned support MUST live inside its bundle beside `design.md`, at any
    depth; domain and operations support MUST live under `<PARENT-ID>/artifacts/` beside the parent file, with one
    canonical same-kind parent in the same root. Supporting Markdown MUST be ID-free and name that parent;

@@ -1,0 +1,40 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:48:07.686847Z'
+status: completed
+summary: 'round 1; reconcile-reviewer: REVISE, reflection complete and consistent except one P2 and three P3'
+findings:
+- issue: 'CAP-DOCS-documentation-ownership §3.3 rule 2 omits ADR-formal-document-closings clauses: a design boundary names rules also when the body cites them inline; no boundary states the document transfers no normative statement or owns no recovery; each route a removed next-read sentence held stays in the body or related_*.'
+  evidence: docs/capabilities/documents/CAP-DOCS-documentation-ownership.md:84-91
+  failure_condition: A reader using the capability as owner writes a design boundary with the stock disclaimer the ADR forbids.
+  suggested_action: Restate the missing clauses in §3.3 rule 2.
+  resolution: open
+  severity: P2
+- issue: OPS-assignment-attention-routing lost the owner of the Host judgment whether a result meets its goal (ADR-adaptive-assignment-commands §4).
+  evidence: docs/operations/OPS-assignment-attention-routing.md:40-43
+  failure_condition: A reader asking who decides whether a returned result meets its goal finds no route.
+  suggested_action: Name the Host judgment and the ADR in the boundary.
+  resolution: open
+  severity: P3
+- issue: reconcile.md claims no document cites §3.1 rules by number; one materials file does, as history.
+  evidence: specs/2026-11/20261117-formal-doc-padding-trim/reconcile.md:53-54
+  failure_condition: A later reader trusts a zero-hit claim that a rerun contradicts.
+  suggested_action: Say no current document cites them and the materials file stays as history.
+  resolution: open
+  severity: P3
+- issue: The entrypoint rejection says the capabilities and designs changed only in wording, which is false for CAP-DOCS-documentation-ownership.
+  evidence: specs/2026-11/20261117-formal-doc-padding-trim/reconcile.md:99-101
+  failure_condition: The recorded rejection reason does not match the diff.
+  suggested_action: State that CAP-DOCS keeps its living-spec-writing entrypoint as its doorway.
+  resolution: open
+  severity: P3
+unverified_areas:
+- Tests and viewer check not rerun by the reviewer at 5d115e1cb
+checks:
+  rules: PASS devkit rules check docs and both spec bundles errors=0
+  tests: SKIP not rerun; caller reports PASS in envelopes/review-01.yaml at dbc55d897
+diff_scope:
+  base: 4a8ccebbdc0e6ca3f3804ad98c706fa5af2483c9
+  head: 5d115e1cb8bbbe984fc85382b43410cd32d5d43b

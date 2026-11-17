@@ -40,7 +40,7 @@ reads `attention=-` in text, with `"observed": null` in JSON, so read the `statu
 ## Authority boundary
 
 An attention value cannot establish whether an assignee is still running, why a worktree moved, or whether a result
-meets its goal.
+meets its goal; `ADR-adaptive-assignment-commands` §4 leaves the last to the Host.
 
 ## Update triggers
 
