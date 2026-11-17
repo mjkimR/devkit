@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T04:21:19.139932Z'
+status: completed
+summary: app-uiux-improve asks in its first question round whether to use Impeccable (with installation state) unless the request already decides; silence keeps inline. Bundle text, CAP rule 15, UC step 1/3c and ADR-impeccable-upfront-ask updated.
+findings: []
+assumptions:
+- worktree=required policy; integration path auto chooses local merge (no CI or platform review needed)
+checks:
+  tests: PASS just test-affected 224 passed; test_app_uiux_improve.py 17 passed
+  build: PASS content-only bundle change; pyright catalog 0 errors
+  lint: PASS devkit rules check --ci --base main; ruff catalog
+diff_scope:
+  base: 967d914477e5cb87033b7639a6838d3b45687277
+  head: 6fabb94e30e8a064fc9535df576555850f2a7ad8
+activity_effort: low

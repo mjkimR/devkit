@@ -210,13 +210,24 @@ def test_framing_is_proportionate_and_reads_ooux_documents_only_where_present() 
 def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None:  # AC-02, AC-03, AC-04, AC-06, AC-09
     skill = (SKILL / "SKILL.md").read_text()
     assert_rule(skill, "impeccable only after the user selects it", "without that selection, work inline")
+    assert_rule(skill, "asking whether to use it selects nothing")
+    assert_rule(
+        skill,
+        "does not say whether to use impeccable",
+        "first question round",
+        "appears installed",
+        "review-only and small requests",
+        "already decides",
+    )
+    assert_rule(skill, "silence selects no route and no impeccable track")
     assert_rule(skill, "user chose the consumer workflow", "before product edits", "steps that precede implementation")
     assert_rule(skill, "make no product edits until the session returns", "recorded base")
     assert_rule(skill, "delegated impeccable session", "no commit, integration or publication permission")
     orchestration = (SKILL / "references/orchestration.md").read_text()
     # Selection and availability (AC-04).
     assert_rule(orchestration, "not selected impeccable", "neither start a session nor load or invoke", "work inline")
-    assert_rule(orchestration, "installed impeccable permits an offer", "hook", "consumer check evidence")
+    assert_rule(orchestration, "first question round", "appears installed", "asking selects nothing", "already decides")
+    assert_rule(orchestration, "hook", "consumer check evidence")
     assert_rule(
         orchestration,
         "`npx impeccable install`",

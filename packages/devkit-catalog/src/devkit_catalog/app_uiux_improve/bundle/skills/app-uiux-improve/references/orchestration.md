@@ -61,8 +61,10 @@ unlike a local role. Accept its changes before continuing through the selected r
 ### Select and set up
 
 1. If the user has not selected Impeccable for this request, neither start a session nor load or invoke Impeccable in
-   your own context; work inline. An installed Impeccable permits an offer. Treat output of a hook the user installed
-   as consumer check evidence, not as an invocation.
+   your own context; work inline. If the request does not say whether to use Impeccable, ask in the first question
+   round, stating whether it appears installed; asking selects nothing. Skip the question when the request or an exact
+   prior instruction already decides. Treat output of a hook the user installed as consumer check evidence, not as an
+   invocation.
 2. If Impeccable is absent and the user wants it, name the upstream routes: `npx impeccable install` at the project
    root, the Claude Code route `/plugin marketplace add pbakaus/impeccable` followed by installing it from `/plugin`,
    or a manual copy of upstream `skills/impeccable` into the host's skill directory. Install only on the user's

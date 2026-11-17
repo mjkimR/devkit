@@ -24,7 +24,9 @@ entrypoints:
 
 ## 2. Main Success Scenario
 
-1. The agent recovers the target, intended outcome, relevant artifacts, constraints and the user's task route choice (`CAP-DLV-uiux-improvement`).
+1. The agent recovers the target, intended outcome, relevant artifacts, constraints, the user's task route choice and
+   whether to use Impeccable, asking about Impeccable in its first question round when the request does not say
+   (`CAP-DLV-uiux-improvement`).
 2. The agent captures the representative task and affected states in the local branch build before edits (`CAP-DLV-uiux-improvement`).
 3. The agent frames the affected objects when the request changes structure or flow, from the project's OOUX
    documents when present, then develops useful design perspectives for the requested improvement
@@ -49,8 +51,8 @@ entrypoints:
 - **3a.** A small request needs no team or research: the agent works inline; resumes at step 4.
 - **3b.** Fresh children are unavailable: the agent uses useful inline passes and discloses their shared context;
   resumes at step 4 without fabricated role findings.
-- **3c.** The user selects Impeccable for craft work: the agent keeps its framing and local perspectives and resumes at
-  step 4; implementation follows 5c.
+- **3c.** The user selects Impeccable for craft work, in the request or as the step 1 answer: the agent keeps its
+  framing and local perspectives and resumes at step 4; implementation follows 5c.
 - **3d.** Impeccable is selected but unavailable: the agent names the upstream install routes; the user installs it,
   or asks the agent to run a route that needs no prompt answers (resumes at 3c), or continues inline (resumes at
   step 4 without 5c).
