@@ -35,7 +35,8 @@ The ADR template (`templates/decision.md`) puts a metadata list under the H1: `-
 
 - Status and Date repeat the frontmatter `status` and `created_at`; the superseded form ("Superseded by" plus an ADR ID)
   repeats `superseded_by`. In the 71 of 94 ADRs that carry the block, both values agree with the frontmatter.
-- Deciders appears in 27 of 94 ADRs and Involved Components in 45; nothing reads either.
+- Deciders appears in 27 of 94 ADRs and Involved Components in 45; nothing parses either line, but backticked IDs in
+  Involved Components lines count as body references for `devkit docs refs` and the viewer's reference panel.
 - No rule enforces the block, but code keeps the copy alive: the proposal scaffold (`scaffold.py`) writes it for PADRs,
   and handoff acceptance (`_accept_status` in `handoff.py`) rewrites the body Status line in step with the frontmatter.
   Tests pin both (`test_proposal_handoff.py`, `test_proposal_scaffold.py`).
@@ -60,9 +61,12 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
     whole supersession leaves a stale `Accepted`) and two ADR layouts. `PADR-frontmatter-only-decision-status`.
 - **Q2**: Does any reader (viewer, `devkit docs` index, search snippet, handbook generation, supersession tooling) parse
   the body Status line? Confirm nothing does before removing the rewrite.
-  - **Answer**: no. Every reader takes status from the frontmatter and supersession from `supersedes`,
-    `superseded_by` and the partial pointer lines; the only code touching the block is the scaffold and the handoff
-    body pass (`materials/body-status-readers.md`).
+  - **Answer**: no reader parses the Status, Date or Deciders lines. Every reader takes status from the frontmatter
+    and supersession from `supersedes`, `superseded_by` and the partial pointer lines; the only code touching the
+    block is the scaffold and the handoff body pass. One indirect reader exists: backticked IDs anywhere in the body,
+    Involved Components lines included, are body references (`devkit docs refs`, the viewer reference panel). In about
+    20 ADRs the Involved Components line is the only mention of some IDs; the Q1 pass keeps those edges
+    (`materials/body-status-readers.md`).
 - **Q3**: Where do "Superseded in part by" lines sit once the block is gone (directly under the H1)?
   - **Answer**: directly under the H1, each a paragraph of its own, as the handoff already writes them
     (`CAP-DLV-proposal-lifecycle` handoff step 4) and as existing ADRs already place them above the block. The
@@ -89,13 +93,33 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
   that a body `- **Status**: Draft` line, wherever it is, is left byte-identical while the frontmatter is accepted.
 - Docs bundle test: a test under `packages/devkit-docs/tests/integration/bundles/docs/` asserts the template has no
   metadata block, no `---` body separator and no Overview/Pros/Cons scaffolding.
-- Existing ADRs (Q1): one mechanical commit removes, from each ADR under `docs/decisions/`, the contiguous metadata
-  list that follows the H1 and any "Superseded in part by" paragraphs, the `---` separator directly after that list
-  when there is one, and the blank lines they leave; nothing else changes. A `- **Status**:` item elsewhere in a body (the milestone lifecycle item of
-  `ADR-roadmap-and-milestones-ledger`) is not the block and stays.
-- Living Spec: `CAP-DLV-proposal-planning` §4.4 drops "`- **Status**: Draft`, `- **Date**`" from the PADR body
-  description; `CAP-DLV-proposal-lifecycle` handoff step 4 drops the body-line rewrite sentence and states that the
-  body is kept as written; `DESIGN-proposal-handoff` line 156 (observed run) stops citing the body status.
+- Existing ADRs (Q1): one mechanical commit, run on every ADR under `docs/decisions/` at Development HEAD. In the
+  first list after the H1 (before `## 1.`), it removes each item starting with `- **Status**:`, `- **Date**:`,
+  `- **Deciders**:` or `- **Involved Components/Capabilities**:`, together with that item's indented continuation
+  lines. Every other line stays where it is: "Superseded in part by" paragraphs and list items, other list items, and
+  prose. When the list is left empty, its surrounding blank lines collapse to one, and a `---` that is the next
+  non-blank line goes with it. When items remain, the list and its `---` stay. Handled by name, at this base:
+  - `ADR-ux-screens`: its three "Superseded in part by" list items stay as the list.
+  - `ADR-dual-source-of-truth-and-periodic-reconciliation`: its `- **Follow-up**` item stays as the list.
+  - `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`: its Deciders provenance becomes one sentence at the
+    end of Context & Problem Statement: "Decided by the user on the rejection of ~~`PROP-direct-devkit-invocation`~~
+    (Git `4672a101eec0`)."
+  - `ADR-orchestration-workers`: prose follows the block before its `---`, so the `---` stays.
+  - A `- **Status**:` item elsewhere in a body (the milestone lifecycle item of `ADR-roadmap-and-milestones-ledger`)
+    is not in the first list and stays.
+  - Reference edges: when an Involved Components line names a backticked ID that the rest of the body does not
+    mention, one sentence at the end of Context & Problem Statement keeps it: "This decision involves `<ID>`, …."
+    Plain path or skill names in those lines are dropped. Development lists the affected ADRs at its HEAD.
+- Handoff compatibility: instead of rewriting a legacy body status, promotion deletes the exact block an earlier
+  scaffold wrote, so a PADR scaffolded before the upgrade (in this repository or a consumer) reaches the ledger
+  without a stale `Draft`. It deletes only the first visible `- **Status**: Draft` or `Proposed` line in the first list
+  after the H1, a `- **Date**:` line directly after it, and a `---` that is the next non-blank line when that list is
+  left empty; fenced, indented and commented lines stay. The existing edge-case tests (fenced example, HTML comment)
+  become deletion tests.
+- Living Spec: `CAP-DLV-proposal-planning` §4.4 states that the PADR body MUST carry no Status, Date, Deciders or
+  Involved Components line, in place of "`- **Status**: Draft`, `- **Date**`"; `CAP-DLV-proposal-lifecycle` handoff
+  step 4 replaces the body-line rewrite sentence with: promotion MUST change only the frontmatter status in place and
+  MUST delete the legacy scaffold block as above; `DESIGN-proposal-handoff` line 156 (observed run) stops citing the body status.
 
 ### Design, domain and operations assessment
 
@@ -113,8 +137,12 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
 ### Planning decisions
 
 - Q1-Q4 as answered in §2; the lasting choice is `PADR-frontmatter-only-decision-status`.
-- Promotion keeps no compatibility pass for a PADR that still carries the block: none exists at this HEAD, and one
-  scaffolded before the change and handed off after is repaired like the Q1 pass (PADR Consequences).
+- Promotion keeps a deletion-only compatibility pass for the legacy scaffold block (challenger-01 finding 3,
+  recommended; open for `plan-accept`). The alternative is to drop all body handling and accept that a pre-upgrade
+  PADR reaches the ledger with a stale `- **Status**: Draft`.
+- The Q1 pass keeps reference edges by moving ADR-only IDs from Involved Components into one Context sentence
+  (challenger-01 finding 2, recommended; open for `plan-accept`). The alternative is to accept losing those edges in
+  `devkit docs refs` and the viewer reference panel.
 - Q4 is a template and guidance edit inside the existing `decision-writing` rule, not a new decision; it gets no PADR.
 - `docs/designs/delivery/DESIGN-proposal-handoff/design.md` is in both this proposal's and
   `PROP-formal-doc-padding-trim`'s boundaries; the overlap is sequenced (this unit integrates after it), and this unit

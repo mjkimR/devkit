@@ -33,17 +33,22 @@ only code, rules, guidance and Living Spec prose remain:
 | Supersession tooling and rules | `governance/usecases/decision_supersession.py` and `documents/models/supersession.py` read `status`, `supersedes`, `superseded_by` and the partial pointer lines. The `handoff.py` pointer writer inserts below the first H1 (`_insert_pointer`, ~:775). |
 | Release handbook script | `scripts/handbook.py:249` takes `status` from the frontmatter. |
 | Other rules, playbooks, guidance | No match outside the template. `adr-consolidation` reads the partial pointers, not the block. |
+| Body references (indirect) | `devkit-docs` `features/documents/models/parse.py` (`body_references`, ~:88, :208-231) and the viewer `api/documents.ts:163-173` and `features/document/references.ts:48,102-135` index every backticked ID in the body, Involved Components lines included. `devkit docs refs CAP-DLV-project-policy` lists `ADR-document-system` and `ADR-worktrees-and-scope` only through those lines. About 20 ADRs mention some IDs only there (challenger-01; a local count found 18 files, 45 mentions). |
 
 ## Corpus (Q1)
 
-- 94 ADR files under `docs/decisions/` (the draft's "95" was off by one); 71 carry `- **Status**`.
-- Block shapes: Status+Date+Deciders+Involved 27 (one of them, `ADR-roadmap-and-milestones-ledger`, also has an
-  unrelated `- **Status**:` milestone-lifecycle item at line 235); Status+Date 25; Status+Date+Involved 18;
-  Status only 1.
+- 94 ADR files under `docs/decisions/` (the draft's "95" counted `README.md`); 71 carry `- **Status**`.
+- Block shapes: Status+Date+Deciders+Involved 27 (`ADR-dual-source-of-truth-and-periodic-reconciliation` adds a
+  `- **Follow-up**` item; `ADR-roadmap-and-milestones-ledger` also has an unrelated `- **Status**:` milestone-lifecycle
+  item at line 235); Status+Date 25 (`ADR-ux-screens` carries three "Superseded in part by" list items inside the
+  same list); Status+Date+Involved 18; Status only 1. About 30 ADRs wrap Involved Components onto indented lines.
+- `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation` records its provenance only in its Deciders line.
+- `ADR-orchestration-workers` has a prose paragraph between the block and its `---`.
 - Every Status agrees with frontmatter `status` (and names `superseded_by` when superseded); every Date equals
   `created_at`.
-- Partial-supersession pointers already sit above the block, directly below the H1 (for example
-  `ADR-roadmap-and-milestones-ledger` lines 23-25), so removing the block leaves them where Q3 wants them.
+- Partial-supersession pointers mostly sit as paragraphs above the block, directly below the H1 (for example
+  `ADR-roadmap-and-milestones-ledger` lines 23-25); `ADR-ux-screens` is the exception with list items inside the
+  block. Removing only the field items leaves every pointer where it is.
 - 64 ADRs use `---` separators beyond the frontmatter; the template change does not require editing them.
 - No PADR under `docs/proposals/` carries the block at this HEAD; the sibling plan branch
   `plan-formal-doc-padding-trim` has no PADR yet.
