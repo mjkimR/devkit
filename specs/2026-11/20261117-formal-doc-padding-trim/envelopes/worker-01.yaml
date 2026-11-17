@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:50:31.800149Z'
+status: completed
+summary: 'Development complete to the final change report: specify, build-verify (5/5 tasks), review-refine (review-01 REVISE 1 P3, fixed, reverify-01), living-spec-draft (reconcile-check-01 REVISE 1 P2 3 P3, fixed, reconcile-check-02 closes it), collect-feedback, final-change-report. Outcome: the 13 formal documents measured 1063 lines at the handoff base 4a8ccebbd; the 12 remaining measure 958 at head (wc -l over docs/designs, docs/domain, docs/operations). Sync output .devkit/installation.json was declared in the payload. No scope extension. Awaiting dev-integration (auto) and the runner check lint-ci-clean.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main 2691 passed; viewer test 244 passed
+  lint: PASS just lint-check; devkit rules check --ci --base main
+  build: PASS just viewer build; devkit generated check; devkit sync --check exit 0
+diff_scope:
+  base: ''
+  head: 1affefd72b5d1d22368e5dbb4a3d271c1e3182d7
+activity_effort: medium
