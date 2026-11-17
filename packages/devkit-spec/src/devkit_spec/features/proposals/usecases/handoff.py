@@ -24,7 +24,9 @@ path it would create), then:
    per leaf (``_plan_materials``): every conflict is refused before the first write and no pre-existing path is ever
    moved, written or removed. The proposal unit's devkit workflow records (decision records and envelopes, as
    devkit's loaders find them) are not carried: they are dropped with the proposal;
-5. rewrites links and ID references that pointed into the proposal (``rewrite``);
+5. rewrites links and ID references that pointed into the proposal (``rewrite``), then, in the carried spec bundle
+   files and the promoted ADRs, every reference written with a handed-off proposal ID or another document's alias
+   (``rewrite_aliases``), so the handoff commit passes ``RULE-document-reference``;
 6. removes the proposal;
 7. carries the proposal's ``gate:plan-accept`` records to the spec under the same names
    (``proposal_gates``, ``_record_gates``), each with the note ``PROP-<slug>: <the proposal record's note>``: a carried
@@ -106,6 +108,7 @@ from devkit_spec.features.proposals.services.rewrite import (
     Unresolved,
     completed_bundles,
     markdown_files,
+    rewrite_aliases,
     rewrite_ids,
     rewrite_links,
     rewrite_paths,
@@ -570,6 +573,12 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     rewrite_links(root, sources, plan, report)
     rewrite_ids(root, sources, plan, index, report)
     rewrite_paths(root, sources, plan, report)
+    # The carried and promoted documents must pass RULE-document-reference at the handoff commit: a sibling proposal
+    # they cite may have been handed off since this proposal's Planning merged.
+    carried_files = [
+        f for f in sources if f.startswith(str(target_dir) + os.sep) or f in {str(d.target) for d in decisions}
+    ]
+    rewrite_aliases(root, carried_files, index, report)
 
     notices: list[AdvisoryError] = []
     try:
@@ -1347,7 +1356,8 @@ def _result(
     if id_rewrites:
         notices.append(
             ProposalReferencesRewrittenNotice(
-                f"{len(id_rewrites)} ID reference(s) to PROP-{slug} or its PADRs now name the spec or the ADRs",
+                f"{len(id_rewrites)} ID reference(s) to PROP-{slug}, its PADRs or other documents' old IDs now name the"
+                " current documents",
                 target_files=list(dict.fromkeys(item.path for item in id_rewrites)),
             )
         )

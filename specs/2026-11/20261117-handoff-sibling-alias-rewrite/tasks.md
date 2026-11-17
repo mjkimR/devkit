@@ -6,7 +6,7 @@ plan: PLAN-handoff-sibling-alias-rewrite
 
 # Tasks: `SPEC-handoff-sibling-alias-rewrite`
 
-- [ ] **Task 1**: Reproduce the stale sibling alias with regression tests, then rewrite alias references in the carried and promoted files inside the handoff.
+- [x] **Task 1**: Reproduce the stale sibling alias with regression tests, then rewrite alias references in the carried and promoted files inside the handoff.
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/proposals/services/rewrite.py`, `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py`, `packages/devkit-spec/tests/integration/features/proposals/test_proposal_aliases.py`
   - _Requirements: AC-01, AC-02, AC-03_
   - **Verification**: Proposals integration tests, lint, types, CI rules and affected tests.

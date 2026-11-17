@@ -107,7 +107,7 @@ After the block, copied cross-file-system sources are removed.
 
 From here nothing raises; problems become notices on a handoff that already happened. A `RelocationPlan` maps every
 old path to its new one, the docs index is reloaded, and the scan set is every Markdown file under `docs/` and
-`specs/` except the proposal and completed spec bundles (their `feedback/` stays in). Four passes run in order
+`specs/` except the proposal and completed spec bundles (their `feedback/` stays in). Five passes run in order
 (`CAP-DLV-proposal-lifecycle` §4.3):
 
 1. `rewrite_history` in
@@ -122,6 +122,9 @@ old path to its new one, the docs index is reloaded, and the scan set is every M
 3. `rewrite_ids` rewrites ID references written with the proposal's or a promoted PADR's ID or alias: `PROP-<slug>`
    to `SPEC-<slug>`, `PADR-<x>` to `ADR-<x>`.
 4. `rewrite_paths` replaces code-span paths relative to the bundle in carried documents with the new ID or path.
+5. `rewrite_aliases` runs on the spec bundle's Markdown files and the promoted ADRs only, with the reloaded index: a
+   handed-off sibling's `PROP-<slug>` becomes its `SPEC-<slug>` and another document's alias its ID, the
+   resolution `RULE-document-reference` fixes, so the composed commit passes the gate.
 
 The bundle is then deleted; a failure is `SPEC_PROPOSAL_CLEANUP_FAILED`. The gate carry writes the proposal's
 `gate:plan-accept` into the spec's `decisions/` under the same name, with the spec's workflow, the original `by`
@@ -175,7 +178,7 @@ carries. `CAP-DLV-spec-bundles` owns the spec skeletons, `CAP-COLL-work-scope-re
 
 ## Update triggers
 
-- `handoff_proposal`, `HandoffUseCase`, `prepare`, `carry_proposal_body`, `roll_back`, the four rewrite passes, the
+- `handoff_proposal`, `HandoffUseCase`, `prepare`, `carry_proposal_body`, `roll_back`, the five rewrite passes, the
   gate carry or `auto_register` change their order, inputs or failure handling.
 - `CAP-DLV-proposal-lifecycle` §4.1 to §4.3 change an outcome this walk-through cites.
 - The worked example is in doubt: compare it with `git show --name-status -M 93e72152c`.

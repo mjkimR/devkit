@@ -7,7 +7,8 @@ never fails a handoff: a link or reference without a new target, and a file that
 
 Every Markdown file under ``docs/`` and ``specs/`` is scanned except the proposal itself, directories starting with
 ``.``, symbolic links and the files of completed spec bundles, which record the proposal as it was (their
-feedback aside, which stays current).
+feedback aside, which stays current). ``rewrite_aliases`` then brings the references of the carried and promoted
+documents themselves up to date, as ``RULE-document-reference``'s fixer would.
 """
 
 from __future__ import annotations
@@ -29,7 +30,9 @@ from devkit_docs.features.documents import (
     body_references,
     parse_document,
 )
+from devkit_docs.features.documents.models.model import is_unit_anchor
 from devkit_docs.features.documents.repositories.index import SOURCE_DIRECTORIES
+from devkit_docs.features.documents.services.dependencies import target_problem
 from devkit_docs.features.documents.services.rewrite import rewrite
 
 LINK = "link"
@@ -246,6 +249,71 @@ def rewrite_ids(
             continue
         report.files.append(display)
         report.rewritten.extend(changed)
+
+
+def current_id(index: DocumentIndex, document: Document, target: str) -> str | None:
+    """The ID ``RULE-document-reference`` would replace ``target`` with in ``document``, or ``None``.
+
+    The same two resolutions as the rule's fixer, through ``DocumentIndex.canonical``: a ``PROP-<slug>`` no document
+    declares names the one document ``SPEC-<slug>`` resolves to (the proposal was handed off), and an alias of another
+    document names that document's ID. A declared ID, an ambiguous or unknown name and the document's own alias stay.
+    """
+    slug = target.removeprefix("PROP-")
+    if slug != target and not index.declares(target):
+        spec = index.canonical(f"SPEC-{slug}")
+        if spec is not None:
+            return spec[0].id
+    found = index.canonical(target)
+    if found is None or found[1] is None or found[0].path == document.path:
+        return None
+    return found[0].id
+
+
+def rewrite_aliases(root: Path, files: Iterable[str], index: DocumentIndex, report: RewriteReport) -> None:
+    """Rewrite references that ``files`` (the documents the handoff carried and promoted) write with a handed-off
+    proposal ID or another document's alias to the current ID (``current_id``), so the handoff commit passes
+    ``RULE-document-reference``.
+
+    A proposal planned beside a sibling cites the sibling's ``PROP-`` ID; when the sibling was handed off first, the
+    carried copy would keep a stale alias. Only reference fields and prose references change, never the
+    ``proposal`` provenance field; a unit anchor's ``depends_on`` whose replacement is no valid anchor stays, as in
+    the rule's fixer. ``index`` is loaded after the handoff's writes. Each rewrite is reported with kind ``id``.
+    """
+    for file in files:
+        display = _display(root, file)
+        try:
+            text = _read(file)
+            document = parse_document(display, text)
+        except (OSError, UnicodeDecodeError, FrontmatterError):
+            report.unresolved.append(Unresolved(display, 0, ID, "", UNREADABLE))
+            continue
+        if document is None:
+            continue
+        mapping: dict[str, str] = {}
+        for ref in document.references:
+            new_id = current_id(index, document, ref.target)
+            if new_id is None or new_id == ref.target:
+                continue
+            if ref.field == "depends_on" and is_unit_anchor(document) and target_problem(index, new_id):
+                continue
+            mapping[ref.target] = new_id
+        if not mapping:
+            continue
+        updated = rewrite(text, document.references, mapping)
+        if updated == text:
+            continue
+        try:
+            _write(file, updated)
+        except OSError:
+            report.unresolved.append(Unresolved(display, 0, ID, "", UNWRITABLE))
+            continue
+        if display not in report.files:
+            report.files.append(display)
+        report.rewritten.extend(
+            Rewritten(display, ref.line, ID, ref.target, mapping[ref.target])
+            for ref in sorted(document.references, key=lambda ref: ref.start)
+            if ref.target in mapping
+        )
 
 
 def rewrite_paths(root: Path, files: Iterable[str], plan: RelocationPlan, report: RewriteReport) -> None:
