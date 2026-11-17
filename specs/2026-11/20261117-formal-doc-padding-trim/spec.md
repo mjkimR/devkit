@@ -4,12 +4,10 @@ title: Trim padding from formal document guidance and documents
 summary: Remove guidance and template elements that duplicate rules, frontmatter or other owners, narrow the Maintenance section to update triggers, and apply the same standard to the existing design, domain and operations documents.
 status: planned
 created: 2026-11-17
-related_capabilities: []
+related_capabilities: [CAP-DOCS-documentation-ownership, CAP-DLV-proposal-lifecycle, CAP-DIST-sync-and-transactions]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
-
 # [SPEC-formal-doc-padding-trim] Trim padding from formal document guidance and documents
 
 ## 1. Problem Statement & Motivation
@@ -56,33 +54,111 @@ the domain relationship table, the reference template, ADR drivers and confirmat
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Trim padding from formal document guidance and documents so that system capabilities are extended.
+- **US-1**: As an agent writing a design, domain or operations document, I want templates and writing instructions
+  that ask only for facts no other owner holds, so that a new document carries no stock disclaimer or repeated
+  owner list.
+- **US-2**: As a reader of an existing formal document, I want its closing to name only the limits the body does not
+  state and the source changes that make it stale, so that every closing line changes what I do next.
+- **US-3**: As an agent routing a fact to its owner, I want one fact-type table in `CAP-DOCS-documentation-ownership`
+  and `living-spec-writing`, so that I consult one table instead of two overlapping ones.
+- **US-4**: As an agent reading `CAP-DLV-proposal-lifecycle` before a handoff, I want the capability to state outcomes
+  and `DESIGN-proposal-handoff` to state order and passes, so that each fact has one owner.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: the ADR template and `decision-writing` (`decision-writing.md` line 19 stays); they belong to
+   the sibling proposal on ADR body metadata.
+2. **Scope Excluded**: `CAP-DLV-proposal-lifecycle` §4.1 step 4 (PADR promotion) and the
+   `DESIGN-proposal-handoff` worked-example row on ADR promotion; the sibling proposal rewrites both.
+3. **Scope Excluded**: other capability, use case, UX and architecture documents, except the one reference repair in
+   `CAP-DIST-sync-and-transactions`.
+4. **Scope Excluded**: any rule or check change; no rule checks closing sections (`ADR-formal-document-closings` §5).
+5. **Scope Excluded**: completed specs, reconcile records and materials that name the folded design; they keep the
+   old ID, which resolves through the successor's `aliases`.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Formal templates close with the narrowed sections
+- **Given** the docs bundle templates `design.md`, `domain.md` and `operations.md`
+- **When** `rg -n "Maintenance and next action|transfers no normative|owns no recovery|Optional: a nonexecuted" <the three templates>` runs
+- **Then** it exits `1`; each template ends with `## Update triggers`, the domain and operations templates mark
+  `## Authority boundary` as omitted when nothing remains, and `domain.md` requires the worked example in the
+  overview or its own section.
 
-## 5. Carried Proposal Notes
+### [AC-02] Per-kind writing instructions keep only kind-specific steps
+- **Given** `design-writing.md`, `domain-writing.md` and `operations-writing.md`
+- **When** `rg -n "Supply nonempty string|first H1|Omit proposal|Omit area|Omit entrypoints|Delete every template HTML comment|settle the one reader question" <the three instructions>` runs
+- **Then** it exits `1`; each instruction keeps one path line, its lead focus, its body sections, its closing per
+  `ADR-formal-document-closings` and its support location, and its first step points to `living-spec-writing`.
+- **And** `living-spec-writing` "Responsibility and design navigation" states the shared steps once (one reader
+  question, the lead with at most one question sentence, related_* lists without reciprocity, rename/split/retire,
+  and a same-kind fold that deletes the folded document and keeps its ID as an alias of the receiving one), and
+  `document-writing` states the delete-template-comments step.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] One fact-type routing table
+- **Given** `CAP-DOCS-documentation-ownership` §3.1 and `living-spec-writing`
+- **When** `uv run pytest packages/devkit-spec/tests/integration/bundles/spec/test_formal_doc_checkpoints_guidance.py` runs
+- **Then** it exits `0`, asserting that each holds exactly one `| Fact type | Owner |` table of 15 rows, that both
+  tables are equal, and that the first row reads "Behavior, validity, safety, limit, output order or tie-break a
+  consumer can observe"; `rg -c "^\| Responsibility / reader question" docs/capabilities/documents/CAP-DOCS-documentation-ownership.md` exits `1`.
 
-### Source feedback
+### [AC-04] Shared templates and instructions lose inactive elements
+- **Given** the docs bundle sources
+- **When** `rg -n "selected development approach defines|File path is|YAML_BINDING_UNAVAILABLE" packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions` runs
+- **Then** it reports only `decision-writing.md`; `templates/usecase.md` and `templates/ux.md` hold no body `---`
+  separator; `templates/capability.md` keeps the `## 1. Summary` and `## 4. Interfaces & Data Contracts` headings
+  without the Summary comment or the §4 scaffold; the docs and spec bundle guidance tests pass.
+
+### [AC-05] CAP-DOCS-documentation-ownership states the new section contract
+- **Given** `CAP-DOCS-documentation-ownership`
+- **When** a reviewer reads §3.2, §3.3 and §4
+- **Then** §3.3 rule 2 states the closings of `ADR-formal-document-closings` with that ADR cited; the §3.2 closing
+  paragraph and the §3.3 "This migration transfers..." sentence are gone; §4 names the templates and writing
+  instructions without restating the template layout; rule 8 cites the renumbered fact-type rule.
+
+### [AC-06] The existing documents follow the standard
+- **Given** the 12 remaining design, domain and operations documents
+- **When** `rg -n "^## Maintenance and next action|non-normative|transfers no normative|settles no rule|owns no recovery|nonexecuted example|^Next read" docs/designs docs/domain docs/operations` runs
+- **Then** it exits `1`; `rg -c "^## Update triggers$" docs/designs docs/domain docs/operations` counts one per
+  document (12); ``rg -n "`_[A-Za-z]" docs/designs`` exits `1`; `DOMAIN-bundle-selection-and-installation` and
+  `DOMAIN-delivery-relationships` carry `related_capabilities`, the former also `related_designs`; and
+  `uv run devkit rules check docs/designs docs/domain docs/operations` reports no violation.
+
+### [AC-07] DESIGN-distribution-transactions is folded into its detail
+- **Given** the folded design
+- **When** `uv run devkit docs resolve DESIGN-distribution-transactions` runs
+- **Then** it exits `0` naming `DESIGN-distribution-file-directory-replacement`, whose `aliases` lists the old ID;
+  the old bundle directory is absent; `CAP-DIST-sync-and-transactions` cites the successor;
+  `specs/2026-11/20261116-design-bundle-layout/feedback/viewer-adopts-bundle-grammar.md` names the successor once; and
+  the viewer `FormalReading.test.ts` reads the capability, the detail, two domains and the operations document as
+  five chapters and follows capability → detail → capability.
+
+### [AC-08] The handoff mechanism moves from the capability to the design
+- **Given** `CAP-DLV-proposal-lifecycle` §4.1 step 5 and §4.3
+- **When** `rg -n "preflight pass|followed back|before ordinary relocation|extract_links|relocate_links" docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md` runs
+- **Then** it exits `1`; the capability keeps the outcome sentences Q8 lists (refused before its first write, a
+  created directory removed when empty, each changed file replaced atomically, the merge bullets, the
+  dropped-record citation condition and `unmapped`); `DESIGN-proposal-handoff` states the preflight pass, the
+  rollback walk, the pass order and the link library and cites `CAP-DLV-proposal-lifecycle` §4.2 for the body
+  classification instead of restating it; `FB-proposal-lifecycle-capability-holds-mechanism-detail` is `resolved`
+  with a Disposition naming this spec.
+
+### [AC-09] Verification passes
+- **Given** the final Development head
+- **When** `just lint-check`, `uv run devkit generated check`, `uv run devkit rules check --ci --base main`,
+  `just test-affected --base main` and the viewer frontend check run
+- **Then** each exits `0`, and `uv run devkit sync --check` exits `0` after the committed sync output.
+
+## 5. Source feedback
 
 - `FB-proposal-lifecycle-capability-holds-mechanism-detail` (direct fix, user-authorized scope extension): review
   `CAP-DLV-proposal-lifecycle` §4.1 step 5 and §4.3 against `CAP-DOCS-documentation-ownership` §3.1, move pure
   mechanism explanation into `DESIGN-proposal-handoff` and keep every observable guarantee in the capability (Q8).
   The source resolves at this unit's completion when the move lands and verification passes.
 
-### 2. Technical Spike Questions
+## 6. Planning decisions
 
-Each answer is a Planning decision; `ADR-formal-document-closings` records Q1, Q2 and the shared-step part of Q4.
+Each answer is a Planning decision and binds Development; `ADR-formal-document-closings` records Q1, Q2 and the shared-step part of Q4.
 
 - **Q1**: What does the narrowed section say? Rename `## Maintenance and next action` to `## Maintenance` (or
   `## Update triggers`) holding only the source change that makes the document stale, naming public entry points or
@@ -199,7 +275,7 @@ Each answer is a Planning decision; `ADR-formal-document-closings` records Q1, Q
     - The feedback's expected gain is smaller than it assumed: most of §4.1 step 5 and §4.3 is observable contract
       that an ADR confirms, so the capability shortens by a few clauses, not by the merge bullets.
 
-### 3. Proposed Design & Impact
+### Proposed Design & Impact
 
 - Docs bundle: templates (design, domain, operations, capability, usecase, ux, milestone) and instructions (design,
   domain, operations, living-spec, document, capability, usecase, ux writing) lose the duplicated and inactive
@@ -216,7 +292,7 @@ Each answer is a Planning decision; `ADR-formal-document-closings` records Q1, Q
   `CAP-DLV-proposal-lifecycle` (its PADR body-metadata rewrite belongs to that sibling), other capability and use case
   documents (one reference repair in `CAP-DIST-sync-and-transactions` aside), and any rule change.
 
-### 4. Lifecycle & Retirement Criteria
+### Lifecycle & Retirement Criteria
 
 - Planning settles Q1–Q7 and the spec boundaries; acceptance hands off to Development and integrates locally under
   `dev-integration=auto`.
@@ -225,7 +301,7 @@ Each answer is a Planning decision; `ADR-formal-document-closings` records Q1, Q
   devkit-spec proposals feature.
 - Retire when the guidance and the document cleanup land.
 
-### 5. Planning decisions
+### Planning decisions on edits
 
 - **Bundle edits** (B = `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`):
   - `templates/{design,domain,operations}.md`: per-kind lead comment without the question rule; `## Update
