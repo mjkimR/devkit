@@ -8,7 +8,7 @@ target: CAP-DLV-proposal-lifecycle
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -52,3 +52,5 @@ be a real directory by `lstat`; ..." and five further merge bullets.
 CAP-DLV-proposal-lifecycle §4.3: "Code-span paths (`kind=path`) ... Directory-only spans, including `materials/` and
 paths resolving to relocated directories without a trailing slash, remain unchanged ..."
 ```
+
+- **Disposition**: `SPEC-formal-doc-padding-trim`: `CAP-DLV-proposal-lifecycle` §4.1 step 5, the rollback paragraph and §4.3 now state outcomes only; the preflight pass, the rollback walk, the pass order and the link library moved to `DESIGN-proposal-handoff`, which cites §4.2 for the body classification. The merge bullets stay as observable guarantees that `ADR-proposal-handoff` confirms. Verified by the code review against `handoff.py`, `specs.py` and `relocation.py` and by `rg` showing no moved phrase left in the capability and no test reading it.
