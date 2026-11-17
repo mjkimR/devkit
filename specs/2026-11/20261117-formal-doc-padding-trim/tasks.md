@@ -27,7 +27,7 @@ plan: PLAN-formal-doc-padding-trim
   - **_Boundary**: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md, docs/designs/delivery/DESIGN-proposal-handoff/design.md, specs/2026-11/20261116-formal-docs-feedback-handoff/feedback/proposal-lifecycle-capability-holds-mechanism-detail.md
   - _Requirements: AC-08_
   - **Verification**: the `rg` command of AC-08 exits `1`
-- [ ] **Task 2.3**: Run the full verification set
+- [x] **Task 2.3**: Run the full verification set
   - **_Boundary**: .devkit/installation.json (sync output)
   - _Requirements: AC-09_
   - **Verification**: `just lint-check`; `uv run devkit generated check`; `uv run devkit rules check --ci --base main`; `just test-affected --base main`
