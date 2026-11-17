@@ -192,9 +192,9 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   the Markdown files of the new spec bundle (moved feedback included) and the promoted ADRs, every reference
   `RULE-document-reference` fixes as an alias: a `PROP-<slug>` no document declares, to the one document
   `SPEC-<slug>` resolves to (a sibling proposal handed off after this proposal's Planning merged), and another
-  document's resolving alias, to that document's ID. Reference fields and prose references change; the `proposal`
-  provenance field, a declared ID, an ambiguous or unknown name, a document's own alias and a unit anchor's
-  `depends_on` whose replacement is no valid anchor do not. Files outside the carried set, the preserved materials
+  document's resolving alias, to that document's ID. Reference fields and prose references change; the provenance
+  fields (`proposal`, `decomposed_from`, `supersedes`), a declared ID, an ambiguous or unknown name, a document's own
+  alias and a unit anchor's `depends_on` whose replacement is no valid anchor do not. Files outside the carried set, the preserved materials
   included, are left to `devkit rules fix` (`FB-handoff-leaves-stale-sibling-proposal-aliases`).
 - **Code-span paths** (`kind=path`) in the bodies of the documents the handoff wrote or moved out of a bundle
   proposal (the carried `spec.md` and blueprint, the promoted ADRs, moved feedback and other carried files): an inline

@@ -2,7 +2,7 @@
 id: SPEC-handoff-sibling-alias-rewrite
 title: Handoff rewrites alias references to already handed-off proposals
 summary: The proposal handoff commit is refused when the carried files cite a sibling proposal that was handed off after this proposal's Planning merged; rewrite such alias references to their current IDs inside the handoff transaction.
-status: in-progress
+status: completed
 created: 2026-11-17
 related_capabilities:
   - CAP-DLV-proposal-lifecycle

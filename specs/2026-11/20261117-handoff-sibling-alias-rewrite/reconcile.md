@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-handoff-sibling-alias-rewrite
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
     resolution: modified
@@ -50,3 +50,11 @@ The change stays in `devkit_spec.features.proposals` and its own capability and 
 `devkit spec entrypoints derive` proposed `rewrite.py` and the alias tests for `CAP-DLV-proposal-lifecycle` and the
 tests for `DESIGN-proposal-handoff`. All were rejected: the capability already declares its doorway `handoff.py`,
 `rewrite.py` is a helper, tests are no doorways, and the design already declares both changed source files.
+
+## Reconcile review
+
+The independent `reconcile-reviewer` passed the reconcile with two P3 findings. The §4.3 exclusion now names every
+provenance field (`proposal`, `decomposed_from`, `supersedes`), matching `Document.references`. The second finding,
+the `ProposalReferencesRewrittenNotice` docstring in `packages/devkit-spec/src/devkit_spec/base/errors.py` naming only
+proposal and PADR rewrites, is waived: the file lies outside this Unit's declared boundary, the docstring is not a
+contract, and the notice's code, message and §4.8 row are the authoritative description.
