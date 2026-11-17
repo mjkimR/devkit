@@ -1,0 +1,23 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T15:13:36.471562Z'
+status: completed
+summary: 'Closing check of reconcile-check-01 by the implementer: re-verified the whole reflection at the resolved record. The P2 is fixed by UC-keep-the-living-spec-consistent extension 5d and Scenario 11 (prescribed text-only fix, matching CAP-GOV-spec-rules 3.10 and the rule messages), listed as a modified target and in spec related_usecases. reconcile.md is resolved with formal_docs covering all three roles and passes the snapshot coverage check.'
+findings:
+- issue: 'Missing use-case reflection: the new commit-gate refusal (a newly resolved reconcile.md with a role covered by neither related_* IDs nor a formal_docs reason) has no extension or scenario in UC-keep-the-living-spec-consistent, which models RULE-reconcile-contract refusals as 5b and Scenario 5, and the use case is not a reconcile target.'
+  evidence: docs/usecases/governance/UC-keep-the-living-spec-consistent.md:66
+  failure_condition: A commit stages a newly resolved reconcile.md with an uncovered role; the gate refuses it, but the use case documents only the modified-target refusal.
+  suggested_action: Add an extension and Given/When/Then scenario for the uncovered role, and list the use case as a modified reconcile target and in spec related_usecases.
+  resolution: resolved
+  severity: P2
+assumptions:
+- 'Self-verified closing check at medium: the fix is confined to the named use case and the reconcile record, text-only, no contract change.'
+checks:
+  rules_ci: PASS devkit rules check --ci --base a7d96154e errors=0 (own record newly resolved, all roles covered)
+  rules_docs: PASS devkit rules check docs specs/2026-11/20261116-formal-doc-authoring-checkpoints
+diff_scope:
+  base: a7d96154eff78483f98911902b1117cd6aaaf2c3
+  head: 9991e906c12b3a098db07bf6f3bfbf841599a690
+activity_effort: medium

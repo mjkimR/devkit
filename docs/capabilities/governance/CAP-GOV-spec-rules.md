@@ -58,7 +58,7 @@ commit.
 | `RULE-task-coverage` | Acceptance-criterion IDs of a spec and the task references of its `tasks.md` cover each other. | none |
 | `RULE-spec-lifecycle` | A spec's `status`, its task checklist and its `reconcile.md` status agree. | Sets `status: completed` on a stale `spec.md`. |
 | `RULE-spec-progress` | A `draft` or `planned` spec with a checked task is marked `in-progress`. | Sets `status: in-progress`. |
-| `RULE-reconcile-contract` | A `reconcile.md` is well formed; in a snapshot run its `modified` targets changed in the diff. | none |
+| `RULE-reconcile-contract` | A `reconcile.md` is well formed; in a snapshot run its `modified` targets changed in the diff and a newly resolved record covers the design, domain and operations roles. | none |
 | `RULE-code-entrypoints` | Every `entrypoints` path of a capability, use case or canonical DESIGN document is a valid, existing workspace path. | none |
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
@@ -293,6 +293,15 @@ so this hint is a rule of its own (`SPEC-open-feedback-and-progress`).
 - **Diff evidence**: in a snapshot run (`--staged`, `--ci`), a `resolved` record the diff changes MUST have every
   `modified` target changed or deleted by that diff. `--ci` judges the whole branch against its merge base. A record
   whose frontmatter is unchanged from the base is not rechecked. A plain `devkit rules check` checks the form only.
+- **Formal-document coverage** (`ADR-recorded-formal-docs-assessment`): each of the design, domain and operations
+  roles is covered by a nonempty `related_designs`, `related_domains` or `related_operations` list, or by
+  `formal_docs.<role>: "none: <reason>"`, never both. In every run a present `formal_docs` MUST be reported when it
+  is not a mapping, has a key other than the three roles, has a value not starting `none: `, has a reason of fewer
+  than 20 non-whitespace characters, or gives a reason for a role that also lists IDs. In a snapshot run, a
+  `resolved` record that the diff changes and that no parent of the commit has `resolved` MUST cover every role; the
+  parents are the snapshot base and, under `--staged`, each commit named by `MERGE_HEAD`, `CHERRY_PICK_HEAD` or
+  `REVERT_HEAD`. A `pending` record, a record resolved at the base and every record in a plain run need no coverage,
+  so existing records stay valid.
 - Every targeted record of a current bundle; a completed bundle's record only when explicitly targeted. Not fixable.
 
 ### 3.11 `RULE-code-entrypoints`

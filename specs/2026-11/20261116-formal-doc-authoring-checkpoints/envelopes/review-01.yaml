@@ -1,0 +1,29 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T15:08:34.596222Z'
+status: completed
+summary: 'code-reviewer round 1 (medium): AC-01..AC-05, AC-07, AC-08 confirmed against the diff and tests; newly-resolved condition correct in staged and ci modes (probes for completed-same-commit, CHERRY_PICK_HEAD, related_designs reference check); fact-type rows agree; bundle text self-contained; scope extensions admitted. AC-06 own-record clause left to living-spec-draft.'
+findings:
+- issue: The module docstring says concluding a merge never requires coverage of a record the base branch resolved, while the implementation exempts any record an in-progress MERGE_HEAD/CHERRY_PICK_HEAD/REVERT_HEAD commit resolved (the guide says the other branch).
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/usecases/reconcile_contract.py:26
+  failure_condition: A reader concludes merging a task branch into main still requires coverage of a record the task branch resolved; it does not.
+  suggested_action: Reword to the merged, picked or reverted commit, matching guide.md.
+  resolution: open
+  severity: P3
+- issue: AC-04 names CHERRY_PICK_HEAD and REVERT_HEAD as staged-run parents but the rule tests cover only MERGE_HEAD, and no test shows operation heads are ignored in a ci run.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/reconcile_contract/tests/test_rule.py:297
+  failure_condition: A regression dropping CHERRY_PICK_HEAD or REVERT_HEAD from OPERATION_HEADS would pass the suite.
+  suggested_action: Add a staged conflicted cherry-pick test modeled on the merge-head test.
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native isolated code-reviewer subagent (claude-code status native).'
+checks:
+  tests: PASS just test-affected --base a7d96154e mode=full 7055 passed 4 skipped; spec e2e 96 passed; reviewer rerun 47 passed
+  lint: PASS just lint-check; devkit rules check --ci --base a7d96154e 0 violations; pyright 0 errors
+diff_scope:
+  base: a7d96154eff78483f98911902b1117cd6aaaf2c3
+  head: 01c7b242863aba6eecac26c8a0a2f1074994d903
+activity_effort: medium

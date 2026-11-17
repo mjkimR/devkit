@@ -116,6 +116,9 @@ sequence.
    Reflection MUST include affected formal DOMAIN, DESIGN and OPS statements and source/detail/artifact maintenance
    in existing plan/reconcile bodies, with changed/deleted canonical and support paths as targets. Each responsibility
    has affected IDs, source identity, sole statement owner, action and evidence, or a bounded unaffected reason.
+   The `reconcile.md` frontmatter indexes that body assessment: affected IDs per role in `related_designs`,
+   `related_domains` or `related_operations`, or `formal_docs.<role>: "none: <reason>"`, which
+   `RULE-reconcile-contract` requires when a commit newly resolves the record (`ADR-recorded-formal-docs-assessment`).
    Core identity and role policy remain with `CAP-DOCS-document-model` and `CAP-DOCS-documentation-ownership`.
    Per-feature `spec-sync` reflects the core contract delta. The separately invoked maintenance playbook in
    `CAP-DLV-drift-reconciliation` reviews accumulated drift in a bounded batch; it adds no delivery stage or
@@ -152,6 +155,10 @@ sequence.
     Review MUST compare the formal responsibility assessment with the actual implementation diff and retained
     source identity, including composed artifact moves/transfers, ordinary links and obsolete source anchors.
     Source changes invalidate affected comparison evidence; required mismatches cannot be documented away.
+    For what `diff_scope` adds or changes, never for older gaps, `reconcile-reviewer` reports recorded role coverage
+    the diff contradicts (P1), a new persisted format, identity derivation or ordering without a statement in its
+    owner (P2), a new code without a documented trigger condition (P2) and new capability text that restates
+    mechanism (P3) (`ADR-recorded-formal-docs-assessment`).
     Only medium permits omitting the initial reconcile reviewer when all affected contracts and documents are
     identified, agreement with the actual diff is directly demonstrated, and no unresolved contract interpretation or
     cross-component impact remains (behavior or agent-facing text changed in more than one package, in more than one

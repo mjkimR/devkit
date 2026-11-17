@@ -66,6 +66,11 @@ created_at: 2026-10-13
 - **5b.** The commit marks a `reconcile.md` `resolved` with a `modified` target the commit does not change:
   `RULE-reconcile-contract` reports the target, and the gate refuses the commit; the agent stages the Living Spec edit
   with the record; resumes at step 5.
+- **5d.** The commit newly resolves a `reconcile.md` (no parent of the commit has it `resolved`) while its design,
+  domain or operations role has neither IDs in `related_designs`, `related_domains` or `related_operations` nor a
+  `formal_docs.<role>: "none: <reason>"`: `RULE-reconcile-contract` reports each uncovered role, and the gate refuses
+  the commit; the agent lists the affected IDs or gives the bounded reason; resumes at step 5
+  (`CAP-GOV-spec-rules` §3.10).
 
 ---
 
@@ -140,3 +145,13 @@ created_at: 2026-10-13
 - **When** the commit snapshot is checked,
 - **Then** the stale declaration is rejected until removed or replaced in that change; history remains resolvable
   (`CAP-TRACE-code-entrypoints`).
+
+### Scenario 11: Requires the formal assessment of a newly resolved reconcile record
+
+- **Covers**: 5d
+- **Given**: a commit marks a spec's `reconcile.md` `resolved` for the first time, with `formal_docs` giving reasons
+  for `design` and `domain` only
+- **When**: the commit gate runs `devkit rules check --staged`
+- **Then**: `RULE-reconcile-contract` reports `formal_docs role operations is not covered`, and adding
+  `related_operations` IDs or `formal_docs.operations: "none: <reason>"` clears it; a record already `resolved` at the
+  base is not required to add the field

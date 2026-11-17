@@ -1,10 +1,12 @@
 ---
 id: CAP-DOCS-documentation-ownership
 title: Documentation ownership and linked entries
-summary: "Assigns one normative owner per responsibility and question-specific navigation among formal design, domain and operations documents, independent detail and parent-owned support."
+summary: "Assigns one normative owner per responsibility and per fact type, keeps capabilities to observable contracts, and sets question-specific navigation among formal design, domain and operations documents, independent detail and parent-owned support."
 area: documents
 status: active
 usecases: []
+entrypoints:
+  - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md
 ---
 
 # [CAP-DOCS-documentation-ownership] Documentation ownership and linked entries
@@ -50,6 +52,26 @@ composition are distinct roles alongside architecture and behavioral contracts. 
 
 6. **Operational authority**: Operations compositions MUST route actions to their existing owners rather than
    introduce duplicate recovery procedures or permissions.
+7. **Fact-type routing**: Authors SHOULD route each fact by its type in the table below; a fact with two parts
+   splits between the owners named. An order or tie-break a consumer can observe is a capability rule; an internal
+   order is design. The docs bundle's `living-spec-writing` instruction carries the same rows for agents.
+
+| Fact type | Owner |
+| --- | --- |
+| Behavior, limit, output order or tie-break a consumer can observe | Capability |
+| That a code is raised, and when, as a guarantee | Capability rule; trigger condition, level and fix in a reference code table |
+| Command, flag, configuration key or payload field syntax | Reference; the capability lists the interface |
+| Data that a later run, another process or another tool reads back: location pattern, encoding, fields, example | Design datasheet; a format consumers author or parse is also a capability interface |
+| How an ID, key, hash, token or name is derived | Design; what the identity means belongs to the domain model |
+| Internal processing order, algorithm or pseudocode | Design, or the source alone |
+| Concept meaning, identity and lifecycle | Domain model; glossary for terms |
+| Rationale and rejected options | ADR |
+| Measurement or experiment | Materials |
+
+8. **Observable contract**: A capability SHOULD state what a consumer can observe or rely on, and SHOULD leave out
+   implementation pseudocode, internal algorithm steps, formats only the implementation reads back and paragraphs
+   another document owns, routing them by rule 7. The docs bundle's `capability-writing` instruction ("What Stays
+   Out") and capability template carry this guidance; no check enforces it.
 
 Domain meaning supplies a conceptual basis; it is not a prerequisite document layer. Design may include diagrams,
 examples and numerical datasheets as the question needs. Document length and numerical content do not route ownership.
@@ -89,6 +111,9 @@ already belong to arc42. These are responsibility boundaries, not a chapter tuto
    predecessor remains retired with its replacement named.
 5. **Navigation**: Authors SHOULD use selected full-ID links or typed related_* lists for the reader's question;
    no reciprocal registry, all-pairs links, whole-layer prerequisite or fixed hop count is required.
+6. **Datasheets**: WHEN a mechanism writes data that a later run, another process or another tool reads back, its
+   design SHOULD carry a datasheet stating the location pattern, encoding, fields or layout, identity derivation,
+   ordering and one example. No section is required, because no check can tell a datasheet from prose.
 
 Domain owns conceptual knowledge alongside structure and contracts. Design owns implementation explanation,
 examples and datasheets. Operations selects existing diagnosis/action owners from evidence and normal-state

@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T15:16:22.758269Z'
+status: completed
+summary: 'SPEC-formal-doc-authoring-checkpoints delivered: fact-type routing, capability exclusions, datasheet condition and reference template in the docs bundle; RULE-reconcile-contract formal_docs form and newly-resolved coverage; spec-sync schema, reconcile-reviewer classes and plan/review routing; Living Spec in four capabilities, the use case and the ADR traces. AC-01..AC-08 verified; review-01 P3s fixed (reverify-01); reconcile-check-01 P2 fixed (reconcile-check-02).'
+findings: []
+assumptions:
+- Outcome baseline is the Planning measurement (10 of 260 reconcile records mention a formal document, none indexes an assessment); the head measurement is the rule refusing a newly resolved record with an uncovered role (rule tests) and this spec's own record covering all three roles.
+checks:
+  tests: PASS just test-affected --base a7d96154e mode=full 7056 passed 4 skipped; spec e2e 96 passed
+  build: PASS devkit sync --check matches; pyright governance and rule folder 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base a7d96154e 0 violations; devkit rules check specs/ 0 violations
+diff_scope:
+  base: a7d96154eff78483f98911902b1117cd6aaaf2c3
+  head: 4806578974d715ea0211d43cbb806e5d657d3d89

@@ -7,6 +7,11 @@ workspace-relative path in canonical form (``docs/a.md``, not ``./docs/a.md`` or
 list, ``resolution`` is ``modified`` (the Living Spec file changed with this work) or ``waived`` (no change needed),
 and a waiver's ``rationale`` holds at least 20 non-whitespace characters, so it says why. Whether a completed spec has a resolved record is ``RULE-spec-lifecycle``'s.
 
+The design, domain and operations assessment is indexed in the same frontmatter: a role is covered by a nonempty
+``related_designs``, ``related_domains`` or ``related_operations`` list, or by ``formal_docs.<role>: "none: <reason>"``
+with at least 20 non-whitespace characters of reason, never both. A present ``formal_docs`` is checked for that form
+in every run.
+
 Checked on every targeted ``reconcile.md`` of a current bundle (a completed bundle's record is history, checked only
 when named as an explicit target). In a snapshot run (``check --staged`` at commit time, ``check --ci`` on a pull
 request) a resolved record the diff changes must also have its evidence: every ``modified`` target is changed or
@@ -15,6 +20,11 @@ read together with the branch's earlier commits since its merge base with the br
 ``devkitBase`` a ``--no-worktree`` start recorded, else the base checkout's branch, else ``origin/HEAD``), so a
 target an earlier commit of the branch changed (an ADR the handoff promoted) counts too. When no such base can be
 found, the staged diff alone is the evidence.
+
+A snapshot run also requires every role to be covered on a resolved record the diff changes that no parent of the
+commit has ``resolved``: the snapshot base, and in a staged run each commit named by ``MERGE_HEAD``,
+``CHERRY_PICK_HEAD`` or ``REVERT_HEAD``, so concluding a merge, cherry-pick or revert never requires coverage of a
+record the merged, picked or reverted commit already resolved.
 """
 
 from __future__ import annotations
@@ -42,10 +52,49 @@ RULE_ID = "RULE-reconcile-contract"
 STATUSES = ("pending", "resolved")
 RESOLUTIONS = ("modified", "waived")
 MIN_RATIONALE = 20
+ROLES = {"design": "related_designs", "domain": "related_domains", "operations": "related_operations"}
+NONE_PREFIX = "none: "
+OPERATION_HEADS = ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD")
 REMEDIATION = (
     "Give reconcile.md reconcile_id, status pending|resolved and targets: [{file, resolution: modified|waived,"
-    f" rationale}}] with a rationale of at least {MIN_RATIONALE} non-whitespace characters for each waiver"
+    f" rationale}}] with a rationale of at least {MIN_RATIONALE} non-whitespace characters for each waiver; cover"
+    " each of the design, domain and operations roles by affected IDs in related_designs, related_domains or"
+    ' related_operations, or by formal_docs.<role>: "none: <reason>"'
 )
+
+
+def _length(text: str) -> int:
+    return sum(not char.isspace() for char in text)
+
+
+def _listed(data: dict[str, object], role: str) -> bool:
+    """Whether the role's ``related_*`` list names at least one ID."""
+    value = data.get(ROLES[role])
+    return isinstance(value, list) and any(isinstance(item, str) and item.strip() for item in value)
+
+
+def _formal_docs_problems(data: dict[str, object]) -> list[str]:
+    """Form of a present ``formal_docs``: a mapping of roles to ``none: <reason>``, never beside the role's IDs."""
+    if "formal_docs" not in data:
+        return []
+    value = data.get("formal_docs")
+    if not isinstance(value, dict):
+        return ["formal_docs must be a mapping of design, domain and operations to a none reason"]
+    problems: list[str] = []
+    for key, reason in value.items():
+        if key not in ROLES:
+            problems.append(f"formal_docs.{key} is not a role: use design, domain or operations")
+        elif not isinstance(reason, str) or not reason.startswith(NONE_PREFIX):
+            problems.append(f'formal_docs.{key} must be a string starting "{NONE_PREFIX}" followed by the reason')
+        elif (length := _length(reason[len(NONE_PREFIX) :])) < MIN_RATIONALE:
+            problems.append(
+                f"formal_docs.{key} needs a reason of at least {MIN_RATIONALE} non-whitespace characters, has {length}"
+            )
+        elif _listed(data, key):
+            problems.append(
+                f"formal_docs.{key} conflicts with {ROLES[key]}: give affected IDs or a none reason, not both"
+            )
+    return problems
 
 
 def _problems(data: dict[str, object]) -> list[str]:
@@ -79,12 +128,13 @@ def _problems(data: dict[str, object]) -> list[str]:
             problems.append(f"targets[{position}].resolution must be modified or waived, got {resolution!r}")
         elif resolution == "waived":
             rationale = target.get("rationale")
-            length = sum(not char.isspace() for char in rationale) if isinstance(rationale, str) else 0
+            length = _length(rationale) if isinstance(rationale, str) else 0
             if length < MIN_RATIONALE:
                 problems.append(
                     f"targets[{position}] waiver of {file} needs a rationale of at least {MIN_RATIONALE}"
                     f" non-whitespace characters, has {length}"
                 )
+    problems.extend(_formal_docs_problems(data))
     return problems
 
 
@@ -114,6 +164,49 @@ def _evidence(ctx: RuleContext, relative: str, data: dict[str, object]) -> list[
         missing = [file for file in missing if file not in earlier]
     where = "the staged diff or the branch's earlier commits" if snapshot.mode == "staged" else "the ci diff"
     return [f"target {file} is resolved as modified but absent from {where}" for file in missing]
+
+
+def _coverage(ctx: RuleContext, relative: str, data: dict[str, object]) -> list[str]:
+    """In a snapshot run, the uncovered roles of a resolved record the diff changes and no parent has resolved."""
+    snapshot = ctx.snapshot
+    if snapshot is None or relative not in snapshot.changed or data.get("status") != "resolved":
+        return []
+    parents = [snapshot.base, *(_operation_heads(snapshot.root) if snapshot.mode == "staged" else [])]
+    if any(_resolved_at(snapshot.root, parent, relative) for parent in parents):
+        return []
+    reasons = data.get("formal_docs")
+    reasons = reasons if isinstance(reasons, dict) else {}
+    return [
+        f"formal_docs role {role} is not covered: list affected IDs in {field} or give"
+        f' formal_docs.{role}: "{NONE_PREFIX}<reason>"'
+        for role, field in ROLES.items()
+        if not _listed(data, role) and role not in reasons
+    ]
+
+
+def _resolved_at(root: Path, revision: str, relative: str) -> bool:
+    """Whether ``relative`` is a ``resolved`` record at ``revision``; ``False`` when it is absent or unreadable."""
+    try:
+        text = run_git(root, "show", f"{revision}:{relative}").decode("utf-8", errors="replace")
+        data = parse(text).data
+    except (GitError, FrontmatterError):
+        return False
+    return isinstance(data, dict) and data.get("status") == "resolved"
+
+
+def _operation_heads(root: Path) -> list[str]:
+    """The commits an in-progress merge, cherry-pick or revert names (``MERGE_HEAD`` lists one per merged head)."""
+    git_dir = _git(root, "rev-parse", "--absolute-git-dir")
+    if not git_dir:
+        return []
+    heads: list[str] = []
+    for name in OPERATION_HEADS:
+        try:
+            content = (Path(git_dir) / name).read_text(encoding="utf-8")
+        except OSError:
+            continue
+        heads.extend(line.strip() for line in content.splitlines() if line.strip())
+    return heads
 
 
 def _git(root: Path, *args: str) -> str | None:
@@ -164,7 +257,10 @@ class ReconcileContractRule(BaseRule):
         super().__init__(
             id=RULE_ID,
             name="reconcile-contract",
-            description="A reconcile.md record has an id, a pending or resolved status and well-formed targets.",
+            description=(
+                "A reconcile.md record has an id, a pending or resolved status, well-formed targets and, once newly"
+                " resolved, a design, domain and operations assessment."
+            ),
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
@@ -196,6 +292,7 @@ class ReconcileContractRule(BaseRule):
             found.extend(self._violation(relative, problem) for problem in problems)
             if not problems:
                 found.extend(self._violation(relative, problem) for problem in _evidence(ctx, relative, data))
+                found.extend(self._violation(relative, problem) for problem in _coverage(ctx, relative, data))
         return found
 
     def _completed(self, ctx: RuleContext, bundle: str) -> bool:

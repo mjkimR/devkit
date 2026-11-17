@@ -55,6 +55,7 @@ def test_inventory_and_guidance_have_independent_ownership() -> None:
         "design",
         "domain",
         "operations",
+        "reference",
     }
     assert next(iter(entry_points(group="devkit.bundles", name="docs"))).value == "devkit_docs.bundles.docs"
     for parent in ["instructions", "templates", "seed"]:
@@ -85,6 +86,8 @@ def test_selection_round_trip_and_project_owned_seed_bytes(tmp_path: Path) -> No
     design = tmp_path / ".devkit/managed/docs/templates/design.md"
     assert design.read_bytes() == (BUNDLE / "templates/design.md").read_bytes()
     assert design.read_text().startswith("---\n")
+    reference = (tmp_path / ".devkit/managed/docs/templates/reference.md").read_text()
+    assert not reference.startswith("---") and "| Code | Level | Condition | Fix |" in reference
     invoke(tmp_path, "add", "docs:docs-skeleton")
     seed = tmp_path / "docs/README.md"
     seed.write_text(seed.read_text() + "\nProject-owned bytes.\n")

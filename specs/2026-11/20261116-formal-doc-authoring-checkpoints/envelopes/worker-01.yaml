@@ -1,0 +1,34 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T15:16:44.382129Z'
+status: completed
+summary: 'Development turn complete through final-change-report: specify, four tasks, code review (2 P3 fixed, reverify-01), reconcile review (1 P2 fixed: UC-keep-the-living-spec-consistent 5d and Scenario 11), feedback sweep and final report. Sync output: .devkit/installation.json, listed under Tasks 1.1-1.3. Deferred code-condition rule handed to Backlog as FB-code-condition-rule-deferred. Outcome: base measurement is Planning''s 10 of 260 records naming a formal document with no indexed assessment; head refuses a newly resolved record with an uncovered role, and this spec''s record covers all roles. Handoff ID rewrites reread: the ADR proposal field and spec id/H1 need no rewording.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base a7d96154e mode=full 7056 passed 4 skipped; spec e2e 96 passed
+  lint: PASS just lint-check; devkit rules check --ci --base a7d96154e 0 violations; devkit rules check specs/ 0 violations over 261 records
+  build: PASS devkit sync --check; pyright 0 errors
+diff_scope:
+  base: ''
+  head: a280d7e4767990004bb60b5f5bca1412c67bed0c
+scope_extensions:
+- path: packages/devkit-docs/README.md
+  task: 1
+  reason: the package README restates the docs bundle template count that templates/reference.md changes
+  requirements:
+  - AC-01
+  - AC-02
+- path: docs/decisions/2026-11/20261116-recorded-formal-docs-assessment.md
+  task: 4
+  reason: replace the ADR's planned-update traces with the CAP-GOV-spec-rules and CAP-DLV-delivery-workflows rules that now restate ADR-recorded-formal-docs-assessment
+  requirements:
+  - AC-08
+- path: docs/capabilities/harness/CAP-HARN-agent-guidance.md
+  task: 4
+  reason: its template list restates the CAP-DOCS-document-model template inventory that the reference template changes
+  requirements:
+  - AC-08
+activity_effort: medium
