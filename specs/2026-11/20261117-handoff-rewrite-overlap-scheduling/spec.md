@@ -2,7 +2,7 @@
 id: SPEC-handoff-rewrite-overlap-scheduling
 title: Handoff rewrites as integration evidence in scope scheduling
 summary: Tells the Host in the spec-orchestrate skill to discount overlap that only the units' completed handoff commits wrote, so handoff reference rewrites alone no longer serialize otherwise separate Development workers.
-status: in-progress
+status: completed
 created: 2026-11-17
 related_capabilities: [CAP-HARN-agent-guidance]
 related_usecases: []
