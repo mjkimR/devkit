@@ -51,10 +51,10 @@ synchronization code and one layout across the corpus.
 - An ADR or PADR states its status, date and whole supersession only in the frontmatter; its body has no Status, Date,
   Deciders or Involved Components line.
 - The PADR scaffold writes no body metadata lines; the H1 is followed by `## 1. Context & Problem Statement`.
-  → CAP-DLV-proposal-planning §4.4 (MUST, planned wording)
+  → `CAP-DLV-proposal-planning` §4.4 (MUST)
 - PADR promotion sets the frontmatter status to `accepted` and rewrites no body status; it deletes the block an earlier
   scaffold wrote, so a PADR scaffolded before the change reaches the ledger without a stale `Draft`.
-  → CAP-DLV-proposal-lifecycle handoff step 4 (MUST, planned wording)
+  → `CAP-DLV-proposal-lifecycle` §4.1 step 4 (MUST)
 - Removing the block leaves every "Superseded in part by" line where it is.
 - The existing blocks are removed in one wording and metadata repair that changes no decision, which the
   `docs/decisions/` ledger allows without a superseding ADR. A backticked ID that only the Involved Components line

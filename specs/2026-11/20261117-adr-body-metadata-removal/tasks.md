@@ -23,7 +23,7 @@ plan: PLAN-adr-body-metadata-removal
   - **_Boundary**: docs/decisions/
   - _Requirements: AC-05_
   - **Verification**: the `rg` command of AC-05; `uv run devkit rules check docs/decisions`
-- [ ] **Task 2.2**: Restate the PADR body and promotion in the capabilities and the design's observed-run row
+- [x] **Task 2.2**: Restate the PADR body and promotion in the capabilities and the design's observed-run row
   - **_Boundary**: docs/capabilities/delivery/CAP-DLV-proposal-planning.md, docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md, docs/designs/delivery/DESIGN-proposal-handoff/design.md
   - _Requirements: AC-06_
   - **Verification**: the `rg` command of AC-06; `uv run devkit rules check docs/capabilities/delivery docs/designs/delivery`

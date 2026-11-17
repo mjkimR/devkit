@@ -287,9 +287,9 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   the commented placeholder `# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>`), `proposal:
   PROP-<slug>`, the commented line `# supersedes: [ADR-<slug>]` (uncommented, it names the ADRs the decision replaces; the comment names the `Supersedes in part` sentence for Decision Outcome,
   wholly or in part, and Decision Outcome names the replaced clauses; `CAP-DOCS-document-model`), `status: draft`,
-  `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
-  `- **Date**`, then Context & Problem Statement, Decision Drivers, Considered Options, Decision Outcome,
-  Consequences, Confirmation). PADR IDs are unique across the repository, aliases included (`SPEC_PROPOSAL_EXISTS`).
+  `created_at`, and a body shaped like the decision template: the H1, then Context & Problem Statement, Decision
+  Drivers, Considered Options, Decision Outcome, Consequences, Confirmation. The frontmatter alone carries status and
+  date: the PADR body MUST carry no Status, Date, Deciders or Involved Components line. PADR IDs are unique across the repository, aliases included (`SPEC_PROPOSAL_EXISTS`).
 - A PADR has no withdrawn status: one withdrawn before `plan-accept` is deleted from `decisions/` in the Planning fold
   commit, and the proposal's Planning decisions name its ID and the reason. Handoff promotes every PADR left there.
 - `target-docs.md` declares `id: PROP-<slug>-target`, `proposal: PROP-<slug>`, `status: draft`, `created_at` and
