@@ -25,8 +25,10 @@ error code that selects the owner.
 | Lexical was requested | The command line carried `--mode lexical`. `mode=` names the ranking that ran, so this is no fallback. | `CAP-DOCS-document-search` §3 rule 5 |
 | Explicit run succeeds while an earlier auto run was lexical | The explicit `--mode hybrid` run prints `mode=hybrid`. Auto loads the model through the same path as the explicit run, so the earlier run used another environment (for example another `uv` project or virtual environment). | `CAP-SRCH-document-search` §2 |
 
-Read the actual advisory before acting. The install or reinstall step and its target requirement stay with the
-advisory's `[FIX]` and the reference row, not this map.
+Read the actual advisory before acting; the install or reinstall step and its target requirement stay with the
+advisory's `[FIX]` and the reference row. For a code no row names, such as `YAML_BINDING_UNAVAILABLE` or
+`DOCS_GLOSSARY_INVALID`, read `CAP-DOCS-document-search` §4.5 and the actual advisory. For `devkit playbook search`,
+which ranks with the same library, read `CAP-DIST-context-and-playbooks`.
 
 ## Normal-state observation
 
@@ -43,19 +45,11 @@ mode, not the hits: `count=0` with exit `0` is still a successful search (§4.5)
 
 ## Authority boundary
 
-This entry routes evidence and owns no recovery. Mode semantics, auto fallback and model packaging belong to
-`CAP-SRCH-document-search` §2, §4 and §5. Command options, the `[SEARCH: ...]` line, JSON keys and exit codes
-belong to `CAP-DOCS-document-search` §3 rule 5 and §4. Codes, levels and conditions belong to the
-[search reference error rows](../development/reference/search.md#error-codes). The install or reinstall action belongs
-to each advisory's `[FIX]` text, which this entry does not repeat.
-
 A lexical result alone cannot tell a missing extra from a missing model or an explicit `--mode lexical`. A
 successful hybrid run says nothing about ranking quality or the `--min-similarity` floor.
 
-## Maintenance and next action
+## Update triggers
 
-Review the routing when `CAP-SRCH-document-search` §2 changes which errors auto falls back on, when a `SEARCH_*`
-code is added or renamed, or when `CAP-DOCS-document-search` §4.2 changes the `[SEARCH: ...]` line. For a code no row
-names, such as `YAML_BINDING_UNAVAILABLE` or `DOCS_GLOSSARY_INVALID`, read `CAP-DOCS-document-search` §4.5 and the
-actual advisory. For `devkit playbook search`, which ranks with the same library, read
-`CAP-DIST-context-and-playbooks`.
+- `CAP-SRCH-document-search` §2 changes which errors auto falls back on.
+- A `SEARCH_*` code is added or renamed.
+- `CAP-DOCS-document-search` §4.2 changes the `[SEARCH: ...]` line.

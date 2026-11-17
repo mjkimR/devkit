@@ -366,8 +366,8 @@ usual warning.
 
 ## 3. Transaction Safety Guarantees
 
-For how a managed file becomes a directory or the reverse, read the
-`DESIGN-distribution-transactions`; it explains implementation while this section
+For how a managed file becomes a directory or the reverse, read
+`DESIGN-distribution-file-directory-replacement`; it explains implementation while this section
 retains eligibility, safety and recovery authority.
 
 

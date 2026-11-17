@@ -1,16 +1,16 @@
 ---
-id: PADR-formal-document-closings
+id: ADR-formal-document-closings
 title: Formal document closings state limits and update triggers
 summary: For formal design, domain and operations documents, we close with limits the body does not state and an Update triggers section, and state shared authoring steps once, to stop template-induced padding, accepting that next-read pointers live only in related_* fields and body links.
-proposal: PROP-formal-doc-padding-trim
+proposal: SPEC-formal-doc-padding-trim
 supersedes: [ADR-problem-first-formal-document-openings, ADR-linked-domain-relationship-views]
-status: draft
+status: accepted
 created_at: 2026-11-17
 ---
 
-# [PADR-formal-document-closings] Formal document closings state limits and update triggers
+# [ADR-formal-document-closings] Formal document closings state limits and update triggers
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-17
 
 ---

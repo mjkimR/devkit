@@ -1,6 +1,6 @@
 # Formal document audit for PROP-formal-doc-padding-trim
 
-Supporting evidence of `PROP-formal-doc-padding-trim`. Two read-only audits run before Planning, one of the docs
+Supporting evidence of `SPEC-formal-doc-padding-trim`. Two read-only audits run before Planning, one of the docs
 bundle assets and one of the 13 design, domain and operations documents (1,063 lines at the Planning base). Planning
 rechecked the items marked "rechecked" against the worktree head; the challenger round checks the rest. Line numbers
 are at the Planning base and move with edits. B = `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`.

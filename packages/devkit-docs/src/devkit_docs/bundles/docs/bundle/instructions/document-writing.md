@@ -35,6 +35,11 @@ the domain basics, and lacks only this repository's facts.
 
 Order content by when the reader needs it: purpose, constraints, procedure, completion check, references.
 
+## Templates
+
+When starting from a template in `../templates/`, delete every HTML comment before `devkit rules check`: agents read
+the raw Markdown, where comments stay visible.
+
 ## Reference Pages
 
 A reference page lists exact syntax: commands, flags, configuration keys, payload fields and codes. Start a new page
@@ -50,8 +55,6 @@ from `../templates/reference.md`; it has no frontmatter or ID.
 
 - Devkit reads Markdown frontmatter with PyYAML's LibYAML safe parser. Keep frontmatter valid for that parser and use
   the owning devkit validation command to check it.
-- If a YAML-reading command reports `YAML_BINDING_UNAVAILABLE`, install PyYAML from a compatible binary wheel in the
-  active environment and verify `uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader')"`.
 
 ## Related Instructions
 

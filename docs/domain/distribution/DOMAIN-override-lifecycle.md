@@ -13,9 +13,8 @@ related_domains: [DOMAIN-bundle-selection-and-installation]
 Once a project override exists, readers confuse its files with its receipt record, and the states that record
 passes through with the `ORPHAN_LEFT` warning: an override of a deselected bundle, an override of an asset removed
 upstream and a file `ORPHAN_LEFT` names all stay on disk. The difference lies in what the receipt still records and
-in which command or sync moves it. This entry relates those states, using only the names and codes of
-`CAP-DIST-workspace-ownership` §3, and names the owner of each. The term itself is defined in the
-[glossary](../../steering/glossary.md) ("Project override").
+in which command or sync moves it. The states and codes below are those of `CAP-DIST-workspace-ownership` §3; the
+term is defined in the [glossary](../../steering/glossary.md) ("Project override").
 
 ## Relationship overview
 
@@ -44,7 +43,7 @@ the receipt's `files` either.
 
 ## Worked example
 
-This nonexecuted example uses the asset `starter:development` from the capability's drift example.
+The example uses the asset `starter:development` from the capability's drift example.
 
 1. `devkit override create starter:development` writes the override and baseline copies and synchronizes; the
    receipt records the asset with the current upstream as its baseline (recorded).
@@ -61,19 +60,12 @@ This nonexecuted example uses the asset `starter:development` from the capabilit
 
 ## Authority boundary
 
-This entry relates states; it settles none of their rules. Override creation, drift policy, retention and
-reconciliation belong to `CAP-DIST-workspace-ownership` §3. File ownership and `ORPHAN_LEFT` belong to
-`CAP-DIST-workspace-ownership` §2. The receipt's `overrides` and `files` fields and selection inputs belong to
-`CAP-DIST-sync-and-transactions` §1 and §2. Where overridden files are projected belongs to
-`CAP-DIST-agent-projections`. How available bundles, selection, assets and receipt evidence relate belongs to
-`DOMAIN-bundle-selection-and-installation`. The term belongs to the [glossary](../../steering/glossary.md) entry
-"Project override". Advisory codes, fields and fixes are mapped in the
-[distribution reference](../../development/reference/distribution.md#error-codes); this entry copies no
-`[FIX]` or `[ACTION]`.
+`CAP-DIST-agent-projections` owns where overridden files are projected. The
+[distribution reference](../../development/reference/distribution.md#error-codes) maps each advisory code to its
+fields and fix.
 
-## Maintenance and next action
+## Update triggers
 
-Update this entry when `CAP-DIST-workspace-ownership` §3 adds, renames or removes an override state or code, or
-changes which command or sync moves a record. For whether an action is allowed or what it guarantees, read
-`CAP-DIST-workspace-ownership` §3. For a code an override command printed, read its row in the distribution
-reference. For where an override is projected, read `CAP-DIST-agent-projections`.
+- `CAP-DIST-workspace-ownership` §3 adds, renames or removes an override state or code, or changes which command or
+  sync moves a record.
+- `CAP-DIST-sync-and-transactions` §1 changes the receipt's `overrides` or `files` fields.

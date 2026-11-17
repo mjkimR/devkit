@@ -4,13 +4,14 @@ title: "Bundle selection and installation"
 status: active
 area: distribution
 summary: "Relates available bundles, requested selection, conceptual assets, projected paths and receipt evidence."
+related_capabilities: [CAP-DIST-content-packages, CAP-DIST-sync-and-transactions, CAP-DIST-manifest-spec, CAP-DIST-agent-projections]
+related_designs: [DESIGN-distribution-file-directory-replacement]
 ---
 
 # [DOMAIN-bundle-selection-and-installation] Bundle selection and installation
 
 Readers confuse available bundles, requested selection, conceptual assets, projected paths and receipt evidence: a
-deployed path or a receipt entry can look like a requested selection or a separate asset. This entry relates the
-chain and names the owner of each link.
+deployed path or a receipt entry can look like a requested selection or a separate asset.
 
 ## Relationship overview
 
@@ -20,8 +21,7 @@ dependency resolution; it does not by itself describe every asset deployed to th
 
 Requested selection combines the project's preset configuration with a bundle's declared auto-selection defaults.
 An available bundle without auto-selection needs an explicit configuration entry; an auto-selected bundle can be
-narrowed or opted out. `CAP-DIST-sync-and-transactions` §2 owns selection inputs and effective configuration.
-`CAP-DIST-manifest-spec` §§2–3 owns assets, preset membership and manifest identity.
+narrowed or opted out.
 
 | Concept or relationship | Distinction | Authoritative owner |
 | --- | --- | --- |
@@ -33,24 +33,18 @@ narrowed or opted out. `CAP-DIST-sync-and-transactions` §2 owns selection input
 
 For example, one selected skill can have a managed copy under `.devkit/managed/` and a native representation under
 `.agents/skills/`. These paths represent the same conceptual asset rather than separate requested assets.
-Kinds have different projection behavior; a seeded document instead becomes project-owned at its target.
-`CAP-DIST-agent-projections` owns host destinations; `CAP-DIST-manifest-spec` §2 owns kind and seeded-asset semantics.
+Kinds have different projection behavior; a seeded document instead becomes project-owned at its target
+(`CAP-DIST-manifest-spec` §2 owns kind and seeded-asset semantics).
 
 The receipt's `selection` records what the last sync applied. It is audit evidence, never another selection input.
 Its `assets` associate deployed representations with their bundle/asset identity, while `files` records digests and
-modes. Seeded targets have their separate evidence. `CAP-DIST-sync-and-transactions` §1 owns these distinctions.
-A path alone therefore does not establish a new asset identity or a requested selection.
+modes. Seeded targets have their separate evidence. A path alone therefore does not establish a new asset identity
+or a requested selection.
 
-## Authority boundary
+## Update triggers
 
-This entry explains the relationship chain; it adds no transaction guarantee, readiness test or recovery procedure.
-Understanding this chain requires no schema or Python class catalog.
-
-## Maintenance and next action
-
-Update this entry when one of the owners below changes how these concepts relate.
-For why a bundle is available, resolve `CAP-DIST-content-packages` and read §§1–3.
-For what is requested or what the receipt proves, resolve `CAP-DIST-sync-and-transactions` and read §2 or §1.
-For asset/preset syntax, resolve `CAP-DIST-manifest-spec`; for a host destination, resolve `CAP-DIST-agent-projections`.
-For sync's implementation mechanism, follow the selected design link in the transaction capability.
-Read only the owner needed for the question.
+- `CAP-DIST-content-packages` §§1–3 change what makes a bundle available.
+- `CAP-DIST-sync-and-transactions` §2 changes the selection inputs, or §1 the receipt fields `selection`, `assets` or
+  `files`.
+- `CAP-DIST-manifest-spec` §2 changes asset identity or kinds, or `CAP-DIST-agent-projections` the destinations of a
+  kind.

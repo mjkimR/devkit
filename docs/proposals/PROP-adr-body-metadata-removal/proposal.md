@@ -151,5 +151,5 @@ Drivers, Confirmation and the outcome-trace comments (test-enforced).
 ## 4. Lifecycle & Retirement Criteria
 
 - Planning settles Q1–Q4; acceptance hands off to Development and integrates locally under `dev-integration=auto`.
-- Integrated after `PROP-formal-doc-padding-trim`, which touches the same docs bundle.
+- Integrated after `SPEC-formal-doc-padding-trim`, which touches the same docs bundle.
 - Retire when the template, scaffold and handoff changes land.

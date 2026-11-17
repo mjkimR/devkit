@@ -4,6 +4,7 @@ title: "Delivery relationships"
 status: active
 area: delivery
 summary: "Distinguishes proposal and spec identity, milestone membership, prerequisites and provenance across delivery."
+related_capabilities: [CAP-DOCS-document-model, CAP-DLV-proposal-lifecycle, CAP-DLV-spec-bundles]
 ---
 
 # [DOMAIN-delivery-relationships] Delivery relationships
@@ -27,29 +28,20 @@ Three relationships answer different questions (`CAP-DOCS-document-model` §3.3)
 
 At handoff, outgoing Unit prerequisites are carried to the spec and live incoming prerequisite targets are relocated.
 Milestone membership is not carried. The retained `proposal` field records origin, not a current prerequisite or
-fulfillment claim. These transformations and their refusal behavior belong to `CAP-DLV-proposal-lifecycle` §4.1;
-relationship grammar remains with `CAP-DOCS-document-model` §3.3.
+fulfillment claim. These transformations and their refusal behavior belong to `CAP-DLV-proposal-lifecycle` §4.1.
 
 ## Membership-change walkthrough
 
-This is a nonexecuted example. Suppose proposal A belongs to milestone Spring and depends on spec Foundation.
+Suppose proposal A belongs to milestone Spring and depends on spec Foundation.
 Moving A's membership to milestone Summer changes the grouping relationship. That move alone says nothing about
 whether Foundation is complete or whether A still depends on it. It creates no proposal/spec origin relationship.
-`CAP-DOCS-document-model` §3.3 remains the source for valid relationship fields and graph separation.
 
 If A is then handed off, the resulting spec retains the prerequisite and the proposal origin, while milestone
 membership stays outside the spec. The projected dependency validation and reference relocation follow
-`CAP-DLV-proposal-lifecycle` §4.1. This example changes no files and prescribes no command.
+`CAP-DLV-proposal-lifecycle` §4.1.
 
-## Authority boundary
+## Update triggers
 
-This entry composes relationships; it adds no validity rule, lifecycle permission or transformation contract.
-No architecture, class catalog or whole document layer is a prerequisite.
-
-## Maintenance and next action
-
-Update this entry when one of the owners below changes a relationship field, its graph or its handoff treatment.
-For an invalid relationship or graph question, resolve `CAP-DOCS-document-model` and read §3.3.
-For what handoff writes, validates or relocates, resolve `CAP-DLV-proposal-lifecycle` and read §4.1.
-For creating a spec directly, resolve `CAP-DLV-spec-bundles` and read §3 rule 7.
-Load the owner needed for that question.
+- `CAP-DOCS-document-model` §3.3 changes a relationship field or its graph.
+- `CAP-DLV-proposal-lifecycle` §4.1 changes how handoff carries, relocates or drops a relationship.
+- `CAP-DLV-spec-bundles` §3 rule 7 changes how a spec starts without a proposal.

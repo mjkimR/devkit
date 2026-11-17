@@ -13,8 +13,7 @@ summary: "<English sentence stating the subject and boundary.>"
 
 # [OPS-<slug>] <Title>
 
-<!-- Lead paragraph: the observed symptom and why the obvious evidence is not enough, beyond the summary. At most
-one sentence is a question. -->
+<!-- Lead paragraph: the observed symptom and why the obvious evidence is not enough, beyond the summary. -->
 
 ## Routing
 
@@ -25,15 +24,18 @@ one sentence is a question. -->
 | <reported code or observed state> | <evidence that separates it from the other rows> | <full ID and section, or the advisory> |
 | <reported code or observed state> | <evidence that separates it from the other rows> | <full ID and section, or the advisory> |
 
+<!-- Below the table: where evidence that matches no row goes. -->
+
 ## Normal-state observation
 
 <!-- The observation that confirms the normal state after the owner's action, and its owner by full ID. -->
 
 ## Authority boundary
 
-<!-- This document routes and owns no recovery: name the action, permission and readiness owners by full ID, and
-what the evidence cannot conclude. -->
+<!-- Owners that neither the table nor the body names, and what the evidence cannot conclude. Delete the section
+when nothing remains. -->
 
-## Maintenance and next action
+## Update triggers
 
-<!-- The change that requires reviewing the routing, and the next useful action for evidence matching no row. -->
+<!-- The source changes that require reviewing the routing, by capability section, field, code or source entry
+point. -->

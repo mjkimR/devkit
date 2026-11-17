@@ -4,58 +4,57 @@ title: "File/directory replacement: the transaction mechanism"
 status: active
 area: distribution
 summary: "Explains preflight, journal evidence, forward ordering and rollback for distribution file and directory replacement."
+aliases: [DESIGN-distribution-transactions]
+related_capabilities: [CAP-DIST-sync-and-transactions]
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/transaction.py
 ---
 
 # [DESIGN-distribution-file-directory-replacement] File/directory replacement: the transaction mechanism
 
-Letting a managed file become a directory, and the reverse, depends on the ordering of deletions and writes and on
-the evidence recorded for rollback. This non-normative detail explains how the current transaction.py implementation
-provides both. For orientation, the `DESIGN-distribution-transactions` locates this mechanism within distribution.
+Letting a managed file become a directory, and the reverse, is a change-set problem: one deletion frees a path
+another write needs, so the result depends on the ordering of deletions and writes. Rollback also has to tell prior
+file content from directories the change set created or replaced, so it depends on the evidence the journal records.
 
 ## Preflight and the change set
 
 In [transaction.py](../../../../packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/transaction.py),
-`require_writable` uses `_removed_owned`, `blocked_parent` and `_emptied` to distinguish a path freed by this
-change set from an obstruction. It returns the directories that a file will replace. This makes both directions
-part of the planned change rather than a blind overwrite.
+`require_writable` checks each planned write against the owned paths this change set removes and the directories it
+empties, and uses `blocked_parent` to tell a path freed by this change set from an obstruction. It returns the
+directories that a file will replace, so both directions are part of the planned change rather than a blind
+overwrite.
 
 For a concrete file-to-directory shape, deleting the managed file `notes` permits writing `notes/SKILL.md`.
 For the reverse shape, deleting the owned contents beneath `notes/` permits writing a file named `notes`.
-These names illustrate a change-set shape; they do not report a recovery run or introduce a new allowed destination.
 The exact refusal conditions belong to `CAP-DIST-sync-and-transactions` §3.
 
 ## Forward application
 
-`apply_changes` first calls `require_writable`, then `_ordered`, which groups deletions before writes.
+`apply_changes` first calls `require_writable`, then orders the changes so that deletions come before writes.
 It builds a journal with encoded `before` and `after` content for each changed path. For a replaced directory,
 its file-shaped `before` is absent; the deleted child files supply their own snapshots.
 `missing_directories` records parents that the writes would create, including a removed file that will become a
 parent. The journal's `directories` also includes the replaced directories returned by `require_writable`.
 
-`apply_changes` writes that journal before applying the ordered changes. For a directory-to-file replacement,
-`_remove_emptied` removes the now-empty directory before the file write. `atomic_write` delegates each changed
-file to `replace_file`. A caught application exception invokes `recover_locked`; a successful application removes
-the journal and prunes empty owned parents left by deletions.
+`apply_changes` writes that journal before applying the ordered changes. For a directory-to-file replacement, the
+now-empty directory is removed before the file write. `atomic_write` delegates each changed file to `replace_file`.
+A caught application exception invokes `recover_locked`; a successful application removes the journal and prunes
+empty owned parents left by deletions.
 
 ## Reverse application
 
-`recover_locked` validates the journal and compares snapshots with its recorded before/after values, with
-`_swapped_directory` recognizing a recorded directory swap. It prepares each path's previous content and orders
-removal of transaction-created content before restoring prior content. `_prune_created` removes recorded created
-directories only while empty. The implementation then removes the journal.
+`recover_locked` validates the journal and compares snapshots with its recorded before/after values, recognizing a
+recorded directory swap. It prepares each path's previous content and orders removal of transaction-created content
+before restoring prior content. Recorded created directories are removed only while empty. The implementation then
+removes the journal.
 
 ## Authority boundary
 
-`CAP-DIST-sync-and-transactions` §3 owns eligibility, safety and recovery guarantees. This explanation is not a
-rollback procedure. Use the cited owner to decide an operational action.
+`CAP-DIST-sync-and-transactions` §3 owns eligibility, admissible replacements, safety and recovery guarantees.
+`ARCH-05-4-distribution-components` §3 locates the installation service that implements them.
 
-## Maintenance and next action
+## Update triggers
 
-A change to deletion ordering calls for checking `_ordered`, `apply_changes`, `recover_locked` and this detail.
-It does not itself change the domain relationship between selection and installed evidence. Revisit architecture
-only if system interactions or component responsibilities change, and capability guarantees if their facts change.
-
-For a later edit or a legacy journal, next use `CAP-DIST-sync-and-transactions` §3 “Recovery”; its stop conditions
-own the operational decision.
+- `apply_changes`, `require_writable` or `recover_locked` change the deletion and write order, the journal fields
+  (`before`, `after`, `directories`) or the rollback order.
+- `CAP-DIST-sync-and-transactions` §3 changes which replacements are admissible.

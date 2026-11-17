@@ -14,8 +14,7 @@ related_operations:
 A configured host hook can leave no warning in the host session and no observation in devkit. Dispatch failures
 are warnings on the hook's stderr while the host operation continues, and whether the host displays that stream is
 host-defined (`CAP-HOST-lifecycle-observation` §4). Silence alone therefore cannot tell an invalid registration, an
-interrupted sync, a handler that failed during the call and a hook the host never ran apart. This entry routes each
-case by devkit's read-only evidence to the owner that acts.
+interrupted sync, a handler that failed during the call and a hook the host never ran apart.
 
 ## Routing
 
@@ -36,7 +35,9 @@ reports `pending_journal`. Only the built-in `observe` handler writes an observa
 | Host did not run the hook | devkit reports `unknown`: `trust` and `execution_permissions` are always `unknown`, and `runtime_on_path` describes only the inspecting process, not the PATH of the host process; the entry has `state` `ok`, no journal is pending, no warning is reachable and an `observe` registration's `last_received` does not advance | The agent host application, which owns hook trust, execution permissions, its launch PATH, timeouts and the display of hook stderr (`CAP-HOST-lifecycle-observation` §3, §5). |
 
 Start with `host status`, because an `invalid` entry already names its code. Consult `devkit status` before reading
-an `ok` entry as healthy, because `host status` does not inspect the sync journal.
+an `ok` entry as healthy, because `host status` does not inspect the sync journal. For evidence that matches no row,
+take the code reported by `host status` or by the hook warning to its row in the
+[host code table](../development/reference/host.md) and its actual advisory.
 
 ## Normal-state observation
 
@@ -49,21 +50,14 @@ observation from a real host session shows that a hook ran (`CAP-HOST-lifecycle-
 
 ## Authority boundary
 
-This entry classifies evidence and owns no recovery. `CAP-HOST-lifecycle-observation` owns hook registration,
-shared-configuration ownership, the dispatch refusals, the handler contract and the observation record.
-`CAP-DIST-sync-and-transactions` owns sync recovery and readiness, and `OPS-distribution-sync` routes a pending sync
-journal to them. The [host code table](../development/reference/host.md) maps each code to its next action, and the
-actual advisory retains its fix. The agent host application owns trust, execution permissions, enablement, its
-process environment and whether hook stderr is shown.
-
 The evidence cannot establish that the host trusted, enabled or invoked a hook, the PATH of the host process, or a
 delivery count: concurrent observations overwrite the latest timestamp (`CAP-HOST-lifecycle-observation` §5). For a
 handler other than `observe`, a missing observation proves nothing.
 
-## Maintenance and next action
+## Update triggers
 
-Review the routing when `CAP-HOST-lifecycle-observation` §2 to §5 change, when the `host status` fields `state`,
-`last_received`, `trust`, `execution_permissions` or `runtime_on_path` change, when the dispatch checks in
-[runner.py](../../packages/devkit-dist/src/devkit_dist/features/host/usecases/runner.py) change order, or when a host
-other than `codex` gains an adapter. For evidence that matches no row, take the code reported by `host status` or by
-the hook warning to its row in the [host code table](../development/reference/host.md) and its actual advisory.
+- `CAP-HOST-lifecycle-observation` §2 to §5 change.
+- The `host status` fields `state`, `last_received`, `trust`, `execution_permissions` or `runtime_on_path` change.
+- The dispatch checks in
+  [runner.py](../../packages/devkit-dist/src/devkit_dist/features/host/usecases/runner.py) change order.
+- A host other than `codex` gains an adapter.

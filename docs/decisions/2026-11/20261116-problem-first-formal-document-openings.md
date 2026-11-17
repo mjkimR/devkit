@@ -10,6 +10,8 @@ created_at: 2026-11-16
 
 # [ADR-problem-first-formal-document-openings] Problem-first formal document openings
 
+Superseded in part by `ADR-formal-document-closings`: the clause that a formal document closes with its authority boundary, naming what it does not settle and the owner that does, and with its maintenance trigger and next useful action, and the clause that each kind's writing instruction carries the scoping step.
+
 - **Status**: Accepted
 - **Date**: 2026-11-16
 

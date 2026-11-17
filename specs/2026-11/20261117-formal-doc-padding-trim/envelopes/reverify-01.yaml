@@ -1,0 +1,16 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:43:19.219065Z'
+status: completed
+review: review-01.yaml
+summary: 'Developer verified at 9926454e88679b23176474a67fa374c55c8f1d5b: the shared step now keeps the old ID in aliases only on a rename; docs and spec bundle guidance tests 708 passed, sync check exit 0'
+findings:
+- issue: The shared rename step keeps the old ID in aliases on a root move as well as a rename; a root move keeps the ID, so there is no old ID to alias.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md:62
+  failure_condition: An agent moving a formal document between docs roots adds its own unchanged ID to aliases.
+  suggested_action: Limit the alias clause to a rename; keep move-with-support and link repair for rename and root move.
+  resolution: resolved
+  severity: P3
+checks: {}

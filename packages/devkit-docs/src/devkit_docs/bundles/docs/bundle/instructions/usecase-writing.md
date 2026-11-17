@@ -67,4 +67,3 @@ rely on. Start from the `usecase` template.
 ## Current behavior
 
 Fold retained behavior into the use cases it changes: steps, extensions, postconditions and scenarios.
-The selected development approach defines its work records and reconciliation procedure.
