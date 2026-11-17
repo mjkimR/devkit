@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:04:08.099644Z'
+status: completed
+summary: 'code-reviewer initial pass: AC-01..AC-07 confirmed by test_decision_template.py, the proposals scaffold and handoff tests (368 passed), a script over all 73 changed ADRs (reference edges exact, only block lines removed, exceptions hold) and the AC rg commands; no findings'
+findings: []
+checks:
+  tests: PASS uv run pytest test_decision_template.py + tests/integration/features/proposals (368 passed); caller just test-affected --base main 2696 passed
+  lint: SKIP not rerun; caller reports PASS just lint-check and devkit rules check --ci --base main at 82207684deaaec390c37180c879a184fc34f5255
+diff_scope:
+  base: dd98503343fde43b8134f10280fb0f67a95f53b8
+  head: 82207684deaaec390c37180c879a184fc34f5255
