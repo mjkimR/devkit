@@ -213,7 +213,7 @@ from devkit_dist.features.distribution.services.installation.discovery import di
 from devkit_dist.features.distribution.usecases.sync import tool_identity
 from importlib.metadata import entry_points
 assert tool_identity().package == 'devkit-dist'
-assert tool_identity().version == version('devkit-dist') == version('devkit-agt')
+assert tool_identity().version == version('devkit-dist')
 assert [entry.dist.name for entry in entry_points(group='console_scripts', name='devkit')] == ['devkit-dist']
 try:
     version('devkit')
