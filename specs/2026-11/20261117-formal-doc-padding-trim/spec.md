@@ -1,39 +1,23 @@
 ---
-id: PROP-formal-doc-padding-trim
+id: SPEC-formal-doc-padding-trim
 title: Trim padding from formal document guidance and documents
 summary: Remove guidance and template elements that duplicate rules, frontmatter or other owners, narrow the Maintenance section to update triggers, and apply the same standard to the existing design, domain and operations documents.
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-11-17
-target_area: documents/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/
-    - packages/devkit-spec/tests/integration/bundles/spec/test_formal_doc_checkpoints_guidance.py
-    - docs/capabilities/documents/CAP-DOCS-documentation-ownership.md
-    - docs/designs/
-    - docs/domain/
-    - docs/operations/
-    - docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
-    - specs/2026-11/20261116-design-bundle-layout/feedback/viewer-adopts-bundle-grammar.md
-    - packages/devkit-viewer/frontend/src/features/knowledge/FormalReading.test.ts
-    - .devkit/installation.json
-    - docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
-    - specs/2026-11/20261116-formal-docs-feedback-handoff/feedback/proposal-lifecycle-capability-holds-mechanism-detail.md
-  excludes:
-    - handbook/
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-17
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-formal-doc-padding-trim] Trim padding from formal document guidance and documents
+# [SPEC-formal-doc-padding-trim] Trim padding from formal document guidance and documents
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-formal-doc-padding-trim on 2026-11-17.
+- **Preserved Materials**: `docs/materials/2026-11/20261117-formal-doc-padding-trim`
+
+### 1. Background & Hypothesis
 
 Two read-only audits of the formal documentation, one of the authoring assets and one of the 13 existing design,
 domain and operations documents (1,063 lines), found that most padding in the documents is induced by the
@@ -70,16 +54,35 @@ documents, makes formal documents shorter to write and read without losing any f
 Checked and kept: use case sections (parsed by rules), operations "Normal-state observation", the problem-first lead,
 the domain relationship table, the reference template, ADR drivers and confirmation.
 
-## Source feedback
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Trim padding from formal document guidance and documents so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### Source feedback
 
 - `FB-proposal-lifecycle-capability-holds-mechanism-detail` (direct fix, user-authorized scope extension): review
   `CAP-DLV-proposal-lifecycle` §4.1 step 5 and §4.3 against `CAP-DOCS-documentation-ownership` §3.1, move pure
   mechanism explanation into `DESIGN-proposal-handoff` and keep every observable guarantee in the capability (Q8).
   The source resolves at this unit's completion when the move lands and verification passes.
 
-## 2. Technical Spike Questions
+### 2. Technical Spike Questions
 
-Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, Q2 and the shared-step part of Q4.
+Each answer is a Planning decision; `ADR-formal-document-closings` records Q1, Q2 and the shared-step part of Q4.
 
 - **Q1**: What does the narrowed section say? Rename `## Maintenance and next action` to `## Maintenance` (or
   `## Update triggers`) holding only the source change that makes the document stale, naming public entry points or
@@ -196,7 +199,7 @@ Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, 
     - The feedback's expected gain is smaller than it assumed: most of §4.1 step 5 and §4.3 is observable contract
       that an ADR confirms, so the capability shortens by a few clauses, not by the merge bullets.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Docs bundle: templates (design, domain, operations, capability, usecase, ux, milestone) and instructions (design,
   domain, operations, living-spec, document, capability, usecase, ux writing) lose the duplicated and inactive
@@ -213,7 +216,7 @@ Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, 
   `CAP-DLV-proposal-lifecycle` (its PADR body-metadata rewrite belongs to that sibling), other capability and use case
   documents (one reference repair in `CAP-DIST-sync-and-transactions` aside), and any rule change.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Planning settles Q1–Q7 and the spec boundaries; acceptance hands off to Development and integrates locally under
   `dev-integration=auto`.
@@ -222,7 +225,7 @@ Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, 
   devkit-spec proposals feature.
 - Retire when the guidance and the document cleanup land.
 
-## 5. Planning decisions
+### 5. Planning decisions
 
 - **Bundle edits** (B = `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/`):
   - `templates/{design,domain,operations}.md`: per-kind lead comment without the question rule; `## Update
@@ -262,3 +265,4 @@ Each answer is a Planning decision; `PADR-formal-document-closings` records Q1, 
   tests, with no code path.
 - **Formal documents**: the change edits the design, domain and operations documents themselves; no new formal
   document is created. DESIGN-distribution-transactions is the only identity removed.
+
