@@ -12,7 +12,7 @@ translated_from: en/journeys/snapshot-bundle-sources.md@93c55e1bca9cb650
 # 번들 소스를 로컬로 도입하고 갱신하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `c03315d43325` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 번들 소스 스냅샷(Bundle source snapshot)은 지원되는 콘텐츠 제공자 전체를 별도 로컬 패키지로 보존합니다. 원래 번들 버전·자원 바이트·실행 모드·라이선스를 경로 없는 출처 정보와 함께 유지합니다. 런타임·명령 제공자나 지원하지 않는 동적 의존 범위는 쓰기 전에 거부합니다.

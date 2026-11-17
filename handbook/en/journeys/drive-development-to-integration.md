@@ -2,7 +2,7 @@
 sources:
   CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
-  CAP-DLV-workflow-envelopes: d4ff93fd7f267da9942bcc5f54d3fefcea45ef99
+  CAP-DLV-workflow-envelopes: bf8c446136bb052fb02075f7cfd527a00d7d94ed
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
@@ -13,7 +13,7 @@ title: Drive development to integration
 # Drive development to integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

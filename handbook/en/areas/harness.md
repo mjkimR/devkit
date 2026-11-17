@@ -6,7 +6,7 @@ sources:
   CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
   CAP-DLV-sdd-baseline-adoption: 6cce1e21f936f5add3cdb32cbb07906fc5c1fb6b
   CAP-GOV-spec-rules: 231d1553ea205aee30516b0cf69e320560d2d9a9
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   CAP-HARN-command-design: 55dfa957b84301d7a9897676145bec7e2486e71f
   CAP-HARN-command-mount: 9963e0253b7b23f53d30d2185998241d83cecd95
   CAP-HARN-isolated-execution: 7b36ba1e9522527ede0d5a91189ee2ec1efcf6ff
@@ -22,7 +22,7 @@ title: Harness
 # Harness
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

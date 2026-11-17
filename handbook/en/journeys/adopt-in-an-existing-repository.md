@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-GOV-spec-rules: 231d1553ea205aee30516b0cf69e320560d2d9a9
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   CAP-HARN-command-mount: 9963e0253b7b23f53d30d2185998241d83cecd95
   UC-adopt-in-an-existing-repository: f0d47aad88a9a4f8942bd3614e8d6c341e0490d5
   UC-adopt-sdd-from-adaptive-development: 2c82a267d679732b7239bc790b0ef9aef0e65c5f
@@ -11,7 +11,7 @@ title: Adopt devkit in an existing repository
 # Adopt devkit in an existing repository
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

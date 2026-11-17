@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-DLV-deep-research: c5d9044c1841d7ccb10a5578a562e79ee134ae8e
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   UC-research-an-idea-and-shape-a-roadmap: 3744a97ed5ecfa404e7127489576ca54dc43223c
 title: Research an idea and shape a roadmap
 ---
@@ -9,7 +9,7 @@ title: Research an idea and shape a roadmap
 # Research an idea and shape a roadmap
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

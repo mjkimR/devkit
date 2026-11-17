@@ -20,12 +20,12 @@ sources:
   CAP-DLV-proposal-planning: b5546ecd6e0a9bf125be3f537b29f214f64d949a
   CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
   CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
-  CAP-DLV-workflow-envelopes: d4ff93fd7f267da9942bcc5f54d3fefcea45ef99
+  CAP-DLV-workflow-envelopes: bf8c446136bb052fb02075f7cfd527a00d7d94ed
   CAP-DLV-workflow-orchestration: 5ad464a0ca56f3ad3beb141cf126ca309b9dffca
   CAP-DOCS-document-model: da6e3a2dfc451c26f2eff04e1f24a74baba63bab
   CAP-GATE-commit-gates: d29338c7967d0820ca4b68b7061c99f0cf5a9cf0
   CAP-GOV-rules-engine: 0be08e47c6be2cb1892d91c7bd7c15dbf3bec98d
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
 title: Concepts
@@ -34,7 +34,7 @@ title: Concepts
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

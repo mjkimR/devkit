@@ -12,7 +12,7 @@ sources:
   CAP-DLV-maintenance-history: b1e327e613097e1cc9b843934824a35b5f174e6c
   CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
   CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
-  CAP-DLV-proposal-lifecycle: b4fce2ec295c02949825afa69f04ca2087a9cddf
+  CAP-DLV-proposal-lifecycle: 2e32faefcdd14e71364089a1cfb03dc1b72cdb77
   CAP-DLV-proposal-planning: b5546ecd6e0a9bf125be3f537b29f214f64d949a
   CAP-DLV-release-handbook: 9d3f56b83c6d01ef6873aee93ac0357fd0c5a005
   CAP-DLV-review-refactor: 80b523a1ee09e2cff326ff4114c3c83c5461a666
@@ -22,7 +22,7 @@ sources:
   CAP-DLV-uiux-improvement: 3f9f57ce40b41250bb87cc933295e5d0cb751cd4
   CAP-DLV-weekly-report: ad32dcc4519c5757150443dcb6079f919578d2a4
   CAP-DLV-workflow-definitions: 05a3ee4acd583eac3d3828c9259c4f2aabe554cd
-  CAP-DLV-workflow-envelopes: d4ff93fd7f267da9942bcc5f54d3fefcea45ef99
+  CAP-DLV-workflow-envelopes: bf8c446136bb052fb02075f7cfd527a00d7d94ed
   CAP-DLV-workflow-orchestration: 5ad464a0ca56f3ad3beb141cf126ca309b9dffca
   CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
   UC-drive-development-to-integration: 2893591134de64be66238b4102062f02e0e370c8
@@ -38,7 +38,7 @@ title: Delivery
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -206,8 +206,10 @@ lifecycle jobs. The Host retains scheduling, semantic choices and result accepta
 git-operator uses lean, with medium effort where supported. These resource levels do not change delivery effort or
 authority.
 
-Scope observations distinguish current writes from future Planning scope. Current overlap serializes running work;
-future-only overlap orders handoff/integration without serializing Planning. Partial coverage never proves independence.
+Scope observations distinguish current writes from future Planning scope. Current overlap serializes running work.
+An exception applies when both units only observed a shared path in their handoff commits and neither changed it
+afterward: that path is resolved during integration in overlap order and is excluded from worker write targets.
+Future-only overlap orders handoff/integration without serializing Planning. Partial coverage never proves independence.
 `uv run devkit spec worker inspect` audits the returned turn and cumulative rules against the intended base.
 
 The Host checks content using the source runtime, then prepares and executes the explicit branch integration.

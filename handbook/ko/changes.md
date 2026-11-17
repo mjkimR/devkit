@@ -4,7 +4,7 @@ generated: true
 # 변경 사항
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `c03315d43325` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -33,16 +33,20 @@ generated: true
 - [`SPEC-design-document-pilot`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-design-document-pilot/spec.md) (영어 원문): Early content pilot for domain, design and operations
 - [`SPEC-design-document-viewer`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-design-document-viewer/spec.md) (영어 원문): First-class formal documentation in the repository viewer
 - [`SPEC-domain-model-documents`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-domain-model-documents/spec.md) (영어 원문): Domain-model documentation
+- [`SPEC-envelope-commit-file-path`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-envelope-commit-file-path/spec.md) (영어 원문): Envelope commit accepts a workspace-relative --file path
 - [`SPEC-formal-doc-authoring-checkpoints`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-doc-authoring-checkpoints/spec.md) (영어 원문): Formal documentation checkpoints: route facts, review reimplementability, record assessments
 - [`SPEC-formal-doc-padding-trim`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-formal-doc-padding-trim/spec.md) (영어 원문): Trim padding from formal document guidance and documents
 - [`SPEC-formal-docs-feedback-handoff`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-docs-feedback-handoff/spec.md) (영어 원문): Feedback lifecycle domain and proposal handoff design documents
 - [`SPEC-formal-document-coverage`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-document-coverage/spec.md) (영어 원문): Formal document coverage across capability areas
 - [`SPEC-formal-document-kinds`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-document-kinds/spec.md) (영어 원문): First-class design, domain and operations document kinds
 - [`SPEC-formal-document-templates`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-document-templates/spec.md) (영어 원문): Template alignment for formal design, domain and operations documents
+- [`SPEC-handoff-rewrite-overlap-scheduling`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-handoff-rewrite-overlap-scheduling/spec.md) (영어 원문): Handoff rewrites as integration evidence in scope scheduling
+- [`SPEC-handoff-sibling-alias-rewrite`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-handoff-sibling-alias-rewrite/spec.md) (영어 원문): Handoff rewrites alias references to already handed-off proposals
 - [`SPEC-open-feedback-fixes`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-open-feedback-fixes/spec.md) (영어 원문): Fixes for four open feedback items
 - [`SPEC-proposal-precedence-edges`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-proposal-precedence-edges/spec.md) (영어 원문): Ordering claims between proposals checked when made
 - [`SPEC-remaining-feedback-fixes`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-remaining-feedback-fixes/spec.md) (영어 원문): Remaining formal-document-coverage feedback fixes
 - [`SPEC-reverify-summary-required`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-reverify-summary-required/spec.md) (영어 원문): envelope reverify requires a summary that envelope commit accepts
+- [`SPEC-viewer-adr-summary-wording`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-viewer-adr-summary-wording/spec.md) (영어 원문): Reword viewer ADR summaries that name library hosts
 - [`SPEC-viewer-host-wording`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-viewer-host-wording/spec.md) (영어 원문): Reword viewer documents still written for library hosts
 - [`SPEC-viewer-internal-simplification`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-viewer-internal-simplification/spec.md) (영어 원문): Viewer as an internal tool: drop the library surface and trim unused features
 - [`SPEC-viewer-roadmap-plumbing`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-viewer-roadmap-plumbing/spec.md) (영어 원문): Remove dead other-branch plumbing from the viewer roadmap

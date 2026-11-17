@@ -4,7 +4,7 @@ generated: true
 # Changes
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -33,16 +33,20 @@ Since the handbook snapshot `v0.1.6`:
 - [`SPEC-design-document-pilot`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-design-document-pilot/spec.md): Early content pilot for domain, design and operations
 - [`SPEC-design-document-viewer`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-design-document-viewer/spec.md): First-class formal documentation in the repository viewer
 - [`SPEC-domain-model-documents`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-domain-model-documents/spec.md): Domain-model documentation
+- [`SPEC-envelope-commit-file-path`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-envelope-commit-file-path/spec.md): Envelope commit accepts a workspace-relative --file path
 - [`SPEC-formal-doc-authoring-checkpoints`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-doc-authoring-checkpoints/spec.md): Formal documentation checkpoints: route facts, review reimplementability, record assessments
 - [`SPEC-formal-doc-padding-trim`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-formal-doc-padding-trim/spec.md): Trim padding from formal document guidance and documents
 - [`SPEC-formal-docs-feedback-handoff`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-docs-feedback-handoff/spec.md): Feedback lifecycle domain and proposal handoff design documents
 - [`SPEC-formal-document-coverage`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-document-coverage/spec.md): Formal document coverage across capability areas
 - [`SPEC-formal-document-kinds`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-document-kinds/spec.md): First-class design, domain and operations document kinds
 - [`SPEC-formal-document-templates`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-formal-document-templates/spec.md): Template alignment for formal design, domain and operations documents
+- [`SPEC-handoff-rewrite-overlap-scheduling`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-handoff-rewrite-overlap-scheduling/spec.md): Handoff rewrites as integration evidence in scope scheduling
+- [`SPEC-handoff-sibling-alias-rewrite`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-handoff-sibling-alias-rewrite/spec.md): Handoff rewrites alias references to already handed-off proposals
 - [`SPEC-open-feedback-fixes`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-open-feedback-fixes/spec.md): Fixes for four open feedback items
 - [`SPEC-proposal-precedence-edges`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-proposal-precedence-edges/spec.md): Ordering claims between proposals checked when made
 - [`SPEC-remaining-feedback-fixes`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-remaining-feedback-fixes/spec.md): Remaining formal-document-coverage feedback fixes
 - [`SPEC-reverify-summary-required`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-reverify-summary-required/spec.md): envelope reverify requires a summary that envelope commit accepts
+- [`SPEC-viewer-adr-summary-wording`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-viewer-adr-summary-wording/spec.md): Reword viewer ADR summaries that name library hosts
 - [`SPEC-viewer-host-wording`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-viewer-host-wording/spec.md): Reword viewer documents still written for library hosts
 - [`SPEC-viewer-internal-simplification`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261116-viewer-internal-simplification/spec.md): Viewer as an internal tool: drop the library surface and trim unused features
 - [`SPEC-viewer-roadmap-plumbing`](https://github.com/mjkimR/devkit/blob/v0.1.7/specs/2026-11/20261117-viewer-roadmap-plumbing/spec.md): Remove dead other-branch plumbing from the viewer roadmap

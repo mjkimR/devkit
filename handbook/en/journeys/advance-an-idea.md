@@ -3,7 +3,7 @@ sources:
   CAP-DIST-sync-and-transactions: 15ae876fa3e36568346c795bbe17d34183f15d85
   CAP-DLV-adaptive-assignments: ab0842accf482f5e3a29279e38a0c3ee5742468c
   CAP-DLV-adaptive-development: 93224b4daa9b78a1b2a090d745e9693571d809e6
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   UC-advance-an-idea: ccd7fa7758787dfc9e96321082bc99904eaadb2f
 title: Advance an idea
 ---
@@ -11,7 +11,7 @@ title: Advance an idea
 # Advance an idea
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

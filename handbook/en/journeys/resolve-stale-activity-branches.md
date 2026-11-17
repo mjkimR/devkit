@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-GOV-evaluation-lifecycle: 01aacea928c70408c22fa701e04032304941ed4c
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
 title: Resolve stale activity branches
@@ -10,7 +10,7 @@ title: Resolve stale activity branches
 # Resolve stale activity branches
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

@@ -10,7 +10,7 @@ translated_from: en/journeys/research-an-idea-and-shape-a-roadmap.md@b1012b55b75
 # 아이디어 조사와 로드맵 구체화하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `c03315d43325` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

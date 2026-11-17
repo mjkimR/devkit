@@ -8,7 +8,7 @@ title: Read decision supersession
 # Read decision supersession
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Open an ADR in Read or rendered Files to inspect Supersedes and Superseded by below its header. Whole replacement follows the earlier decision's status and reciprocal metadata; other relations show partial replacement and the written clause scope.

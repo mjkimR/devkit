@@ -9,7 +9,7 @@ translated_from: en/journeys/import-third-party-agent-assets.md@f52ffda1ec848ed1
 # 선택한 외부 에이전트 자산 가져오기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `c03315d43325` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 `adaptive-dev:core` 또는 `adaptive-dev:import`를 선택하고 동기화한 뒤 `/adaptive-import <repository-url-or-local-path>`를 명시적으로 실행합니다.

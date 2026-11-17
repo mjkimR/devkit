@@ -8,7 +8,7 @@ title: Read a formal document
 # Read a formal document
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Open the Living Spec book, select a namespace and area, or search for a design, domain or operations document. The viewer shows the canonical document and its source; follow current references or historical context to a related document. Open a supporting file from its parent and use Back to return.

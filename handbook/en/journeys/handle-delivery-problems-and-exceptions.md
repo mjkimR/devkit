@@ -1,8 +1,8 @@
 ---
 sources:
   CAP-DLV-delivery-workflows: 24dd61c39f2978024fbf3eeeb33337ddf0fd822c
-  CAP-DLV-workflow-envelopes: d4ff93fd7f267da9942bcc5f54d3fefcea45ef99
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-DLV-workflow-envelopes: bf8c446136bb052fb02075f7cfd527a00d7d94ed
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
   UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
 title: Handle delivery problems and exceptions
@@ -11,7 +11,7 @@ title: Handle delivery problems and exceptions
 # Handle delivery problems and exceptions
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

@@ -33,13 +33,13 @@ sources:
   UC-review-and-refactor-accumulated-slop: null
   UC-route-development-intent: null
 title: 전달
-translated_from: en/areas/delivery.md@cbdb565c99de72a6
+translated_from: en/areas/delivery.md@b6cc7d2578f9d945
 ---
 
 # 전달
 
 <!-- handbook:provenance -->
-> 소스 커밋 `a8289513d9e5` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `c03315d43325` 기준 devkit `v0.1.7` 스냅숏이며 2026-11-17에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -203,7 +203,9 @@ direct에서는 Host가 작업합니다. local-orchestrated는 각 워크트리�
 일정, 의미적 선택과 결과 수용은 Host가 맡습니다. scout의 기본 모델 수준은 compact,
 git-operator는 lean이며 지원되는 호스트에서 medium 추론 수준을 씁니다. 이 자원 수준은 전달 작업 노력 수준이나 권한을 바꾸지 않습니다.
 
-범위 관찰은 현재 쓰기와 미래 Planning 범위를 구분합니다. 현재 겹침은 실행 중 작업을 직렬화하고,
+범위 관찰은 현재 쓰기와 미래 Planning 범위를 구분합니다. 현재 겹침은 실행 중 작업을 직렬화합니다.
+두 Unit 모두 공유 경로를 handoff 커밋에서만 관찰했고 이후 수정하지 않았다면 예외가 적용됩니다.
+이 경로는 겹침 순서에 따라 통합 중 해결하며 작업자의 쓰기 대상에서 제외합니다.
 미래 범위만 겹치면 Planning을 직렬화하지 않고 handoff·통합 순서를 정합니다. 부분 관찰로 독립성을 증명할 수는 없습니다.
 `uv run devkit spec worker inspect`가 반환된 턴과 누적 규칙을 의도한 베이스와 대조합니다.
 

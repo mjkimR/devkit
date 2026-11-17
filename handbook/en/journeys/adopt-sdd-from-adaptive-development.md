@@ -1,7 +1,7 @@
 ---
 sources:
   CAP-DLV-sdd-baseline-adoption: 6cce1e21f936f5add3cdb32cbb07906fc5c1fb6b
-  CAP-HARN-agent-guidance: 8ca837964e8cb60e81e74e06688977bf26d501b9
+  CAP-HARN-agent-guidance: bf55166087783e5443836f637c6d054399623985
   UC-adopt-sdd-from-adaptive-development: 2c82a267d679732b7239bc790b0ef9aef0e65c5f
 title: Adopt SDD from adaptive development
 ---
@@ -9,7 +9,7 @@ title: Adopt SDD from adaptive development
 # Adopt SDD from adaptive development
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.7` at source commit `a8289513d9e5`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.7` at source commit `c03315d43325`, generated 2026-11-17. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
