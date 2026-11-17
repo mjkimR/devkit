@@ -2,7 +2,7 @@
 id: SPEC-envelope-commit-file-path
 title: Envelope commit accepts a workspace-relative --file path
 summary: devkit workflow envelope commit joins a workspace-relative --file path to the unit directory and its fix repeats the failing path; accept a path that already starts with the unit directory and name a working form in the fix.
-status: in-progress
+status: completed
 created: 2026-11-17
 related_capabilities: [CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output]
 related_usecases: []
