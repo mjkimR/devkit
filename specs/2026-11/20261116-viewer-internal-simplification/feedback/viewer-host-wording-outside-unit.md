@@ -8,7 +8,7 @@ target: docs/ux/viewer/UX-view-decision.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-16
 ---
 
@@ -34,3 +34,13 @@ docs/ux/viewer/UX-view-decision.md:21,26,48 host wording
 docs/decisions/2026-11/20261104-viewer-namespace-roadmap-discovery.md "Both dashboard routes" decision bullet
 docs/decisions/2026-11/20261110-viewer-indexed-decision-supersession.md drivers and consequences name library hosts
 ```
+
+## Disposition
+
+Resolved by `SPEC-viewer-host-wording`. `UX-view-decision` now names the page's own navigation, the Read, Files and
+proposal detail views and the document header's raw control; `rg -n -i host` finds no match in it. The library-host
+context, driver and "Both dashboard routes" bullet of `ADR-viewer-namespace-roadmap-discovery` and the library-host
+driver, option and consequence of `ADR-viewer-indexed-decision-supersession` carry history notes citing
+`ADR-internal-repository-viewer`; no decision clause changed, and the Decision Outcome of the second ADR is
+byte-identical to the base. The unit's self-review (low effort) passed with no findings and `devkit rules check --ci`
+reported no violation.
