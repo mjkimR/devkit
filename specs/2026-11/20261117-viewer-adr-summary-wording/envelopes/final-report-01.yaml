@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:16:18.397206Z'
+status: completed
+summary: 'Docs-only wording repair: the summaries of ADR-viewer-namespace-roadmap-discovery and ADR-viewer-indexed-decision-supersession no longer name library sources or a second host; each Y-statement keeps its decision and downside, and only the two summary lines changed. FB-viewer-adr-summaries-name-library-hosts resolved; FB-envelope-commit-file-path-doubled recorded.'
+findings: []
+checks:
+  tests: PASS just test-affected base=main partial 18 passed
+  build: PASS no build input changed; docs-only diff
+  lint: PASS devkit rules check --ci --base main; git diff --check
+diff_scope:
+  base: a8289513d9e59aab49e35e11900e26be3da493df
+  head: 72e2c59d0ac018db2b8e796afc18a56897bb369d
