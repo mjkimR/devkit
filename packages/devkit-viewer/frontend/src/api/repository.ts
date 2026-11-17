@@ -81,12 +81,7 @@ export function httpDataSource(base: string): RepositoryDataSource {
 
 export function normalizeTree(response: TreeResponse): TreeItem[] {
 	const items = Array.isArray(response) ? response : (response?.items ?? []);
-	return items
-		.map((item: any) => ({
-			...item,
-			type: item.type === 'dir' ? 'tree' : item.type === 'file' ? 'blob' : item.type
-		}))
-		.sort((a: any, b: any) =>
-			a.type !== b.type ? (a.type === 'tree' ? -1 : 1) : a.name.localeCompare(b.name)
-		);
+	return [...items].sort((a: any, b: any) =>
+		a.type !== b.type ? (a.type === 'tree' ? -1 : 1) : a.name.localeCompare(b.name)
+	);
 }

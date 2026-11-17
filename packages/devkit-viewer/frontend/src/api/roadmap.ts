@@ -11,8 +11,6 @@ export interface Member {
 	status: string;
 	/** Direct proposals do not certify milestone completion. */
 	settled: boolean;
-	/** The activity branch the member was read from; `null` for the default branch. */
-	branch: string | null;
 	path: string;
 }
 export interface Milestone {
@@ -29,17 +27,9 @@ export interface Milestone {
 	unknown: string[];
 	members: Member[];
 }
-export interface BranchDocuments {
-	name: string;
-	documents: RepositoryDocument[];
-}
-
 const FINISHED = new Set(['done', 'dropped']);
 const ORDER = ['active', 'planned', 'done', 'dropped'];
 const PROPOSAL = /^docs\/proposals\/PROP-[^/]+\/proposal\.md$/;
-
-/** Local branches whose Units the roadmap reads besides the selected branch. */
-export const isActivityBranch = (name: string) => /^(plan|dev)-./.test(name);
 
 const text = (value: unknown) => (typeof value === 'string' ? value : '');
 const rank = (status: string) => {
@@ -47,7 +37,7 @@ const rank = (status: string) => {
 	return index < 0 ? ORDER.length : index;
 };
 
-function memberOf(doc: RepositoryDocument, branch: string | null) {
+function memberOf(doc: RepositoryDocument) {
 	if (!PROPOSAL.test(doc.path)) return null;
 	const id = text(doc.meta.id);
 	if (!id.startsWith('PROP-')) return null;
@@ -58,37 +48,25 @@ function memberOf(doc: RepositoryDocument, branch: string | null) {
 		kind: 'proposal',
 		status,
 		settled: false,
-		branch,
 		path: doc.path
 	};
 	return { member, milestone: text(doc.meta.milestone), slug: id.replace(/^PROP-/, '') };
 }
 
 /**
- * Milestones of the default branch (`base`) with their readiness and members. Direct PROP members only. One member per slug:
- * an activity branch replaces the default branch's copy; rejected proposals
- * are not members.
+ * Milestones of the registered checkout with their readiness and members. Direct PROP members only. One member per
+ * slug, the first in `documents` order; rejected proposals are not members.
  */
 export function buildRoadmap(
-	base: RepositoryDocument[],
-	branches: BranchDocuments[],
+	documents: RepositoryDocument[],
 	options: { history: boolean }
 ): Milestone[] {
 	const winners = new Map<string, { member: Member; milestone: string }>();
-	const sources = [
-		{ branch: null, documents: base },
-		...branches.map((b) => ({ branch: b.name, documents: b.documents }))
-	];
-	const weight = (m: Member) => (m.branch ? 1 : 0);
-	for (const source of sources)
-		for (const doc of source.documents) {
-			const candidate = memberOf(doc, source.branch);
-			if (!candidate) continue;
-			const current = winners.get(candidate.slug);
-			if (!current || weight(candidate.member) > weight(current.member))
-				winners.set(candidate.slug, candidate);
-		}
-	const milestones = base
+	for (const doc of documents) {
+		const candidate = memberOf(doc);
+		if (candidate && !winners.has(candidate.slug)) winners.set(candidate.slug, candidate);
+	}
+	const milestones = documents
 		.filter((doc) => isMilestonePath(doc.path) && text(doc.meta.id))
 		.map((doc) => ({
 			id: text(doc.meta.id),

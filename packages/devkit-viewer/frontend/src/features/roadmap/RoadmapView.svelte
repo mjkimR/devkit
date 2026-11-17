@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { RepositoryDocument } from '../../api/documents';
 	import type { RepositoryDataSource } from '../../api/repository';
-	import { buildRoadmap, loadRoadmapDocuments, type BranchDocuments } from '../../api/roadmap';
+	import { buildRoadmap, loadRoadmapDocuments } from '../../api/roadmap';
 	import MilestoneItem from './MilestoneItem.svelte';
 
 	let {
@@ -16,7 +16,6 @@
 
 	let base = $state<RepositoryDocument[]>([]);
 	let baseRef = $state('');
-	let branches: BranchDocuments[] = [];
 	let errors = $state<string[]>([]);
 	let loading = $state(false);
 	let history = $state(false);
@@ -41,8 +40,7 @@
 		return () => controller.abort();
 	});
 
-	const opens = (_ref: string | null) => baseRef === branch;
-	const milestones = $derived(buildRoadmap(base, branches, { history }));
+	const milestones = $derived(buildRoadmap(base, { history }));
 </script>
 
 <div class="roadmap">
@@ -67,12 +65,7 @@
 	{:else}
 		<ol class="milestones">
 			{#each milestones as milestone (milestone.id)}
-				<MilestoneItem
-					{milestone}
-					canOpenBase={opens(null)}
-					canOpenMember={(memberBranch) => opens(memberBranch)}
-					{onOpen}
-				/>
+				<MilestoneItem {milestone} {onOpen} />
 			{/each}
 		</ol>
 	{/if}

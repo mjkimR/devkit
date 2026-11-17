@@ -3,13 +3,9 @@
 
 	let {
 		milestone,
-		canOpenBase = true,
-		canOpenMember,
 		onOpen
 	}: {
 		milestone: Milestone;
-		canOpenBase?: boolean;
-		canOpenMember: (branch: string | null) => boolean;
 		onOpen: (path: string) => void;
 	} = $props();
 </script>
@@ -28,9 +24,7 @@
 				<span class="readiness unknown">Unknown dependencies: {milestone.unknown.join(', ')}</span>
 			{/if}
 		{/if}
-		{#if canOpenBase}
-			<button onclick={() => onOpen(milestone.path)}>View raw</button>
-		{/if}
+		<button onclick={() => onOpen(milestone.path)}>View raw</button>
 	</header>
 	<h2>{milestone.title}</h2>
 	{#if milestone.members.length}
@@ -40,14 +34,7 @@
 					<span class="settled" class:done={member.settled}>
 						{member.settled ? 'Settled' : 'In progress'}
 					</span>
-					{#if canOpenMember(member.branch)}
-						<button class="title" onclick={() => onOpen(member.path)}>{member.title}</button>
-					{:else}
-						<span class="title">{member.title}</span>
-					{/if}
-					{#if member.branch}
-						<span class="branch">🌿 {member.branch}</span>
-					{/if}
+					<button class="title" onclick={() => onOpen(member.path)}>{member.title}</button>
 					<span class="meta">{member.id} · {member.status}</span>
 				</li>
 			{/each}
@@ -187,11 +174,6 @@
 	button.title:hover {
 		text-decoration: underline;
 		background: none;
-	}
-
-	.branch {
-		font-size: 11px;
-		color: var(--text-muted);
 	}
 
 	.meta {

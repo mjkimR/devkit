@@ -29,7 +29,7 @@ const milestones = [
 
 describe('buildRoadmap order and readiness', () => {
 	it('lists active then planned, history hidden', () => {
-		const roadmap = buildRoadmap(milestones, [], { history: false });
+		const roadmap = buildRoadmap(milestones, { history: false });
 		expect(roadmap.map((m) => m.id)).toEqual(['MS-b', 'MS-c', 'MS-e']);
 		const [b, c] = roadmap;
 		expect([b.ready, b.waitingFor]).toEqual([true, []]);
@@ -37,12 +37,12 @@ describe('buildRoadmap order and readiness', () => {
 	});
 
 	it('adds done and dropped milestones with history', () => {
-		const roadmap = buildRoadmap(milestones, [], { history: true });
+		const roadmap = buildRoadmap(milestones, { history: true });
 		expect(roadmap.map((m) => m.id)).toEqual(['MS-b', 'MS-c', 'MS-e', 'MS-a', 'MS-d']);
 	});
 
 	it('never counts an unknown prerequisite as satisfied', () => {
-		const e = buildRoadmap(milestones, [], { history: false }).find((m) => m.id === 'MS-e')!;
+		const e = buildRoadmap(milestones, { history: false }).find((m) => m.id === 'MS-e')!;
 		expect([e.ready, e.unknown, e.waitingFor]).toEqual([false, ['MS-missing'], []]);
 	});
 });
@@ -56,44 +56,27 @@ describe('buildRoadmap members', () => {
 		proposal('h', 'accepted', 'MS-b'),
 		proposal('other', 'draft', 'MS-c')
 	];
-	const branches = [{ name: 'dev-h', documents: [spec('h', 'in-progress', 'MS-b')] }];
 
 	it('ignores SPEC metadata and leaves direct PROP members and rejected filtering intact', () => {
-		const b = buildRoadmap(base, branches, { history: false }).find((m) => m.id === 'MS-b')!;
-		expect(b.members.map((m) => [m.id, m.settled, m.branch])).toEqual([
-			['PROP-h', false, null],
-			['PROP-p', false, null]
+		const b = buildRoadmap(base, { history: false }).find((m) => m.id === 'MS-b')!;
+		expect(b.members.map((m) => [m.id, m.settled])).toEqual([
+			['PROP-h', false],
+			['PROP-p', false]
 		]);
 	});
 
-	it('shows only the selected branch without activity branches', () => {
-		const b = buildRoadmap(base, [], { history: false }).find((m) => m.id === 'MS-b')!;
-		expect(b.members.map((m) => m.id)).toEqual(['PROP-h', 'PROP-p']);
-	});
-
-	it('does not replace PROP membership with a same-slug completed SPEC on any branch', () => {
+	it('does not replace PROP membership with a same-slug completed SPEC', () => {
 		const documents = [...base, spec('p', 'completed', 'MS-c')];
-		const activity = [{ name: 'dev-p', documents: [spec('p', 'completed', 'MS-c')] }];
-		const b = buildRoadmap(documents, activity, { history: true }).find((m) => m.id === 'MS-b')!;
+		const b = buildRoadmap(documents, { history: true }).find((m) => m.id === 'MS-b')!;
 		expect(b.members.map((m) => m.id)).toEqual(['PROP-h', 'PROP-p']);
 		expect(b.members.every((m) => m.kind === 'proposal' && !m.settled)).toBe(true);
 	});
 
 	it('retains proposal members when showing milestone history', () => {
-		const history = buildRoadmap([...base, proposal('old', 'draft', 'MS-a')], [], {
+		const history = buildRoadmap([...base, proposal('old', 'draft', 'MS-a')], {
 			history: true
 		});
 		expect(history.find((m) => m.id === 'MS-a')!.members.map((m) => m.id)).toEqual(['PROP-old']);
-	});
-
-	it('follows a member that moved to another milestone on its branch', () => {
-		const moved = [{ name: 'plan-p', documents: [proposal('p', 'reviewing', 'MS-c')] }];
-		const roadmap = buildRoadmap(base, moved, { history: false });
-		expect(roadmap.find((m) => m.id === 'MS-b')!.members.map((m) => m.id)).not.toContain('PROP-p');
-		expect(roadmap.find((m) => m.id === 'MS-c')!.members.map((m) => [m.id, m.branch])).toEqual([
-			['PROP-other', null],
-			['PROP-p', 'plan-p']
-		]);
 	});
 });
 
@@ -154,10 +137,10 @@ it('keeps done and dropped archived prerequisites satisfied before history filte
 		milestone('MS-live', 'active', ['MS-done', 'MS-drop'])
 	];
 	for (const history of [false, true]) {
-		const live = buildRoadmap(base, [], { history }).find((m) => m.id === 'MS-live')!;
+		const live = buildRoadmap(base, { history }).find((m) => m.id === 'MS-live')!;
 		expect([live.ready, live.unknown, live.waitingFor]).toEqual([true, [], []]);
 	}
 	const reopened = milestone('MS-done', 'active');
 	expect(reopened.path).toBe('docs/roadmap/MS-done.md');
-	expect(buildRoadmap([reopened], [], { history: false })[0].status).toBe('active');
+	expect(buildRoadmap([reopened], { history: false })[0].status).toBe('active');
 });

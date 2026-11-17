@@ -2,7 +2,7 @@
 id: SPEC-viewer-roadmap-plumbing
 title: Remove dead other-branch plumbing from the viewer roadmap
 summary: Drop the unused branch parameter and helpers from the viewer roadmap, the foreign dir/file mapping in normalizeTree and the stale library-build gitignore entries, with their tests; roadmap behavior is unchanged.
-status: planned
+status: in-progress
 created: 2026-11-17
 related_capabilities: [CAP-VIEW-repository-viewer]
 related_usecases: []
