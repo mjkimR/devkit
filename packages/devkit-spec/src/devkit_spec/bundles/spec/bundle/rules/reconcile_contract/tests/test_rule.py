@@ -313,6 +313,27 @@ def test_a_record_resolved_in_a_merge_head_needs_no_coverage(tmp_path: Path) -> 
     assert _staged(tmp_path) == []
 
 
+def test_a_record_resolved_by_a_picked_commit_needs_no_coverage(tmp_path: Path) -> None:
+    _repo(tmp_path)
+    write_files(tmp_path, {"docs/a.md": "a\n"})
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "base")
+    _git(tmp_path, "switch", "-q", "-c", "dev-x")
+    write_files(tmp_path, {"docs/a.md": "a on the branch\n"})
+    _git(tmp_path, "commit", "-q", "-am", "branch")
+    _git(tmp_path, "switch", "-q", "main")
+    write_files(tmp_path, {"docs/a.md": "a on main\n", SPEC: _spec(), RECORD: _targets_record("", coverage="")})
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "an older record resolved on main")
+    _git(tmp_path, "switch", "-q", "dev-x")
+    subprocess.run(["git", "-C", str(tmp_path), "cherry-pick", "main"], capture_output=True, check=False)
+    assert (tmp_path / ".git/CHERRY_PICK_HEAD").exists()  # docs/a.md conflicts, so the pick waits to be concluded
+    write_files(tmp_path, {"docs/a.md": "a resolved\n"})
+    assert _staged(tmp_path) == []
+    (tmp_path / ".git/CHERRY_PICK_HEAD").unlink()  # without the operation head the record is newly resolved
+    assert _staged(tmp_path) == _uncovered("design", "domain", "operations")
+
+
 def test_a_newly_resolved_record_needs_coverage_in_a_ci_run(tmp_path: Path) -> None:
     _repo(tmp_path)
     write_files(tmp_path, {"docs/a.md": "a\n"})

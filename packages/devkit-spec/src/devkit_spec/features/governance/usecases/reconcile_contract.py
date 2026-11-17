@@ -23,8 +23,8 @@ found, the staged diff alone is the evidence.
 
 A snapshot run also requires every role to be covered on a resolved record the diff changes that no parent of the
 commit has ``resolved``: the snapshot base, and in a staged run each commit named by ``MERGE_HEAD``,
-``CHERRY_PICK_HEAD`` or ``REVERT_HEAD``, so concluding a merge never requires coverage of a record the base branch
-resolved.
+``CHERRY_PICK_HEAD`` or ``REVERT_HEAD``, so concluding a merge, cherry-pick or revert never requires coverage of a
+record the merged, picked or reverted commit already resolved.
 """
 
 from __future__ import annotations
