@@ -10,14 +10,6 @@ created_at: 2026-11-16
 
 # [ADR-internal-repository-viewer] Internal single-host repository viewer
 
-- **Status**: Accepted
-- **Date**: 2026-11-16
-- **Involved Components/Capabilities**: `packages/devkit-viewer/` (Python package and `frontend/`),
-  `.devkit/generated.toml` (`CAP-GEN-tracked-artifacts`), `CAP-VIEW-repository-viewer`, `ARCH-05-1-containers`,
-  `ARCH-07-deployment`, `scripts/viewer.sh`, `scripts/affected_tests.py`, `.github/workflows/ci.yml`
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-repository-viewer` built the viewer as one Svelte source for two hosts: devkit's local server and autohub's
@@ -34,6 +26,8 @@ per-page caches, and Planning-overlay sources and caches beyond the local machin
 
 The committed static build is independent of autohub: it lets a Git install of `devkit-viewer` serve the page without
 Node.
+
+This decision involves `CAP-GEN-tracked-artifacts`, `ARCH-05-1-containers`, `ARCH-07-deployment`.
 
 ---
 

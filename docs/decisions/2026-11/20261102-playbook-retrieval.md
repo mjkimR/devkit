@@ -11,13 +11,6 @@ aliases:
 
 # [ADR-playbook-retrieval] External scheduling and exact playbook retrieval by ID or alias
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `CAP-DIST-context-and-playbooks`, `ARCH-08-2-resource-taxonomy`,
-  `CAP-SRCH-document-search`
-
----
-
 ## 1. Context & Problem Statement
 
 `MS-maintenance-operations` requires callers that already know a playbook ID to retrieve a task without discovery.

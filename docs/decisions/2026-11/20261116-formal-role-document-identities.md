@@ -14,11 +14,6 @@ Superseded in part by `ADR-area-scoped-design-bundles`: the flat canonical path 
 domain documents and the `<ID>/artifacts/` support clause for design documents. Its identity, prefix, status, relation,
 ownership and entrypoint clauses stay in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-16
-
----
-
 ## 1. Context & Problem Statement
 
 Independently maintained conceptual, implementation and operational knowledge requires direct identity,

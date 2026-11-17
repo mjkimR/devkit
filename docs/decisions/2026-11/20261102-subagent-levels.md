@@ -12,12 +12,6 @@ aliases:
 
 # [ADR-subagent-levels] Neutral subagent model levels resolved at distribution time
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `CAP-DIST-agent-projections`, `CAP-DIST-sync-and-transactions`
-
----
-
 ## 1. Context & Problem Statement
 
 `CAP-DIST-agent-projections` renders native model and effort fields. Projects need portable opt-in levels and

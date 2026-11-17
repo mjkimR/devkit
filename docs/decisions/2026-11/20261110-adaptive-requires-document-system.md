@@ -10,11 +10,6 @@ created_at: 2026-11-10
 
 # [ADR-adaptive-requires-document-system] devkit-adaptive requires the document system
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-adaptive-development-and-research` keeps adaptive development installable beside the document system without

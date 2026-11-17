@@ -17,14 +17,6 @@ aliases:
 Superseded in part by `ADR-remove-plan-intent-gate`: Gates, Overall refactor workflow and Handoff target lose `plan-intent` and its
 carry. Classification axes, workflow/stage IDs, `plan-accept`, `dev-integration` and target workflow remain.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @mjkimR, @minjae
-- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-planning`,
-  `CAP-DLV-spec-bundles`, `CAP-DLV-project-policy`, `CAP-HARN-agent-guidance`, `capabilities/delivery/`, `architecture/`
-
----
-
 ## 1. Context & Problem Statement
 
 Routes 1 to 4 mixed two questions in one name: what the work does (only `bugfix` said that) and what must be settled
@@ -55,6 +47,8 @@ A structural change across the project (package boundaries, conventions, documen
 depths: `session` cannot change the Living Spec, `spec` demands `spec.md`, `plan.md` and `tasks.md` with fixed task
 boundaries before code, and `proposal` adds Planning and usually workers. Such work is broad and its direction settles
 while it proceeds, so the unit documents and worker boundaries hold it back.
+
+This decision involves `CAP-DLV-spec-bundles`, `CAP-DLV-project-policy`.
 
 ---
 

@@ -10,11 +10,6 @@ created_at: 2026-11-16
 
 # [ADR-area-scoped-design-bundles] Area-scoped design bundles and domain area directories
 
-- **Status**: Accepted
-- **Date**: 2026-11-16
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-formal-role-document-identities` placed design, domain and operations documents at flat canonical paths

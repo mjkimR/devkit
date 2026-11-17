@@ -11,11 +11,6 @@ created_at: 2026-10-22
 
 Superseded in part by `ADR-decision-ledger`: the decision-record exemption from alias rewrites in the References outcome; historical files retain their existing treatment.
 
-- **Status**: Accepted
-- **Date**: 2026-10-22
-
----
-
 ## 1. Context & Problem Statement
 
 A document is found only by its exact ID. Renaming a capability, story, architecture document, milestone or any other

@@ -16,15 +16,6 @@ created_at: 2026-11-11
 
 Superseded in part by `ADR-remove-unused-cli-options-without-shims`: the clause that `--local-only` stays accepted, and the follow-up to retire the no-op `--local-only` flag. All other decisions remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-11
-- **Deciders**: user
-- **Involved Components/Capabilities**: `CAP-WT-task-worktrees`, `CAP-INT-mcp-services`,
-  `CAP-DLV-workflow-envelopes`, `CAP-DLV-delivery-workflows`, `ARCH-04-2-delivery-policy`, `ARCH-05-2-components`,
-  `devkit_agt.features.worktree`, `devkit_agt.features.integration`, `devkit_agt.features.workflow`
-
----
-
 ## 1. Context & Problem Statement
 
 Two implementations landed a task branch on the local base: `devkit worktree finish --merge` and
@@ -37,6 +28,8 @@ be kept twice.
 The local route's boundaries are already decided: `ADR-post-merge-verification` removed content finish guards from
 integration, and `ARCH-04-2-delivery-policy` excludes fetch and push from the local route. The only caller of the
 `devkit.finish_guard` group was `finish --merge`.
+
+This decision involves `CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`.
 
 ---
 

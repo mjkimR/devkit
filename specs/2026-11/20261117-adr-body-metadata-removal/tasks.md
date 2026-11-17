@@ -19,7 +19,7 @@ plan: PLAN-adr-body-metadata-removal
 
 ## Phase 2: Living Spec
 
-- [ ] **Task 2.1**: Remove the block from the existing ADRs, keeping reference edges and the named exceptions
+- [x] **Task 2.1**: Remove the block from the existing ADRs, keeping reference edges and the named exceptions
   - **_Boundary**: docs/decisions/
   - _Requirements: AC-05_
   - **Verification**: the `rg` command of AC-05; `uv run devkit rules check docs/decisions`

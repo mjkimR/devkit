@@ -15,13 +15,6 @@ aliases:
 
 # [ADR-feedback-lifecycle-ledger] Feedback lifecycle, recording lookup and consolidation
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: not recorded in the members
-- **Involved Components/Capabilities**: not recorded in the members
-
----
-
 ## 1. Context & Problem Statement
 
 Capture and hygiene kept direct fixes and routed work under the same promoted status, and an authorized fix outside a

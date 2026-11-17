@@ -17,16 +17,6 @@ Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: 
 
 Superseded in part by `ADR-selective-package-versions`: the foundation-lockstep qualifier in the first MCP runtime outcome; ownership, dependency directions, runtime, registration and approval decisions remain.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @minjae
-- **Involved Components/Capabilities**: `packages/devkit-mcp/`, `packages/devkit-dist/` (shared artifacts, host
-  registration), `packages/devkit-core/`, `CAP-HOST-lifecycle-observation`, `CAP-COLL-work-scope-registry`,
-  `CAP-MCP-runtime-registration`, `CAP-DIST-sync-and-transactions`, the maintenance bundle's reporting playbook,
-  `MS-maintenance-operations`
-
----
-
 ## 1. Context & Problem Statement
 
 **MCP runtime.** The package split moved host whole into dist and made the MCP server version follow dist. The

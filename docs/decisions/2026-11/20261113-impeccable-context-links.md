@@ -10,9 +10,6 @@ created_at: 2026-11-13
 
 # [ADR-impeccable-context-links] User-requested links to tracked Impeccable context
 
-- **Status**: Accepted
-- **Date**: 2026-11-13
-
 ## 1. Context & Problem Statement
 
 Consumer-owned Impeccable context kept only at the checkout root is absent from another worktree or clone.

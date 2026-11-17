@@ -9,13 +9,6 @@ created_at: 2026-11-04
 
 # [ADR-inspected-state-identity] Inspected-state identity for maintenance runs
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-- **Deciders**: repository owner
-- **Involved Components/Capabilities**: `capabilities/delivery/`, the maintenance playbooks, `packages/devkit/src/devkit_agt/features/`
-
----
-
 ## 1. Context & Problem Statement
 
 Every maintenance playbook records HEAD and the dirty path list at intake, and `CAP-DLV-weekly-report` requires a

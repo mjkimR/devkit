@@ -22,14 +22,6 @@ Superseded in part by `ADR-post-merge-verification`: optional same-process accep
 
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause, the consequence requiring separate live evidence for native form rendering, and the viewer exception clause. Conversational acceptance and the repository viewer protections remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-10-22
-- **Deciders**: not recorded in the members
-- **Involved Components/Capabilities**: `CAP-DLV-proposal-planning`, `CAP-DLV-delivery-workflows`,
-  `CAP-GOV-spec-rules`, `CAP-GOV-rule-authoring`
-
----
-
 ## 1. Context & Problem Statement
 
 A direct acceptance must reach the same end state a Planning acceptance reaches: `status: accepted` and an accepted

@@ -10,11 +10,6 @@ created_at: 2026-11-10
 
 # [ADR-adaptive-assignment-commands] Adaptive assignment commands
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-
----
-
 ## 1. Context & Problem Statement
 
 Adaptive development is guidance: `CAP-DLV-adaptive-development` excludes a runtime scheduler and states that no

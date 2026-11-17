@@ -12,11 +12,6 @@ created_at: 2026-11-16
 
 Superseded in part by `ADR-formal-document-closings`: the clause that a formal document closes with its authority boundary, naming what it does not settle and the owner that does, and with its maintenance trigger and next useful action, and the clause that each kind's writing instruction carries the scoping step.
 
-- **Status**: Accepted
-- **Date**: 2026-11-16
-
----
-
 ## 1. Context & Problem Statement
 
 `CAP-DOCS-documentation-ownership` §3.3 asks authors to state the reader question, and

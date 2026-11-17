@@ -14,14 +14,6 @@ supersedes: [ADR-document-id-aliases]
 
 # [ADR-decision-ledger] Immutable decisions, editable records and confirm-first playbook discovery
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @minjae
-- **Involved Components/Capabilities**: `docs/decisions/`, `capabilities/documents/`, `capabilities/governance/`,
-  `capabilities/harness/`, the `adr-consolidation` playbook
-
----
-
 ## 1. Context & Problem Statement
 
 **Decision records.** An append-only ledger, in which an approved ADR is never edited or deleted and any change is a

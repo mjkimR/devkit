@@ -9,11 +9,6 @@ created_at: 2026-11-16
 
 # [ADR-recorded-formal-docs-assessment] Recorded formal-docs assessment and reimplementability review
 
-- **Status**: Accepted
-- **Date**: 2026-11-16
-
----
-
 ## 1. Context & Problem Statement
 
 `spec-plan`, `spec-review` and `spec-sync` ask for a design, domain and operations assessment in plan, review and

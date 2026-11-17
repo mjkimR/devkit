@@ -10,11 +10,6 @@ created_at: 2026-11-04
 
 # [ADR-namespace-milestone-roots] Per-namespace milestones under the namespace docs root
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-roadmap-and-milestones-ledger` keeps milestones global ("Milestones are global; per-namespace roadmaps are

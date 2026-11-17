@@ -16,8 +16,6 @@ aliases:
 Superseded in part by `ADR-remove-plan-intent-gate`: the inline Planning boundary is before implementation rather than before `plan-intent`.
 Comparing screen candidates during Planning and retaining the recommended candidate during Development remain.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
 - Superseded in part by `ADR-namespace-steering-registers`: the clauses requiring one root-only register, unconditional root creation with the first UX document, and root-only writes of drafted register rows by `spec-sync`. Shared rows stay global, namespace rows stay local, and files are created only when needed; other screen and register contracts remain.
 - Superseded in part by `ADR-explicit-ux-coverage-exception-notation`: the Step links and coverage clauses for empty Step cells and uncited steps or extensions, which now exclude classifications with a reason; the off-screen phrase and the known limit that every uncited step retains a warning. Classified steps retain their flow effects.
 - Superseded in part by `ADR-ux-coverage-step-targeting`: the uncited-step report targeting clause only: the report belongs to a targeted use case, else the first targeted listing UX document; `RULE-ux-links` keeps its existing targeting.

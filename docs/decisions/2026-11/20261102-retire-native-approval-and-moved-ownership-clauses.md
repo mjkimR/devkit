@@ -9,14 +9,6 @@ supersedes: [ADR-proposal-acceptance, ADR-mcp-runtime-and-shared-artifacts, ADR-
 
 # [ADR-retire-native-approval-and-moved-ownership-clauses] Retire native-approval and moved-ownership clauses
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: user, agent
-- **Involved Components/Capabilities**: `CAP-DLV-proposal-planning`, `CAP-INT-mcp-services`, `CAP-VIEW-repository-viewer`,
-  `CAP-DOCS-document-model`, `CAP-DIST-context-and-playbooks`
-
----
-
 ## 1. Context & Problem Statement
 
 Later decisions replaced some clauses of four accepted ADRs without adding a "Superseded in part by" line, so those
@@ -35,6 +27,9 @@ ADRs still state them:
 
 The ADR consolidation found these clauses and kept them verbatim, because a consolidation changes no decision
 (`FB-native-approval-adrs-without-pointers`, `FB-adr-ownership-moves-without-pointers`).
+
+This decision involves `CAP-DLV-proposal-planning`, `CAP-INT-mcp-services`, `CAP-VIEW-repository-viewer`,
+`CAP-DOCS-document-model`, `CAP-DIST-context-and-playbooks`.
 
 ---
 

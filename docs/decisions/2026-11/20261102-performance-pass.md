@@ -13,13 +13,6 @@ aliases:
 
 # [ADR-performance-pass] Performance pass playbook, classification, measurement and reuse
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `maintenance/performance-pass` and `maintenance/review-refactor` playbooks
-  (`packages/devkit-catalog`), `CAP-DIST-context-and-playbooks`
-
----
-
 ## 1. Context & Problem Statement
 
 A performance pass has its own goal (latency of user-selected operations) and its own evidence (a measured baseline,

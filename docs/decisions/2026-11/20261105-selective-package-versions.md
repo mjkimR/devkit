@@ -13,9 +13,6 @@ created_at: 2026-11-05
 
 # [ADR-selective-package-versions] Selective package versions and immutable release inventories
 
-- **Status**: Accepted
-- **Date**: 2026-11-05
-
 ## 1. Context & Problem Statement
 
 Lockstep metadata advances independently consumed `devkit-advisory` without a distribution change.

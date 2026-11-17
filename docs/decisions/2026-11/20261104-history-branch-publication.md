@@ -11,13 +11,6 @@ created_at: 2026-11-04
 
 Superseded in part by `ADR-opt-in-maintenance-history`: the blanket applicability of section 4 first clause; its publication semantics apply to explicitly selected history runs. All other decisions remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-- **Deciders**: repository owner
-- **Involved Components/Capabilities**: `capabilities/delivery/`, `packages/devkit/src/devkit_agt/features/`, the maintenance playbooks
-
----
-
 ## 1. Context & Problem Statement
 
 Maintenance playbook runs end in a local report and a local companion record; nothing durable survives the

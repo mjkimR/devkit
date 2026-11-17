@@ -22,13 +22,6 @@ authorization and all later boundary policies remain.
 
 Superseded in part by `ADR-post-merge-verification`: the merge-time readiness and report-engine revalidation requirements only. Direction acceptance and retained-base approval authority remain.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @mjkimR, Repository owner
-- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-project-policy`, `ARCH-06-runtime-view`
-
----
-
 ## 1. Context & Problem Statement
 
 Delivery workflows have three human decision points (the user's intent, the direction among alternatives and
@@ -62,6 +55,8 @@ discussion. Existing guarded CLI execution can be delegated without changing whe
 matching live read-only state reports. It did not measure lifecycle mutation reliability, token cost or conversation
 availability. The user selected the role name `git-operator` and the existing `lean` preset. Terra medium was not part
 of the probe; that choice is not inferred from the Sol results.
+
+This decision involves `CAP-DLV-delivery-workflows`, `ARCH-06-runtime-view`.
 
 ---
 

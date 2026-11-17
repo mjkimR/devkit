@@ -11,16 +11,6 @@ created_at: 2026-11-11
 
 # [ADR-remove-unused-cli-options-without-shims] Remove unused CLI options without compatibility shims
 
-- **Status**: Accepted
-- **Date**: 2026-11-11
-- **Deciders**: user
-- **Involved Components/Capabilities**: `CAP-WT-task-worktrees`, `CAP-DLV-cli-and-output`,
-  `CAP-DLV-workflow-definitions`, `CAP-DOCS-document-lookup`, `devkit_agt.features.worktree`,
-  `devkit_agt.features.rules`, `devkit_agt.features.workflow`, `devkit_dist.features.host`,
-  `devkit_docs.features.documents`
-
----
-
 ## 1. Context & Problem Statement
 
 Six options are accepted but unused by any documented workflow, bundle guidance, script or caller:

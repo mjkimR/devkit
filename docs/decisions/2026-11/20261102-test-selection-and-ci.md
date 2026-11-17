@@ -14,13 +14,6 @@ aliases:
 
 Superseded in part by `ADR-post-merge-verification`: permission to leave non-batch integrated-head testing to a later batch or nightly run. Affected selection, full fallback and full nightly/release CI remain.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `just test-affected` and its selector, `spec-orchestrate` Completion, the
-  nightly CI wrapper, manual and release CI
-
----
-
 ## 1. Context & Problem Statement
 
 Repeated complete workspace runs delay development as the suite grows. Static affected-test selection covers most

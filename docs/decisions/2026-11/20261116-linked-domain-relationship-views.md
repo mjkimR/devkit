@@ -16,11 +16,6 @@ relationship overview, authority boundary and next useful step remain.
 
 Superseded in part by `ADR-formal-role-document-identities`: the ID-free domain representation, exclusion from indexed identity and selected absence of Kind, template, namespace and runtime support.
 
-- **Status**: Accepted
-- **Date**: 2026-11-16
-
----
-
 ## 1. Context & Problem Statement
 
 The supplied domain pilot explains useful relationships, but its filename was supplied to the reader. Existing

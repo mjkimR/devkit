@@ -16,13 +16,6 @@ Superseded in part by `ADR-namespace-steering-directories`: the Directory clause
 
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the statements that `devkit get-context spec` lists steering documents, that role contracts receive the list through spec context, and that a guidance test asserts this. Role contracts still load spec context; docs context lists the steering documents.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `docs/steering/`, `CAP-DIST-manifest-spec`, `CAP-DIST-context-and-playbooks`,
-  `CAP-DIST-workspace-ownership`
-
----
-
 ## 1. Context & Problem Statement
 
 Project-wide background (product purpose, tone, style direction, a domain overview) has no place in the Living Spec:

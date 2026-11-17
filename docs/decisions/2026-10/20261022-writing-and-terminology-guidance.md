@@ -12,13 +12,6 @@ aliases:
 
 # [ADR-writing-and-terminology-guidance] Writing and terminology guidance
 
-- **Status**: Accepted
-- **Date**: 2026-10-22
-- **Involved Components/Capabilities**: `CAP-HARN-agent-guidance`, `CAP-DOCS-document-search`,
-  `ARCH-08-2-resource-taxonomy`
-
----
-
 ## 1. Context & Problem Statement
 
 Eight terminology rules ship as bundle instruction text. Their place had to be decided (where the text lives, where

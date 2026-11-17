@@ -25,15 +25,6 @@ Superseded in part by `ADR-post-merge-verification`: the requirements for target
 
 Superseded in part by `ADR-single-local-landing-route`: the clauses that `[worktree] merge` applies to `devkit worktree finish --merge`, that the CLI `finish --merge` builds a merge commit only when the target did not advance and takes the integration lock, that `devkit worktree finish --merge` keeps refusing a moved target, and the mention of `finish --merge` among the callers that pass no conflict settler. All other decisions remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: user, agent (user decisions are cited where the members record them)
-- **Involved Components/Capabilities**: `CAP-INT-mcp-services`, `CAP-WT-task-worktrees`, `CAP-DLV-delivery-workflows`,
-  `CAP-GEN-tracked-artifacts`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-content-packages`, `devkit.worktree`,
-  `devkit worktree finish`
-
----
-
 ## 1. Context & Problem Statement
 
 Integration ran `git merge --ff-only` in the base checkout (`worktree/lifecycle.py` `finish`), and the request fixed
@@ -82,6 +73,8 @@ that channel could carry out remained: a refusal before the confirmation of "any
 only an admin could make ends as `INTEGRATION_MERGE_REFUSED` at the merge call, unreadable classic protection is
 disclosed, not refused), and the confirmation-form rules and "native approval routes" of
 `ADR-configuration-language-and-rendering`.
+
+This decision involves `CAP-DIST-content-packages`.
 
 ---
 

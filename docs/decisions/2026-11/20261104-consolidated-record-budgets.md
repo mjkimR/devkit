@@ -11,9 +11,6 @@ created_at: 2026-11-04
 
 Superseded in part by `ADR-byte-based-file-budgets`: the line-count metric, line-based setting names and the repository's 600-line limits. Alias eligibility, optional rule-local budgeting, max precedence and pure settings resolution remain.
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-
 ## 1. Context & Problem Statement
 
 `ADR-decision-ledger` keeps a topic's decisions together. Ordinary line-length remediation splits that record,

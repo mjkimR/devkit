@@ -9,11 +9,6 @@ created_at: 2026-11-11
 
 # [ADR-literal-read-test-selection] Select tests by their literal repository-path reads
 
-- **Status**: Accepted
-- **Date**: 2026-11-11
-
----
-
 ## 1. Context & Problem Statement
 
 `scripts/affected_tests.py` maps a changed non-source file to its readers only through the hand-kept `DATA` table

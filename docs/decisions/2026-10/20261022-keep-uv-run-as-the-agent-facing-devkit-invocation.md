@@ -8,13 +8,6 @@ created_at: 2026-10-22
 
 # [ADR-keep-uv-run-as-the-agent-facing-devkit-invocation] Keep uv run as the agent-facing devkit invocation
 
-- **Status**: Accepted
-- **Date**: 2026-10-22
-- **Deciders**: the user, on the rejection of ~~`PROP-direct-devkit-invocation`~~ (Git `4672a101eec0`)
-- **Involved Components/Capabilities**: `capabilities/harness/`, `capabilities/distribution/`
-
----
-
 ## 1. Context & Problem Statement
 
 Agent guidance tells agents to call `uv run devkit ...`: the managed `AGENTS.md` block, the generated
@@ -24,6 +17,8 @@ commands that take 120-450 ms. Hooks already avoid it: commit gates run the work
 host hooks run `devkit` from `PATH`. The guidance is committed and shared by every consumer repository, host and
 clone, so any form it names must work from any working directory and must not run a devkit older than the lock.
 devkit targets POSIX only (`ARCH-03-context`).
+
+Decided by the user on the rejection of ~~`PROP-direct-devkit-invocation`~~ (Git `4672a101eec0`).
 
 ## 2. Decision Drivers
 
