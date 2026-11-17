@@ -8,7 +8,7 @@ target: docs/development/reference/
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-17
 ---
 
@@ -38,3 +38,9 @@ no violation on the pages written after the template landed.
 ```text
 spec.md §3 Non-Goal 2 and §5 "Deferred work"; ADR-recorded-formal-docs-assessment §5 "Follow-up".
 ```
+
+## Disposition
+
+- **Disposition**: Dismissed: an open item whose only trigger is "after five specs" has no owner that rechecks it, and
+  `reconcile-reviewer` already reports a new code without a documented condition as P2 on every change. Raise a new
+  feedback item when a review misses an undocumented code condition; that miss is the evidence this rule needs.
