@@ -112,8 +112,11 @@ Alternatives, research and criticism are optional means, not a required final re
 14. **Artifact preservation**: WHEN the bundle is removed or reselected, sync MUST preserve user-owned design artifacts.
     Tests: `test_removal_preserves_user_artifacts_and_other_selected_assets` and the installed-consumer test.
 15. **User-selected delegation**: WHERE the user has not selected the Impeccable track, the coordinator MUST NOT start
-    an Impeccable session or load or invoke Impeccable in its own context; an installed Impeccable permits an offer,
-    and output of a hook the user installed is consumer check evidence (`ADR-impeccable-session-authority`).
+    an Impeccable session or load or invoke Impeccable in its own context, and output of a hook the user installed is
+    consumer check evidence (`ADR-impeccable-session-authority`). WHEN a request states neither use nor non-use of
+    Impeccable, the coordinator MUST ask in its first question round whether to use it for this request, stating
+    whether it appears installed; a request or exact prior instruction that decides skips the question, and a pending
+    or unanswered question selects nothing (`ADR-impeccable-upfront-ask`).
     Review: `test_impeccable_delegation_is_selected_briefed_routed_and_accepted`.
 16. **Session brief and routing**: WHEN delegating to Impeccable, the coordinator MUST complete pre-implementation
     workflow steps required by the selected route, pass a self-contained brief (goal, framing result with read-only

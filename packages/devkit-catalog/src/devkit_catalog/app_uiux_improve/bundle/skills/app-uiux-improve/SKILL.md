@@ -21,7 +21,7 @@ request. A review-only request ends with findings and no product edits.
 - Keep roles optional and local; load only selected role bodies for concrete assignments. Role instructions are
   behavioral guidance, not native permission or filesystem isolation.
 - Load or invoke Impeccable only after the user selects it for this request; without that selection, work inline.
-  An installed Impeccable permits an offer.
+  Asking whether to use it selects nothing.
 - Read the project's OOUX documents (glossary, object register, UX documents) only where they exist, and edit none
   of them in this run; report the ones a change makes stale.
 - Install Impeccable, add ignore entries, remove Impeccable output or change `PRODUCT.md` or `DESIGN.md` only on the
@@ -33,11 +33,14 @@ request. A review-only request ends with findings and no product edits.
 1. Recover the target, intended user outcome, relevant artifacts and hard constraints from context; ask only for
    missing information that changes the work. For a broad request, choose a bounded initial focus and explain how
    it serves the goal. A focus such as color first orders work; only user-stated constraints or explicit deferrals
-   become non-goals. For implementation or requested setup/cleanup, announce: this procedure runs outside the
-   repository's development workflow and its process guidelines. Obtain explicit approval for this task or follow
-   the consumer workflow the user chooses, before product edits or write-capable delegation. Reuse an exact route
-   instruction already given; do not ask twice. Without an answer or approval channel, preserve useful read-only
-   inspection and wait before dependent edits. Silence selects no route. A review-only request needs no route approval.
+   become non-goals. If the request does not say whether to use Impeccable, ask in this first question round
+   whether to use it for this request, and say whether it appears installed; ask for review-only and small requests
+   too. Skip the question when the request or an exact prior instruction already decides. For implementation or
+   requested setup/cleanup, announce: this procedure runs outside the repository's development workflow and its
+   process guidelines. Obtain explicit approval for this task or follow the consumer workflow the user chooses,
+   before product edits or write-capable delegation. Reuse an exact route instruction already given; do not ask
+   twice. Without an answer or approval channel, preserve useful read-only inspection and wait before dependent
+   edits. Silence selects no route and no Impeccable track. A review-only request needs no route approval.
 2. Inspect the current interface and representative task path in the local branch build when executable; retain
    the baseline task, data and capture method before edits. A deployed environment supplies at most a baseline. If live service use is costly or shared, use a repeatable mocked backend
    against that branch build; name screenshot-, code- or text-only coverage when interaction cannot be checked.
@@ -48,8 +51,8 @@ request. A review-only request ends with findings and no product edits.
      the CTAs on each object and the attributes each view shows, with empty, loading, error and populated states.
    - If the request is review-only, use the framing as a lens and return findings with no product edits.
    - Frame the objects the request touches, not the whole product.
-4. Choose the track. Inline is the default: you implement, optionally with local roles; the Impeccable track runs
-   after the user selects it. Read `references/orchestration.md` before delegating to a local role or to Impeccable.
+4. Choose the track from the step 1 answer. Inline is the default: you implement, optionally with local roles; the
+   Impeccable track runs after the user selects it. Read `references/orchestration.md` before delegating to a local role or to Impeccable.
    Assign designer, unconventional-designer, reference-researcher or critic work on either track where useful, and
    preserve independent first passes until their returns arrive.
    Read `references/impeccable-limits.md` when preparing an Impeccable brief or handling detector, autonomy-probe

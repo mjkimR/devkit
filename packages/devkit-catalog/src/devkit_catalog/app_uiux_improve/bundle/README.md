@@ -52,9 +52,10 @@ It does not:
      the actions (CTAs) on each object and the attributes each view shows, with empty, loading, error and populated
      states;
    - a review-only request uses the framing as a lens and ends with findings and no product edits.
-3. Track: inline is the default. Say "use Impeccable" to select the Impeccable track; the coordinator then writes a
-   brief with the goal, the framing, the files Impeccable may edit, a recorded base, the commands and a stop
-   condition.
+3. Track: inline is the default. Unless your request already says whether to use Impeccable, the coordinator asks in
+   its first question round, noting whether Impeccable appears installed. Say "use Impeccable" (in the request or as
+   the answer) to select the Impeccable track; the coordinator then writes a brief with the goal, the framing, the
+   files Impeccable may edit, a recorded base, the commands and a stop condition.
 4. Session: Impeccable runs through one of the two launch routes below. The coordinator edits no product files until
    the session returns.
 5. Acceptance: the coordinator compares the working tree with the recorded base and both the edit list and approved
@@ -105,7 +106,8 @@ off.
 
 ## 5. What the coordinator does and does not do
 
-- It runs Impeccable only after you select it for the request. An installed Impeccable is offered, not used.
+- It runs Impeccable only after you select it for the request. It asks first when your request does not say; an
+  unanswered question keeps the inline track.
 - It pauses its own product edits while the session runs.
 - It accepts only changes matching both listed files and the approved goal. An in-list but out-of-scope change,
   such as an unrelated dependency bump, is reported and excluded without unsolicited reversion or deletion.
