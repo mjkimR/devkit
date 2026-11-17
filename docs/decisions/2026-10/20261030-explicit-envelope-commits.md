@@ -9,11 +9,6 @@ created_at: 2026-10-30
 
 # [ADR-explicit-envelope-commits] Explicit commits for individual workflow envelopes
 
-- **Status**: Accepted
-- **Date**: 2026-10-30
-
----
-
 ## 1. Context & Problem Statement
 
 CAP-DLV-delivery-workflows requires stage-boundary commits. CAP-DLV-workflow-envelopes authoring writes files and

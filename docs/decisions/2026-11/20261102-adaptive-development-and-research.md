@@ -29,14 +29,6 @@ Superseded in part by `ADR-post-merge-verification`: the premerge project/sessio
 
 Superseded in part by `ADR-skill-local-research-roles`: the registered research-role projection and role-policy migration clauses only; bundle ownership, optionality and retained materials remain unchanged.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `CAP-DLV-adaptive-development`, `CAP-DLV-sdd-baseline-adoption`,
-  `CAP-DLV-project-policy`, `CAP-DLV-proposal-planning`, `CAP-HARN-agent-guidance`, `CAP-DOCS-document-model`,
-  `CAP-DIST-content-packages`
-
----
-
 ## 1. Context & Problem Statement
 
 Independent document assets do not deactivate installed SDD runtime extensions, and an application-specific reader

@@ -26,15 +26,6 @@ Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: 
 
 Superseded in part by `ADR-selective-package-versions`: the root-version and same-version qualifiers in the Document package and bundles Package clause; document and SDD ownership and dependency directions remain.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @mjkimR
-- **Involved Components/Capabilities**: `ARCH-03-context`, `ARCH-05-1-containers`, `ARCH-05-2-components`,
-  `ARCH-08-cross-cutting`, `CAP-HARN-agent-guidance`, `CAP-HARN-command-mount`, `CAP-GOV-spec-rules`,
-  `CAP-TRACE-code-entrypoints`, `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`, `CAP-DOCS-document-model`
-
----
-
 ## 1. Context & Problem Statement
 
 **Spec package on devkit.** Spec-driven development was delivered as a standalone Go CLI with its own installer,
@@ -101,6 +92,9 @@ entrypoint-bearing kinds, heading-token kinds and the field-to-prefix map of the
 back between kinds ("not a use case, so a capability"), so a new kind that misses one place is silently treated as
 another. `Kind` members are referenced statically in 51 places outside `ids.py`, and kind-specific behavior
 (lifecycles, unit anchors, path grammars) depends on that.
+
+This decision involves `ARCH-03-context`, `ARCH-05-2-components`, `CAP-HARN-agent-guidance`, `CAP-HARN-command-mount`,
+`CAP-GOV-spec-rules`, `CAP-TRACE-code-entrypoints`, `CAP-DLV-project-policy`, `CAP-DLV-delivery-workflows`.
 
 ---
 

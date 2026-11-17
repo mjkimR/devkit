@@ -9,11 +9,6 @@ created_at: 2026-11-16
 
 # [ADR-formal-document-delivery-integration] Consume formal documentation policy at delivery boundaries
 
-- **Status**: Accepted
-- **Date**: 2026-11-16
-
----
-
 ## 1. Context & Problem Statement
 
 Formal design, domain and operations require complete downstream authoring and maintenance support. Existing SDD

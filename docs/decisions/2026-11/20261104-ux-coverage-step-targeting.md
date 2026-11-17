@@ -10,11 +10,6 @@ created_at: 2026-11-04
 
 # [ADR-ux-coverage-step-targeting] Uncovered steps are reported on their use case
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-
----
-
 ## 1. Context & Problem Statement
 
 `RULE-ux-coverage` reports an uncited use case step on the first UX document that lists the use case and is in the

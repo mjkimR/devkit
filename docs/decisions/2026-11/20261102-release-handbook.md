@@ -15,13 +15,6 @@ aliases:
 
 Superseded in part by `ADR-internal-repository-viewer`: the library-host clauses (library hosts keep their `RepositoryDataSource`; the host guarantee of the `book` view id, `initialView` and the `sdd:path-change` event; the standalone `KnowledgeViews` binding of the book request; the library-host deep links).
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `CAP-DLV-release-handbook`, `CAP-VIEW-repository-viewer`, `handbook/`,
-  `scripts/release.sh`, `packages/devkit-viewer/`, `AGENTS.md`
-
----
-
 ## 1. Context & Problem Statement
 
 `docs/` is written for agents and split by contract and ID; a person has no single entry point to what devkit is and

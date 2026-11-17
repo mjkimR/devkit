@@ -8,11 +8,6 @@ created_at: 2026-10-07
 
 # [ADR-dual-source-of-truth-and-periodic-reconciliation] Complementary code and spec ledgers with periodic human-in-the-loop drift reconciliation
 
-- **Status**: Accepted
-- **Date**: 2026-10-07
-- **Deciders**: @mjkimR
-- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, the `spec-sync` skill, `docs/capabilities/`,
-  `docs/usecases/`, `specs/`
 - **Follow-up**: `SPEC-periodic-drift-reconciliation`
 
 ---
@@ -38,6 +33,8 @@ Dogfooding and larger features showed its limits:
 
 The premise that one side can be the absolute single ledger, or that complete automatic sync is achievable, is not
 sustainable.
+
+This decision involves `CAP-DLV-delivery-workflows`.
 
 ---
 

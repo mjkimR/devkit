@@ -8,13 +8,6 @@ created_at: 2026-10-22
 
 # [ADR-usecases-replace-stories] Use Cases Replace User Stories in the Living Spec
 
-- **Status**: Accepted
-- **Date**: 2026-10-22
-- **Deciders**: @minjae
-- **Involved Components/Capabilities**: `capabilities/documents/`, `capabilities/governance/`, `capabilities/traceability/`, `usecases/`
-
----
-
 ## 1. Context & Problem Statement
 
 `docs/` is the current contract, but its actor-level documents were user stories: an "As a / I want / So that"

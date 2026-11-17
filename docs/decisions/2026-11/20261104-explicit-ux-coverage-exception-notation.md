@@ -10,11 +10,6 @@ created_at: 2026-11-04
 
 # [ADR-explicit-ux-coverage-exception-notation] Explicit UX coverage exception notation
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-ux-screens` lets a global control leave its Step cell empty and an off-screen step cite no screen, and makes

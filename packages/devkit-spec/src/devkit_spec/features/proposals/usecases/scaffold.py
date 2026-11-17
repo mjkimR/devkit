@@ -486,11 +486,6 @@ created_at: {created}
 
 # [{padr_id}] {title}
 
-- **Status**: Draft
-- **Date**: {created}
-
----
-
 ## 1. Context & Problem Statement
 
 ## 2. Decision Drivers

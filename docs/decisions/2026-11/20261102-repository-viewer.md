@@ -18,15 +18,6 @@ aliases:
 
 Superseded in part by `ADR-internal-repository-viewer`: every decision (distribution and frontend, autohub consumption, server, working-tree reads, proposal-review route and Planning proposal overlay).
 
-- **Status**: Superseded by `ADR-internal-repository-viewer`
-- **Date**: 2026-11-02
-- **Deciders**: @minjae
-- **Involved Components/Capabilities**: `packages/devkit-viewer/` (Python package and `frontend/`),
-  `.devkit/generated.toml` (`CAP-GEN-tracked-artifacts`), `CAP-VIEW-repository-viewer`, `CAP-DLV-human-interaction`,
-  `CAP-INT-mcp-services`, autohub `modules/hub-ui/`
-
----
-
 ## 1. Context & Problem Statement
 
 devkit owns the viewer source (decided in Backlog, `SPEC-repository-viewer`). devkit is a Python monorepo: consumers
@@ -48,6 +39,8 @@ A proposal under Planning is edited on its `plan-<slug>` branch, usually in a si
 view shows the copy the main checkout last merged, which can be days behind. Branch reads through `gh` were slow.
 Only `docs/proposals/PROP-<slug>/` of each Planning branch is current: the rest of that branch is a stale copy of its
 base. The checkout view must not wait for anything new.
+
+This decision involves `CAP-GEN-tracked-artifacts`, `CAP-VIEW-repository-viewer`.
 
 ---
 

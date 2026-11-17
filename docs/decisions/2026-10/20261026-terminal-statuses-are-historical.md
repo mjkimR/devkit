@@ -8,14 +8,6 @@ created_at: 2026-10-26
 
 # [ADR-terminal-statuses-are-historical] Terminal statuses are historical in document browsing
 
-- **Status**: Accepted
-- **Date**: 2026-10-26
-- **Deciders**: user
-- **Involved Components/Capabilities**: `CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`,
-  `CAP-DOCS-document-search`
-
----
-
 ## 1. Context & Problem Statement
 
 `devkit spec list` and `devkit spec search` hide historical documents unless `--history` is passed: the files of
@@ -28,6 +20,8 @@ out of the page and the agent's context.
 Non-Goal 1 of `SPEC-feedback-list-filters`, mirrored in a scope note of `CAP-DOCS-document-lookup`, refused a
 feedback status default: a default for one kind would make `list feedback` and `list feedback spec` select
 differently, and items hidden without a trace would drop out of the delivery report and the hygiene pass.
+
+This decision involves `CAP-DOCS-document-search`.
 
 ## 2. Decision Drivers
 

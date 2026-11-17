@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:07:50.052945Z'
+status: completed
+summary: 'Development to the final change report: spec/plan/tasks written; template + decision-writing trimmed with test; PADR scaffold writes no block; handoff promotion is frontmatter-only with a deletion-only legacy-block pass; mechanical pass removed the block from 72 ADRs (18 gained a ''This decision involves'' sentence, keep-uv-run provenance sentence, named exceptions kept); CAP-DLV-proposal-planning 4.4, CAP-DLV-proposal-lifecycle 4.1 step 4 and the DESIGN-proposal-handoff ADR-promotion row updated; ADR traces backticked. review-01 PASS (code-reviewer, 0 findings); reconcile-check-01 (reconcile-reviewer, 1 P3) closed by reconcile-check-02 after a capability wording fix. Feedback FB-handoff-leaves-stale-sibling-proposal-aliases recorded. Sync output: .devkit/installation.json (declared as sync output in Task 1.1/2.3). Baseline: outcome measured at head only (rg over docs/decisions finds only the roadmap milestone item; before: 72 files with the block at the handoff base). Not integrated.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main 2696 passed
+  lint: PASS just lint-check; devkit rules check --ci --base main; devkit rules check docs/decisions
+  build: PASS devkit sync --check exit 0; devkit generated check exit 0
+diff_scope:
+  base: ''
+  head: d8957ba8f64de41f4f098b389cf82ced748503ae
+activity_effort: medium

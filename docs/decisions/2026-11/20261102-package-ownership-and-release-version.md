@@ -24,18 +24,6 @@ Superseded in part by `ADR-selective-package-versions`: the Single release versi
 
 Superseded in part by `ADR-single-local-landing-route`: the clause that the `devkit.finish_guard` `workflow-envelopes` entry point stays with `devkit-agt`. All other decisions remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @minjae
-- **Involved Components/Capabilities**: `packages/devkit-core/`, `packages/devkit-dist/`, `packages/devkit/`,
-  `packages/devkit-mcp/`, `packages/devkit-advisory/`, `tools/devkit-dev/`, `architecture/` (`ARCH-05-1-containers`,
-  `ARCH-05-2-components`, `ARCH-05-3-command-plugins`, `ARCH-05-4-distribution-components`, `ARCH-07-deployment`),
-  `capabilities/distribution/` (`CAP-DIST-content-packages`, `CAP-DIST-manifest-spec`,
-  `CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership`, `CAP-DIST-in-repo-bundles`),
-  `CAP-CMP-bounded-execution`, `guides/`
-
----
-
 ## 1. Context & Problem Statement
 
 `devkit.distribution` depended on shared core services, playbook search and native host hook support housed in
@@ -75,6 +63,8 @@ preparation require edits across package metadata. Installed library contracts s
 Module paths quoted from the 2026-10-19 decisions (`devkit.cli`, `devkit.core.receipt`, `devkit.harness_guide`, the
 `devkit.<area>` names) are their decision-time names; the namespace decision below moved them to the owning wheel's
 regular package.
+
+This decision involves `CAP-CMP-bounded-execution`.
 
 ---
 

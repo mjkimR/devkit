@@ -10,11 +10,6 @@ created_at: 2026-11-10
 
 # [ADR-role-worker-subagent] Shared role-worker subagent for skill-local roles
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-
----
-
 ## 1. Context & Problem Statement
 
 Skill-local roles (deep-research, app-uiux-improve, design-explore) pass a role file to a general subagent so that no

@@ -10,11 +10,6 @@ created_at: 2026-11-17
 
 # [ADR-formal-document-closings] Formal document closings state limits and update triggers
 
-- **Status**: Accepted
-- **Date**: 2026-11-17
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-problem-first-formal-document-openings` makes every formal design, domain and operations document close with an

@@ -9,11 +9,6 @@ supersedes: [ADR-namespace-steering-directories, ADR-ux-screens]
 
 # [ADR-namespace-steering-registers] Namespace vocabulary registers follow shared and local steering
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-- **Involved Components/Capabilities**: `CAP-DOCS-namespaces`, `CAP-DOCS-document-search`, `CAP-GOV-spec-rules`,
-  `CAP-HARN-agent-guidance`
-
 ## 1. Context & Problem Statement
 
 Namespace UX documents and background have independent roots, while their terminology still points to global

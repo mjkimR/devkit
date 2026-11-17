@@ -14,13 +14,6 @@ aliases:
 
 # [ADR-review-refactor-application] Review-refactor scope, evidence and application
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `maintenance/review-refactor` playbook (`packages/devkit-catalog`),
-  `CAP-DLV-review-refactor`, `UC-review-and-refactor-accumulated-slop`
-
----
-
 ## 1. Context & Problem Statement
 
 A review-refactor run covers code, agent guidance and CLI commands, whose review criteria differ and whose findings

@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:05:54.875700Z'
+status: completed
+summary: 'reconcile-reviewer pass: 76 targets match the 76 changed docs paths, related_designs and formal_docs reasons hold, traces backticked, entrypoint rejections correct, no stale block description elsewhere; one optional P3'
+findings:
+- issue: CAP-DLV-proposal-lifecycle §4.1 step 4 names the deleted lines but not that the blank lines around them collapse to one, which AC-04 and the handoff docstring state
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md:73-77
+  failure_condition: A reimplementer working only from the capability leaves several blank lines between the H1 and the first section heading
+  suggested_action: Add that the blank lines around the deleted lines collapse to one
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS uv run devkit rules check docs/decisions docs/capabilities/delivery docs/designs/delivery
+diff_scope:
+  base: dd98503343fde43b8134f10280fb0f67a95f53b8
+  head: af2163104964015ecc1c3d643cafef885e523879

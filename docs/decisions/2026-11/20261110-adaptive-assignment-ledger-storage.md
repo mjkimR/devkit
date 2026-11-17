@@ -9,11 +9,6 @@ created_at: 2026-11-10
 
 # [ADR-adaptive-assignment-ledger-storage] Assignment ledger in the shared Git directory
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-
----
-
 ## 1. Context & Problem Statement
 
 The assignment commands (`ADR-adaptive-assignment-commands`) need one record that the Host reads and writes from its

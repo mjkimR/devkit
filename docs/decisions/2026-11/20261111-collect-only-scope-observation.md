@@ -10,11 +10,6 @@ created_at: 2026-11-11
 
 # [ADR-collect-only-scope-observation] Collect is the only scope observation surface
 
-- **Status**: Accepted
-- **Date**: 2026-11-11
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-worktrees-and-scope` moved scope observation to the Host (`devkit spec scope collect`) and removed the

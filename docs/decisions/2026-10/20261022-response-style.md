@@ -13,14 +13,6 @@ aliases:
 
 # [ADR-response-style] Response style for adaptive agent replies
 
-- **Status**: Accepted
-- **Date**: 2026-10-22
-- **Deciders**: @minjae
-- **Involved Components/Capabilities**: the `response-style` bundle, `capabilities/distribution/`
-  (`CAP-DIST-content-packages`, `CAP-DIST-manifest-spec`)
-
----
-
 ## 1. Context & Problem Statement
 
 The previous style combined content obligations with recurring visual instructions. Block-count thresholds and fixed

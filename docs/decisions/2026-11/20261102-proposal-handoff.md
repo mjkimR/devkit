@@ -11,12 +11,6 @@ aliases:
 
 # [ADR-proposal-handoff] Proposal handoff merges materials per leaf and commits its composed transaction
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `CAP-DLV-proposal-planning`
-
----
-
 ## 1. Context & Problem Statement
 
 The proposal handoff moves `materials/` and the carried bundle files into the dated directory
@@ -33,6 +27,8 @@ worktree HEAD after the Host's own commits, and a worker's write scope excludes 
 and material moves, so a handoff that commits nothing needs a Host commit before a worker starts. The composed
 acceptance already commits its exact service-created delta. `MAT-git-operator-handoff-commit-evidence` records four
 such Host commits on 2026-10-30, each staging every changed path without judgment.
+
+This decision involves `CAP-DLV-proposal-planning`.
 
 ---
 

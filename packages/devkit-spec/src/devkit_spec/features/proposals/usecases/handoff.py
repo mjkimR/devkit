@@ -173,7 +173,10 @@ _DRAFT_STATUS = re.compile(
     r"""^status:[ \t]*(?:draft|proposed|"(?:draft|proposed)"|'(?:draft|proposed)')(?=[ \t]*\r?$|[ \t]+#)""",
     re.MULTILINE,
 )
-_DRAFT_BODY_STATUS = re.compile(r"(- \*\*Status\*\*:[ \t]*)(?:Draft|Proposed)[ \t]*")
+# The body block an earlier PADR scaffold wrote below the H1 (ADR-frontmatter-only-decision-status): a status line,
+# then a date line. Promotion deletes it; remove this pass once no supported release scaffolds the block.
+_LEGACY_BODY_STATUS = re.compile(r"- \*\*Status\*\*:[ \t]*(?:Draft|Proposed)[ \t]*")
+_LEGACY_BODY_DATE = re.compile(r"- \*\*Date\*\*:.*")
 SUPERSEDED_IN_PART = "Superseded in part by"
 
 
@@ -857,18 +860,64 @@ def _drop_supersedes_placeholder(text: str) -> str:
 
 
 def _accept_status(text: str) -> str:
-    """``text`` with its frontmatter ``status: draft`` and its first prose ``- **Status**: Draft`` line accepted; a
-    fenced or indented example or an HTML comment in the body keeps its draft status."""
+    """``text`` with its frontmatter ``status: draft`` accepted and the legacy scaffold block deleted from its body
+    (``_drop_legacy_block``); no body status line is written."""
     block = locate(text)
     end = block.end if block else 0
     text = _DRAFT_STATUS.sub("status: accepted", text[:end]) + text[end:]
-    for line in visible_lines(text, start=end):
-        # ``line.text`` is the source line with comments blanked in place, so its positions are the source's: only
-        # the status word is replaced and a trailing comment stays.
-        if (match := _DRAFT_BODY_STATUS.fullmatch(line.text)) is not None:
-            word = line.offset + match.end(1)
-            return text[:word] + "Accepted" + text[word + len(match.group(0).rstrip()) - match.end(1) :]
-    return text
+    return _drop_legacy_block(text, end)
+
+
+def _drop_legacy_block(text: str, start: int) -> str:
+    """``text`` without the body block an earlier PADR scaffold wrote: in the first list after the H1, the first
+    visible ``- **Status**: Draft`` (or ``Proposed``) line, a ``- **Date**:`` line directly after it and, when the list
+    is left empty, a ``---`` that is its next non-blank line, with the blank lines around them collapsed to one.
+
+    Fenced, indented and commented lines are never candidates: ``visible_lines`` leaves them out or blanks them. The
+    scan stops at the first heading after the H1, so a block anywhere else in the body stays.
+    """
+    visible = {line.offset: line.text for line in visible_lines(text, start=start)}
+    lines: list[tuple[int, str]] = []
+    position = start
+    for raw in text[start:].splitlines(keepends=True):
+        lines.append((position, raw))
+        position += len(raw)
+
+    def shown(index: int) -> str:
+        return visible.get(lines[index][0], "").rstrip("\r\n")
+
+    def blank(index: int) -> bool:
+        return not lines[index][1].strip()
+
+    def next_nonblank(index: int) -> int | None:
+        return next((i for i in range(index, len(lines)) if not blank(i)), None)
+
+    heading = next((i for i in range(len(lines)) if shown(i).startswith("# ")), None)
+    if heading is None:
+        return text
+    first = heading + 1
+    while first < len(lines) and not shown(first).lstrip().startswith("- "):
+        if shown(first).startswith("#"):
+            return text
+        first += 1
+    if first >= len(lines):
+        return text
+    last = first
+    while last + 1 < len(lines) and not blank(last + 1):
+        last += 1
+    status = next((i for i in range(first, last + 1) if _LEGACY_BODY_STATUS.fullmatch(shown(i))), None)
+    if status is None:
+        return text
+    dropped = {status}
+    if status < last and _LEGACY_BODY_DATE.fullmatch(shown(status + 1)):
+        dropped.add(status + 1)
+    if len(dropped) == last - first + 1:
+        # The list is empty: drop it, a following ``---`` and the blank lines up to the next content line.
+        follower = next_nonblank(last + 1)
+        if follower is not None and shown(follower).strip() == "---":
+            follower = next_nonblank(follower + 1)
+        dropped = set(range(first, len(lines) if follower is None else follower))
+    return text[:start] + "".join(raw for index, (_, raw) in enumerate(lines) if index not in dropped)
 
 
 def _unit_records(bundle: Path) -> list[Path]:

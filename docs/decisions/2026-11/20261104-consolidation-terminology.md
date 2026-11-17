@@ -8,11 +8,6 @@ created_at: 2026-11-04
 
 # [ADR-consolidation-terminology] Record merging is called consolidation
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-
----
-
 ## 1. Context & Problem Statement
 
 devkit named the operation that merges related closed records into one replacement with aliases "compaction": the

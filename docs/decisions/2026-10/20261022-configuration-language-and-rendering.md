@@ -14,15 +14,6 @@ aliases:
 
 Superseded in part by `ADR-local-and-pull-request-integration`: the confirmation-form rules requiring explanations when schema metadata is omitted, verbatim source and provider prose, and language sampled once per form; and native approval routes in the local-text clause. Its other clauses remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-10-22
-- **Deciders**: @minjae
-- **Involved Components/Capabilities**: `capabilities/distribution/` (`CAP-DIST-manifest-spec`,
-  `CAP-DIST-sync-and-transactions`), `capabilities/mcp/`, `capabilities/worktree/`, `packages/devkit-dist`,
-  `packages/devkit-core`, `packages/devkit-mcp`, the `response-style` bundle, installation guides
-
----
-
 ## 1. Context & Problem Statement
 
 Template variables change committed receipt hashes and can change tracked guidance. Ignored files do not travel with

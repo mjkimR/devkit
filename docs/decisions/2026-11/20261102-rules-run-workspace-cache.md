@@ -16,13 +16,6 @@ aliases:
 
 # [ADR-rules-run-workspace-cache] Share parsed sources, resolved paths and indexes once per rules run in WorkspaceCache
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `WorkspaceCache`, `RuleContext`, the Python-source and Markdown rules,
-  `CAP-GOV-rule-authoring`
-
----
-
 ## 1. Context & Problem Statement
 
 Rules reach shared per-run data through `RuleContext.cache`, a `WorkspaceCache`; rules from `.devkit/managed/` run

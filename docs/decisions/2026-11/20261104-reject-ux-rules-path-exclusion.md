@@ -8,13 +8,6 @@ created_at: 2026-11-04
 
 # [ADR-reject-ux-rules-path-exclusion] Reject a path-scoped opt-out of the UX document rules
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-- **Deciders**: the repository owner
-- **Involved Components/Capabilities**: `capabilities/governance/`, `capabilities/harness/`, the docs bundle's `ux-writing` instruction
-
----
-
 ## 1. Context & Problem Statement
 
 The proposal ~~`PROP-ux-rules-path-exclusion`~~ (rejected in commit `aa67659f`, deleted in this ADR's commit)

@@ -10,14 +10,6 @@ created_at: 2026-11-10
 
 # [ADR-adaptive-dev-distribution] Ship the adaptive-dev bundle from a dedicated devkit-adaptive distribution
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-- **Involved Components/Capabilities**: `packages/devkit-adaptive/`, `packages/devkit-catalog/`,
-  `CAP-DLV-adaptive-development`, `CAP-HARN-agent-guidance`, `ARCH-05-1-containers`, `ARCH-05-2-components`,
-  `ARCH-07-deployment`, `guides/`
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-adaptive-development-and-research` placed the `adaptive-dev` bundle in `devkit-catalog` and rejected a dedicated
@@ -35,6 +27,8 @@ distribution that provides it. The name, presets and asset IDs are consumer-faci
 the installation command and the receipt. Nothing uses the bundle outside this repository.
 
 Evidence and option tables: `docs/materials/2026-11/20261110-adaptive-package-extraction/planning-evidence.md` of `SPEC-adaptive-package-extraction`.
+
+This decision involves `CAP-HARN-agent-guidance`, `ARCH-05-1-containers`.
 
 ## 2. Decision Drivers
 

@@ -11,8 +11,6 @@ created_at: 2026-11-04
 
 Superseded in part by `ADR-internal-repository-viewer`: the generic-host clauses (generic discovery trusting host tree/blob representation; generic hosts keeping their tree/blob interface; one helper serving both generic routes).
 
-- **Status**: Accepted.
-
 ## 1. Context & Problem Statement
 
 `CAP-VIEW-repository-viewer` limits discovery to global roadmap paths. `CAP-DOCS-namespaces` supports package

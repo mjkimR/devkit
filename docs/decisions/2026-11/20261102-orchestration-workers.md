@@ -23,13 +23,6 @@ Superseded in part by `ADR-recorded-adjacent-path-extensions-for-development-wor
 
 Superseded in part by `ADR-single-local-landing-route`: the clause that devkit refuses `devkit worktree finish --merge` while a unit is held. All other decisions remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @mjkimR (user)
-- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-planning`,
-  `CAP-DLV-project-policy`, `CAP-DLV-workflow-envelopes`, `CAP-HARN-agent-guidance`, the `worker` role contract,
-  `spec-delegate`, `spec-orchestrate`, `spec-tasks`
-
 The role reasoning effort presets once decided under the alias `ADR-role-effort-presets`, with the model-selection
 exclusion, are decided by `ADR-subagent-levels`; Host-only lifecycle invocation is decided by
 `ADR-delivery-approval-and-lifecycle-authority`. Neither is restated here.
@@ -97,6 +90,8 @@ Further gaps followed on the same runs:
   turn's envelope, since inspection derives `head` from the latest envelope on the branch and on a later turn would
   re-audit the previous turn and pass. A partial committed escape (some worker commits on the base branch) passes
   every check: the `WORKTREE_MERGE_NOT_FF` fix merges the base into the branch without naming any commit.
+
+This decision involves `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-planning`, `CAP-DLV-project-policy`.
 
 ---
 

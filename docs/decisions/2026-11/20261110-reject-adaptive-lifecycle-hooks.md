@@ -8,13 +8,6 @@ created_at: 2026-11-10
 
 # [ADR-reject-adaptive-lifecycle-hooks] Reject lifecycle hook gates for adaptive delegation
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-- **Deciders**: the repository owner
-- **Involved Components/Capabilities**: `capabilities/host/`, `CAP-DLV-adaptive-assignments`, the `adaptive-dev` bundle
-
----
-
 ## 1. Context & Problem Statement
 
 The proposal ~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in commit `8a725e5d`, deleted in this ADR's commit)
@@ -34,6 +27,8 @@ Its first Planning turn, retained as `MAT-adaptive-lifecycle-hooks`, found:
   adapter, size M with a registration the user installs or L with one devkit manages in a settings file that also
   holds permission settings. Antigravity documents another contract and no subagent event.
 - No effect was measured and no host ran a hook; the host facts come from vendor documentation.
+
+This decision involves `CAP-DLV-adaptive-assignments`.
 
 ---
 

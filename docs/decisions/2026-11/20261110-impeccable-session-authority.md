@@ -16,11 +16,6 @@ Superseded in part by `ADR-impeccable-question-relay`: Decision Outcome clause r
 
 Superseded in part by `ADR-uiux-task-approved-run`: Decision Outcome clauses requiring unconditional consumer-workflow pre-implementation steps, continuation for accepted implementation and user-requested setup or cleanup, and stale-document updates through the consumer workflow's own step. Implementation and requested actions now follow the user's per-task route choice; stale documents are reported for the consumer's documentation process where present or a separate documentation task otherwise. Host approvals, no implicit Git authority, report-only document ownership, brief, question/load routing and acceptance boundaries remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-uiux-improvement-workflow-boundary` lets only the coordinator change product files. Local roles return

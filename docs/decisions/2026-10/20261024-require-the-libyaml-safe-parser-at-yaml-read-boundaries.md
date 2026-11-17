@@ -9,11 +9,6 @@ created_at: 2026-10-24
 
 # [ADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries] Require the LibYAML safe parser at YAML read boundaries
 
-- **Status**: Accepted
-- **Date**: 2026-10-24
-
----
-
 ## 1. Context & Problem Statement
 
 Python YAML readers select different parsers, and the shared frontmatter reader preserves Python acceptance with

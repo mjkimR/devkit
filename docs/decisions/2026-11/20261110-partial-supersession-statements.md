@@ -9,13 +9,6 @@ created_at: 2026-11-10
 
 # [ADR-partial-supersession-statements] Fixed partial-supersession statement in the superseding ADR
 
-- **Status**: Accepted
-- **Date**: 2026-11-10
-- **Involved Components/Capabilities**: `docs/decisions/`, `capabilities/documents/`, `capabilities/governance/`,
-  `capabilities/delivery/`, the `adr-consolidation` playbook
-
----
-
 ## 1. Context & Problem Statement
 
 A later ADR that replaces part of an earlier one names it in `supersedes`, and the earlier ADR stays `accepted` with

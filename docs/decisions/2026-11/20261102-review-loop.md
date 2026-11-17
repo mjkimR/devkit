@@ -15,14 +15,6 @@ aliases:
 
 # [ADR-review-loop] Review roles, bounded review loop and verification records
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: the `spec` bundle (`skills/spec/references/review-loop.md`,
-  `skills/spec/references/effort.md`), `capabilities/delivery/` (`CAP-DLV-delivery-workflows`,
-  `CAP-DLV-workflow-envelopes`), `ARCH-04-delivery-strategy`
-
----
-
 ## 1. Context & Problem Statement
 
 Code review and reconcile verification compare different artifacts and require different instructions. Requiring a
@@ -46,6 +38,8 @@ counts for settled findings (`FB-challenger-findings-stay-open`). Round counts w
 marker, so rounds recorded before the marker existed had no defined count, and folding the user's answers into a
 reviewed proposal was named neither a batch nor a fresh loop (`FB-review-loop-round-count-across-procedure-change`).
 Evidence: `docs/materials/2026-10/20261020-envelope-record-gaps/spike-evidence.md`.
+
+This decision involves `ARCH-04-delivery-strategy`.
 
 ---
 

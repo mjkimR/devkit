@@ -10,9 +10,6 @@ created_at: 2026-11-13
 
 # [ADR-impeccable-question-relay] Capability-gated Impeccable question relay
 
-- **Status**: Accepted
-- **Date**: 2026-11-13
-
 ## 1. Context & Problem Statement
 
 `ADR-impeccable-session-authority` keeps interactive Impeccable commands in a user-operated session. A coordinator

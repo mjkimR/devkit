@@ -9,11 +9,6 @@ supersedes: [ADR-history-branch-publication]
 
 # [ADR-opt-in-maintenance-history] Explicit opt-in maintenance history composition
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-- **Deciders**: repository owner
-- **Involved Components/Capabilities**: `CAP-DLV-maintenance-history`, maintenance catalog playbooks
-
 ## 1. Context & Problem Statement
 
 History commands are useful independently of maintenance playbooks. Command installation must not change a playbook's report handling or completion criteria. `ADR-history-branch-publication` section 4 first clause broadly says each maintenance run publishes; its root and publication decisions do not require default lifecycle integration.

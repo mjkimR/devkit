@@ -12,14 +12,6 @@ created_at: 2026-11-04
 
 Superseded in part by `ADR-namespace-steering-registers`: the namespace glossary locations and exclusions, the root-only search synonyms, and the deferred namespace UX object register; its other decisions remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-04
-- **Involved Components/Capabilities**: `docs/steering/`, `docs/packages/<name>/steering/`, `CAP-GOV-spec-rules`,
-  `CAP-DIST-context-and-playbooks`, `CAP-DIST-manifest-spec`, `CAP-DIST-workspace-ownership`, `CAP-DOCS-namespaces`,
-  `CAP-DOCS-document-model`, `ARCH-05-2-components`
-
----
-
 ## 1. Context & Problem Statement
 
 `ADR-steering-documents` keeps project background in one flat `docs/steering/` directory, lists each file's `title`

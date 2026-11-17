@@ -12,13 +12,6 @@ aliases:
 
 # [ADR-rules-run-scoping] Skip declared rules no target or diff path can affect
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Involved Components/Capabilities**: `BaseRule`, `evaluate_rules`, `scope_rules`, `RunProjectRulesUseCase`,
-  `CAP-GOV-rules-engine`
-
----
-
 ## 1. Context & Problem Statement
 
 A targeted run evaluates every active rule. Three rules need every Python file of the workspace whatever the targets:

@@ -22,15 +22,6 @@ It recommends starting the eligible requested draft's Planning; ordering and exp
 
 Superseded in part by `ADR-namespace-milestone-roots`: the global-only milestone and deferred per-namespace roadmap clause and the global-root wording for live milestones. Other clauses remain in force; goals remain prose without IDs.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @minjae, user, agent
-- **Involved Components/Capabilities**: `ARCH-01-introduction-and-goals`, `CAP-DOCS-document-model`,
-  `CAP-DOCS-document-lookup`, `CAP-GOV-spec-rules`, `CAP-DLV-proposal-planning`, `CAP-DLV-spec-bundles`,
-  `CAP-HARN-agent-guidance`, `docs/roadmap/`
-
----
-
 ## 1. Context & Problem Statement
 
 Three sources disagreed on where Backlog keeps its plan. The strategy layer's master flow (workbench
@@ -64,6 +55,8 @@ A scheduled roadmap review (three `done` milestones or 2027-01-31, recorded as a
 `spec-next`'s idle step) is no longer carried by any shipped guidance or code: commit `e9f589c4` (2026-10-22) removed
 the idle step and a later commit its test assertion, while five milestones are `done` in `docs/roadmap/_archive/`, so
 the count trigger passed with no record.
+
+This decision involves `CAP-GOV-spec-rules`, `CAP-DLV-spec-bundles`, `CAP-HARN-agent-guidance`.
 
 ---
 

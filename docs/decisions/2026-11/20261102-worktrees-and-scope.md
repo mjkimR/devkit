@@ -25,15 +25,6 @@ access", §5, §6) is reworded to the remaining read surfaces without changing t
 
 Superseded in part by `ADR-single-local-landing-route`: the clause that `[worktree] pull_request = "required"` makes devkit refuse `devkit worktree finish --merge`. All other decisions remain in force.
 
-- **Status**: Accepted
-- **Date**: 2026-11-02
-- **Deciders**: @mjkimR
-- **Involved Components/Capabilities**: `CAP-DLV-project-policy`, `CAP-DLV-spec-bundles`,
-  `CAP-DLV-proposal-planning`, `CAP-COLL-work-scope-registry`, `CAP-HARN-agent-guidance`, `ARCH-06-runtime-view`,
-  `ARCH-08-cross-cutting`
-
----
-
 ## 1. Context & Problem Statement
 
 `devkit workflow next` and `devkit worktree finish` know nothing about devkit-spec, yet the work-scope registry has to
@@ -57,6 +48,9 @@ overlap evidence. Logical reads created locks and cleaned record and token tempo
 when all records are readable. Worker scope refresh calls add token, retry and ACK duties without proving freshness
 when the Host schedules another task. Creation already registers initial scope, while host-visible worktrees and
 branch trees contain later evidence that can be read without modifying registrations.
+
+This decision involves `CAP-DLV-project-policy`, `CAP-DLV-spec-bundles`, `CAP-DLV-proposal-planning`,
+`CAP-HARN-agent-guidance`, `ARCH-06-runtime-view`, `ARCH-08-cross-cutting`.
 
 ---
 
