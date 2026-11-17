@@ -42,5 +42,5 @@ Rechecked at worktree HEAD of `plan-formal-doc-authoring-checkpoints` (base `22c
 
 ## Concurrent proposals
 
-- `PROP-handoff-rewrite-overlap-scheduling` (draft) owns `packages/devkit-spec/tests/` and the `spec-orchestrate`
+- `SPEC-handoff-rewrite-overlap-scheduling` (draft) owns `packages/devkit-spec/tests/` and the `spec-orchestrate`
   skill. This proposal's owned paths are narrowed to the files it changes so the only shared prefix is the test tree.

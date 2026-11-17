@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-handoff-rewrite-overlap-scheduling
+by: user
+at: '2026-11-17T00:31:24.978775Z'

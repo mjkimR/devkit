@@ -57,4 +57,4 @@ Viewer checkpoint: only spec.md, plan.md and tasks.md changed; worktree clean.
 
 ## Disposition
 
-- **Disposition**: `PROP-handoff-rewrite-overlap-scheduling`: queued as a draft proposal that settles whether handoff-rewritten paths count as scheduling overlap.
+- **Disposition**: `SPEC-handoff-rewrite-overlap-scheduling`: queued as a draft proposal that settles whether handoff-rewritten paths count as scheduling overlap.
