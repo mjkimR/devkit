@@ -349,7 +349,7 @@
       "payload"
     ]
   },
-  "digest": "fe596e4946942152bc9dacc7a7ee371577bb7083436b6b6bab661ff3a9593612",
+  "digest": "2a746f483f7431c9953391b370dce79917a2320e4166c184f1e6b5a7fcebe38f",
   "edits": [
     {
       "after": "0.1.7",
@@ -487,7 +487,7 @@
         }
       },
       "disposition": "changed",
-      "fingerprint": "b9089ef6e06b1c2084153eca329153b710293b58d90fcaa45238e5a9d5c37dcb",
+      "fingerprint": "151cfa99981f2c842c52b1ca7cf2f556a357fee8aa44801695d6e199b80b3c80",
       "path": "packages/devkit",
       "requires": [
         "click>=8.1.7",
@@ -682,13 +682,13 @@
     "devkit-spec": {
       "bundles": {
         "spec": {
-          "fingerprint": "6cbd3dfd7c4dead9921f85de11372e458851ba688b7a0592dec90d58b8ea6cd3",
+          "fingerprint": "e9ee75ca868ff7dafbf6aabd2e34c5ef52816f967ad102ab28eb12e9aedd4ef1",
           "manifest": "src/devkit_spec/bundles/spec/bundle/bundle.toml",
           "version": "0.1.7"
         }
       },
       "disposition": "changed",
-      "fingerprint": "4be457221fb55f5a5888eb6db2a5317afd99e165c4515bf3a1511d1d3b956dca",
+      "fingerprint": "02323b8fc90ffcbf08dfe89e0182252dd296da8627b4a8499e78da61bffd9c52",
       "path": "packages/devkit-spec",
       "requires": [
         "click>=8.1.7",
