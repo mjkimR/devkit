@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-16T23:23:24.343183Z'
+status: completed
+summary: 'Self-verified at low effort: reconcile.md targets cover all three changed docs; history notes match ADR-internal-repository-viewer and CAP-VIEW-repository-viewer sections 4.4 and 5; no capability, use case or architecture change needed; FB-viewer-host-wording-outside-unit resolved with disposition.'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 2d247d8242b46455efad71bc7947b3584096ca80
+  head: 5c43efe4f321255d9a70e91827ec30aabf6069db
