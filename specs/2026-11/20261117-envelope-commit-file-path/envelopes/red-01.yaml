@@ -1,0 +1,13 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:26:34.299761Z'
+status: completed
+summary: A workspace-relative --file inside the Unit is refused with ENVELOPE_COMMIT_INVALID, a doubled target and a fix repeating the rejected value
+findings: []
+checks:
+  reproduced: PASS test_workspace_relative_file_inside_the_unit_commits and test_file_outside_the_unit_names_the_unit_relative_form fail (9 failed) with ENVELOPE_COMMIT_INVALID and target <unit>/<file> as characterized
+diff_scope:
+  base: 53ecdcfbb1ffdee3012eb7bc9406afbf32647596
+  head: b9a77b8d8f4529c54b15de92489080dad2821a84
