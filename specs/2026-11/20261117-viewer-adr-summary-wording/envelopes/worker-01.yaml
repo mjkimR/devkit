@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:16:28.039088Z'
+status: completed
+summary: 'Development to final change report: spec/plan/tasks written; the summaries of ADR-viewer-namespace-roadmap-discovery and ADR-viewer-indexed-decision-supersession reworded with no decision change; self-review and self-checked reconcile at low; FB-viewer-adr-summaries-name-library-hosts resolved per payload; FB-envelope-commit-file-path-doubled recorded. No sync output, no scope extension; docs-only, no before/after measurement applies.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected base=main 18 passed
+  lint: PASS devkit rules check --ci --base main; git diff --check
+diff_scope:
+  base: ''
+  head: 60d6b1919602f81af00450b45dc6d67e02cfcd8a
+activity_effort: low

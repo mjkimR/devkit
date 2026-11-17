@@ -1,0 +1,18 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:14:45.558761Z'
+status: completed
+summary: 'Self-review at low effort: only the two ADR summary lines changed in docs/decisions; each Y-statement keeps its concern, decision and downside, and the new quality of ADR-viewer-indexed-decision-supersession restates its drivers and selected option. AC-01..AC-04 verified.'
+findings: []
+checks:
+  ac01_rg: PASS exit=1 no match
+  ac02_rg: PASS exit=1 no match
+  ac03_diff: PASS two summary lines only
+  rules_check_ci: PASS exit=0
+  test_affected: PASS 18 passed
+diff_scope:
+  base: a8289513d9e59aab49e35e11900e26be3da493df
+  head: 60c6c0a7e870bf7eee2b47134e71f9801370bb62
+activity_effort: low

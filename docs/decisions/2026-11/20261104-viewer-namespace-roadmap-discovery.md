@@ -1,7 +1,7 @@
 ---
 id: ADR-viewer-namespace-roadmap-discovery
 title: Discover viewer namespace roadmaps by structural paths
-summary: "For viewer roadmap discovery across local and library sources, we match global and namespace roadmap paths without reading the namespace registry, to preserve reader independence, accepting that unregistered directories can appear."
+summary: "For viewer roadmap discovery, we match global and namespace roadmap paths without reading the namespace registry, to preserve reader independence, accepting that unregistered directories can appear."
 proposal: SPEC-viewer-namespace-roadmap
 status: accepted
 created_at: 2026-11-04

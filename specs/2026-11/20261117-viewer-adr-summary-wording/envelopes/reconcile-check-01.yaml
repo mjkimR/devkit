@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-17T00:15:14.495047Z'
+status: completed
+summary: 'Self-checked reconcile at low effort: reconcile.md covers both ADR summary changes, records no capability, use case, architecture, design, domain or operations impact, and resolves FB-viewer-adr-summaries-name-library-hosts.'
+findings: []
+checks:
+  reconcile_targets: PASS two ADR files modified
+  rules_check_unit: PASS exit=0
+diff_scope:
+  base: a8289513d9e59aab49e35e11900e26be3da493df
+  head: 0112a75021ab24f316b384f13151e02ec425854b
+activity_effort: low

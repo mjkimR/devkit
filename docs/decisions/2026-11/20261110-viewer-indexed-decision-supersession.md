@@ -1,7 +1,7 @@
 ---
 id: ADR-viewer-indexed-decision-supersession
 title: Derive viewer supersession from indexed decisions
-summary: "For decision readers, we derive supersession in the browser and show it beside each decision body, to retain one read-only viewer across hosts, accepting tested duplication of the document query semantics."
+summary: "For decision readers, we derive supersession in the browser and show it beside each decision body, to keep the viewer read-only without running each repository's Python environment, accepting tested duplication of the document query semantics."
 proposal: SPEC-viewer-decision-supersession
 status: accepted
 created_at: 2026-11-10
