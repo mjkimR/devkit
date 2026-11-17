@@ -4,7 +4,7 @@ aliases:
   - MS-implementation-design-documents
 title: Documentation system evolution
 summary: "Establishes design, domain and operations as formal document kinds with complete identity, governance, authoring, discovery, lifecycle and viewer support while preserving distinct authoritative owners."
-status: planned
+status: done
 created_at: 2026-11-16
 depends_on: []
 ---
@@ -54,8 +54,9 @@ Implementation minimization is not a success criterion.
   impact targets; unaffected layers need no arbitrary updates. Adaptive-dev acquires no implicit SDD records.
 - The viewer provides complete kind navigation/groups, IDs and deep links, prose references, applicable metadata,
   relation graph, supersession recognition and supporting-artifact links in global and namespace views.
-  Rendering, empty, missing and unsupported states follow existing supported behavior. Public frontend libraries,
-  generated static assets, builds and packaging are verified. Handbook source lookup recognizes the kinds and
+  Rendering, empty, missing and unsupported states follow existing supported behavior. Generated static assets,
+  builds and wheel packaging are verified; the public frontend library was retired by
+  `ADR-internal-repository-viewer` (`SPEC-viewer-internal-simplification`). Handbook source lookup recognizes the kinds and
   distinguishes deliberate inclusion policy from silent omission.
 - A per-kind support matrix records every audited surface, implementation owner, applicability decision and
   verification result. Real retained documents exercise authoring through migration, consumer distribution,
@@ -77,5 +78,19 @@ Implementation minimization is not a success criterion.
 
 ## Completion review
 
-Decomposition: pending
-Direct proposal work: pending
+Decomposition: confirmed
+Direct proposal work: confirmed
+
+- `SPEC-formal-document-kinds`, `SPEC-design-document-lifecycle` and `SPEC-design-document-viewer` are completed
+  and integrated, with `SPEC-design-document-foundation`, `SPEC-design-document-pilot`,
+  `SPEC-domain-model-documents`, `SPEC-design-bundle-layout` and `SPEC-formal-document-templates`; later
+  refinements (`SPEC-formal-document-coverage`, `SPEC-formal-docs-feedback-handoff`,
+  `SPEC-formal-doc-authoring-checkpoints`, `SPEC-formal-doc-padding-trim`, `SPEC-adr-body-metadata-removal`) are
+  completed. No in-scope proposal or handed-off work remains.
+- `ADR-formal-role-document-identities` supersedes the ID-free decisions; current DESIGN, DOMAIN and OPS documents
+  carry formal identity in global and namespace roots.
+- The per-kind support evidence is recorded in the formal-document-kinds, design-document-lifecycle and
+  design-document-viewer materials (support audit, development evidence and viewer support matrix).
+- The public frontend library requirement was overtaken by `ADR-internal-repository-viewer`
+  (`SPEC-viewer-internal-simplification`); its matrix row is historical evidence, and the static build and wheel
+  remain verified.
