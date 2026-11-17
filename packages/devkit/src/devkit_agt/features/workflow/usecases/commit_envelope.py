@@ -48,14 +48,22 @@ class CommitEnvelopeUseCase(BaseUseCase):
             if anchor_entry is None:
                 raise EnvelopeCommitInvalidError("Unit anchor must be tracked in HEAD")
             anchor_doc = parse(repo.blob(anchor_entry[1]).decode("utf-8"))
+            file = _unit_relative(file, (raw_unit, Path(ref.rel)))
+            target = f"{ref.rel}/{file}"
+            retry = workflow_command(f"envelope commit --unit {shlex.quote(unit)}{selector} --file {shlex.quote(file)}")
             selected = Path(file)
             if (
                 selected.parts != ("envelopes", selected.name)
                 or FILE.fullmatch(selected.name) is None
                 or file != selected.as_posix()
             ):
+                form = workflow_command(
+                    f"envelope commit --unit {shlex.quote(unit)}{selector} --file envelopes/<kind>-<NN>.yaml"
+                )
                 raise EnvelopeCommitInvalidError(
-                    "--file must name one literal immediate envelopes/<kind>-<NN>.yaml file"
+                    "--file must name one literal immediate envelopes/<kind>-<NN>.yaml file of the Unit",
+                    target_files=[ref.rel],
+                    fix=f"Pass the Unit-relative path of the envelope: run `{form}`",
                 )
             path = ref.dir / selected
             repo.regular_path(path)
@@ -110,3 +118,14 @@ class CommitEnvelopeUseCase(BaseUseCase):
             "subject": None if already else subject,
             "notices": [],
         }
+
+
+def _unit_relative(file: str, units: tuple[Path, ...]) -> str:
+    """``file`` without a leading literal Unit directory, so a workspace-relative spelling selects the same record."""
+    for unit in units:
+        if unit.is_absolute() or not unit.parts:
+            continue
+        prefix = unit.as_posix() + "/"
+        if file.startswith(prefix):
+            return file[len(prefix) :]
+    return file
