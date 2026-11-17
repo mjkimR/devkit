@@ -48,27 +48,31 @@ The decision changes clauses of two accepted ADRs and applies to three document 
 
 Choose option 2.
 
-- A formal design, domain or operations document closes with `## Authority boundary` and `## Update triggers`.
+- A formal design document closes with `## Authority boundary` and `## Update triggers`; a domain or operations
+  document closes with `## Update triggers`, preceded by `## Authority boundary` when it has content.
   → `CAP-DOCS-documentation-ownership` §3.3 Independent usefulness (SHOULD).
-- The authority boundary names what the document does not settle and its owner by full ID, only where the body or
-  its table does not already name that owner, and what the document or its evidence cannot conclude. It carries no
-  statement that the document transfers no normative statement or owns no recovery. A domain or operations document
-  omits the section when nothing remains. → `CAP-DOCS-documentation-ownership` §3.3 Independent usefulness (SHOULD).
+- A design's authority boundary names the rules it explains and their owners by full ID, also when the body cites
+  them inline. A domain or operations boundary names only owners its table and body do not name, and what the
+  document or its evidence cannot conclude, and is omitted when nothing remains. No boundary states that the
+  document transfers no normative statement or owns no recovery.
+  → `CAP-DOCS-documentation-ownership` §3.3 Independent usefulness (SHOULD).
 - `## Update triggers` names the source changes that make the document stale, by public entry point, use case,
-  field, code or capability section. Next-read pointers go to `related_*` fields and body links; an operations
-  fallback for evidence that matches no row belongs under `## Routing`.
+  field, code or capability section, and a command that rechecks a worked example when there is one. Each route a
+  next-read sentence held stays in the body or in `related_*`; an operations fallback for evidence that matches no
+  row belongs under `## Routing`.
   → `CAP-DOCS-documentation-ownership` §3.3 Independent usefulness (SHOULD).
 - `living-spec-writing` states the authoring steps the three kinds share, the scoping step included; each kind's
   writing instruction keeps only its path, lead focus, body sections, closing and support location.
 
-Supersedes in part `ADR-problem-first-formal-document-openings`: the clause that a formal document closes with its maintenance trigger and next useful action, and the clause that each kind's writing instruction carries the scoping step.
+Supersedes in part `ADR-problem-first-formal-document-openings`: the clause that a formal document closes with its authority boundary, naming what it does not settle and the owner that does, and with its maintenance trigger and next useful action, and the clause that each kind's writing instruction carries the scoping step.
 
-Supersedes in part `ADR-linked-domain-relationship-views`: the clause that an entry gives its next useful step.
+Supersedes in part `ADR-linked-domain-relationship-views`: the clause that an entry gives its authority boundary and next useful step.
 
 ## 5. Consequences
 
 - Good: closings shrink to facts a reader acts on, and misplaced routing and owner lines return to the body.
-- Bad: a reader who wants a "what next" pointer follows `related_*` or the table instead of a closing line.
+- Bad: a reader who wants a "what next" pointer follows `related_*`, the table or a body link instead of a closing
+  line, and a domain or operations document may end without a boundary.
 - Neutral: no rule checks sections; Review keeps judging whether a closing sentence adds a fact.
 
 ## 6. Confirmation
