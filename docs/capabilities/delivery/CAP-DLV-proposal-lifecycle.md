@@ -126,7 +126,8 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    - Every move writes only a path that was absent in preflight. The handoff gives no concurrent-change guarantee: a
      file written at a planned path between preflight and its move may be replaced, the same window the ADR writes
      have.
-6. **Rewriting** of what pointed into the proposal (4.3).
+6. **Rewriting** of what pointed into the proposal, then of the stale references in the carried and promoted
+   documents (4.3), so the handoff commit passes `RULE-document-reference`.
 7. **Removal** of the proposal, with its workflow records.
 8. **Gates**: the proposal's `plan-accept` record carried to the spec (`CAP-DLV-proposal-planning` rule 12).
 
@@ -187,6 +188,14 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   old ID, to the new canonical ID, across the same scan set (ADRs, the ADRs promoted in this handoff and feedback
   included, completed bundles excluded), because the translation removes the alias's only declaration. This is the
   handoff's own rename. Bare text, inline code other than a lone ID and fenced code do not change.
+- **Stale references in the carried documents** (`kind=id`): after the passes above, the handoff MUST rewrite, in
+  the Markdown files of the new spec bundle (moved feedback included) and the promoted ADRs, every reference
+  `RULE-document-reference` fixes as an alias: a `PROP-<slug>` no document declares, to the one document
+  `SPEC-<slug>` resolves to (a sibling proposal handed off after this proposal's Planning merged), and another
+  document's resolving alias, to that document's ID. Reference fields and prose references change; the provenance
+  fields (`proposal`, `decomposed_from`, `supersedes`), a declared ID, an ambiguous or unknown name, a document's own
+  alias and a unit anchor's `depends_on` whose replacement is no valid anchor do not. Files outside the carried set, the preserved materials
+  included, are left to `devkit rules fix` (`FB-handoff-leaves-stale-sibling-proposal-aliases`).
 - **Code-span paths** (`kind=path`) in the bodies of the documents the handoff wrote or moved out of a bundle
   proposal (the carried `spec.md` and blueprint, the promoted ADRs, moved feedback and other carried files): an inline
   code span holding a path relative to the bundle (`` `decisions/PADR-x.md` ``,
@@ -409,7 +418,7 @@ Warnings exit `0` (`1` under `--strict`, which never turns a `2` into a `1`). Ev
 | `SPEC_PROPOSAL_HANDOFF_FAILED` | `ERROR` (`MAINTENANCE`) | `ProposalHandoffError` | A write failed; what was written is removed, the materials and carried files moved back, the proposal kept. When the roll-back was incomplete, `[DETAIL]` lists what could not be moved back or removed (kept, never deleted). |
 | `SPEC_PROPOSAL_CLEANUP_FAILED` | `WARNING` | `ProposalCleanupWarning` | The handoff completed but the proposal could not be removed, or the post-finish prune of the slug's empty proposal directories failed (`CAP-COLL-work-scope-registry`). |
 | `SPEC_PROPOSAL_LINK_UNRESOLVED` | `WARNING` | `ProposalLinkUnresolvedWarning` | Links or references into the proposal were left as they were; the `[UNRESOLVED_LINK]` lines list them. |
-| `SPEC_PROPOSAL_REFS_REWRITTEN` | `NOTICE` | `ProposalReferencesRewrittenNotice` | ID references now name the spec or the ADRs; reread each `[REWRITTEN ... kind=id]` sentence. |
+| `SPEC_PROPOSAL_REFS_REWRITTEN` | `NOTICE` | `ProposalReferencesRewrittenNotice` | ID references now name the spec, the ADRs or the current ID of a stale reference (4.3); reread each `[REWRITTEN ... kind=id]` sentence. |
 | `SPEC_PROPOSAL_MILESTONE_INACTIVE` | `NOTICE` | `ProposalMilestoneInactiveNotice` | `new --milestone`: the canonical milestone is done or dropped; creation succeeds and the notice names its ID and state and advises membership review. Milestone status and completion assertions are unchanged; no approval gate is added and `--strict` still exits `0` for this notice. |
 | `SPEC_PROPOSAL_UNBOUND` | `NOTICE` | `ProposalUnboundNotice` | `new`: `sdd-proposal` is not available, `proposal.md` is unbound. `handoff`: `task_kind` is `feature` (or absent) and `sdd-spec-feature` is not available, `spec.md` is unbound. The `[FIX]` is `devkit workflow bind --unit <dir> --workflow <id>`. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `accept`: `--direct` with a blank `--note`. `new`: `--namespace` is neither `global` nor registered, `--task-kind` is not `feature` or `bugfix`, `--planning-effort` or `--dev-effort` is not `low`, `medium` or `high`, `--supersedes` names no other proposal. `new`, `padr`: stripped `--summary` is empty, longer than 300 characters or not English. |

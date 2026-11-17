@@ -1,0 +1,13 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:16:28.087809Z'
+status: completed
+summary: Handoff leaves carried references to a handed-off sibling proposal and to other documents' aliases unrewritten
+findings: []
+checks:
+  reproduced: 'PASS pytest test_proposal_aliases.py: test_handoff_rewrites_carried_references_to_a_handed_off_sibling and test_handoff_rewrites_carried_aliases_of_other_documents fail with PROP-sibling and ADR-old left in the carried spec.md'
+diff_scope:
+  base: a8289513d9e59aab49e35e11900e26be3da493df
+  head: d67f4ce06f03e35cd7f4713fcfd8d641e0ef6997

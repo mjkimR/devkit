@@ -1,0 +1,26 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-17T00:21:29.228869Z'
+status: completed
+summary: 'Independent code-reviewer PASS: AC-01..AC-03 met, resolution matches RULE-document-reference fixer, scope limited to carried and promoted files; two P3 findings'
+findings:
+- issue: An unreadable carried or promoted file is reported as unresolved twice (rewrite_ids and rewrite_aliases)
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/services/rewrite.py:288
+  failure_condition: A spec-bundle Markdown file or promoted ADR with malformed frontmatter or invalid UTF-8 inflates the SPEC_PROPOSAL_LINK_UNRESOLVED count
+  suggested_action: Skip the unreadable append when an equal Unresolved is already reported
+  resolution: open
+  severity: P3
+- issue: No test covers the depends_on handling or moved feedback in the carried set
+  evidence: packages/devkit-spec/tests/integration/features/proposals/test_proposal_aliases.py:146
+  failure_condition: Dropping the depends_on guard or narrowing carried_files to exclude feedback/ fails no test
+  suggested_action: Add a depends_on case and a moved-feedback case
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS uv run pytest -q test_proposal_aliases.py 11 passed
+  lint: PASS devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: a8289513d9e59aab49e35e11900e26be3da493df
+  head: b11f5cefad747bc71179224b5cb1562979423ab8
