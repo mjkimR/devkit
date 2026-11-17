@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-uiux-impeccable-upfront-ask
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
     resolution: modified

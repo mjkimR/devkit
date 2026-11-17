@@ -2,7 +2,7 @@
 id: SPEC-uiux-impeccable-upfront-ask
 title: Ask about Impeccable at the start of app-uiux-improve
 summary: app-uiux-improve asks the user first whether to use Impeccable unless the request already says so; silence keeps the inline track.
-status: in-progress
+status: completed
 created: 2026-11-17
 related_capabilities: [CAP-DLV-uiux-improvement]
 related_usecases: [UC-improve-an-interface-and-user-flow]
